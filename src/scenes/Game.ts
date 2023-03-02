@@ -9,7 +9,7 @@ import { SceneStates } from "./interfaces";
 export default class Game extends Phaser.Scene implements SceneStates {
   private map!: Phaser.Tilemaps.Tilemap;
   private mainPlayer!: Player;
-  private buildingSystem: BuildingSystem = new BuildingSystem(1);
+  private buildingSystem: BuildingSystem = new BuildingSystem(this, 1);
   
   constructor() {
     super("game");
@@ -42,7 +42,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     });
 
     this.mainPlayer = new Player(this, "main");
-
+    this.buildingSystem.setPlayer(this.mainPlayer);
     new Item(this, ItemType.WOOD, 10).spawnGameObject(100, 100);
 
     this.cameras.main.setBounds(
@@ -67,7 +67,8 @@ export default class Game extends Phaser.Scene implements SceneStates {
   spawnFactories() {
     const furnace = new Furnace(this, 1, 136, 136)
     furnace.addToInventory(new Item(this, ItemType.WOOD, 1));
-    this.buildingSystem.buildings.push(furnace);
+    this.buildingSystem.addBuilding(furnace);
+    
     
   }
 }
