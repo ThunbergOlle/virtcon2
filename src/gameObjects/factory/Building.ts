@@ -7,6 +7,7 @@ export enum BuildingType {
 }
 
 export abstract class Building extends Physics.Arcade.Sprite {
+  public id: number;
   public buildingType: BuildingType;
   public scene: Phaser.Scene;
   
@@ -22,12 +23,13 @@ export abstract class Building extends Physics.Arcade.Sprite {
   protected isProcessing: boolean = false;
   protected processingTicksLeft: number = 0;
 
-  constructor(scene: Phaser.Scene, type: BuildingType, x: number, y: number) {
+  constructor(scene: Phaser.Scene, id: number, type: BuildingType, x: number, y: number) {
     super(scene, x, y, type.toString());
     this.buildingType = type;
     this.scene = scene;
     this.x = x;
     this.y = y;
+    this.id = id;
     const gameObject = this.scene.physics.add.existing(this);
     this.scene.add.existing(this);
     

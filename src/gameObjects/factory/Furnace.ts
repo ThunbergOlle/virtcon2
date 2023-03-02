@@ -12,7 +12,7 @@ export class Furnace extends Factory  {
   ];
   public processingTicks: number = 2;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, BuildingType.FURNACE, x, y);
+  constructor(scene: Phaser.Scene,id: number, x: number, y: number) {
+    super(scene, id, BuildingType.FURNACE, x, y);
   }
 }
