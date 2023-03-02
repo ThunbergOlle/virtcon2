@@ -1,6 +1,7 @@
 
 import Item, { ItemType } from "../item/Item";
-import { Factory, FactoryType } from "./Factory";
+import { BuildingType } from "./Building";
+import { Factory } from "./Factory";
 
 export class Furnace extends Factory  {
   public destination: Factory | null = null;
@@ -12,6 +13,6 @@ export class Furnace extends Factory  {
   public processingTicks: number = 2;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, FactoryType.FURNACE, x, y);
+    super(scene, BuildingType.FURNACE, x, y);
   }
 }
