@@ -1,5 +1,6 @@
 import { Physics } from "phaser";
 import Item from "../item/Item";
+import { events } from "../../events/Events";
 
 export enum BuildingType {
   STONE_DRILL = "stone_drill",
@@ -10,7 +11,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
   public id: number;
   public buildingType: BuildingType;
   public scene: Phaser.Scene;
-  
 
   private inventory = new Array<Item>();
 
@@ -23,7 +23,13 @@ export abstract class Building extends Physics.Arcade.Sprite {
   protected isProcessing: boolean = false;
   protected processingTicksLeft: number = 0;
 
-  constructor(scene: Phaser.Scene, id: number, type: BuildingType, x: number, y: number) {
+  constructor(
+    scene: Phaser.Scene,
+    id: number,
+    type: BuildingType,
+    x: number,
+    y: number
+  ) {
     super(scene, x, y, type.toString());
     this.buildingType = type;
     this.scene = scene;
@@ -32,10 +38,18 @@ export abstract class Building extends Physics.Arcade.Sprite {
     this.id = id;
     const gameObject = this.scene.physics.add.existing(this);
     this.scene.add.existing(this);
-    
-    gameObject.setImmovable(true);
-  }
 
+    this.setInteractive();
+    gameObject.setImmovable(true);
+
+    this.setupListeners();
+  }
+  setupListeners() {
+    this.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      events.notify("onBuildingClicked", this);
+      console.log("pointerdown");
+    });
+  }
   /* Eject item is run if there is no destination */
   protected ejectItem(item: Item): void {
     // drop the item on the grown
@@ -74,7 +88,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
 
   protected onProcessingFinished(): void {
     console.log("Processing finished for " + this.buildingType);
-    
   }
   protected onBeginProcessing(): void {
     this.processingTicksLeft = this.processingTicks;

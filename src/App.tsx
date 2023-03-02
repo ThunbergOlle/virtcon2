@@ -1,34 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useEffect, useRef, useState } from "react";
+import "./App.css";
+import { events } from "./events/Events";
+import Window from "./ui/components/window/Window";
+import { WindowStack, WindowType } from "./ui/lib/WindowManager";
+import { Building } from "./gameObjects/factory/Building";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [openWindows, setOpenWindows] = useState<{
+    [key in WindowType]?: boolean;
+  }>({
+    [WindowType.VIEW_BUILDING]: false,
+  });
+  const windowStack = useRef(new WindowStack());
 
+  const [activeBuilding, setActiveBuilding] = useState<Building | null>(null)
+  useEffect(() => {
+    events.subscribe("onBuildingClicked", (building) => {
+      console.log("building was clicked, received in react ui");
+      setActiveBuilding(building);
+      selectWindow(WindowType.VIEW_BUILDING);
+      
+    });
+    return () => {
+      events.unsubscribe("onBuildingClicked", () => {});
+    };
+  }, []);
+  const selectWindow = (window: WindowType) => {
+    setOpenWindows({
+      [window]: true,
+    });
+    windowStack.current.selectWindow(window);
+  }
+  const closeWindow =(window: WindowType) =>  {
+    setOpenWindows({
+      [window]: false,
+    });
+    
+  }
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Window
+        title="Building Viewer"
+        onFocus={selectWindow}
+        onClose={closeWindow}
+        width={400}
+        height={400}
+        isOpen={openWindows[WindowType.VIEW_BUILDING]!}
+        className={windowStack.current.getClass(WindowType.VIEW_BUILDING)}
+        windowType={WindowType.VIEW_BUILDING}
+      >
+        <div>{activeBuilding?.buildingType}</div>
+        <h2>Inventory</h2>
+        {activeBuilding?.getInventory().map((item) => {
+          return <div>{item.type}</div>;
+        })
+        }
+      </Window>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

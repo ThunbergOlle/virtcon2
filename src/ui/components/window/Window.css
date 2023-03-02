@@ -1,0 +1,16 @@
+.window {
+  background-color: #1a1a1a;
+  padding: 0%;
+}
+.window .content {
+  padding-top: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.handle {
+  cursor: -webkit-grab;
+  background-color: #121212;
+}
+.handle:active {
+  cursor: -webkit-grabbing;
+}
