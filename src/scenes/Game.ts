@@ -1,10 +1,9 @@
 import Phaser from "phaser";
+import { FactorySystem } from "../gameObjects/factory/FactorySystem";
 import { Furnace } from "../gameObjects/factory/Furnace";
 import Item, { ItemType } from "../gameObjects/item/Item";
 import { Player } from "../gameObjects/player/Player";
 import { SceneStates } from "./interfaces";
-import { Factory } from "../gameObjects/factory/Factory";
-import { FactorySystem } from "../gameObjects/factory/FactorySystem";
 // import { debugDraw } from '../utils/debug'
 
 export default class Game extends Phaser.Scene implements SceneStates {
