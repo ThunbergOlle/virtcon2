@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { events } from "../../../events/Events";
-import { Building } from "../../../gameObjects/factory/Building";
+import { Building } from "../../../gameObjects/buildings/Building";
 import Window from "../../components/window/Window";
 import { WindowManagerFunctions, WindowType } from "../../lib/WindowManager";
 import ProgressBar from "react-bootstrap/ProgressBar";
@@ -36,6 +36,7 @@ export default function BuildingWindow(props: {
           <p className="text-md">Name: {activeBuilding?.buildingType}</p>
           <p className="text-md">Pos: {activeBuilding?.x}, {activeBuilding?.y}</p>
           <h2 className="text-2xl">Inventory</h2>
+          <p>{(activeBuilding?.getCurrentInventorySize() ?? 0)} / {(activeBuilding?.inventorySize ?? 0)}</p>
           {activeBuilding?.getInventory().map((item) => {
             return (
               <div key={item.type}>

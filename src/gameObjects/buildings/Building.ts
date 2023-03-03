@@ -5,6 +5,7 @@ import { events } from "../../events/Events";
 export enum BuildingType {
   STONE_DRILL = "stone_drill",
   FURNACE = "furnace",
+  PIPE = "pipe",
 }
 
 export abstract class Building extends Physics.Arcade.Sprite {
@@ -14,6 +15,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   public scene: Phaser.Scene;
 
   private inventory = new Array<Item>();
+  public abstract inventorySize: number;
 
   public abstract processingTicks: number;
   public abstract requiredForProcessing: Item[];
@@ -52,6 +54,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   protected ejectItem(item: Item): void {
     // drop the item on the grown
     item.spawnGameObject(this.x, this.y); // TOOD: Change this to be destination direction.
+    this.removeFromInventory(item);
   }
   public onItemReceive(item: Item) {
     this.addToInventory(item);
@@ -60,11 +63,19 @@ export abstract class Building extends Physics.Arcade.Sprite {
   public getInventory(): Item[] {
     return this.inventory;
   }
+
+  public getCurrentInventorySize(): number {
+    return this.inventory.reduce((acc, item) => acc + item.amount, 0);
+  }
   /**
    *
    * @param item The item to add to the inventory.
    */
   public addToInventory(item: Item): void {
+    if (this.getCurrentInventorySize() + item.amount > this.inventorySize) {
+      console.log("Inventory full"); // TODO: Implement better way to handle this
+      return;
+    }
     const itemWithSameType = this.inventory.find((i) => i.type == item.type);
     if (itemWithSameType) {
       itemWithSameType.amount += item.amount;

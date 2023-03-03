@@ -1,5 +1,5 @@
 import EventSystem from "events-system";
-import { Building } from "../gameObjects/factory/Building";
+import { Building } from "../gameObjects/buildings/Building";
 
 type Events = {
   onBuildingClicked: (building: Building) => void;

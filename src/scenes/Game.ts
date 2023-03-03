@@ -1,9 +1,11 @@
 import Phaser from "phaser";
-import { BuildingSystem } from "../gameObjects/factory/BuildingSystem";
+
 import { Furnace } from "../gameObjects/factory/Furnace";
 import Item, { ItemType } from "../gameObjects/item/Item";
 import { Player } from "../gameObjects/player/Player";
 import { SceneStates } from "./interfaces";
+import { BuildingSystem } from "../gameObjects/buildings/BuildingSystem";
+import { Pipe } from "../gameObjects/buildings/Pipe";
 // import { debugDraw } from '../utils/debug'
 
 export default class Game extends Phaser.Scene implements SceneStates {
@@ -68,7 +70,13 @@ export default class Game extends Phaser.Scene implements SceneStates {
     const furnace = new Furnace(this, 1, 136, 136)
     furnace.addToInventory(new Item(this, ItemType.COAL, 10));
     furnace.addToInventory(new Item(this, ItemType.SAND, 10));
+
+    const connectedPipe = new Pipe(this, 2, 152, 136);
+    connectedPipe.source.push(furnace);
+    furnace.destination = connectedPipe;
+
     this.buildingSystem.addBuilding(furnace);
+    this.buildingSystem.addBuilding(connectedPipe);
     
     
   }

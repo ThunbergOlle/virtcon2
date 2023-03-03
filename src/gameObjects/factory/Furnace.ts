@@ -1,12 +1,13 @@
 
 import Item, { ItemType } from "../item/Item";
-import { BuildingType } from "./Building";
+import { Building, BuildingType } from "../buildings/Building";
 import { Factory } from "./Factory";
 
 export class Furnace extends Factory  {
+  public inventorySize: number = 50;
   outputItems: Item = new Item(this.scene, ItemType.GLASS, 1);
-  public destination: Factory | null = null;
-  public source: Factory[] = [];
+  public destination: Building | null = null;
+  public source: Building[] = [];
 
   public requiredForProcessing: Item[] = [
     new Item(this.scene, ItemType.COAL, 10),

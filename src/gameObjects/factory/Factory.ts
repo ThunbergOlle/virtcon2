@@ -1,5 +1,5 @@
 import Item from "../item/Item";
-import { Building, BuildingType } from "./Building";
+import { Building, BuildingType } from "../buildings/Building";
 
 export abstract class Factory extends Building {
   abstract outputItems: Item;
