@@ -1,3 +1,4 @@
+import { events } from "../../events/Events";
 import { Building } from "./Building";
 
 export class BuildingSystem {
@@ -31,6 +32,7 @@ export class BuildingSystem {
     this.ticks += Math.floor(1 * dt);
     if (this.ticks >= 1000 / this.tps) {
       this.ticks = 0;
+      events.notify("tick", undefined)
       return true;
     }
     return false;

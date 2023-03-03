@@ -40,7 +40,7 @@
 .window-header .window-header-container {
   display: flex;
   justify-content: space-between;
-  padding-inline: 20px;
+  
 }
 
 .window-header .window-title {

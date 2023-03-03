@@ -8,20 +8,18 @@ export enum BuildingType {
 }
 
 export abstract class Building extends Physics.Arcade.Sprite {
+  public isUIVisable: boolean = false;
   public id: number;
   public buildingType: BuildingType;
   public scene: Phaser.Scene;
 
   private inventory = new Array<Item>();
 
-  public abstract destination: Building | null;
-  public abstract source: Building[];
-
   public abstract processingTicks: number;
   public abstract requiredForProcessing: Item[];
 
   protected isProcessing: boolean = false;
-  protected processingTicksLeft: number = 0;
+  public processingTicksLeft: number = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -47,7 +45,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   setupListeners() {
     this.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       events.notify("onBuildingClicked", this);
-      console.log("pointerdown");
+      this.isUIVisable = true;
     });
   }
   /* Eject item is run if there is no destination */

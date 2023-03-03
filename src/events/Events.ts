@@ -3,5 +3,6 @@ import { Building } from "../gameObjects/factory/Building";
 
 type Events = {
   onBuildingClicked: (building: Building) => void;
+  tick: (...args: any) => void;
 };
 export const events = new EventSystem<Events>();

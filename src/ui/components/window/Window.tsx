@@ -17,7 +17,6 @@ export default function Window(props: {
 
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    console.log("window useEffect called");
     setOpen(props.windowManager.isOpen(props.windowType));
   }, [props.windowManager.stack]);
 
@@ -46,7 +45,7 @@ export default function Window(props: {
           title={props.title}
           onClose={() => props.windowManager.closeWindow(props.windowType)}
         ></WindowHeader>
-        <div className="content">{props.children}</div>
+        <div className="content h-full">{props.children}</div>
       </Card>
     </Draggable>
   );

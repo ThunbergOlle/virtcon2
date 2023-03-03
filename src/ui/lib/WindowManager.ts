@@ -16,6 +16,7 @@ export interface WindowManagerFunctions {
   openWindow: (window: WindowType) => void;
   registerWindow: (window: WindowType) => void;
   isOpen: (window: WindowType) => boolean;
+  reRenderWindow: () => void;
   stack: WindowStack[];
 }
 export function useWindowManager():WindowManagerFunctions {
@@ -87,6 +88,9 @@ export function useWindowManager():WindowManagerFunctions {
       stack.push({ stackIndex: stack.length, type: window, open: false });
     }
   };
+  const reRenderWindow = () => {
+    setStack([...stack]);
+  };
 
   return {
     selectWindow,
@@ -95,6 +99,7 @@ export function useWindowManager():WindowManagerFunctions {
     closeWindow,
     registerWindow,
     isOpen,
+    reRenderWindow,
     stack,
   };
 }
