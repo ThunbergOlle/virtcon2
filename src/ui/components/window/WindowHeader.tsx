@@ -8,27 +8,15 @@ export default function WindowHeader(props: {
 }) {
   const [hideContent, setHideContent] = useState(false);
   return (
-    <Card.Header className="handle">
-      <div style={{display:'flex', justifyContent: 'space-between', paddingInline: 20}}>
-        <p style={{ flex: 1 }}>{props.title}</p>
+    <Card.Header className="handle window-header">
+      <div className="window-header-container">
+        <p className="window-title">{props.title}</p>
         
           {props.onClose !== undefined && (
-            <div style={{flex: 1, display: 'flex', flexDirection:'row', alignItems:'center', justifyContent: 'flex-end'}}>
+            <div className="close-button-container">
             <Button
               size="sm"
-              style={{
-                flex: 1,
-                justifySelf: "flex-end",
-                maxWidth: 40,
-                maxHeight: 40,
-                marginRight: 10,
-                textAlign: "center",
-                fontSize: 12,
-                padding: 0,
-                
-                backgroundColor: "darkred",
-                borderColor: "darkred",
-              }}
+              className="close-button"
               onClick={() => {
                 if (props.onClose !== undefined) {
                   props.onClose();

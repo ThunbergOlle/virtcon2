@@ -18,12 +18,10 @@ export class WindowStack {
 
     this.stack = this.stack.filter((i) => i.type !== window); // Update the stack and remove the item we want to put on top of the stack.
 
-    let biggestIndex = -1;
     let biggestVal = 0;
     for (let i = 0; i < this.stack.length; i++) {
       // Loop throgh the stack and find the index and value of the item highest on the stack.
       if (this.stack[i].stackIndex >= biggestVal) {
-        biggestIndex = i;
         biggestVal = this.stack[i].stackIndex;
       }
     }

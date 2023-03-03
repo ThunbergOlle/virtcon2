@@ -1,6 +1,6 @@
 import Draggable from "react-draggable";
 import { WindowType } from "../../lib/WindowManager";
-import WindowHeader from "../WindowHeader";
+import WindowHeader from "./WindowHeader";
 import "./Window.css";
 import { Card } from "react-bootstrap";
 export default function Window(props: {
@@ -10,6 +10,7 @@ export default function Window(props: {
   isOpen: boolean;
   className: string;
   windowType: WindowType;
+  defaultPosition?: { x?: number; y?: number };
   width: number;
   height: number;
   children: React.ReactNode;
@@ -20,7 +21,7 @@ export default function Window(props: {
       axis="both"
       handle=".handle"
       bounds={{ top: 0 }}
-      defaultPosition={{ x: 40, y: 10 }}
+      defaultPosition={{ x: props.defaultPosition?.x ?? 40, y: props.defaultPosition?.y ?? 40 }}
       onMouseDown={() => props.onFocus(props.windowType)}
     >
       <Card

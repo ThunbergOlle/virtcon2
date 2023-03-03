@@ -14,3 +14,35 @@
 .handle:active {
   cursor: -webkit-grabbing;
 }
+
+.window .close-button {
+  flex: 1;
+  justify-self: flex-end;
+
+  max-width: 40px;
+  max-height: 40px;
+  margin-right: 10px;
+  text-align: center;
+  font-size: 12px;
+  padding: 0px;
+
+  background-color: darkred;
+  border-color: darkred;
+}
+.window .close-button-container {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.window-header .window-header-container {
+  display: flex;
+  justify-content: space-between;
+  padding-inline: 20px;
+}
+
+.window-header .window-title {
+  flex: 1
+}

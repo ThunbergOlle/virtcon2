@@ -45,6 +45,7 @@ function App() {
         onClose={closeWindow}
         width={400}
         height={400}
+        defaultPosition={{ x: 40, y: 40 }}
         isOpen={openWindows[WindowType.VIEW_BUILDING]!}
         className={windowStack.current.getClass(WindowType.VIEW_BUILDING)}
         windowType={WindowType.VIEW_BUILDING}
