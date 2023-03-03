@@ -66,12 +66,9 @@ export default class Game extends Phaser.Scene implements SceneStates {
   }
   spawnFactories() {
     const furnace = new Furnace(this, 1, 136, 136)
-    furnace.addToInventory(new Item(this, ItemType.WOOD, 1));
+    furnace.addToInventory(new Item(this, ItemType.COAL, 10));
+    furnace.addToInventory(new Item(this, ItemType.SAND, 10));
     this.buildingSystem.addBuilding(furnace);
-    
-    const furnace2 = new Furnace(this, 20, 120, 120)
-    furnace2.addToInventory(new Item(this, ItemType.SAND, 1));
-    this.buildingSystem.addBuilding(furnace2);
     
     
   }

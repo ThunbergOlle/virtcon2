@@ -1,6 +1,8 @@
 export enum ItemType {
   WOOD = "wood",
   SAND = "sand",
+  GLASS = "glass",
+  COAL = "coal",
 }
 export default class Item {
   public type: ItemType;
@@ -16,7 +18,6 @@ export default class Item {
     this.scene = scene;
     this.type = type;
     this.amount = amount;
-    
   }
 
   spawnGameObject(x: number, y: number) {
@@ -31,16 +32,7 @@ export default class Item {
     this.scene.add.sprite(
       this.position.x,
       this.position.y,
-      "items",
-      this.getSpriteSheetIndex()
+      this.type.toString()
     );
-  }
-  getSpriteSheetIndex(): number {
-    switch (this.type) {
-      case ItemType.WOOD:
-        return 0;
-      case ItemType.SAND:
-        return 1;
-    }
   }
 }

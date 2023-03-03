@@ -75,6 +75,16 @@ export abstract class Building extends Physics.Arcade.Sprite {
     }
   }
 
+  public removeFromInventory(item: Item): void {
+    const itemWithSameType = this.inventory.find((i) => i.type == item.type);
+    if (itemWithSameType) {
+      itemWithSameType.amount -= item.amount;
+      if (itemWithSameType.amount <= 0) {
+        this.inventory = this.inventory.filter((i) => i != itemWithSameType);
+      }
+    }
+  }
+
   /**
    *
    * @returns true if the factory can process the items in its inventory.
@@ -92,7 +102,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
   protected onBeginProcessing(): void {
     this.processingTicksLeft = this.processingTicks;
     this.isProcessing = true;
-    console.log("Processing started for " + this.buildingType);
   }
   public tick(): void {
     if (this.isProcessing) {

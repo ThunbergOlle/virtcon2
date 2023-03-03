@@ -30,7 +30,10 @@ export default function BuildingWindow(props: {
       <div>{activeBuilding?.buildingType}</div>
       <h2>Inventory</h2>
       {activeBuilding?.getInventory().map((item) => {
-        return <div key={item.type}>{item.type}</div>;
+        return <div key={item.type}>
+          <img style={{marginRight: 10}} src={"assets/sprites/items/" + item.type + ".png"}></img>
+          {item.type}: x{item.amount}
+          </div>;
       })}
     </Window>
   );
