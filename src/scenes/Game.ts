@@ -69,6 +69,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     this.cameras.main.startFollow(Game.mainPlayer, false);
     this.cameras.main.setZoom(4);
     this.spawnFactories();
+    
   }
   preload() {}
   update(t: number, dt: number) {

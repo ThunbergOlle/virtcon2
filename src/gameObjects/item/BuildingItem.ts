@@ -23,5 +23,10 @@ export class BuildingItem extends Item {
 
         return building;
     }   
+    createGhostBuilding(x: number, y: number) {
+        const gameObject = this.scene.add.sprite(x, y, this.type.toString());
+        gameObject.alpha= 0.5;
+        return gameObject;
+    }
 
 }

@@ -57,6 +57,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   }
   /* Eject item is run if there is no destination */
   protected ejectItem(item: Item): void {
+    console.log(this);
     const { x, y } = fromPhaserPos({ x: this.x, y: this.y });
     // drop the item on the grown
     item.spawnGameObject(x,y); // TODO: Change this to be destination direction.

@@ -4,6 +4,7 @@ import { Player } from "../../../gameObjects/player/Player";
 import Window from "../../components/window/Window";
 import { WindowManager, WindowType } from "../../lib/WindowManager";
 import { useForceUpdate } from "../../hooks/useForceUpdate";
+import { BuildingItem } from "../../../gameObjects/item/BuildingItem";
 
 export default function PlayerInventoryWindow(props: {
   windowManager: WindowManager;
@@ -51,6 +52,11 @@ export default function PlayerInventoryWindow(props: {
           {player?.getInventory().map((item) => {
             return (
                 <div
+                  onClick={() => {
+                    if (item instanceof BuildingItem) {
+                      events.notify("onPlaceBuildingIntent", item);
+                    }
+                  }}
                   key={item.type}
                   className="flex flex-col text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
                 >

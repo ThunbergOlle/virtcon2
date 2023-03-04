@@ -1,5 +1,5 @@
-import Item, { ItemType } from "../item/Item";
 import { Building, BuildingType } from "../buildings/Building";
+import Item from "../item/Item";
 
 export class Pipe extends Building {
   public inventorySize = 5;
@@ -13,11 +13,12 @@ export class Pipe extends Building {
     super(scene, id, BuildingType.PIPE, x, y);
   }
   onProcessingFinished() {
-    // ! i have no idea if this will work. In theory it should
-    const func = this.destination ? this.destination.onItemReceive : this.ejectItem;
     for (let item of this.getInventory()) {
-      func(item)
+        if (this.destination) this.destination.onItemReceive(item);
+        else this.ejectItem(item);
+      
     }
+    
   }
   canProcess(): boolean {
     return this.getInventory().length > 0;
