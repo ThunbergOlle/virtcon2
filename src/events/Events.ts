@@ -6,6 +6,7 @@ type Events = {
   onBuildingClicked: (building: Building) => void;
   onPlayerInventoryOpened: (player: Player) => void;
   onPlayerInventoryClosed: () => void;
+  onPlayerInventoryUpdate: () => void;
   tick: (...args: any) => void;
 };
 export const events = new EventSystem<Events>();

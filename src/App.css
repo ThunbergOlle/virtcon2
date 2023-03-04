@@ -34,7 +34,7 @@ p, text, h1,h2,h3,h4,h5,div{
 }
 
 .read-the-docs {
-  color: #888;
+  color: #282828;
 }
 
 .App {
@@ -112,4 +112,8 @@ p, text, h1,h2,h3,h4,h5,div{
 }
 .z20 {
   z-index: 21;
+}
+
+.pixelart {
+  image-rendering: pixelated;
 }
