@@ -1,4 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import 'react-contexify/ReactContexify.css';
+
 import { useEffect, useState } from "react";
 import "./App.css";
 

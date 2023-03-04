@@ -1,3 +1,5 @@
+import { events } from "../../events/Events";
+import Game from "../../scenes/Game";
 import { fromPhaserPos, toPhaserPos } from "../../ui/lib/coordinates";
 
 export enum ItemType {
@@ -5,13 +7,14 @@ export enum ItemType {
   SAND = "sand",
   GLASS = "glass",
   COAL = "coal",
+  BUILDING_PIPE = "building_pipe",
 }
 export default class Item {
   public type: ItemType;
   public amount: number;
   public gameObject: Phaser.GameObjects.Sprite | null = null;
 
-  private scene: Phaser.Scene;
+  protected scene: Phaser.Scene;
 
   public position = new Phaser.Math.Vector2(0, 0);
 
@@ -27,11 +30,22 @@ export default class Item {
     if (this.gameObject != null) this.gameObject.destroy();
 
     /* Add the sprite to the scene */
-    let sprite = this.scene.add.sprite(
+    let sprite = this.scene.physics.add.sprite(
       x,
       y,
       this.type.toString()
     );
     sprite.setScale(0.8);
+    // add collision between item and player. if collision, add item to inventory
+    this.scene.physics.add.overlap(
+      Game.mainPlayer.body.gameObject,
+      sprite,
+      () => {
+        Game.mainPlayer.addToInventory(this);
+        events.notify("onPlayerInventoryUpdate")
+        sprite.destroy();
+      }
+    );
+    
   }
 }

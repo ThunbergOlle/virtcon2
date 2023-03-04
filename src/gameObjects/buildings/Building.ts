@@ -5,8 +5,8 @@ import { fromPhaserPos, toPhaserPos } from "../../ui/lib/coordinates";
 
 export enum BuildingType {
   STONE_DRILL = "stone_drill",
-  FURNACE = "furnace",
-  PIPE = "pipe",
+  FURNACE = "building_furnace",
+  PIPE = "building_pipe",
 }
 
 export abstract class Building extends Physics.Arcade.Sprite {
