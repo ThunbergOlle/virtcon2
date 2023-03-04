@@ -6,6 +6,7 @@ import { Player } from "../gameObjects/player/Player";
 import { SceneStates } from "./interfaces";
 import { BuildingSystem } from "../gameObjects/buildings/BuildingSystem";
 import { Pipe } from "../gameObjects/buildings/Pipe";
+import { toPhaserPos } from "../ui/lib/coordinates";
 // import { debugDraw } from '../utils/debug'
 
 export default class Game extends Phaser.Scene implements SceneStates {
@@ -45,7 +46,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
 
     this.mainPlayer = new Player(this, "main");
     this.buildingSystem.setPlayer(this.mainPlayer);
-    new Item(this, ItemType.WOOD, 10).spawnGameObject(100, 100);
+    new Item(this, ItemType.WOOD, 10).spawnGameObject(8, 10);
 
     this.cameras.main.setBounds(
       0,
@@ -67,11 +68,12 @@ export default class Game extends Phaser.Scene implements SceneStates {
     this.buildingSystem.update(t, dt);
   }
   spawnFactories() {
-    const furnace = new Furnace(this, 1, 136, 136)
+    
+    const furnace = new Furnace(this, 1, 10, 10)
     furnace.addToInventory(new Item(this, ItemType.COAL, 10));
     furnace.addToInventory(new Item(this, ItemType.SAND, 10));
 
-    const connectedPipe = new Pipe(this, 2, 152, 136);
+    const connectedPipe = new Pipe(this, 2, 11, 10);
     connectedPipe.source.push(furnace);
     furnace.destination = connectedPipe;
 

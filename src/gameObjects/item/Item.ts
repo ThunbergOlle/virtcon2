@@ -1,3 +1,5 @@
+import { fromPhaserPos, toPhaserPos } from "../../ui/lib/coordinates";
+
 export enum ItemType {
   WOOD = "wood",
   SAND = "sand",
@@ -20,7 +22,8 @@ export default class Item {
     this.amount = amount;
   }
 
-  spawnGameObject(x: number, y: number) {
+  spawnGameObject(_x: number, _y: number) {
+    const { x, y } = toPhaserPos({ x: _x, y: _y }) ;
     if (this.gameObject != null) {
       console.log("destroying old game object");
       this.gameObject.destroy();

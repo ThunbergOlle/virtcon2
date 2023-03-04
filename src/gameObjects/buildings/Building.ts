@@ -1,6 +1,7 @@
 import { Physics } from "phaser";
 import Item from "../item/Item";
 import { events } from "../../events/Events";
+import { fromPhaserPos, toPhaserPos } from "../../ui/lib/coordinates";
 
 export enum BuildingType {
   STONE_DRILL = "stone_drill",
@@ -27,9 +28,10 @@ export abstract class Building extends Physics.Arcade.Sprite {
     scene: Phaser.Scene,
     id: number,
     type: BuildingType,
-    x: number,
-    y: number
+    _x: number,
+    _y: number
   ) {
+    const {x, y} = toPhaserPos({x: _x, y:_y});
     super(scene, x, y, type.toString());
     this.buildingType = type;
     this.scene = scene;
@@ -52,8 +54,9 @@ export abstract class Building extends Physics.Arcade.Sprite {
   }
   /* Eject item is run if there is no destination */
   protected ejectItem(item: Item): void {
+    const { x, y } = fromPhaserPos({ x: this.x, y: this.y });
     // drop the item on the grown
-    item.spawnGameObject(this.x, this.y); // TOOD: Change this to be destination direction.
+    item.spawnGameObject(x,y); // TOOD: Change this to be destination direction.
     this.removeFromInventory(item);
   }
   public onItemReceive(item: Item) {
