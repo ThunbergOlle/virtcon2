@@ -1,10 +1,10 @@
 import { events } from "../../events/Events";
+import Game from "../../scenes/Game";
 import { Building } from "./Building";
 
 export class BuildingSystem {
   /* For creating colliders */
   private scene: Phaser.Scene;
-  private _player: Phaser.GameObjects.Sprite | null = null;
 
   private tps: number;
   private ticks: number = 0;
@@ -14,10 +14,9 @@ export class BuildingSystem {
     this.tps = tps;
     this.scene = scene;
   }
-  setPlayer(player: Phaser.GameObjects.Sprite) {
-    this._player = player;
+  setupCollisions() {
     for (let building of this.buildings) {
-      this.scene.physics.add.collider(player, building);
+      this.scene.physics.add.collider(Game.mainPlayer, building);
     }
   }
   update(t: number, dt: number) {
@@ -38,9 +37,9 @@ export class BuildingSystem {
     return false;
   }
   addBuilding(building: Building) {
-    if (this._player) {
+    if (Game.mainPlayer) {
       console.log("adding collider")
-      this.scene.physics.add.collider(this._player, building);
+      this.scene.physics.add.collider(Game.mainPlayer, building);
     }
 
     // check if a building with that ID already exists

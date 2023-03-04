@@ -42,6 +42,9 @@ p, text, h1,h2,h3,h4,h5,div{
   height: 100vh;
   
 }
+.z0 {
+  z-index: 1;
+}
 .z1 {
   z-index: 2;
 }

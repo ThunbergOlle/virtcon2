@@ -11,7 +11,7 @@ import { toPhaserPos } from "../ui/lib/coordinates";
 
 export default class Game extends Phaser.Scene implements SceneStates {
   private map!: Phaser.Tilemaps.Tilemap;
-  private mainPlayer!: Player;
+  public static mainPlayer: Player;
   private buildingSystem: BuildingSystem = new BuildingSystem(this, 1);
   
   constructor() {
@@ -44,8 +44,8 @@ export default class Game extends Phaser.Scene implements SceneStates {
       this.map.createLayer(index, tileSet, 0, 0);
     });
 
-    this.mainPlayer = new Player(this, "main");
-    this.buildingSystem.setPlayer(this.mainPlayer);
+    Game.mainPlayer = new Player(this, "main");
+    this.buildingSystem.setupCollisions();
     new Item(this, ItemType.WOOD, 10).spawnGameObject(8, 10);
 
     this.cameras.main.setBounds(
@@ -55,7 +55,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
       this.map.heightInPixels
     );
 
-    this.cameras.main.startFollow(this.mainPlayer, false);
+    this.cameras.main.startFollow(Game.mainPlayer, false);
     this.cameras.main.setZoom(4);
     this.spawnFactories();
   }
@@ -63,7 +63,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
   update(t: number, dt: number) {
     // handle player movement
     if (this.input.keyboard.enabled) {
-      this.mainPlayer.update(t, dt);
+      Game.mainPlayer.update(t, dt);
     }
     this.buildingSystem.update(t, dt);
   }

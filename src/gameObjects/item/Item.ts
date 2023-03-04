@@ -25,17 +25,15 @@ export default class Item {
   spawnGameObject(_x: number, _y: number) {
     const { x, y } = toPhaserPos({ x: _x, y: _y }) ;
     if (this.gameObject != null) {
-      console.log("destroying old game object");
       this.gameObject.destroy();
     }
-
-    this.position = new Phaser.Math.Vector2(x, y);
-
     /* Add the sprite to the scene */
-    this.scene.add.sprite(
-      this.position.x,
-      this.position.y,
+    let sprite = this.scene.add.sprite(
+      x,
+      y,
       this.type.toString()
     );
+    sprite.setScale(0.8)
+    
   }
 }

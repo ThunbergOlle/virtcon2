@@ -1,25 +1,31 @@
 import { useEffect, useState } from "react";
+import ProgressBar from "react-bootstrap/ProgressBar";
 import { events } from "../../../events/Events";
 import { Building } from "../../../gameObjects/buildings/Building";
 import Window from "../../components/window/Window";
-import { WindowManagerFunctions, WindowType } from "../../lib/WindowManager";
-import ProgressBar from "react-bootstrap/ProgressBar";
+import { WindowManager, WindowType, windowManager } from "../../lib/WindowManager";
+import { useForceUpdate } from "../../hooks/useForceUpdate";
 
 export default function BuildingWindow(props: {
-  windowManager: WindowManagerFunctions;
+  windowManager: WindowManager;
 }) {
   const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
+  const forceUpdate = useForceUpdate();
 
   useEffect(() => {
     events.subscribe("onBuildingClicked", (building) => {
       setActiveBuilding(building);
       props.windowManager.openWindow(WindowType.VIEW_BUILDING);
     });
-
+    events.subscribe("tick", () => {
+      forceUpdate();
+    });
     return () => {
       events.unsubscribe("onBuildingClicked", () => {});
+      events.unsubscribe("tick", () => {});
     };
   }, []);
+  
 
   return (
     <Window
@@ -34,9 +40,14 @@ export default function BuildingWindow(props: {
         <div className="flex-1">
           <h2 className="text-2xl">Info</h2>
           <p className="text-md">Name: {activeBuilding?.buildingType}</p>
-          <p className="text-md">Pos: {activeBuilding?.x}, {activeBuilding?.y}</p>
+          <p className="text-md">
+            Pos: {activeBuilding?.x}, {activeBuilding?.y}
+          </p>
           <h2 className="text-2xl">Inventory</h2>
-          <p>{(activeBuilding?.getCurrentInventorySize() ?? 0)} / {(activeBuilding?.inventorySize ?? 0)}</p>
+          <p>
+            {activeBuilding?.getCurrentInventorySize() ?? 0} /{" "}
+            {activeBuilding?.inventorySize ?? 0}
+          </p>
           {activeBuilding?.getInventory().map((item) => {
             return (
               <div key={item.type}>
@@ -51,19 +62,18 @@ export default function BuildingWindow(props: {
         </div>
         <div className="justify-self-end place-items-end flex-1 flex">
           <div className="w-full my-3">
-          <p className="text-md">Building processing progress</p>
-        {activeBuilding ? (
-          <ProgressBar
-            max={activeBuilding.processingTicks}
-            now={
-              activeBuilding.processingTicks -
-              activeBuilding.processingTicksLeft
-            }
-          />
-        ) : null}
+            <p className="text-md">Building processing progress</p>
+            {activeBuilding ? (
+              <ProgressBar
+                max={activeBuilding.processingTicks}
+                now={
+                  activeBuilding.processingTicks -
+                  activeBuilding.processingTicksLeft
+                }
+              />
+            ) : null}
+          </div>
         </div>
-        </div>
-        
       </div>
     </Window>
   );

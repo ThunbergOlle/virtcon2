@@ -1,11 +1,11 @@
-import Draggable from "react-draggable";
-import { WindowManagerFunctions, WindowType } from "../../lib/WindowManager";
-import WindowHeader from "./WindowHeader";
-import "./Window.css";
-import { Card } from "react-bootstrap";
 import { useEffect, useRef, useState } from "react";
+import { Card } from "react-bootstrap";
+import Draggable from "react-draggable";
+import { WindowManager, WindowType } from "../../lib/WindowManager";
+import "./Window.css";
+import WindowHeader from "./WindowHeader";
 export default function Window(props: {
-  windowManager: WindowManagerFunctions;
+  windowManager: WindowManager;
   title: string;
   windowType: WindowType;
   defaultPosition?: { x?: number; y?: number };
@@ -38,7 +38,7 @@ export default function Window(props: {
     >
       <Card
         ref={nodeRef}
-        className="window"
+        className={"window " + props.windowManager.getClass(props.windowType)}
         style={{ width: props.width, height: props.height }}
       >
         <WindowHeader
