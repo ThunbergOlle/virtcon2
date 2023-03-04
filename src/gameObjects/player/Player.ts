@@ -2,13 +2,14 @@ import { GameObjects, Physics } from "phaser";
 import PlayerController from "./PlayerController";
 import Item from "../item/Item";
 import { PlayerEvents } from "./PlayerEvents";
+import { BuildingItem } from "../item/BuildingItem";
 
 export class Player extends Physics.Arcade.Sprite {
   public controller: PlayerController
   public events: PlayerEvents
   
-  private inventory = new Array<Item>();
-  public inventorySize: number = 250;
+  private inventory = new Array<Item | BuildingItem>();
+  public inventorySize: number = 1000;
 
   constructor(scene: Phaser.Scene, playerId: string) {
     const name = "player-" + playerId;

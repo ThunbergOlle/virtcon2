@@ -7,6 +7,7 @@ import { SceneStates } from "./interfaces";
 import { BuildingSystem } from "../gameObjects/buildings/BuildingSystem";
 import { Pipe } from "../gameObjects/buildings/Pipe";
 import { toPhaserPos } from "../ui/lib/coordinates";
+import { BuildingItem } from "../gameObjects/item/BuildingItem";
 // import { debugDraw } from '../utils/debug'
 
 export default class Game extends Phaser.Scene implements SceneStates {
@@ -45,6 +46,8 @@ export default class Game extends Phaser.Scene implements SceneStates {
     });
 
     Game.mainPlayer = new Player(this, "main");
+    Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1))
+
     this.buildingSystem.setupCollisions();
     new Item(this, ItemType.WOOD, 10).spawnGameObject(8, 10);
 

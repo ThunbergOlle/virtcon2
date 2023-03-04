@@ -8,11 +8,11 @@ import { useForceUpdate } from "../../hooks/useForceUpdate";
 export default function PlayerInventoryWindow(props: {
   windowManager: WindowManager;
 }) {
-  const forceUpdate = useForceUpdate()
+  const forceUpdate = useForceUpdate();
   const [player, setPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
-    console.log("Setting up player inventory window listener")
+    console.log("Setting up player inventory window listener");
     events.subscribe("onPlayerInventoryOpened", (player) => {
       setPlayer(player);
       props.windowManager.openWindow(WindowType.VIEW_PLAYER_INVENTORY);
@@ -23,7 +23,7 @@ export default function PlayerInventoryWindow(props: {
       props.windowManager.closeWindow(WindowType.VIEW_PLAYER_INVENTORY);
     });
     events.subscribe("onPlayerInventoryUpdate", () => {
-      forceUpdate()
+      forceUpdate();
     });
 
     return () => {
@@ -50,16 +50,20 @@ export default function PlayerInventoryWindow(props: {
           </p>
           {player?.getInventory().map((item) => {
             return (
-              <div
-                key={item.type}
-                className="flex flex-col text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
-              >
-                <img
-                  className="flex-1 pixelart w-12  m-auto"
-                  src={"assets/sprites/items/" + item.type + ".png"}
-                ></img>
-                <p className="flex-1 m-[-8px]">x{item.amount}</p>
-              </div>
+                <div
+                  key={item.type}
+                  className="flex flex-col text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
+                >
+                  <img
+                    className="flex-1 pixelart w-12  m-auto"
+                    src={`assets/sprites/${
+                      item.type.includes("building_")
+                        ? "buildings/" + item.type.substring(9)
+                        : "items/" + item.type
+                    }.png`}
+                  ></img>
+                  <p className="flex-1 m-[-8px]">x{item.amount}</p>
+                </div>
             );
           })}
         </div>

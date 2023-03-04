@@ -7,13 +7,14 @@ export enum ItemType {
   SAND = "sand",
   GLASS = "glass",
   COAL = "coal",
+  BUILDING_PIPE = "building_pipe",
 }
 export default class Item {
   public type: ItemType;
   public amount: number;
   public gameObject: Phaser.GameObjects.Sprite | null = null;
 
-  private scene: Phaser.Scene;
+  protected scene: Phaser.Scene;
 
   public position = new Phaser.Math.Vector2(0, 0);
 
