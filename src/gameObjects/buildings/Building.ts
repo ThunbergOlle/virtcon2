@@ -51,6 +51,9 @@ export abstract class Building extends Physics.Arcade.Sprite {
       events.notify("onBuildingClicked", this);
       this.isUIVisable = true;
     });
+    events.subscribe("tick", () => {
+      this.tick();
+    })
   }
   /* Eject item is run if there is no destination */
   protected ejectItem(item: Item): void {

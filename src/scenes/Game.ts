@@ -1,19 +1,25 @@
 import Phaser from "phaser";
 
+import { BuildingSystem } from "../systems/BuildingSystem";
+import { Pipe } from "../gameObjects/buildings/Pipe";
 import { Furnace } from "../gameObjects/factory/Furnace";
+import { BuildingItem } from "../gameObjects/item/BuildingItem";
 import Item, { ItemType } from "../gameObjects/item/Item";
 import { Player } from "../gameObjects/player/Player";
 import { SceneStates } from "./interfaces";
-import { BuildingSystem } from "../gameObjects/buildings/BuildingSystem";
-import { Pipe } from "../gameObjects/buildings/Pipe";
-import { toPhaserPos } from "../ui/lib/coordinates";
-import { BuildingItem } from "../gameObjects/item/BuildingItem";
+import { ClockSystem } from "../systems/ClockSystem";
 // import { debugDraw } from '../utils/debug'
 
 export default class Game extends Phaser.Scene implements SceneStates {
   private map!: Phaser.Tilemaps.Tilemap;
+
   public static mainPlayer: Player;
-  private buildingSystem: BuildingSystem = new BuildingSystem(this, 1);
+  public static clockSystem: ClockSystem;
+  
+  /* Ticks per second, read more in ClockSystem.ts */
+  public tps = 1;
+
+  private buildingSystem: BuildingSystem = new BuildingSystem(this);
   
   constructor() {
     super("game");
@@ -28,6 +34,8 @@ export default class Game extends Phaser.Scene implements SceneStates {
   }
 
   create() {
+    Game.clockSystem = new ClockSystem(this.tps);
+
     console.log("creating scene");
     this.physics.world.createDebugGraphic();
 
@@ -68,7 +76,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     if (this.input.keyboard.enabled) {
       Game.mainPlayer.update(t, dt);
     }
-    this.buildingSystem.update(t, dt);
+    Game.clockSystem.update(t, dt);
   }
   spawnFactories() {
     
