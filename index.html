@@ -11,4 +11,10 @@
 
     <script type="module" src="/src/main.tsx"></script>
   </body>
+  <style>
+    /* Z-Index has to be > 0 if we want mousemove event to fire in Phaser */
+    #phaser-container {
+      z-index: 1;
+    }
+  </style>
 </html>

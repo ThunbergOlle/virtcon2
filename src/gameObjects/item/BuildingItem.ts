@@ -2,8 +2,10 @@ import { Pipe } from "../buildings/Pipe";
 import Item, { ItemType } from "./Item";
 
 export class BuildingItem extends Item {
-    constructor (scene: Phaser.Scene, type: ItemType, amount: number) {
+    public allowedRotations: number[] = [];
+    constructor (scene: Phaser.Scene, type: ItemType, amount: number, allowedRotations: number[] = []) {
         super(scene, type, amount)
+        this.allowedRotations = allowedRotations;
     }
     getBuildingType(){
         switch (this.type) {

@@ -54,7 +54,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     });
 
     Game.mainPlayer = new Player(this, "main");
-    Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1))
+    Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1, [0, 90, 180, 270]))
 
     this.buildingSystem.setupCollisions();
     new Item(this, ItemType.WOOD, 10).spawnGameObject(8, 10);
