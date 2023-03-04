@@ -56,7 +56,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   protected ejectItem(item: Item): void {
     const { x, y } = fromPhaserPos({ x: this.x, y: this.y });
     // drop the item on the grown
-    item.spawnGameObject(x,y); // TOOD: Change this to be destination direction.
+    item.spawnGameObject(x,y); // TODO: Change this to be destination direction.
     this.removeFromInventory(item);
   }
   public onItemReceive(item: Item) {
@@ -89,6 +89,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
 
   public removeFromInventory(item: Item): void {
     const itemWithSameType = this.inventory.find((i) => i.type == item.type);
+
     if (itemWithSameType) {
       itemWithSameType.amount -= item.amount;
       if (itemWithSameType.amount <= 0) {
@@ -103,8 +104,9 @@ export abstract class Building extends Physics.Arcade.Sprite {
    */
   protected canProcess(): boolean {
     return this.requiredForProcessing.every((item) => {
-      const itemInInventory = this.inventory.find((i) => i.type == item.type);
-      return itemInInventory ? itemInInventory.amount >= item.amount : false;
+      const isInInventory = this.inventory.find((i) => i.type == item.type);
+      const canProcess: boolean = isInInventory ? isInInventory.amount >= item.amount : false
+      return canProcess;
     });
   }
 

@@ -24,16 +24,14 @@ export default class Item {
 
   spawnGameObject(_x: number, _y: number) {
     const { x, y } = toPhaserPos({ x: _x, y: _y }) ;
-    if (this.gameObject != null) {
-      this.gameObject.destroy();
-    }
+    if (this.gameObject != null) this.gameObject.destroy();
+
     /* Add the sprite to the scene */
     let sprite = this.scene.add.sprite(
       x,
       y,
       this.type.toString()
     );
-    sprite.setScale(0.8)
-    
+    sprite.setScale(0.8);
   }
 }

@@ -13,20 +13,13 @@ export class Pipe extends Building {
     super(scene, id, BuildingType.PIPE, x, y);
   }
   onProcessingFinished() {
-    if (this.destination) {
-      for (let item of this.getInventory()) {
-        this.destination.onItemReceive(item);
-      }
-    } else {
-      for (let item of this.getInventory()) {
-        this.ejectItem(item);
-      }
+    // ! i have no idea if this will work. In theory it should
+    const func = this.destination ? this.destination.onItemReceive : this.ejectItem;
+    for (let item of this.getInventory()) {
+      func(item)
     }
   }
   canProcess(): boolean {
-    if(this.getInventory().length > 0) {
-      return true;
-    } 
-    return false;
+    return this.getInventory().length > 0;
   }
 }
