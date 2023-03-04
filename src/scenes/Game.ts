@@ -15,14 +15,15 @@ export default class Game extends Phaser.Scene implements SceneStates {
 
   public static mainPlayer: Player;
   public static clockSystem: ClockSystem;
+  public static buildingSystem: BuildingSystem;
   
   /* Ticks per second, read more in ClockSystem.ts */
   public tps = 1;
 
-  private buildingSystem: BuildingSystem = new BuildingSystem(this);
   
   constructor() {
     super("game");
+    Game.buildingSystem = new BuildingSystem(this);
   }
 
   disableKeys() {
@@ -56,7 +57,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     Game.mainPlayer = new Player(this, "main");
     Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1, [0, 90, 180, 270]))
 
-    this.buildingSystem.setupCollisions();
+    Game.buildingSystem.setupCollisions();
     new Item(this, ItemType.WOOD, 10).spawnGameObject(8, 10);
 
     this.cameras.main.setBounds(
@@ -89,8 +90,8 @@ export default class Game extends Phaser.Scene implements SceneStates {
     connectedPipe.source.push(furnace);
     furnace.destination = connectedPipe;
 
-    this.buildingSystem.addBuilding(furnace);
-    this.buildingSystem.addBuilding(connectedPipe);
+    Game.buildingSystem.addBuilding(furnace);
+    Game.buildingSystem.addBuilding(connectedPipe);
     
     
   }

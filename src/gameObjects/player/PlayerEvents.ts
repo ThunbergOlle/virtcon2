@@ -7,6 +7,7 @@ import {
   roundToTile,
   toPhaserPos,
 } from "../../ui/lib/coordinates";
+import Game from "../../scenes/Game";
 
 export class PlayerEvents {
   private player: Player;
@@ -17,11 +18,13 @@ export class PlayerEvents {
     building: BuildingItem | null;
     sprite: Phaser.GameObjects.Sprite | null;
     rotationIndex: number;
+    canPlace: boolean;
   } = {
     isPlacing: false,
     building: null,
     sprite: null,
     rotationIndex: 0,
+    canPlace: false,
   };
 
   constructor(scene: Phaser.Scene, player: Player) {
@@ -62,6 +65,7 @@ export class PlayerEvents {
                 building: null,
                 sprite: null,
                 rotationIndex: 0,
+                canPlace: false,
             }
         }
     })
@@ -73,6 +77,7 @@ export class PlayerEvents {
         building: building,
         sprite: building.createGhostBuilding(this.player.x, this.player.y),
         rotationIndex: 0,
+        canPlace: false,
       };
     });
     // Events for tracking mouse position when placing buildings
@@ -86,6 +91,15 @@ export class PlayerEvents {
           });
           this.buildingPlacement.sprite.x = x;
           this.buildingPlacement.sprite.y = y;
+          const buildingOnDesiredPosition = Game.buildingSystem.getBuildingOnTile(x, y);
+            if (buildingOnDesiredPosition) {
+                this.buildingPlacement.sprite.setTint(0xff0000);
+                this.buildingPlacement.canPlace = false;
+            }else {
+                this.buildingPlacement.sprite.clearTint();
+                this.buildingPlacement.canPlace = true;
+            }
+
         }
       }
     );

@@ -35,4 +35,7 @@ export class BuildingSystem {
   getBuildingById(id: number): Building | null {
     return this.buildings.find((b) => b.id === id) || null;
   }
+  getBuildingOnTile(x: number, y: number): Building | null {
+    return this.buildings.find((b) => b.x === x && b.y === y) || null;
+  }
 }
