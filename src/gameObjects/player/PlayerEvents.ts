@@ -6,11 +6,13 @@ export class PlayerEvents {
     private player: Player
     private scene: Scene
     private isInventoryOpen: boolean = false
+    
     constructor(scene: Phaser.Scene, player: Player) {
         this.scene = scene;
         this.player = player;
         this.setupListeners();
     }
+
     setupListeners() {
         console.log("Setting up player listeners")
         // on press "E" key

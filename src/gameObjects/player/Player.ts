@@ -31,20 +31,16 @@ export class Player extends Physics.Arcade.Sprite {
       console.log("Inventory full"); // TODO: Implement better way to handle this
       return;
     }
-    const itemWithSameType = this.inventory.find((i) => i.type == item.type);
-    if (itemWithSameType) {
-      itemWithSameType.amount += item.amount;
-    }
-    else {
-      this.inventory.push(item);
-    }
+    const sameTypeItem = this.inventory.find((i) => i.type == item.type);
+    if (sameTypeItem) sameTypeItem.amount += item.amount;
+    else this.inventory.push(item);
   }
   public removeFromInventory(item: Item) {
-    const itemWithSameType = this.inventory.find((i) => i.type == item.type);
-    if (itemWithSameType) {
-      itemWithSameType.amount -= item.amount;
-      if (itemWithSameType.amount <= 0) {
-        this.inventory = this.inventory.filter((i) => i.type != item.type);
+    const sameTypeItem = this.getInventory().find((i) => i.type == item.type);
+    if (sameTypeItem) {
+      sameTypeItem.amount -= item.amount;
+      if (sameTypeItem.amount <= 0) {
+        this.inventory = this.getInventory().filter((i) => i.type != item.type);
       }
     }
   }

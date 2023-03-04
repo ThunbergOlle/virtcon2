@@ -21,10 +21,8 @@ export abstract class Factory extends Building {
     for (let item of this.requiredForProcessing) {
       this.removeFromInventory(item);
     }
-    if (this.destination) {
-      this.destination.onItemReceive(this.outputItems);
-    } else {
-    }
+    
+    if (this.destination) this.destination.onItemReceive(this.outputItems);
     super.onProcessingFinished();
   }
 }

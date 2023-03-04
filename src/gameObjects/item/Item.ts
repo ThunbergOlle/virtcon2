@@ -27,16 +27,15 @@ export default class Item {
 
   spawnGameObject(_x: number, _y: number) {
     const { x, y } = toPhaserPos({ x: _x, y: _y }) ;
-    if (this.gameObject != null) {
-      this.gameObject.destroy();
-    }
+    if (this.gameObject != null) this.gameObject.destroy();
+
     /* Add the sprite to the scene */
     let sprite = this.scene.physics.add.sprite(
       x,
       y,
       this.type.toString()
     );
-    sprite.setScale(0.8)
+    sprite.setScale(0.8);
     // add collision between item and player. if collision, add item to inventory
     this.scene.physics.add.overlap(
       Game.mainPlayer.body.gameObject,
