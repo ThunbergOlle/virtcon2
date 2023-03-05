@@ -86,7 +86,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     furnace.addToInventory(new Item(this, ItemType.COAL, 10));
     furnace.addToInventory(new Item(this, ItemType.SAND, 10));
 
-    const connectedPipe = new Pipe(this, 2, 11, 10);
+    const connectedPipe = new Pipe(this, 2, 11, 10, 0);
     connectedPipe.source.push(furnace);
     furnace.destination = connectedPipe;
 

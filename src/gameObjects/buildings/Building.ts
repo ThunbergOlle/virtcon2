@@ -29,7 +29,8 @@ export abstract class Building extends Physics.Arcade.Sprite {
     id: number,
     type: BuildingType,
     _x: number,
-    _y: number
+    _y: number,
+    rotation: number = 0
   ) {
     const {x, y} = toPhaserPos({x: _x, y:_y});
     super(scene, x, y, type.toString());
@@ -43,6 +44,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
 
     this.setInteractive();
     gameObject.setImmovable(true);
+    gameObject.setRotation(rotation);
 
     this.setupListeners();
   }
@@ -75,7 +77,8 @@ export abstract class Building extends Physics.Arcade.Sprite {
     return this.inventory.reduce((acc, item) => acc + item.amount, 0);
   }
   /**
-   *
+   * Adds an item to the inventory.
+   * In most cases, use onItemReceive instead. OnItemReceive will call this method.
    * @param item The item to add to the inventory.
    */
   public addToInventory(item: Item): void {
