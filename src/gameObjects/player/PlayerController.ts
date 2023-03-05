@@ -18,17 +18,10 @@ export default class PlayerController {
 
     // get player input, update position of player
 
-    // TODO: add better movement with less if statements
-    if (this.keys.left.isDown) {
-      this.player.setVelocityX(-this.speed);
-    } else if (this.keys.right.isDown) {
-      this.player.setVelocityX(this.speed);
-    }
-    if (this.keys.up.isDown) {
-      this.player.setVelocityY(-this.speed);
-    }
-    if (this.keys.down.isDown) {
-      this.player.setVelocityY(this.speed);
-    }
+    const xVel: number = Number(this.keys.right.isDown) - Number(this.keys.left.isDown);
+    this.player.setVelocityX(xVel*this.speed);
+
+    const yVel: number = Number(this.keys.down.isDown) - Number(this.keys.up.isDown);
+    this.player.setVelocityY(yVel*this.speed);
   }
 }

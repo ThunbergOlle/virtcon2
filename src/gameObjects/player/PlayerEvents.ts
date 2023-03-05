@@ -48,7 +48,7 @@ export class PlayerEvents {
     });
 
     /* Listener for "rotate" key */
-    this.scene.input.keyboard.on("keydown-R", () => {
+    this. scene.input.keyboard.on("keydown-R", () => {
         /* Rotate potential building placement */
         if (this.buildingPlacement.isPlacing && this.buildingPlacement.sprite && this.buildingPlacement.building?.allowedRotations.length) {
             this.buildingPlacement.rotationIndex = (this.buildingPlacement.rotationIndex + 1) % this.buildingPlacement.building.allowedRotations.length;
