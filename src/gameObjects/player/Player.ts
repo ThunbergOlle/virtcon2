@@ -1,7 +1,7 @@
 import { GameObjects, Physics } from "phaser";
 import PlayerController from "./PlayerController";
 import Item from "../item/Item";
-import { PlayerEvents } from "./PlayerEvents";
+import { PlayerEvents } from "./events/PlayerEvents";
 import { BuildingItem } from "../item/BuildingItem";
 
 export class Player extends Physics.Arcade.Sprite {
@@ -20,7 +20,7 @@ export class Player extends Physics.Arcade.Sprite {
     this.scene.add.existing(this); 
       
     this.controller = new PlayerController(scene, this); // create new character controller
-    this.events = new PlayerEvents(scene, this);
+    this.events = new PlayerEvents(scene);
   }
  
   update(t: number, dt: number){
