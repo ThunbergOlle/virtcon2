@@ -1,6 +1,6 @@
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
-import { roundToTile } from '../../../ui/lib/coordinates';
+import { fromPhaserPos, roundToTile } from '../../../ui/lib/coordinates';
 import { BuildingItem } from '../../item/BuildingItem';
 
 export class BuildingPlacementEvents {
@@ -39,9 +39,9 @@ export class BuildingPlacementEvents {
     });
 
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      console.log('Mouse down');
       if (this.buildingPlacement.isPlacing && this.buildingPlacement.sprite && this.buildingPlacement.canPlace) {
-        console.log('Placing building');
+        const { x, y } = fromPhaserPos({ x: this.buildingPlacement.sprite.x, y: this.buildingPlacement.sprite.y });
+        this.buildingPlacement.building?.placeBuilding(x, y, this.buildingPlacement.building.allowedRotations[this.buildingPlacement.rotationIndex]);
       }
     });
     /* Listen for an event when a player wants to place a new building down. */
@@ -64,7 +64,7 @@ export class BuildingPlacementEvents {
         });
         this.buildingPlacement.sprite.x = x;
         this.buildingPlacement.sprite.y = y;
-        const buildingOnDesiredPosition = Game.buildingSystem.getBuildingOnTile(x, y);
+        const buildingOnDesiredPosition = Game.buildingSystem.getBuildingOnTile(fromPhaserPos({ x, y }));
         if (buildingOnDesiredPosition) {
           this.buildingPlacement.sprite.setTint(0xff0000);
           this.buildingPlacement.canPlace = false;
@@ -87,6 +87,8 @@ export class BuildingPlacementEvents {
   rotateGhostBuilding() {
     if (!this.buildingPlacement.sprite || !this.buildingPlacement.building?.allowedRotations.length) return;
     this.buildingPlacement.rotationIndex = (this.buildingPlacement.rotationIndex + 1) % this.buildingPlacement.building.allowedRotations.length;
-    this.buildingPlacement.sprite.angle = this.buildingPlacement.building.allowedRotations[this.buildingPlacement.rotationIndex];
+    // convert to degrees for phaser
+    const angle = this.buildingPlacement.building.allowedRotations[this.buildingPlacement.rotationIndex] * (180 / Math.PI);
+    this.buildingPlacement.sprite.angle = angle;
   }
 }

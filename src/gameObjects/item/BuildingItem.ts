@@ -1,15 +1,11 @@
-import { Pipe } from "../buildings/Pipe";
-import { Furnace } from "../factory/Furnace";
-import Item, { ItemType } from "./Item";
+import Game from '../../scenes/Game';
+import { Pipe } from '../buildings/Pipe';
+import { Furnace } from '../factory/Furnace';
+import Item, { ItemType } from './Item';
 
 export class BuildingItem extends Item {
   public allowedRotations: number[] = [];
-  constructor(
-    scene: Phaser.Scene,
-    type: ItemType,
-    amount: number,
-    allowedRotations: number[] = []
-  ) {
+  constructor(scene: Phaser.Scene, type: ItemType, amount: number, allowedRotations: number[] = []) {
     super(scene, type, amount);
     this.allowedRotations = allowedRotations;
   }
@@ -20,7 +16,7 @@ export class BuildingItem extends Item {
       case ItemType.BUILDING_FURNACE:
         return Furnace;
       default:
-        throw new Error("Building type not found");
+        throw new Error('Building type not found');
     }
   }
   placeBuilding(x: number, y: number, rotation: number = 0) {
@@ -28,8 +24,8 @@ export class BuildingItem extends Item {
 
     const Building = this.getBuildingType();
 
-    const building = new Building(this.scene, id, x, y, rotation);
-    return building;
+    const building = new Building(this.scene, id, { x, y }, rotation);
+    Game.buildingSystem.addBuilding(building);
   }
   createGhostBuilding(x: number, y: number) {
     const gameObject = this.scene.add.sprite(x, y, this.type.toString());
