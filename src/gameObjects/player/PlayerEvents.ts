@@ -85,18 +85,23 @@ export class PlayerEvents {
       Phaser.Input.Events.POINTER_MOVE,
       (pointer: Phaser.Input.Pointer) => {
         if (this.buildingPlacement.isPlacing && this.buildingPlacement.sprite) {
+
+          const centerOfSprite = 8;
           let { x, y } = roundToTile({
-            x: pointer.worldX - 8, // -8 is to center the sprite and account for the offset of the tilemap
-            y: pointer.worldY - 8,
+            x: pointer.worldX - centerOfSprite,
+            y: pointer.worldY - centerOfSprite,
           });
-          this.buildingPlacement.sprite.x = x;
-          this.buildingPlacement.sprite.y = y;
+
+          const { sprite } = this.buildingPlacement;
+          sprite.x = x;
+          sprite.y = y;
+
           const buildingOnDesiredPosition = Game.buildingSystem.getBuildingOnTile(x, y);
             if (buildingOnDesiredPosition) {
-                this.buildingPlacement.sprite.setTint(0xff0000);
+                sprite.setTint(0xff0000);
                 this.buildingPlacement.canPlace = false;
             }else {
-                this.buildingPlacement.sprite.clearTint();
+                sprite.clearTint();
                 this.buildingPlacement.canPlace = true;
             }
 

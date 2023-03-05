@@ -1,4 +1,4 @@
-import { GameObjects, Physics } from "phaser";
+import { Physics } from "phaser";
 import PlayerController from "./PlayerController";
 import Item from "../item/Item";
 import { PlayerEvents } from "./PlayerEvents";
@@ -27,14 +27,19 @@ export class Player extends Physics.Arcade.Sprite {
     this.controller.update(t, dt); // update character controller
   }
   public addToInventory(item: Item) {
-    if (this.getCurrentInventorySize() + item.amount > this.inventorySize) {
-      console.log("Inventory full"); // TODO: Implement better way to handle this
+    const currentInventorySize = this.getCurrentInventorySize();
+
+    if (currentInventorySize + item.amount > this.inventorySize) {
+      // TODO: Implement better way to handle this
+      if (currentInventorySize >= this.inventorySize) console.log("Inventory full");
+      else console.log(`The inventory can't hold ${item.amount} items.`)
       return;
     }
     const sameTypeItem = this.inventory.find((i) => i.type == item.type);
     if (sameTypeItem) sameTypeItem.amount += item.amount;
     else this.inventory.push(item);
   }
+  
   public removeFromInventory(item: Item) {
     const sameTypeItem = this.getInventory().find((i) => i.type == item.type);
     if (sameTypeItem) {
