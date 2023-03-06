@@ -31,8 +31,7 @@ export class Player extends Physics.Arcade.Sprite {
 
     if (currentInventorySize + item.amount > this.inventorySize) {
       // TODO: Implement better way to handle this
-      if (currentInventorySize >= this.inventorySize) console.log("Inventory full");
-      else console.log(`The inventory can't hold ${item.amount} items.`)
+      console.log("Inventory full");
       return;
     }
     const sameTypeItem = this.inventory.find((i) => i.type == item.type);
