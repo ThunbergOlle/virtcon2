@@ -1,6 +1,6 @@
 import { events } from "../../events/Events";
 import Game from "../../scenes/Game";
-import { fromPhaserPos, toPhaserPos } from "../../ui/lib/coordinates";
+import { TileCoordinates, toPhaserPos } from "../../ui/lib/coordinates";
 
 export enum ItemType {
   WOOD = "wood",
@@ -8,6 +8,7 @@ export enum ItemType {
   GLASS = "glass",
   COAL = "coal",
   BUILDING_PIPE = "building_pipe",
+  BUILDING_FURNACE = "building_furnace",
 }
 
 export default class Item {
@@ -26,8 +27,8 @@ export default class Item {
     this.amount = amount;
   }
 
-  spawnGameObject(_x: number, _y: number) {
-    const { x, y } = toPhaserPos({ x: _x, y: _y }) ;
+  spawnGameObject(pos: TileCoordinates) {
+    const { x, y } = toPhaserPos({ x: pos.x, y: pos.y }) ;
     if (this.gameObject != null) this.gameObject.destroy();
 
     /* Add the sprite to the scene */
