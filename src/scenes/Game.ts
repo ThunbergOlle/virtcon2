@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import { Scene, Tilemaps } from "phaser";
 
 import { Pipe } from '../gameObjects/buildings/Pipe';
 import { Furnace } from '../gameObjects/factory/Furnace';
@@ -10,14 +10,14 @@ import { ClockSystem } from '../systems/ClockSystem';
 import { SceneStates } from './interfaces';
 // import { debugDraw } from '../utils/debug'
 
-export default class Game extends Phaser.Scene implements SceneStates {
-  private map!: Phaser.Tilemaps.Tilemap;
+export default class Game extends Scene implements SceneStates {
+  private map!: Tilemaps.Tilemap;
 
   public static mainPlayer: Player;
   public static clockSystem: ClockSystem;
   public static buildingSystem: BuildingSystem;
-
-  /* Ticks per second, read more in ClockSystem.ts */
+  
+  // * Ticks per second, read more in ClockSystem.ts
   public tps = 1;
 
   constructor() {
@@ -68,6 +68,7 @@ export default class Game extends Phaser.Scene implements SceneStates {
     }
     Game.clockSystem.update(t, dt);
   }
+
   spawnFactories() {
     const furnace = new Furnace(this, 1, { x: 10, y: 10 });
     furnace.addToInventory(new Item(this, ItemType.COAL, 10));

@@ -10,6 +10,7 @@ export enum ItemType {
   BUILDING_PIPE = "building_pipe",
   BUILDING_FURNACE = "building_furnace",
 }
+
 export default class Item {
   public type: ItemType;
   public amount: number;
@@ -36,6 +37,7 @@ export default class Item {
       y,
       this.type.toString()
     );
+    
     sprite.setScale(0.8);
     // add collision between item and player. if collision, add item to inventory
     this.scene.physics.add.overlap(
