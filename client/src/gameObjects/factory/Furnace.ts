@@ -1,10 +1,11 @@
 
 import { TileCoordinates } from "../../ui/lib/coordinates";
-import { Building, BuildingType } from "../buildings/Building";
+import { Building,  } from "../buildings/Building";
 import { FactoryIO, IOType } from "../buildings/IOBuilding";
 import Item from "../item/Item";
 import { ItemType } from "@shared/types/itemType";
 import { Factory } from "./Factory";
+import { BuildingType } from "@shared/types/buildingType";
 
 export class Furnace extends Factory  {
   

@@ -2,12 +2,9 @@ import { Physics } from 'phaser';
 import Item from '../item/Item';
 import { events } from '../../events/Events';
 import { TileCoordinates, fromPhaserPos, toPhaserPos } from '../../ui/lib/coordinates';
+import { BuildingType } from '@shared/types/buildingType';
 
-export enum BuildingType {
-  STONE_DRILL = 'stone_drill',
-  FURNACE = 'building_furnace',
-  PIPE = 'building_pipe',
-}
+
 
 export abstract class Building extends Physics.Arcade.Sprite {
   public isUIVisable: boolean = false;

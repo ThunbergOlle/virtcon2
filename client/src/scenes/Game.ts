@@ -11,13 +11,14 @@ import { SceneStates } from './interfaces';
 import { ItemType } from '@shared/types/itemType';
 import { Network } from '../networking/Network';
 import { events } from '../events/Events';
+import { MainPlayer } from 'src/gameObjects/player/MainPlayer';
 // import { debugDraw } from '../utils/debug'
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
 
   public static network: Network;
-  public static mainPlayer: Player;
+  public static mainPlayer: MainPlayer;
   public static clockSystem: ClockSystem;
   public static buildingSystem: BuildingSystem;
 
@@ -39,25 +40,30 @@ export default class Game extends Scene implements SceneStates {
   }
 
   create() {
-    Game.mainPlayer = new Player(this, ""); /* Create a temporary mainPlayer until server has answered with real user */
+    events.subscribe('joinWorld',(worldId) => {
+      Game.mainPlayer = new MainPlayer(this, ""); /* Create a temporary mainPlayer until server has answered with real user */
 
-    Game.clockSystem = new ClockSystem(this.tps);
-    Game.network = new Network();
-
-    console.log('creating scene');
-    this.physics.world.createDebugGraphic();
-
-    this.map = this.make.tilemap({ key: 'tilemap' });
-    let tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 0, 0);
-
-    this.map.layers.forEach((layer, index) => {
-      this.map.createLayer(index, tileSet, 0, 0);
-    });
-
-    events.subscribe('networkNewMainPlayer', (mainPlayer) => {
+      Game.clockSystem = new ClockSystem(this.tps);
+      Game.network = new Network();
+  
+      console.log('creating scene');
+      this.physics.world.createDebugGraphic();
+  
+      /* TODO: fetch this data from the backend */
+      this.map = this.make.tilemap({ key: 'tilemap' });
+      let tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 0, 0);
+  
+      this.map.layers.forEach((layer, index) => {
+        this.map.createLayer(index, tileSet, 0, 0);
+      });
+      Game.network.join(worldId);
+    })
+    events.subscribe('networkLoadWorld', (world) => {
+      console.log("Loading world data...")
+      const mainPlayer = world.player
       Game.mainPlayer.destroy(); // destroy the old mainPlayer (dead user)
       
-      Game.mainPlayer = new Player(this, mainPlayer.id);
+      Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
       Game.mainPlayer.setPosition(mainPlayer.pos.x, mainPlayer.pos.y);
       Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1, [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]));
       this.spawnFactories();
@@ -71,6 +77,10 @@ export default class Game extends Scene implements SceneStates {
       this.cameras.main.startFollow(Game.mainPlayer, false);
       this.cameras.main.setZoom(4);
     });
+    events.subscribe('networkNewPlayer', (player) => {
+      const newPlayer = new Player(this, player.id);
+      newPlayer.setPosition(player.pos.x, player.pos.y);
+    })  
 
   }
   preload() {}
