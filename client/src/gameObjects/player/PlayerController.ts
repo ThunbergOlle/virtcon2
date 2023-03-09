@@ -20,10 +20,20 @@ export default class PlayerController {
 
     // * -1 ≥ xVel ≤ 1
     const xVel: number = Number(this.keys.right.isDown) - Number(this.keys.left.isDown);
-    this.player.setVelocityX(xVel*this.speed);
 
     // * -1 ≥ yVel ≤ 1
     const yVel: number = Number(this.keys.down.isDown) - Number(this.keys.up.isDown);
-    this.player.setVelocityY(yVel*this.speed);
+
+    let ySpeed = yVel*this.speed;
+    let xSpeed = xVel*this.speed;
+
+    // Normalize speed in the diagonals
+    if (ySpeed != 0 && xSpeed != 0) {
+      ySpeed = ySpeed/2
+      xSpeed = xSpeed/2
+    }
+
+    this.player.setVelocityY(ySpeed);
+    this.player.setVelocityX(xSpeed);
   }
 }
