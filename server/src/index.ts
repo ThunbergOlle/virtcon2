@@ -5,11 +5,20 @@ import * as socketio from "socket.io";
 import { World } from "./gameClasses/World";
 import cors from "cors";
 import { ServerPlayer } from "@shared/types/ServerPlayer";
+import { Redis } from './database/Redis';
+import { v4 as uuidv4 } from 'uuid';
+const redis = new Redis();
 
 
-const worlds: World[] = [];
-const testWorld = new World("test");
-worlds.push(testWorld);
+redis.connectClient().then(() => {
+  const world = {
+    id:  uuidv4(),
+    name:"test-world",
+    players: [],
+    buildings: [],
+  }
+  redis.client.json.set("test-world", "$", world);
+})
 
 const app = express.default();
 app.use(express.json());
@@ -32,7 +41,7 @@ io.on("connection", (socket) => {
   console.log("Connected", socket.id);
   socket.on("join", (worldId: string) => {
     console.log(`Socket ${socket.id} joined world ${worldId}`)
-    const world = worlds.find(world => world.id === worldId);
+    const world = undefined;
     if (!world) {
       console.log(`World ${worldId} not found`);
       socket.emit("error", `World not found`);
@@ -50,12 +59,9 @@ io.on("connection", (socket) => {
 });
 
 app.get("/worlds", (_req, res) => {
-  const availableWorlds = worlds.map(lobby => ({
-    id: lobby.id,
-    name: lobby.name,
-    playerCount: lobby.players.length
-  }))
-  res.send(availableWorlds);
+  const world = redis.client.json.get("test-world")
+  
+  res.send([world]);
 });
 
 server.listen(3000, () => {
