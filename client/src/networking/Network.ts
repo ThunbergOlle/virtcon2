@@ -14,10 +14,6 @@ export class Network {
       console.log('Connected to server');
       this.isConnected = true;
     });
-    socket.on('availableLobbies', (lobbies: Lobby[]) => {
-      this.lobbies = lobbies;
-      this.join(lobbies[0].id);
-    });
     socket.onAny((event, ...args) => {
       // capitalize the first letter of the event
       event = event.charAt(0).toUpperCase() + event.slice(1);

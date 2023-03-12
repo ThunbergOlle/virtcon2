@@ -1,6 +1,7 @@
+import { BuildingType } from "@shared/types/buildingType";
 import Game from "../../scenes/Game";
 import { TileCoordinates } from "../../ui/lib/coordinates";
-import { Building, BuildingType } from "../buildings/Building";
+import { Building } from "../buildings/Building";
 
 import Item from "../item/Item";
 import { FactoryIO, IOBuilding } from "./IOBuilding";

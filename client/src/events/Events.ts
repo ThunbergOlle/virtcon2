@@ -10,7 +10,11 @@ type Events = {
   onPlayerInventoryOpened: (player: Player) => void;
   onPlayerInventoryClosed: () => void;
   onPlayerInventoryUpdate: () => void;
-  networkNewMainPlayer: (player: ServerPlayer) => void;
+  joinWorld: (worldId: string) => void;
+  networkLoadWorld: (world: {player: ServerPlayer}) => void;
+  networkNewPlayer: (player: ServerPlayer) => void;
+  networkPlayerMove: (player: ServerPlayer) => void;
+  networkError: (message: string) => void;
   tick: (...args: any) => void;
 
 };

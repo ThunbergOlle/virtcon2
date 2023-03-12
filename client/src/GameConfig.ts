@@ -23,8 +23,6 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [Preload, Game],
 };
 
-const phaserGame = new Phaser.Game(config);
 
-(window as any).game = phaserGame;
 
-export default phaserGame;
+export default config;
