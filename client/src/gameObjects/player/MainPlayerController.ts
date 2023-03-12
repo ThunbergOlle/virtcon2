@@ -1,7 +1,9 @@
 // import Game from "../../scenes/Game";
+import Game from "src/scenes/Game";
 import { Player } from "./Player";
+import { events } from "src/events/Events";
 
-export default class PlayerController {
+export default class MainPlayerController {
   public speed = 100;
   private player: Player;
   private scene: Phaser.Scene;
@@ -11,8 +13,14 @@ export default class PlayerController {
     this.player = player;
     this.scene = scen;
     this.keys = this.scene.input.keyboard.createCursorKeys();
+    this.setupListeners();
   }
 
+  private setupListeners() {
+    events.subscribe("tick", () => {
+      Game.network.socket.emit("playerMove", this.player);
+    });
+  }
   update(t: number, dt: number) {
     this.player.setVelocity(0, 0);
 
@@ -35,5 +43,7 @@ export default class PlayerController {
 
     this.player.setVelocityY(ySpeed);
     this.player.setVelocityX(xSpeed);
+    
+ 
   }
 }

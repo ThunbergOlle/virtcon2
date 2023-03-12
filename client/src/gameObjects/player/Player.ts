@@ -1,12 +1,12 @@
 import { Physics } from "phaser";
-import PlayerController from "./PlayerController";
+import PlayerController from "./MainPlayerController";
 import Item from "../item/Item";
 import { PlayerEvents } from "./events/PlayerEvents";
 import { BuildingItem } from "../item/BuildingItem";
+import { events } from "src/events/Events";
+import { ServerPlayer } from "@shared/types/ServerPlayer";
 
 export class Player extends Physics.Arcade.Sprite {
-  
-
   public id: string;
   private inventory = new Array<Item | BuildingItem>();
   public inventorySize: number = 1000;
@@ -20,9 +20,17 @@ export class Player extends Physics.Arcade.Sprite {
     this.scene.physics.add.existing(this);
     this.scene.add.existing(this); 
       
+    this.setupListeners()
     
   }
   
+  private setupListeners(){
+    events.subscribe("networkPlayerMove", (player: ServerPlayer) => {
+      if (player.id == this.id) {
+        this.setPosition(player.pos.x, player.pos.y);
+      }
+    });
+  }
   public addToInventory(item: Item) {
     const currentInventorySize = this.getCurrentInventorySize();
 

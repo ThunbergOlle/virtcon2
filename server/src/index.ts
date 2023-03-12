@@ -56,8 +56,17 @@ io.on('connection', (socket) => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
     World.removePlayer(player, player.worldId, socket, redis);
-    
   });
+
+  socket.on('playerMove', async (data: { x: number; y: number }) => {
+    console.log("playerMove", data)
+    const player = await World.getPlayerBySocketId(socket.id, redis);
+    if (!player) return;
+    player.pos.x = data.x;
+    player.pos.y = data.y;
+    socket.broadcast.to(player.worldId).emit('playerMove', player);
+  });
+
 });
 
 app.get('/worlds', async (_req, res) => {

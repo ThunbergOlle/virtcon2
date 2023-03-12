@@ -13,6 +13,7 @@ type Events = {
   joinWorld: (worldId: string) => void;
   networkLoadWorld: (world: {player: ServerPlayer}) => void;
   networkNewPlayer: (player: ServerPlayer) => void;
+  networkPlayerMove: (player: ServerPlayer) => void;
   networkError: (message: string) => void;
   tick: (...args: any) => void;
 

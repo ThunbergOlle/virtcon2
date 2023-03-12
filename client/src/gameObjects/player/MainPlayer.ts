@@ -1,5 +1,5 @@
 import { Player } from './Player';
-import PlayerController from './PlayerController';
+import PlayerController from './MainPlayerController';
 import { PlayerEvents } from './events/PlayerEvents';
 
 export class MainPlayer extends Player {
