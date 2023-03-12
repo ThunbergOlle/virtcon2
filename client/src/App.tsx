@@ -22,7 +22,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LobbyPage />} />
           <Route path="/world/:worldId" element={<WorldPage />} />
-          <Route path="*" element={<LobbyPage/>}/>
+          <Route path="*" element={<LobbyPage />} />
         </Routes>
       </BrowserRouter>
     </div>

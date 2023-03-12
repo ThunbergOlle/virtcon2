@@ -1,9 +1,10 @@
+import { ServerPlayer } from '@shared/types/ServerPlayer';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { baseUrl } from 'src/config/networkConfig';
 
 export default function LobbyPage() {
-  const [worlds, setWorlds] = useState<{ id: string; name: string; playerCount: number }[]>([]);
+  const [worlds, setWorlds] = useState<{ id: string; name: string; players: ServerPlayer[] }[]>([]);
   
   const navigate = useNavigate();
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function LobbyPage() {
         {worlds.map((world) => {
           return (
             <li key={world.id} onClick={() => joinWorld(world.id)} className="hover:cursor-pointer text-green-800">
-              {world.name} ({world.playerCount} players)
+              {world.name}  ({world.players.length} players)
             </li>
           );
         })}
