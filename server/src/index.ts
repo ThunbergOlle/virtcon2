@@ -59,7 +59,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('playerMove', async (data: { x: number; y: number }) => {
-    console.log("playerMove", data)
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
     player.pos.x = data.x;
