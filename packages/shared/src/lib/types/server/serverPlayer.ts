@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
-import { Item } from "../gameClasses/Item";
+import { ItemType } from "../item";
 export class ServerPlayer {
   id: string;
   name: string;
   pos: { x: number; y: number } = { x: 0, y: 0 };
-  inventory: Item[] = [];
+  inventory: {type: ItemType}[] = [];
   socket: string;
   worldId: string;
   constructor(name: string, worldId: string,  socket: string) {

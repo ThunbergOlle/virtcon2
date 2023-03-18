@@ -4,9 +4,9 @@ import * as express from 'express';
 import * as http from 'http';
 import * as socketio from 'socket.io';
 import { Redis } from './database/Redis';
-import { ErrorType } from './errors/errorTypes';
+import { ServerPlayer } from '@shared/types/server/serverPlayer';
 import { World } from './functions/world/world';
-import { ServerPlayer } from './types/ServerPlayer';
+
 const redis = new Redis();
 
 redis.connectClient().then(async () => {

@@ -12,9 +12,11 @@ import { SceneStates } from './interfaces';
 import { Network } from '../networking/Network';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
-import { ItemType } from 'apps/server/src/types/itemType';
 
-// import { debugDraw } from '../utils/debug'
+
+
+
+
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;

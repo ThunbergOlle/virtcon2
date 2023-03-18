@@ -10,7 +10,6 @@
           "error",
           {
             "enforceBuildableLibDependency": true,
-            "allow": [],
             "depConstraints": [
               {
                 "sourceTag": "*",
