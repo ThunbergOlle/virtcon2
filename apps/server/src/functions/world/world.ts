@@ -34,6 +34,7 @@ const addPlayer = async (player: ServerPlayer, worldId: string, socket: socketio
 };
 
 const removePlayer = async (player: ServerPlayer, worldId: string, socket: socketio.Socket, redis: Redis) => {
+  console.log(`Removing player ${player.id} from world ${worldId}`)
   // Remove player from redis world
   await redis.client.json.del('worlds', `$.${worldId}.players[?(@.id=='${player.id}')]`);
   socket.broadcast.to(worldId).emit('playerLeave', player);

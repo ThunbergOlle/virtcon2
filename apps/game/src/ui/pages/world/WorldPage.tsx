@@ -35,12 +35,14 @@ function GamePage() {
     console.log("Joining world", worldId)
     events.notify("joinWorld", worldId);
   }, [worldId])
-  /* Call Game.network.disconnect when we leave page */
+
   useEffect(() => {
     return () => {
       if (game) {
-        Game.network.disconnect();
+        Game.destroy();
+        console.log("Destroying game");
         game.destroy(true);
+
       }
     };
   }, [game]);

@@ -18,34 +18,8 @@ export class Player extends Physics.Arcade.Sprite {
     this.scene.physics.add.existing(this);
     this.scene.add.existing(this);
 
-    this.setupListeners();
   }
 
-  protected setupListeners() {
-    console.log(`Setting up listeners for player ${this.id}`);
-    events.subscribe('networkPlayerMove', (player: ServerPlayer) => {
-      console.log(`player ${player.id} moved to ${player.pos.x}, ${player.pos.y}`);
-      if (player.id === this.id) {
-        this.networkPosition = { x: player.pos.x, y: player.pos.y };
-        this.scene.physics.moveTo(this, this.networkPosition.x, this.networkPosition.y, 100, 100);
-      }
-    });
-    events.subscribe('networkPlayerDisconnect', (player: ServerPlayer) => {
-      if (player.id === this.id) {
-        this.destroy();
-      }
-    });
-
-    /* playerSetPosition packet is sent when a player has finished moving. We need to correct it's position. */
-    events.subscribe('networkPlayerSetPosition', (player: ServerPlayer) => {
-      if (player.id === this.id) {
-        setTimeout(() => {
-          this.setVelocity(0, 0);
-          this.setPosition(player.pos.x, player.pos.y);
-        }, playerPositionUpdateRate);
-      }
-    })
-  }
   update(t: number, dt: number) {
 
   }
@@ -53,7 +27,7 @@ export class Player extends Physics.Arcade.Sprite {
     const currentInventorySize = this.getCurrentInventorySize();
 
     if (currentInventorySize + item.amount > this.inventorySize) {
-      // TODO: Implement better way to handle this
+      // TODO: Implement better way to handle this!
       console.log('Inventory full');
       return;
     }

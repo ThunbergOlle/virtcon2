@@ -15,10 +15,6 @@ import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { ItemType } from '@shared';
 import { PlayerSystem } from '../systems/PlayerSystem';
 
-
-
-
-
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
 
@@ -26,7 +22,7 @@ export default class Game extends Scene implements SceneStates {
   public static mainPlayer: MainPlayer;
   public static clockSystem: ClockSystem;
   public static buildingSystem: BuildingSystem;
-  public static playerSystem: PlayerSystem
+  public static playerSystem: PlayerSystem;
 
   // * Ticks per second, read more in ClockSystem.ts
   public static tps = 1;
@@ -34,7 +30,6 @@ export default class Game extends Scene implements SceneStates {
   constructor() {
     super('game');
     Game.buildingSystem = new BuildingSystem(this);
-
   }
 
   disableKeys() {
@@ -47,8 +42,8 @@ export default class Game extends Scene implements SceneStates {
 
   create() {
     Game.network = new Network();
-    events.subscribe('joinWorld',(worldId) => {
 
+    events.subscribe('joinWorld', (worldId) => {
       console.log('creating scene');
       this.physics.world.createDebugGraphic();
 
@@ -60,14 +55,14 @@ export default class Game extends Scene implements SceneStates {
         this.map.createLayer(index, tileSet, 0, 0);
       });
       Game.network.join(worldId);
-    })
+    });
     events.subscribe('networkLoadWorld', (world) => {
-      console.log("Loading world data...")
+      console.log('Loading world data...');
 
       Game.clockSystem = new ClockSystem(Game.tps);
       Game.playerSystem = new PlayerSystem(this);
 
-      const mainPlayer = world.player
+      const mainPlayer = world.player;
 
       // setup players
       for (const player of world.players) {
@@ -92,23 +87,19 @@ export default class Game extends Scene implements SceneStates {
       this.cameras.main.startFollow(Game.mainPlayer, false);
       this.cameras.main.setZoom(4);
     });
-
-
   }
   preload() {}
   update(t: number, dt: number) {
-
     // handle player movement
     if (this.input.keyboard.enabled && Game.mainPlayer) {
       Game.mainPlayer.update(t, dt);
     }
-    if (Game.clockSystem){
+    if (Game.clockSystem) {
       Game.clockSystem.update(t, dt);
     }
     if (Game.playerSystem) {
       //Game.playerSystem.update(t, dt);
     }
-
   }
 
   spawnFactories() {
@@ -122,5 +113,14 @@ export default class Game extends Scene implements SceneStates {
 
     Game.buildingSystem.addBuilding(furnace);
     Game.buildingSystem.addBuilding(connectedPipe);
+  }
+  static destroy() {
+    if (Game.network) Game.network.disconnect();
+    if (Game.buildingSystem) Game.buildingSystem.destroy();
+    if (Game.playerSystem) Game.playerSystem.destroy();
+
+    events.unsubscribe('joinWorld', () => {});
+    events.unsubscribe('networkLoadWorld', () => {});
+
   }
 }

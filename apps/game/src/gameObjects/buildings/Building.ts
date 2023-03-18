@@ -2,9 +2,7 @@ import { Physics } from 'phaser';
 import Item from '../item/Item';
 import { events } from '../../events/Events';
 import { TileCoordinates, fromPhaserPos, toPhaserPos } from '../../ui/lib/coordinates';
-import {BuildingType} from '@shared';
-
-
+import { BuildingType } from '@shared';
 
 export abstract class Building extends Physics.Arcade.Sprite {
   public isUIVisable: boolean = false;
@@ -61,7 +59,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   protected ejectItem(item: Item): void {
     const { x, y } = fromPhaserPos({ x: this.x, y: this.y });
     // drop the item on the grown
-    item.spawnGameObject({x, y}); // TODO: Change this to be destination direction.
+    item.spawnGameObject({ x, y }); // TODO: Change this to be destination direction.
     this.removeFromInventory(item);
   }
   public onItemReceive(item: Item) {

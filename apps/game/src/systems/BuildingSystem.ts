@@ -65,6 +65,9 @@ export class BuildingSystem {
     surroundingBuildings.bottom = this.getBuildingOnTile({ x, y: y + 1 });
 
     return surroundingBuildings;
-
+  }
+  destroy() {
+    events.unsubscribe('tick', () => {});
+    this.buildings.forEach((b) => b.destroy());
   }
 }
