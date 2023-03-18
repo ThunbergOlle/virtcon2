@@ -28,12 +28,6 @@ export class PlayerSystem {
     events.subscribe('networkNewPlayer', (player) => {
       this.newPlayer(player);
     })
-    setInterval(() => {
-      this.players.forEach((p) => {
-        p.update(0, 0);
-      });
-    }, playerPositionUpdateRate);
-
   }
   getPlayerById(id: string) {
     return this.players.find((p) => p.id === id);
