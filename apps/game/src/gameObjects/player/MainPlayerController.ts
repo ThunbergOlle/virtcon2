@@ -47,7 +47,7 @@ export default class MainPlayerController {
     }
     else if(this.isMoving) {
       this.isMoving = false;
-      Game.network.socket.emit("playerStopMovement", this.player);
+      Game.network.socket.emit("playerSetPosition", this.player);
     }
 
 

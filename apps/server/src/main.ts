@@ -4,8 +4,8 @@ import * as express from 'express';
 import * as http from 'http';
 import * as socketio from 'socket.io';
 import { Redis } from './database/Redis';
-import { ErrorType, ServerPlayer, playerPositionUpdateRate } from '@shared';
 import { World } from './functions/world/world';
+import { setupPlayerEventHandler } from './events/player/playerEventHandler';
 
 const redis = new Redis();
 
@@ -33,49 +33,13 @@ const io = new socketio.Server(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('Connected', socket.id);
-  socket.on('join', async (worldId: string) => {
-    console.log(`Socket ${socket.id} joined world ${worldId}`);
-    const world = await World.getWorld(worldId, redis);
-    if (!world) {
-      console.log(`World ${worldId} not found`);
-      socket.emit('error', {message: `World not found`, type: ErrorType.WorldNotFound});
-      return;
-    }
-
-    const newPlayer = new ServerPlayer('test', worldId, socket.id);
-    World.addPlayer(newPlayer, worldId, socket, redis);
-    socket.emit('loadWorld', { player: newPlayer, players: world.players, buildings: world.buildings });
-    socket.broadcast.to(worldId).emit('newPlayer', newPlayer);
-  });
+  setupPlayerEventHandler(socket, redis);
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
     World.removePlayer(player, player.worldId, socket, redis);
     socket.broadcast.to(player.worldId).emit('playerDisconnect', player);
   });
-
-  socket.on('playerMove', async (data: { x: number; y: number }) => {
-    const player = await World.getPlayerBySocketId(socket.id, redis);
-    if (!player || Date.now() - player.pos.updated < playerPositionUpdateRate) return;
-    player.pos.x = data.x;
-    player.pos.y = data.y;
-    player.pos.updated = Date.now();
-    World.savePlayer(player, redis);
-    console.log(`Player ${player.id} moved to ${player.pos.x}, ${player.pos.y}`);
-    socket.broadcast.to(player.worldId).emit('playerMove', player);
-  });
-  socket.on('playerStopMovement', async (data: {x: number, y: number}) => {
-    const player = await World.getPlayerBySocketId(socket.id, redis);
-    if (!player) return;
-    player.pos.x = data.x;
-    player.pos.y = data.y;
-    player.pos.updated = Date.now();
-    World.savePlayer(player, redis);
-    console.log(`Player ${player.id} stopped moving to ${player.pos.x}, ${player.pos.y}`);
-    socket.broadcast.to(player.worldId).emit('playerStopMovement', player);
-  });
-
 });
 
 app.get('/worlds', async (_req, res) => {

@@ -18,7 +18,7 @@ export class PlayerSystem {
         playerObject.networkPosition = { x: player.pos.x, y: player.pos.y };
       }
     });
-    events.subscribe('networkPlayerStopMovement', (player: ServerPlayer) => {
+    events.subscribe('networkPlayerSetPosition', (player: ServerPlayer) => {
       console.log(`player ${player.id} stopped moving`);
       const playerObject = this.getPlayerById(player.id);
       if (playerObject) {

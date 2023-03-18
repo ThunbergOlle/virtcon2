@@ -36,8 +36,8 @@ export class Player extends Physics.Arcade.Sprite {
       }
     });
 
-    /* PlayerStopMovement packet is sent when a player has finished moving. We need to correct it's position. */
-    events.subscribe('networkPlayerStopMovement', (player: ServerPlayer) => {
+    /* playerSetPosition packet is sent when a player has finished moving. We need to correct it's position. */
+    events.subscribe('networkPlayerSetPosition', (player: ServerPlayer) => {
       if (player.id === this.id) {
         setTimeout(() => {
           this.setVelocity(0, 0);
