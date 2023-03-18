@@ -1,10 +1,9 @@
-import { Physics } from "phaser";
-import PlayerController from "./MainPlayerController";
-import Item from "../item/Item";
-import { PlayerEvents } from "./events/PlayerEvents";
-import { BuildingItem } from "../item/BuildingItem";
-import { events } from "src/events/Events";
 import { ServerPlayer } from "@shared/types/ServerPlayer";
+import { Physics } from "phaser";
+import { events } from "src/events/Events";
+import { BuildingItem } from "../item/BuildingItem";
+import Item from "../item/Item";
+import Game from "src/scenes/Game";
 
 export class Player extends Physics.Arcade.Sprite {
   public id: string;
@@ -24,8 +23,10 @@ export class Player extends Physics.Arcade.Sprite {
     
   }
   
-  private setupListeners(){
+  protected setupListeners(){
+    console.log(`Setting up listeners for player ${this.id}`)
     events.subscribe("networkPlayerMove", (player: ServerPlayer) => {
+      console.log(`player ${player.id} moved to ${player.pos.x}, ${player.pos.y}`)
       if (player.id == this.id) {
         this.setPosition(player.pos.x, player.pos.y);
       }

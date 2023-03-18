@@ -17,7 +17,6 @@ export class Network {
     socket.onAny((event, ...args) => {
       // capitalize the first letter of the event
       event = event.charAt(0).toUpperCase() + event.slice(1);
-      console.log("Event: ", event, args)
       events.notify(('network' + event) as any, ...args);
     });
   }

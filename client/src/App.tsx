@@ -1,15 +1,16 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import './App.css';
+import { events } from './events/Events';
 import LobbyPage from './ui/pages/lobby/LobbyPage';
 import WorldPage from './ui/pages/world/WorldPage';
-import './App.css';
-import { useEffect } from 'react';
-import { events } from './events/Events';
-import { ToastContainer, toast } from 'react-toastify';
+import networkError from './ui/errors/network/networkError';
 
 export default function App() {
   useEffect(() => {
-    events.subscribe('networkError', (errorMsg) => {
-        toast("Network: " + errorMsg, {type: 'error'});
+    events.subscribe('networkError', ({message, type}) => {
+      networkError(message, type);
     });
     return () => {
       events.unsubscribe('networkError', () => {});

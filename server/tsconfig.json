@@ -7,8 +7,12 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/*"],
-    }
+      "@shared/*": ["../shared/*"]
+    },
   },
-  "include": ["src/**/*", "../shared/**/*"]
+  "include": ["src/**/*", "../shared/**/*"],
+  "ts-node": {
+    // Do not forget to `npm i -D tsconfig-paths`
+    "require": ["tsconfig-paths/register"]
+  }
 }

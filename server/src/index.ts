@@ -10,6 +10,7 @@ import * as socketio from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { Redis } from './database/Redis';
 import { World } from './functions/world/world';
+import { ErrorType } from '@shared/errors/errorTypes';
 const redis = new Redis();
 
 redis.connectClient().then(async () => {
@@ -42,15 +43,14 @@ io.on('connection', (socket) => {
     const world = await World.getWorld(worldId, redis);
     if (!world) {
       console.log(`World ${worldId} not found`);
-      socket.emit('error', `World not found`);
+      socket.emit('error', {message: `World not found`, type: ErrorType.WorldNotFound});
       return;
     }
 
-    const player = new ServerPlayer('test', worldId, socket.id);
-    World.addPlayer(player, worldId, socket, redis);
-
-    socket.emit('loadWorld', { player: player, buildings: world.buildings });
-    socket.broadcast.to(worldId).emit('newPlayer', player);
+    const newPlayer = new ServerPlayer('test', worldId, socket.id);
+    World.addPlayer(newPlayer, worldId, socket, redis);
+    socket.emit('loadWorld', { player: newPlayer, players: world.players, buildings: world.buildings });
+    socket.broadcast.to(worldId).emit('newPlayer', newPlayer);
   });
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
@@ -63,9 +63,10 @@ io.on('connection', (socket) => {
     if (!player) return;
     player.pos.x = data.x;
     player.pos.y = data.y;
+    World.savePlayer(player, redis);
+    console.log(`Player ${player.id} moved to ${player.pos.x}, ${player.pos.y}`);
     socket.broadcast.to(player.worldId).emit('playerMove', player);
   });
-
 });
 
 app.get('/worlds', async (_req, res) => {

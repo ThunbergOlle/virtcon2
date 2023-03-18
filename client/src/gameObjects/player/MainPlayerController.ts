@@ -13,13 +13,6 @@ export default class MainPlayerController {
     this.player = player;
     this.scene = scen;
     this.keys = this.scene.input.keyboard.createCursorKeys();
-    this.setupListeners();
-  }
-
-  private setupListeners() {
-    events.subscribe("tick", () => {
-      Game.network.socket.emit("playerMove", this.player);
-    });
   }
   update(t: number, dt: number) {
     this.player.setVelocity(0, 0);
@@ -41,9 +34,22 @@ export default class MainPlayerController {
       xSpeed = xSpeed/2
     }
 
+    
     this.player.setVelocityY(ySpeed);
     this.player.setVelocityX(xSpeed);
     
- 
+    // calculate new position
+    const newX = this.player.x + xSpeed * dt;
+    const newY = this.player.y + ySpeed * dt;
+    if (this.player.x != newX || this.player.y != newY) {
+      
+      Game.network.socket.emit("playerMove", this.player);
+    }
+    
+  }
+  destroy(){
+    events.unsubscribe("tick", () => {
+      console.log(`Unsubcribed from tick`)
+    });
   }
 }

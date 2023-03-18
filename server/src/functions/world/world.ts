@@ -55,7 +55,9 @@ const getPlayerBySocketId = async (socketId: string, redis: Redis): Promise<Serv
   if (!player || !player[0]) return null;
   return player[0];
 };
-
+const savePlayer = async (player: ServerPlayer, redis: Redis) => {
+  await redis.setJson('worlds', `$.${player.worldId}.players[?(@.id=='${player.id}')]`, player);
+};
 export const World = {
   getWorld,
   registerWorld,
@@ -64,4 +66,5 @@ export const World = {
   removePlayer,
   getPlayer,
   getPlayerBySocketId,
+  savePlayer
 };

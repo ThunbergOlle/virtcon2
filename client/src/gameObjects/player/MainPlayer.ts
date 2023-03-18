@@ -15,7 +15,7 @@ export class MainPlayer extends Player {
     this.controller.update(t, dt); // update character controller
   }
   public destroy(): void {
-    this.controller = null;
+    this.controller?.destroy();
     super.destroy();
   }
 }

@@ -23,7 +23,7 @@ export default class Game extends Scene implements SceneStates {
   public static buildingSystem: BuildingSystem;
 
   // * Ticks per second, read more in ClockSystem.ts
-  public tps = 1;
+  public static tps = 20;
 
   constructor() {
     super('game');
@@ -40,12 +40,9 @@ export default class Game extends Scene implements SceneStates {
   }
 
   create() {
+    Game.network = new Network();
     events.subscribe('joinWorld',(worldId) => {
-      Game.mainPlayer = new MainPlayer(this, ""); /* Create a temporary mainPlayer until server has answered with real user */
-
-      Game.clockSystem = new ClockSystem(this.tps);
-      Game.network = new Network();
-  
+      
       console.log('creating scene');
       this.physics.world.createDebugGraphic();
   
@@ -60,8 +57,16 @@ export default class Game extends Scene implements SceneStates {
     })
     events.subscribe('networkLoadWorld', (world) => {
       console.log("Loading world data...")
+    
+      Game.clockSystem = new ClockSystem(Game.tps);
+
       const mainPlayer = world.player
-      Game.mainPlayer.destroy(); // destroy the old mainPlayer (dead user)
+
+      // setup players
+      for (const player of world.players) {
+        const newPlayer = new Player(this, player.id);
+        newPlayer.setPosition(player.pos.x, player.pos.y);
+      }
       
       Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
       Game.mainPlayer.setPosition(mainPlayer.pos.x, mainPlayer.pos.y);
@@ -87,10 +92,13 @@ export default class Game extends Scene implements SceneStates {
   update(t: number, dt: number) {
     
     // handle player movement
-    if (this.input.keyboard.enabled) {
+    if (this.input.keyboard.enabled && Game.mainPlayer) {
       Game.mainPlayer.update(t, dt);
+    } 
+    if (Game.clockSystem){
+      Game.clockSystem.update(t, dt);
     }
-    Game.clockSystem.update(t, dt);
+    
   }
 
   spawnFactories() {
