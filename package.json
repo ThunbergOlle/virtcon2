@@ -47,6 +47,7 @@
     "@vitejs/plugin-react": "^3.0.0",
     "@vitest/coverage-c8": "~0.25.8",
     "@vitest/ui": "^0.25.8",
+    "autoprefixer": "10.4.13",
     "cypress": "^12.2.0",
     "esbuild": "^0.17.5",
     "eslint": "~8.15.0",
