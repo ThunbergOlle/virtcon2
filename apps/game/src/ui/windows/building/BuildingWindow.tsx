@@ -25,7 +25,7 @@ export default function BuildingWindow(props: {
       events.unsubscribe("tick", () => {});
     };
   }, []);
-  
+
 
   return (
     <Window
@@ -52,8 +52,9 @@ export default function BuildingWindow(props: {
             return (
               <div key={item.type}>
                 <img
+                  alt={item.type}
                   className="mr-2 inline-block"
-                  src={"assets/sprites/items/" + item.type + ".png"}
+                  src={"/assets/sprites/items/" + item.type + ".png"}
                 ></img>
                 {item.type}: x{item.amount}
               </div>

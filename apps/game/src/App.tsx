@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import './App.css';
+import './App.scss';
 import { events } from './events/Events';
 import LobbyPage from './ui/pages/lobby/LobbyPage';
 import WorldPage from './ui/pages/world/WorldPage';

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card } from "react-bootstrap";
 import Draggable from "react-draggable";
 import { WindowManager, WindowType } from "../../lib/WindowManager";
-import "./Window.css";
+import "./Window.scss";
 import WindowHeader from "./WindowHeader";
 export default function Window(props: {
   windowManager: WindowManager;

@@ -63,7 +63,7 @@ export default function PlayerInventoryWindow(props: {
                   <img
                     alt={item.type}
                     className="flex-1 pixelart w-12  m-auto"
-                    src={`assets/sprites/${
+                    src={`/assets/sprites/${
                       item.type.includes("building_")
                         ? "buildings/" + item.type.substring(9)
                         : "items/" + item.type

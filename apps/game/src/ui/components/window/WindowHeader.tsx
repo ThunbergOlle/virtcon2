@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button, Card } from "react-bootstrap";
 export default function WindowHeader(props: {
   title: string;
-  onChange?: Function;
   onClose?: () => void;
   onRefresh?: () => void;
 }) {
@@ -11,7 +10,7 @@ export default function WindowHeader(props: {
     <Card.Header className="handle window-header">
       <div className="window-header-container">
         <p className="window-title">{props.title}</p>
-        
+
           {props.onClose !== undefined && (
             <div className="close-button-container">
             <Button
