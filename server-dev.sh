@@ -1,1 +1,0 @@
-yarn --cwd ./server/ dev

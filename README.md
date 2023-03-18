@@ -1,4 +1,4 @@
-## Virtcon 2
+# Virtcon2
 
 The second version of the Virtcon project. This is a complete rewrite of the original. 
 
@@ -9,17 +9,15 @@ The second version of the Virtcon project. This is a complete rewrite of the ori
 3. Install Docker
 4. Clone the repository
 5. Start Redis docker container with `docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest`
-6. Run `./install.sh` in the root directory
-7. Run `./server-dev` to start the development server
-8. Run `./client-dev` to start the development client
+6. Run `yarn install` in the root directory
+7. Install nx cli with `yarn global add nx`
+8. Run `nx run-many --target=serve` in the root directory to start all apps
 
 
-#### Project setup
+## Understand this workspace
 
-`./server` hosts virtcon's backend structure. 
+Run `nx graph` to see a diagram of the dependencies of the projects.
 
-`./client` hosts virtcon's frontend structure.
+## NX documentation
 
-
-
-
+Visit the [Nx Documentation](https://nx.dev) to learn more.
