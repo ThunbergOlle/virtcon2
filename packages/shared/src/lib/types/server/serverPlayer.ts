@@ -3,7 +3,7 @@ import { ItemType } from "../item";
 export class ServerPlayer {
   id: string;
   name: string;
-  pos: { x: number; y: number } = { x: 0, y: 0 };
+  pos: { x: number; y: number, updated: number } = { x: 0, y: 0, updated: 0 };
   inventory: {type: ItemType}[] = [];
   socket: string;
   worldId: string;

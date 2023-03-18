@@ -23,4 +23,7 @@ export class Network {
   join(lobbyId: string) {
     this.socket.emit('join', lobbyId);
   }
+  disconnect() {
+    this.socket.disconnect();
+  }
 }

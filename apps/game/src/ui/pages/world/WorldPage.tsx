@@ -15,6 +15,7 @@ import {
 import BuildingWindow from "../../windows/building/BuildingWindow";
 import PlayerInventoryWindow from "../../windows/playerInventory/PlayerInventory";
 import { events } from "../../../events/Events";
+import Game from "../../../scenes/Game";
 
 
 function GamePage() {
@@ -34,7 +35,15 @@ function GamePage() {
     console.log("Joining world", worldId)
     events.notify("joinWorld", worldId);
   }, [worldId])
-
+  /* Call Game.network.disconnect when we leave page */
+  useEffect(() => {
+    return () => {
+      if (game) {
+        Game.network.disconnect();
+        game.destroy(true);
+      }
+    };
+  }, [game]);
   const openWindow = (windowType: WindowType) => {
     const newStack = windowManager.openWindow(windowType, stack);
     setStack([...newStack]);

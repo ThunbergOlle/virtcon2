@@ -8,7 +8,7 @@ export default class MainPlayerController {
   private player: Player;
   private scene: Phaser.Scene;
   private keys: Phaser.Types.Input.Keyboard.CursorKeys;
-
+  private isMoving: boolean = false;
   constructor(scen: Phaser.Scene, player: Player) {
     this.player = player;
     this.scene = scen;
@@ -42,9 +42,14 @@ export default class MainPlayerController {
     const newX = this.player.x + xSpeed * dt;
     const newY = this.player.y + ySpeed * dt;
     if (this.player.x !== newX || this.player.y !== newY) {
-
       Game.network.socket.emit("playerMove", this.player);
+      this.isMoving = true;
     }
+    else if(this.isMoving) {
+      this.isMoving = false;
+      Game.network.socket.emit("playerStopMovement", this.player);
+    }
+
 
   }
   destroy(){

@@ -9,3 +9,5 @@ export * from './lib/types/server/serverPlayer';
 export * from './lib/types/server/serverLobby';
 
 export * from './lib/errors/errorTypes';
+
+export * from './lib/config/positionUpdate';

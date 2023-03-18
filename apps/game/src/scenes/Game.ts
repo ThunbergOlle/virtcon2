@@ -13,6 +13,7 @@ import { Network } from '../networking/Network';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { ItemType } from '@shared';
+import { PlayerSystem } from '../systems/PlayerSystem';
 
 
 
@@ -25,9 +26,10 @@ export default class Game extends Scene implements SceneStates {
   public static mainPlayer: MainPlayer;
   public static clockSystem: ClockSystem;
   public static buildingSystem: BuildingSystem;
+  public static playerSystem: PlayerSystem
 
   // * Ticks per second, read more in ClockSystem.ts
-  public static tps = 20;
+  public static tps = 1;
 
   constructor() {
     super('game');
@@ -63,13 +65,17 @@ export default class Game extends Scene implements SceneStates {
       console.log("Loading world data...")
 
       Game.clockSystem = new ClockSystem(Game.tps);
+      Game.playerSystem = new PlayerSystem(this);
 
       const mainPlayer = world.player
 
       // setup players
       for (const player of world.players) {
-        const newPlayer = new Player(this, player.id);
-        newPlayer.setPosition(player.pos.x, player.pos.y);
+        if (player.id === mainPlayer.id) {
+          continue;
+        }
+        console.log(player);
+        Game.playerSystem.newPlayer(player);
       }
 
       Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
@@ -86,10 +92,7 @@ export default class Game extends Scene implements SceneStates {
       this.cameras.main.startFollow(Game.mainPlayer, false);
       this.cameras.main.setZoom(4);
     });
-    events.subscribe('networkNewPlayer', (player) => {
-      const newPlayer = new Player(this, player.id);
-      newPlayer.setPosition(player.pos.x, player.pos.y);
-    })
+
 
   }
   preload() {}
@@ -101,6 +104,9 @@ export default class Game extends Scene implements SceneStates {
     }
     if (Game.clockSystem){
       Game.clockSystem.update(t, dt);
+    }
+    if (Game.playerSystem) {
+      //Game.playerSystem.update(t, dt);
     }
 
   }
