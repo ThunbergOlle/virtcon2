@@ -1,6 +1,6 @@
 
-import { BuildingType } from "apps/server/src/types/BuildingType";
-import { ItemType } from "apps/server/src/types/itemType";
+import { BuildingType } from "@shared";
+import { ItemType } from "@shared";
 import { TileCoordinates } from "../../ui/lib/coordinates";
 import { Building,  } from "../buildings/Building";
 import { FactoryIO, IOType } from "../buildings/IOBuilding";

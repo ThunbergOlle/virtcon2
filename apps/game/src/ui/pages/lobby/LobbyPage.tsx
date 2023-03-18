@@ -1,6 +1,7 @@
 
-import { baseUrl } from 'apps/game/src/config/networkConfig';
-import { ServerPlayer } from 'apps/server/src/types/ServerPlayer';
+
+import { ServerPlayer } from '@shared';
+import { baseUrl } from '../../../config/networkConfig';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

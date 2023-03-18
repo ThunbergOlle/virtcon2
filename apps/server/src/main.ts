@@ -4,7 +4,7 @@ import * as express from 'express';
 import * as http from 'http';
 import * as socketio from 'socket.io';
 import { Redis } from './database/Redis';
-import { ServerPlayer } from '@shared/types/server/serverPlayer';
+import { ErrorType, ServerPlayer } from '@shared';
 import { World } from './functions/world/world';
 
 const redis = new Redis();

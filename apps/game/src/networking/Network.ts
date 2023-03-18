@@ -1,4 +1,4 @@
-import { ServerLobby } from '@shared/types/server/serverLobby'
+import { ServerLobby } from '@shared'
 import { Socket, io } from 'socket.io-client';
 import { events } from '../events/Events';
 

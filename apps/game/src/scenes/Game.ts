@@ -12,7 +12,7 @@ import { SceneStates } from './interfaces';
 import { Network } from '../networking/Network';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
-
+import { ItemType } from '@shared';
 
 
 

@@ -1,4 +1,3 @@
-import { useState } from "react";
 
 export enum WindowType {
   VIEW_BUILDING = "view_building",
@@ -34,7 +33,7 @@ const selectWindow = (
   window: WindowType,
   stack: WindowStack[]
 ): WindowStack[] => {
-  
+
   // If the window is already the highest in the stack, do nothing.
   if (stack && stack[stack.length - 1]?.type === window) return stack;
   const oldVal = stack.find((i) => i.type === window)?.stackIndex; // Find the old index of the window we want to bring to the top.

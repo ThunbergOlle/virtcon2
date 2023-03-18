@@ -1,4 +1,4 @@
-import { ErrorType } from "apps/server/src/errors/errorTypes";
+import { ErrorType } from "@shared";
 import { toast } from "react-toastify";
 
 export default function networkError(message: string, errorType: ErrorType) {

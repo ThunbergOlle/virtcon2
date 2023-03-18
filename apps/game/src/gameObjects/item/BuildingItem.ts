@@ -1,4 +1,4 @@
-import { ItemType } from 'apps/server/src/types/itemType';
+import { ItemType } from '@shared';
 import Game from '../../scenes/Game';
 import { Pipe } from '../buildings/Pipe';
 import { Furnace } from '../factory/Furnace';

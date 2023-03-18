@@ -1,9 +1,8 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import * as socketio from 'socket.io';
 import { Redis } from '../../database/Redis';
 import { RedisWorld } from '../../database/schemas/RedisWorld';
-import { ServerPlayer } from '../../types/ServerPlayer';
+import { ServerPlayer } from '@shared';
 const getWorld = async (id: string, redis: Redis) => {
   const world = (await redis.client.json.get(`worlds`, {
     path: `$.${id}`,
@@ -67,5 +66,5 @@ export const World = {
   removePlayer,
   getPlayer,
   getPlayerBySocketId,
-  savePlayer
+  savePlayer,
 };

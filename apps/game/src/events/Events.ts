@@ -2,8 +2,7 @@ import EventSystem from "events-system";
 import { Building } from "../gameObjects/buildings/Building";
 import { Player } from "../gameObjects/player/Player";
 import { BuildingItem } from "../gameObjects/item/BuildingItem";
-import { ErrorType } from "apps/server/src/errors/errorTypes";
-import { ServerPlayer } from "apps/server/src/types/ServerPlayer";
+import { ServerPlayer, ErrorType } from "@shared";
 
 
 type Events = {

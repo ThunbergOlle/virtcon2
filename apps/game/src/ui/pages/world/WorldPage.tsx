@@ -14,7 +14,7 @@ import {
 } from "../../lib/WindowManager";
 import BuildingWindow from "../../windows/building/BuildingWindow";
 import PlayerInventoryWindow from "../../windows/playerInventory/PlayerInventory";
-import { events } from "apps/game/src/events/Events";
+import { events } from "../../../events/Events";
 
 
 function GamePage() {

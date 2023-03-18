@@ -1,4 +1,4 @@
-import { BuildingType } from "apps/server/src/types/BuildingType";
+import { BuildingType } from "@shared";
 import Game from "../../scenes/Game";
 import { TileCoordinates } from "../../ui/lib/coordinates";
 import { Building } from "../buildings/Building";

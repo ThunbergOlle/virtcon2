@@ -2,7 +2,7 @@ import { Physics } from 'phaser';
 import Item from '../item/Item';
 import { events } from '../../events/Events';
 import { TileCoordinates, fromPhaserPos, toPhaserPos } from '../../ui/lib/coordinates';
-import {BuildingType} from 'apps/server/src/types/BuildingType';
+import {BuildingType} from '@shared';
 
 
 

@@ -1,5 +1,5 @@
-import { ServerBuilding } from "../../types/ServerBuilding";
-import { ServerPlayer } from "../../types/ServerPlayer";
+import { ServerPlayer, ServerBuilding } from "@shared";
+
 
 export interface RedisWorld {
     players: ServerPlayer[];
