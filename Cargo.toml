@@ -1,0 +1,8 @@
+
+[workspace]
+members = [
+	'apps/server_world',
+]
+
+[profile.release]
+lto = true

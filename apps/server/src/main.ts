@@ -6,13 +6,35 @@ import * as socketio from 'socket.io';
 import { Redis } from './database/Redis';
 import { World } from './functions/world/world';
 import { setupPlayerEventHandler } from './events/player/playerEventHandler';
+import { exec } from 'child_process';
+import { cwd } from 'process';
+import dotenv from 'dotenv';
+import { TPS } from '@shared';
+
+dotenv.config({path: `${cwd()}/.env`});
 
 const redis = new Redis();
+
 
 redis.connectClient().then(async () => {
   await redis.client.json.set('worlds', '$', {});
   await redis.client.json.set('availableWorlds', '$', []);
-  await World.registerWorld('test', redis);
+  const world = await World.registerWorld('test', redis);
+  const worldProcess = exec(`$(which cargo) run`, {
+    cwd: `${cwd()}/apps/server_world`,
+    env: {
+      WORLD_ID: world.id,
+      TPS: TPS.toString(),
+    },
+    shell: process.env.SHELL,
+  });
+  worldProcess.stdout.on('data', (data) => {
+     console.log("Data:" + data);
+  })
+  worldProcess.stderr.on('data', (data) => {
+    console.log("Error: ", data);
+  })
+  console.log(worldProcess.pid);
 });
 
 const app = express.default();
@@ -52,4 +74,11 @@ app.get('/worlds', async (_req, res) => {
 
 server.listen(3000, () => {
   console.log('Server running on port: 3000 🚀');
+});
+
+/* Implement SIGKILL logic */
+process.on('SIGINT', async () => {
+  await redis.client.disconnect();
+
+  process.exit();
 });

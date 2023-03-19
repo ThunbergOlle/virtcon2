@@ -10,6 +10,6 @@ export * from './lib/types/server/serverLobby';
 
 export * from './lib/errors/errorTypes';
 
-export * from './lib/config/positionUpdate';
+export * from './lib/config/timers';
 
 export * from './lib/events/networkEvents';

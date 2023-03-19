@@ -1,8 +1,6 @@
 import { Physics } from 'phaser';
 import { BuildingItem } from '../item/BuildingItem';
 import Item from '../item/Item';
-import { events } from '../../events/Events';
-import { ServerPlayer, playerPositionUpdateRate } from '@shared';
 
 export class Player extends Physics.Arcade.Sprite {
   public id: string;
