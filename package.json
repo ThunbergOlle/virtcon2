@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "linux": "yarn nx run-many --target=serve"
+    "start": "nx run-many --target=serve",
+    "linux": "yarn nx run-many --target=serve",
+    "docker": "docker run -d --name redis-stack-server -p 6379:6379 redis/redis-"
   },
   "private": true,
   "dependencies": {
