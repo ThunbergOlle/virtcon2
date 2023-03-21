@@ -20,20 +20,19 @@ export default class MainPlayerController {
     // get player input, update position of player
 
     // * -1 ≥ xVel ≤ 1
-    const xVel: number = Number(this.keys.right.isDown) - Number(this.keys.left.isDown);
+    let xVel: number = Number(this.keys.right.isDown) - Number(this.keys.left.isDown);
 
     // * -1 ≥ yVel ≤ 1
-    const yVel: number = Number(this.keys.down.isDown) - Number(this.keys.up.isDown);
+    let yVel: number = Number(this.keys.down.isDown) - Number(this.keys.up.isDown);
+
+    // Normalize speed in the diagonals
+    if (yVel !== 0 && xVel !== 0) {
+      yVel = yVel/2;
+      xVel = xVel/2;
+    }
 
     let ySpeed = yVel*this.speed;
     let xSpeed = xVel*this.speed;
-
-    // Normalize speed in the diagonals
-    if (ySpeed !== 0 && xSpeed !== 0) {
-      ySpeed = ySpeed/2
-      xSpeed = xSpeed/2
-    }
-
 
     this.player.setVelocityY(ySpeed);
     this.player.setVelocityX(xSpeed);
