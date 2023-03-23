@@ -2,9 +2,14 @@
   "name": "virtcon2",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start": "nx run-many --target=serve",
+    "linux": "yarn nx run-many --target=serve",
+    "docker": "docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest"
+  },
   "private": true,
   "dependencies": {
+    "@monodon/rust": "^1.1.1",
     "@types/express": "~4.17.13",
     "axios": "^1.0.0",
     "bootstrap": "^5.2.3",
@@ -20,6 +25,7 @@
     "react-router-dom": "6.8.1",
     "react-toastify": "^9.1.1",
     "redis": "^4.6.5",
+    "socket.io": "^4.6.1",
     "socket.io-client": "^4.6.1",
     "tailwindcss": "^3.2.7",
     "tslib": "^2.3.0"
