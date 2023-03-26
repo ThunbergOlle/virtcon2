@@ -1,24 +1,24 @@
 import cors from 'cors';
 
+import { TPS } from '@shared';
+import { extractWorldId, getPacketData } from '@virtcon2/network-packet';
+import { exec } from 'child_process';
+import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
+import { cwd } from 'process';
+import { createClient } from 'redis';
 import * as socketio from 'socket.io';
 import { Redis } from './database/Redis';
-import { World } from './functions/world/world';
 import { setupPlayerEventHandler } from './events/player/playerEventHandler';
-import { exec } from 'child_process';
-import { cwd } from 'process';
-import dotenv from 'dotenv';
-import { TPS } from '@shared';
+import { World } from './functions/world/world';
 
-dotenv.config({path: `${cwd()}/.env`});
+dotenv.config({ path: `${cwd()}/.env` });
 
 const redis = new Redis();
 
-
 redis.connectClient().then(async () => {
   await redis.client.json.set('worlds', '$', {});
-  await redis.client.json.set('availableWorlds', '$', []);
   const world = await World.registerWorld('test', redis);
   const worldProcess = exec(`$(which cargo) run`, {
     cwd: `${cwd()}/apps/server_world`,
@@ -29,13 +29,21 @@ redis.connectClient().then(async () => {
     shell: process.env.SHELL,
   });
   worldProcess.stdout.on('data', (data) => {
-     console.log("Data:" + data);
-  })
+    console.log('Data:' + data);
+  });
   worldProcess.stderr.on('data', (data) => {
-    console.log("Error: ", data);
-  })
+    console.log('Error: ', data);
+  });
+
+
   console.log(worldProcess.pid);
 });
+
+const redisPubSub = createClient();
+redisPubSub.on('error', (err) => console.log('Redis pub sub client error', err));
+redisPubSub.connect();
+
+
 
 const app = express.default();
 app.use(express.json());
@@ -53,14 +61,34 @@ const io = new socketio.Server(server, {
     methods: ['GET', 'POST'],
   },
 });
+(async() => {
+  const client = createClient();
+  await client.connect();
+  client.pSubscribe("from_world:*", (message, channel) => {
+    // get world id from channel
+    const worldId = channel.split(':')[1];
+    console.log("worldId", worldId)
+    io.to(worldId).emit('packet', message);
+
+  });
+})()
 
 io.on('connection', (socket) => {
+
   setupPlayerEventHandler(socket, redis);
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
-    World.removePlayer(player, player.worldId, socket, redis);
-    socket.broadcast.to(player.worldId).emit('playerDisconnect', player);
+    World.removePlayer(player, player.world_id, socket, redis);
+    socket.broadcast.to(player.world_id).emit('playerDisconnect', player);
+  });
+
+  socket.on('packet', async (packet: string) => {
+    const worldId = extractWorldId(packet);
+    if(!socket.rooms.has(worldId) ) {
+      socket.join(worldId);
+    }
+    await redisPubSub.publish(extractWorldId(packet), getPacketData(packet));
   });
 });
 

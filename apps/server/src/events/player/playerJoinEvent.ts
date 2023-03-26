@@ -12,7 +12,7 @@ export async function playerJoinEvent(worldId: string, socket: Socket, redis: Re
     return;
   }
 
-  const newPlayer = new ServerPlayer('test', worldId, socket.id);
+  const newPlayer = new ServerPlayer('test', worldId);
   World.addPlayer(newPlayer, worldId, socket, redis);
   socket.emit('loadWorld', { player: newPlayer, players: world.players, buildings: world.buildings });
   socket.broadcast.to(worldId).emit('newPlayer', newPlayer);

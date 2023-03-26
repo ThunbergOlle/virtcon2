@@ -14,5 +14,5 @@ export async function playerMoveEvent(data: NetworkServerPlayerMoveEvent, socket
   console.log(`Player ${player.id} moved to ${player.pos.x}, ${player.pos.y}`);
 
   /* If force update = true, then we want to force to update new position on the clients. Therefor we need to call "playerSetPosition" */
-  forceUpdate ? socket.broadcast.to(player.worldId).emit('playerSetPosition', player) : socket.broadcast.to(player.worldId).emit('playerMove', player);
+  forceUpdate ? socket.broadcast.to(player.world_id).emit('playerSetPosition', player) : socket.broadcast.to(player.world_id).emit('playerMove', player);
 }

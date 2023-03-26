@@ -23,6 +23,7 @@ export class Redis {
   async disconnect() {
     await this.client.disconnect();
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async setJson(key: string, path: string,  value: any) {
     await this.client.json.set(key, path, value);
   }
