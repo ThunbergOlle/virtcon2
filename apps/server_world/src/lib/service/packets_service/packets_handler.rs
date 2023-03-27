@@ -11,6 +11,7 @@ pub fn on_packet(packet: String, world: &mut world::World, connection: &mut redi
 
     match packet_type {
         "join" => packets::packet_join_world(packet, world, connection),
+        "disconnect" => packets::packet_disconnect(packet, world, connection),
         "playerMove" => packets::packet_player_move(packet, world, connection),
         _ => println!("Packet not found"),
     }

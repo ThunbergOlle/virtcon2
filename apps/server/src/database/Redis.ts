@@ -1,3 +1,4 @@
+import { LogApp, LogLevel, log } from "@shared";
 import { createClient } from "redis";
 
 export class Redis {
@@ -11,7 +12,7 @@ export class Redis {
   }
   async connectClient() {
     await this.client.connect();
-    console.log("Redis database connected")
+    log("Redis database connected", LogLevel.OK, LogApp.SERVER);
   }
   async set(key: string, value: string) {
     await this.client.set(key, value);

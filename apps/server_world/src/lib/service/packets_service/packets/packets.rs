@@ -5,6 +5,7 @@ use crate::packets_service::publish_packet;
 use crate::{world};
 
 include!("./join_packet.rs");
+include!("./disconnect_packet.rs");
 include!("./player_move_packet.rs");
 
 // packet type
@@ -12,6 +13,7 @@ include!("./player_move_packet.rs");
 pub enum PacketTypes {
     UnknownPacket,
     JoinPacket,
+    DisconnectPacket,
     PlayerMovePacket,
 }
 

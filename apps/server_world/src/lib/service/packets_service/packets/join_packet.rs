@@ -8,7 +8,7 @@ pub struct JoinPacket {
 }
 impl NetworkPacket for JoinPacket {
     fn get_packet_type(&self) -> String {
-        "joinPacket".to_string()
+        "join".to_string()
     }
     fn deserialize(&self, data: String) -> JoinPacket {
         serde_json::from_str(&data).unwrap()

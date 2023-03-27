@@ -5,7 +5,7 @@ pub struct PlayerMovePacket {
 }
 impl NetworkPacket for PlayerMovePacket {
     fn get_packet_type(&self) -> String {
-        "playerMovePacket".to_string()
+        "playerMove".to_string()
     }
     fn deserialize(&self, data: String) -> PlayerMovePacket {
         serde_json::from_str(&data).unwrap()

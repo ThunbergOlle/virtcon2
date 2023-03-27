@@ -1,5 +1,6 @@
 export enum PacketType {
   JOIN = 'join',
+  DISCONNECT = 'disconnect',
   PLAYER_MOVE = 'playerMove',
   LOAD_WORLD = 'loadWorld',
   PLAYER_SET_POSITION = 'playerSetPosition',

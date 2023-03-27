@@ -13,3 +13,5 @@ export * from './lib/errors/errorTypes';
 export * from './lib/config/timers';
 
 export * from './lib/events/networkEvents';
+
+export * from './lib/logger/logger';
