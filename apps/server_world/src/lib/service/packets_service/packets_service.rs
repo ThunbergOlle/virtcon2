@@ -6,8 +6,8 @@ use crate::{world, world_service::save_world};
 #[path = "../world_service.rs"]
 mod world_service;
 
-#[path = "./packets_handler.rs"]
-mod packets_handler;
+#[path = "./packets/packets.rs"]
+mod packets;
 
 pub trait NetworkPacket {
     fn get_packet_type(&self) -> String;
@@ -15,31 +15,51 @@ pub trait NetworkPacket {
     fn serialize(&self) -> String;
 }
 
+pub fn tick(
+  world_id: String,
+  message_receiver: &std::sync::mpsc::Receiver<String>,
+  connection: &mut redis::Connection,
+) {
+  let mut world = world_service::get_world(&world_id, connection).expect("World not found");
+
+  let client_packets = message_receiver
+      .try_iter()
+      .map(|x| x)
+      .collect::<Vec<String>>();
+
+  /* Run handler that will check and handle all of the newly received packets. */
+  handle_packets(client_packets, &mut world, connection);
+
+  /* Save the world after we are done modifying it for this tick */
+  save_world(&world, connection);
+}
+
+
 pub fn handle_packets(
     client_packets: Vec<String>,
     world: &mut world::World,
     connection: &mut redis::Connection,
 ) {
     for i in client_packets {
-        packets_handler::on_packet(i, world, connection);
+        on_packet(i, world, connection);
     }
 }
-pub fn tick(
-    world_id: String,
-    message_receiver: &std::sync::mpsc::Receiver<String>,
-    connection: &mut redis::Connection,
-) {
-    let mut world = world_service::get_world(&world_id, connection).expect("World not found");
+pub fn on_packet(packet: String, world: &mut world::World, connection: &mut redis::Connection) {
+  println!("Packet: {}", packet);
+  let packet_parts = packet.split("#").collect::<Vec<&str>>();
+  let packet_type = packet_parts[0];
+  let packet = packet_parts[1].to_string();
 
-    let client_packets = message_receiver
-        .try_iter()
-        .map(|x| x)
-        .collect::<Vec<String>>();
-
-    handle_packets(client_packets, &mut world, connection);
-    save_world(&world, connection);
+  match packet_type {
+      "join" => packets::packet_join_world(packet, world, connection),
+      "disconnect" => packets::packet_disconnect(packet, world, connection),
+      "playerMove" => packets::packet_player_move(packet, world, connection),
+      _ => println!("Packet not found"),
+  }
 }
 
+
+/* Section for publishing of new packets  */
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PublishablePacket {
     world_id: String,

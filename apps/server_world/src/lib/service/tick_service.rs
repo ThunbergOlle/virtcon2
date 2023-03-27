@@ -12,7 +12,7 @@ pub fn tick(
     let elapsed = last_tick.elapsed();
 
     if let Some(over) = elapsed.checked_sub(sleep_time) {
-        println!("Lagging behind: {:?}", over);
+        println!("Lagging behind {:?} on tick {:?}", over, tick);
     }
 
     if elapsed < sleep_time {
