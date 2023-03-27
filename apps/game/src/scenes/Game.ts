@@ -74,7 +74,7 @@ export default class Game extends Scene implements SceneStates {
       }
 
       Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
-      Game.mainPlayer.setPosition(mainPlayer.pos.x, mainPlayer.pos.y);
+      Game.mainPlayer.setPosition(mainPlayer.position[0], mainPlayer.position[1]);
       Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1, [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]));
       this.spawnFactories();
 

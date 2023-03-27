@@ -1,7 +1,7 @@
 import cors from 'cors';
 
 import { TPS } from '@shared';
-import { extractWorldId, getPacketData } from '@virtcon2/network-packet';
+import { NetworkPacketData, extractWorldId } from '@virtcon2/network-packet';
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
 import * as express from 'express';
@@ -35,15 +35,12 @@ redis.connectClient().then(async () => {
     console.log('Error: ', data);
   });
 
-
   console.log(worldProcess.pid);
 });
 
 const redisPubSub = createClient();
 redisPubSub.on('error', (err) => console.log('Redis pub sub client error', err));
 redisPubSub.connect();
-
-
 
 const app = express.default();
 app.use(express.json());
@@ -61,21 +58,18 @@ const io = new socketio.Server(server, {
     methods: ['GET', 'POST'],
   },
 });
-(async() => {
+(async () => {
   const client = createClient();
   await client.connect();
-  client.pSubscribe("from_world:*", (message, channel) => {
+  client.pSubscribe('from_world:*', (message, channel) => {
     // get world id from channel
     const worldId = channel.split(':')[1];
-    console.log("worldId", worldId)
+    console.log(`🖥 Packet received: ${message} on channel: ${channel}`);
     io.to(worldId).emit('packet', message);
-
   });
-})()
+})();
 
 io.on('connection', (socket) => {
-
-  setupPlayerEventHandler(socket, redis);
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
@@ -84,11 +78,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('packet', async (packet: string) => {
-    const worldId = extractWorldId(packet);
-    if(!socket.rooms.has(worldId) ) {
-      socket.join(worldId);
+    const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
+    if (!socket.rooms.has(packetJson.world_id)) {
+      socket.join(packetJson.world_id);
     }
-    await redisPubSub.publish(extractWorldId(packet), getPacketData(packet));
+    console.log(`🖥 Sending Packet: ${packet} on channel: ${packetJson.world_id}`);
+    await redisPubSub.publish(packetJson.world_id, packetJson.packet_type + '#' + JSON.stringify(packetJson.data));
   });
 });
 

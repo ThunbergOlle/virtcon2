@@ -1,18 +1,27 @@
 export enum PacketType {
-    JOIN = 'join',
-    PLAYER_MOVE = 'join',
-    PLAYER_SET_POSITION = 'playerSetPosition',
+  JOIN = 'join',
+  PLAYER_MOVE = 'playerMove',
+  LOAD_WORLD = 'loadWorld',
+  PLAYER_SET_POSITION = 'playerSetPosition',
 }
-export abstract class NetworkPacket {
-
-  type: PacketType;
 
 
-  constructor(type: PacketType) {
-    this.type = type;
-  }
-
-  abstract serialize(data: unknown): string;
-  abstract deserialize(data: string): unknown;
-
+export interface NetworkPacketData<T> {
+  world_id: string;
+  packet_type: PacketType;
+  data: T;
 }
+
+export const UseNetworkPacket = <T>() => ({
+  serialize: (packet_type: PacketType, data: T, world_id: string): string => {
+    const packetData: NetworkPacketData<T> = {
+      packet_type: packet_type,
+      data,
+      world_id,
+    };
+    return JSON.stringify(packetData);
+  },
+  deserialize: (data: string): NetworkPacketData<T> => {
+    return JSON.parse(data);
+  },
+});

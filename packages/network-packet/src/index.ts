@@ -4,3 +4,5 @@ export * from './lib/service/packets/PacketService';
 
 export * from './lib/service/packets/JoinPacket';
 
+export * from './lib/service/packets/PlayerMovePacket';
+

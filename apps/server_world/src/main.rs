@@ -20,6 +20,7 @@ mod packets_service;
 #[path = "./lib/service/world_service/world_service.rs"]
 mod world_service;
 
+
 fn main() {
     /* Setup redis connection */
     let redis_client =
@@ -39,12 +40,11 @@ fn main() {
     redis_subscriber_service::subscribe(redis_client, world_id.clone(), message_sender);
 
     // tick system
-    let tick_begin_life_time = std::time::Instant::now();
     let mut tick = 0;
     let mut last_tick = std::time::Instant::now();
 
     loop {
         packets_service::tick(world_id.clone(),&message_receiver, &mut redis_connection);
-        tick_service::tick(tps, &mut tick, &mut last_tick, tick_begin_life_time);
+        tick_service::tick(tps, &mut tick, &mut last_tick);
     }
 }

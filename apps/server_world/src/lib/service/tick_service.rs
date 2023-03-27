@@ -1,4 +1,8 @@
-pub fn tick(tps: i32, tick: &mut i32, last_tick: &mut std::time::Instant, tick_begin_life_time: std::time::Instant) {
+pub fn tick(
+    tps: i32,
+    tick: &mut i32,
+    last_tick: &mut std::time::Instant,
+) {
     // increase tick
     *tick += 1;
 
@@ -6,15 +10,18 @@ pub fn tick(tps: i32, tick: &mut i32, last_tick: &mut std::time::Instant, tick_b
     // sleep
     let sleep_time = std::time::Duration::from_millis((1000 / tps).try_into().unwrap());
     let elapsed = last_tick.elapsed();
+
+    if let Some(over) = elapsed.checked_sub(sleep_time) {
+        println!("Lagging behind: {:?}", over);
+    }
+
     if elapsed < sleep_time {
         if current_tick % 100 == 0 {
             println!(
-                "Tick ({}) took: {:?}, average tick-rate: {:?}",
-                current_tick,
-                elapsed,
-                ((current_tick) as f64 / tick_begin_life_time.elapsed().as_secs_f64())
+                "Tick ({}) took: {:?}",
+                current_tick, elapsed,
             );
-        }
+          }
 
         std::thread::sleep(sleep_time - elapsed);
     }

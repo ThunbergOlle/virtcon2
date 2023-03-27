@@ -1,38 +1,39 @@
-use crate::packets_service::NetworkPacket;
 
-#[derive(Debug)]
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct JoinPacket {
     pub id: String,
     pub name: String,
     pub position: Vec<f32>,
 }
-
 impl NetworkPacket for JoinPacket {
-    fn deserialize(packet: String) -> Self {
-        let packet = packet.split("#").collect::<Vec<&str>>();
-
-        let id = packet[0].to_string();
-        let name = packet[1].to_string();
-
-        let position = vec![
-            packet[2].parse::<f32>().unwrap(),
-            packet[3].parse::<f32>().unwrap(),
-        ];
-
-        JoinPacket {
-            id,
-            name,
-            position,
-        }
+    fn get_packet_type(&self) -> String {
+        "joinPacket".to_string()
+    }
+    fn deserialize(&self, data: String) -> JoinPacket {
+        serde_json::from_str(&data).unwrap()
     }
     fn serialize(&self) -> String {
-        let packet = format!(
-            "join#{}#{}#{}#{}",
-            self.id,
-            self.name,
-            self.position[0].to_string(),
-            self.position[1].to_string()
-        );
-        packet
+        serde_json::to_string(&self).unwrap()
     }
+}
+
+
+pub fn packet_join_world(
+  packet: String,
+  world: &mut world::World,
+  connection: &mut redis::Connection,
+) {
+  // deserialize packet
+  let deserialized_packet: JoinPacket = serde_json::from_str(&packet).unwrap();
+
+  publish_packet(&deserialized_packet, world.id.clone(), connection);
+
+  let player = world::Player {
+      id: deserialized_packet.id,
+      name: deserialized_packet.name,
+      position: deserialized_packet.position,
+  };
+
+  world.players.append(&mut vec![player]);
 }

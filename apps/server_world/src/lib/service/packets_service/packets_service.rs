@@ -1,5 +1,5 @@
 use redis::Commands;
-
+use serde::{Deserialize, Serialize};
 
 use crate::{world, world_service::save_world};
 
@@ -10,8 +10,9 @@ mod world_service;
 mod packets_handler;
 
 pub trait NetworkPacket {
+    fn get_packet_type(&self) -> String;
+    fn deserialize(&self, data: String) -> Self;
     fn serialize(&self) -> String;
-    fn deserialize(packet: String) -> Self;
 }
 
 pub fn handle_packets(
@@ -39,18 +40,33 @@ pub fn tick(
     save_world(&world, connection);
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PublishablePacket {
+    world_id: String,
+    packet_type: String,
+    data: String,
+}
+
 pub fn publish_packet(
     packet: &impl NetworkPacket,
     world_id: String,
     connection: &mut redis::Connection,
 ) {
-    let packet_data = packet.serialize();
-    match connection .publish::<String, String, i32>(format!("from_world:{}", world_id), packet_data) {
+    // serialize json
+    let packet = PublishablePacket {
+        world_id,
+        packet_type: packet.get_packet_type(),
+        data: packet.serialize(),
+    };
+    let serialized_packet = serde_json::to_string(&packet).unwrap();
+
+    match connection.publish::<String, String, i32>(
+        format!("from_world:{}", packet.world_id),
+        serialized_packet,
+    ) {
         Ok(_) => {}
         Err(e) => {
             println!("Error: {:?}", e);
         }
     }
-
-
 }
