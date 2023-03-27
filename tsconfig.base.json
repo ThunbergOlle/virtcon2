@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@shared": ["packages/shared/src/index.ts"]
+      "@shared": ["packages/shared/src/index.ts"],
+      "@virtcon2/network-packet": ["packages/network-packet/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -4,16 +4,15 @@ import { Pipe } from '../gameObjects/buildings/Pipe';
 import { Furnace } from '../gameObjects/factory/Furnace';
 import { BuildingItem } from '../gameObjects/item/BuildingItem';
 import Item from '../gameObjects/item/Item';
-import { Player } from '../gameObjects/player/Player';
 import { BuildingSystem } from '../systems/BuildingSystem';
 import { ClockSystem } from '../systems/ClockSystem';
 import { SceneStates } from './interfaces';
 
-import { Network } from '../networking/Network';
+import { ItemType } from '@shared';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
-import { ItemType } from '@shared';
 import { PlayerSystem } from '../systems/PlayerSystem';
+import { Network } from './networking/Network';
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
@@ -26,6 +25,7 @@ export default class Game extends Scene implements SceneStates {
 
   // * Ticks per second, read more in ClockSystem.ts
   public static tps = 1;
+  public static worldId = "";
 
   constructor() {
     super('game');
@@ -74,7 +74,7 @@ export default class Game extends Scene implements SceneStates {
       }
 
       Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
-      Game.mainPlayer.setPosition(mainPlayer.pos.x, mainPlayer.pos.y);
+      Game.mainPlayer.setPosition(mainPlayer.position[0], mainPlayer.position[1]);
       Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1, [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]));
       this.spawnFactories();
 

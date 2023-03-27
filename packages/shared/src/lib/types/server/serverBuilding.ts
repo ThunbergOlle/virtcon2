@@ -3,15 +3,15 @@ import { ItemType } from '../item';
 
 export class ServerBuilding {
   id: string;
-  pos: { x: number; y: number } = { x: 0, y: 0 };
+  position = [0, 0]
   inventory: { type: ItemType }[] = [];
-  buildingType: BuildingType;
+  building_type: BuildingType;
 
-  constructor(id: string, buildingType: BuildingType) {
+  constructor(id: string, building_type: BuildingType) {
     this.id = id;
-    this.buildingType = buildingType;
+    this.building_type = building_type;
   }
   setPos(pos: { x: number; y: number }) {
-    this.pos = pos;
+    this.position = [pos.x, pos.y];
   }
 }
