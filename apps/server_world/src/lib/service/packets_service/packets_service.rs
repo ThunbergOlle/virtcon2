@@ -69,12 +69,12 @@ pub struct PublishablePacket {
 
 pub fn publish_packet(
     packet: &impl NetworkPacket,
-    world_id: String,
+    world_id: &str,
     connection: &mut redis::Connection,
 ) {
     // serialize json
     let packet = PublishablePacket {
-        world_id,
+        world_id: world_id.to_string(),
         packet_type: packet.get_packet_type(),
         data: packet.serialize(),
     };

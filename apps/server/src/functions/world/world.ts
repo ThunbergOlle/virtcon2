@@ -51,7 +51,7 @@ const getPlayer = async (playerId: string, redis: Redis): Promise<ServerPlayer> 
 };
 const getPlayerBySocketId = async (socketId: string, redis: Redis): Promise<ServerPlayer> => {
   const player = await redis.client.json.get('worlds', {
-    path: `$.*.players[?(@.socket=='${socketId}')]`,
+    path: `$.*.players[?(@.socket_id=='${socketId}')]`,
   });
   if (!player || !player[0]) return null;
   return player[0];

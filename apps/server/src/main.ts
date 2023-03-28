@@ -1,6 +1,6 @@
 import cors from 'cors';
 
-import { NetworkPacketData, PacketType } from '@virtcon2/network-packet';
+import { JoinPacketData, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
 import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
@@ -44,17 +44,21 @@ const io = new socketio.Server(server, {
 });
 
 io.on('connection', (socket) => {
-
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
-    await redisPubSub.publish(player.world_id, PacketType.DISCONNECT + '#' + JSON.stringify({id: player.id}));
+    await redisPubSub.publish(player.world_id, PacketType.DISCONNECT + '#' + JSON.stringify({ id: player.id }));
   });
 
   socket.on('packet', async (packet: string) => {
     const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
     if (!socket.rooms.has(packetJson.world_id)) {
-      log(`Player tried to send packet to world they are not in: ${packetJson.world_id}`, LogLevel.WARN, LogApp.SERVER)
+      if (packetJson.packet_type === PacketType.JOIN) {
+        packetJson.data = { ...packetJson.data as JoinPacketData, socket_id: socket.id };
+        await redisPubSub.publish(packetJson.world_id, packetJson.packet_type + '#' + JSON.stringify(packetJson.data));
+        return;
+      }
+      log(`Player tried to send packet to world they are not in: ${packetJson.world_id}`, LogLevel.WARN, LogApp.SERVER);
       socket.emit('error', 'You are not in this world!');
       return;
     }

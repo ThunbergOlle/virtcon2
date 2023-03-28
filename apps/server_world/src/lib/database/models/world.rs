@@ -15,6 +15,8 @@ pub struct Player {
   pub id: String,
   pub name: String,
   pub position: Vec<f32>,
+  pub socket_id: String,
+  pub world_id: String,
 }
 
 

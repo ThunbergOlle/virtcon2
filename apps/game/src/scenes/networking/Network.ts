@@ -37,6 +37,7 @@ export class Network {
     this.sendPacket(packet);
   }
   disconnect() {
+    console.log("Disconnecting from server")
     this.socket.disconnect();
   }
   sendPacket(packet: NetworkPacketData<unknown>) {
