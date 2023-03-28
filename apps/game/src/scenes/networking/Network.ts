@@ -26,6 +26,7 @@ export class Network {
       const event = packetJSON.packet_type.charAt(0).toUpperCase() + packetJSON.packet_type.slice(1);
 
       console.log(`Received packet: ${event} ${JSON.stringify(packetJSON.data)}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       events.notify(('network' + event) as any, packetJSON.data);
     });
   }

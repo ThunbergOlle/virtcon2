@@ -32,7 +32,7 @@ impl NetworkPacket for JoinPacket {
 pub fn packet_join_world(
     packet: String,
     world: &mut world::World,
-    connection: &mut redis::Connection,
+    _: &mut redis::Connection,
     sender: &str,
     publish_send_packet: &mpsc::Sender<String>,
 ) {

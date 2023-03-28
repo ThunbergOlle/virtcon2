@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 
-use redis::Commands;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{world, world_service::save_world};

@@ -19,8 +19,7 @@ type Events = {
   networkPlayerMove: (data: PlayerMovePacketData) => void;
   networkPlayerSetPosition: (player: PlayerMovePacketData) => void;
   networkError: (error: {message: string; type: ErrorType}) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   networkTick: (...args: any) => void;
-  tick: (...args: any) => void;
-
 };
 export const events = new EventSystem<Events>();

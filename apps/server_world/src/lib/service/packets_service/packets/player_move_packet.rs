@@ -17,7 +17,7 @@ impl NetworkPacket for PlayerMovePacket {
 pub fn packet_player_move(
   packet: String,
   world: &mut world::World,
-  connection: &mut redis::Connection,
+  _: &mut redis::Connection,
   publish_send_packet: &mpsc::Sender<String>,
 ) {
   let deserialized_packet: PlayerMovePacket = serde_json::from_str(&packet).unwrap();

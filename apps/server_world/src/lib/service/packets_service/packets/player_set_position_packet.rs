@@ -17,7 +17,7 @@ impl NetworkPacket for PlayerSetPositionPacket {
 pub fn packet_player_set_position(
   packet: String,
   world: &mut world::World,
-  connection: &mut redis::Connection,
+  _: &mut redis::Connection,
   publish_send_packet: &mpsc::Sender<String>,
 ) {
   let deserialized_packet: PlayerSetPositionPacket = serde_json::from_str(&packet).unwrap();

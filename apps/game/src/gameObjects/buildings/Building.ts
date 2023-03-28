@@ -19,7 +19,7 @@ export abstract class Building extends Physics.Arcade.Sprite {
   public abstract requiredForProcessing: Item[];
 
   protected isProcessing: boolean = false;
-  public processingTicksLeft: number = 0;
+
 
   constructor(scene: Phaser.Scene, id: number, type: BuildingType, pos: TileCoordinates, rotation: number = 0) {
     const { x, y } = toPhaserPos({ x: pos.x, y: pos.y });
@@ -50,9 +50,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
     this.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       events.notify('onBuildingClicked', this);
       this.isUIVisable = true;
-    });
-    events.subscribe('tick', () => {
-      this.tick();
     });
   }
   /* Eject item is run if there is no destination */
@@ -118,18 +115,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
     console.log('Processing finished for ' + this.buildingType);
   }
   protected onBeginProcessing(): void {
-    this.processingTicksLeft = this.processingTicks;
     this.isProcessing = true;
-  }
-  public tick(): void {
-    if (this.isProcessing) {
-      this.processingTicksLeft--;
-      if (this.processingTicksLeft <= 0) {
-        this.isProcessing = false;
-        this.onProcessingFinished();
-      }
-    } else if (this.canProcess()) {
-      this.onBeginProcessing();
-    }
   }
 }

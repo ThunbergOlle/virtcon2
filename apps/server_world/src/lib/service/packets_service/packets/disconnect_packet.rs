@@ -20,7 +20,7 @@ impl NetworkPacket for DisconnectPacket {
 pub fn packet_disconnect(
   packet: String,
   world: &mut world::World,
-  connection: &mut redis::Connection,
+  _: &mut redis::Connection,
   publish_send_packet: &mpsc::Sender<String>,
 
 ) {
