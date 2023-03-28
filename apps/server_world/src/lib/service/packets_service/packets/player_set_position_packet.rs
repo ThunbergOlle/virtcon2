@@ -1,26 +1,26 @@
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PlayerMovePacket {
+pub struct PlayerSetPositionPacket {
     pub player_id: String,
     pub position: Vec<f32>,
 }
-impl NetworkPacket for PlayerMovePacket {
+impl NetworkPacket for PlayerSetPositionPacket {
     fn get_packet_type(&self) -> String {
-        "playerMove".to_string()
+        "playerSetPosition".to_string()
     }
-    fn deserialize(&self, data: String) -> PlayerMovePacket {
+    fn deserialize(&self, data: String) -> PlayerSetPositionPacket {
         serde_json::from_str(&data).unwrap()
     }
     fn serialize(&self) -> String {
         serde_json::to_string(&self).unwrap()
     }
 }
-pub fn packet_player_move(
+pub fn packet_player_set_position(
   packet: String,
   world: &mut world::World,
   connection: &mut redis::Connection,
   publish_send_packet: &mpsc::Sender<String>,
 ) {
-  let deserialized_packet: PlayerMovePacket = serde_json::from_str(&packet).unwrap();
+  let deserialized_packet: PlayerSetPositionPacket = serde_json::from_str(&packet).unwrap();
   publish_packet(&deserialized_packet, &world.id, None, publish_send_packet);
 
   // get the player from the world

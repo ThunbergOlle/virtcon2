@@ -52,7 +52,10 @@ io.on('connection', (socket) => {
 
   socket.on('packet', async (packet: string) => {
     const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
-    if (packetJson.packet_type === PacketType.JOIN) packetJson.data = { ...(packetJson.data as JoinPacketData), socket_id: socket.id };
+    if (packetJson.packet_type === PacketType.JOIN) {
+      packetJson.data = { ...(packetJson.data as JoinPacketData), socket_id: socket.id };
+      socket.join(packetJson.world_id);
+    }
 
     if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.JOIN) {
       log(`Player tried to send packet to world they are not in: ${packetJson.world_id}`, LogLevel.WARN, LogApp.SERVER);
@@ -68,7 +71,6 @@ io.on('connection', (socket) => {
     packetBuilder = packetBuilder.data(packetJson.data);
 
     await packetBuilder.build().publish();
-
   });
 });
 
@@ -100,21 +102,22 @@ process.on('SIGINT', async () => {
     // get world id from channel
     const worldId = channel.split(':')[1];
 
-    const packet = JSON.parse(message) as NetworkPacketData<unknown>;
-    log(`Packet received from WORLD_SERVER: ${packet.packet_type} on channel: ${channel}`, LogLevel.INFO, LogApp.SERVER);
+    const packetWithStringData = JSON.parse(message) as NetworkPacketData<string>;
+    const packetData = JSON.parse(packetWithStringData.data);
 
-    io.sockets.to(worldId).emit('packet', message);
+    const packet = { ...packetWithStringData, data: packetData } as NetworkPacketData<unknown>;
+
+
+    io.sockets.to(worldId).emit('packet', packet);
   });
   client.pSubscribe('socket:*', (message, channel) => {
     // get world id from channel
     const socket = channel.split(':')[1];
 
     const packetWithStringData = JSON.parse(message) as NetworkPacketData<string>;
-    const packetData = JSON.parse(packetWithStringData.data)
+    const packetData = JSON.parse(packetWithStringData.data);
 
     const packet = { ...packetWithStringData, data: packetData } as NetworkPacketData<unknown>;
-
-    log(`Packet received from WORLD_SERVER: ${packet.packet_type} on channel: ${channel}`, LogLevel.INFO, LogApp.SERVER);
 
     io.sockets.to(socket).emit('packet', packet);
   });

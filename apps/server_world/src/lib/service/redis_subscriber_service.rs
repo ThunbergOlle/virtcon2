@@ -20,7 +20,6 @@ pub fn subscribe(
             let msg = pubsub.get_message();
             match msg {
                 Ok(msg) => {
-                    println!("Got message: {:?}", msg);
                     let payload: String = msg.get_payload().expect("Failed to get payload");
                     message_sender.send(payload).expect("Failed to send message");
                 }

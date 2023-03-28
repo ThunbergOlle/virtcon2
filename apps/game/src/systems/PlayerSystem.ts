@@ -17,12 +17,13 @@ export class PlayerSystem {
       const playerObject = this.getPlayerById(player.player_id);
       if (playerObject) {
         playerObject.networkPosition = { x: player.position[0], y: player.position[1] };
-        this.scene.physics.moveTo(playerObject, playerObject.networkPosition.x, playerObject.networkPosition.y, 100, 100);
+        console.log(`X: ${playerObject.x} Y: ${playerObject.y}`)
+        this.scene.physics.moveTo(playerObject, playerObject.networkPosition.x, playerObject.networkPosition.y, 100, 50);
       }
     });
-    events.subscribe('networkPlayerSetPosition', (player: ServerPlayer) => {
-      console.log(`player ${player.id} stopped moving`);
-      const playerObject = this.getPlayerById(player.id);
+    events.subscribe('networkPlayerSetPosition', (player: PlayerMovePacketData) => {
+      console.log(`player ${player.player_id} stopped moving`);
+      const playerObject = this.getPlayerById(player.player_id);
       if (playerObject) {
         setTimeout(() => {
           playerObject.setVelocity(0, 0);

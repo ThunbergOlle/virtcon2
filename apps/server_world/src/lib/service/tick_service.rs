@@ -1,8 +1,29 @@
+use redis::Commands;
+
 pub fn tick(
     tps: i32,
     tick: &mut i32,
     last_tick: &mut std::time::Instant,
+    connection: &mut redis::Connection,
+    on_send_packet: &std::sync::mpsc::Receiver<String>,
 ) {
+    let send_packets = on_send_packet
+        .try_iter()
+        .map(|x| x)
+        .collect::<Vec<String>>();
+
+    for packet in send_packets {
+        let packet_parts = packet.split("#").collect::<Vec<&str>>();
+        let packet_channel = packet_parts[0].to_string();
+        let serialized_packet = packet_parts[1].to_string();
+        match connection.publish::<String, String, i32>(packet_channel, serialized_packet) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Error: {:?}", e);
+            }
+        }
+    }
+
     // increase tick
     *tick += 1;
 
@@ -17,11 +38,8 @@ pub fn tick(
 
     if elapsed < sleep_time {
         if current_tick % 100 == 0 {
-            println!(
-                "Tick ({}) took: {:?}",
-                current_tick, elapsed,
-            );
-          }
+            println!("Tick ({}) took: {:?}", current_tick, elapsed,);
+        }
 
         std::thread::sleep(sleep_time - elapsed);
     }

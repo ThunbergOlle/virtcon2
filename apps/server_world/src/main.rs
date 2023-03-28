@@ -35,16 +35,17 @@ fn main() {
     let tps = env_tps.parse::<i32>().expect("TPS must be a number");
 
 
-    let (message_sender, message_receiver) = mpsc::channel();
+    let (publish_receive_packet, on_receive_packet) = mpsc::channel();
+    let (publish_send_packet, on_send_packet) = mpsc::channel();
 
-    redis_subscriber_service::subscribe(redis_client, world_id.clone(), message_sender);
+    redis_subscriber_service::subscribe(redis_client, world_id.clone(), publish_receive_packet);
 
     // tick system
     let mut tick = 0;
     let mut last_tick = std::time::Instant::now();
 
     loop {
-        packets_service::tick(world_id.clone(),&message_receiver, &mut redis_connection);
-        tick_service::tick(tps, &mut tick, &mut last_tick);
+        packets_service::tick(world_id.clone(),&on_receive_packet, &publish_send_packet, &mut redis_connection);
+        tick_service::tick(tps, &mut tick, &mut last_tick, &mut redis_connection,&on_send_packet);
     }
 }

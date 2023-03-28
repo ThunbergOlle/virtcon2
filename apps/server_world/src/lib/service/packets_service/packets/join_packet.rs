@@ -34,12 +34,13 @@ pub fn packet_join_world(
     world: &mut world::World,
     connection: &mut redis::Connection,
     sender: &str,
+    publish_send_packet: &mpsc::Sender<String>,
 ) {
     let world_id = world.id.clone();
     // deserialize packet
     let deserialized_packet: JoinPacket = serde_json::from_str(&packet).unwrap();
 
-    publish_packet(&deserialized_packet, &world.id, None, connection);
+    publish_packet(&deserialized_packet, &world.id, None, publish_send_packet);
     let player = world::Player {
         id: deserialized_packet.id,
         name: deserialized_packet.name,
@@ -51,7 +52,7 @@ pub fn packet_join_world(
         world: world.clone(),
         player: player.clone(),
     };
-    publish_packet(&load_world_packet, &world.id, Some(sender), connection);
+    publish_packet(&load_world_packet, &world.id, Some(sender), publish_send_packet);
 
     world.players.append(&mut vec![player]);
 }
