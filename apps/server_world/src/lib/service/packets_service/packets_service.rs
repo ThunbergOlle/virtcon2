@@ -3,10 +3,9 @@ use std::sync::mpsc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{world, world_service::save_world};
+use crate::{world, world_service::{save_world, self}};
 
-#[path = "../world_service.rs"]
-mod world_service;
+
 
 #[path = "./packets/packets.rs"]
 mod packets;
