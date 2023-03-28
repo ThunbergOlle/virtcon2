@@ -25,7 +25,7 @@ pub fn packet_disconnect(
   // deserialize packet
   let deserialized_packet: DisconnectPacket = serde_json::from_str(&packet).unwrap();
 
-  publish_packet(&deserialized_packet, &world.id, connection);
+  publish_packet(&deserialized_packet, &world.id, None, connection);
 
   // remove player from world
   world.players.retain(|x| x.id != deserialized_packet.id);

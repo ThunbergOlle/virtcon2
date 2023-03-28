@@ -7,6 +7,7 @@ use crate::{world};
 include!("./join_packet.rs");
 include!("./disconnect_packet.rs");
 include!("./player_move_packet.rs");
+include!("./load_world_packet.rs");
 
 // packet type
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,6 +16,7 @@ pub enum PacketTypes {
     JoinPacket,
     DisconnectPacket,
     PlayerMovePacket,
+    LoadWorldPacket,
 }
 
 

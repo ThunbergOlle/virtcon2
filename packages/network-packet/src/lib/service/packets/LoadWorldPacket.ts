@@ -1,7 +1,9 @@
 import { ServerPlayer } from '@shared';
 
-export interface LoadWorldPacket {
+export interface LoadWorldPacketData {
   player: ServerPlayer;
-  players: ServerPlayer[];
+  world: {
+    players: ServerPlayer[];
+  }
 }
 

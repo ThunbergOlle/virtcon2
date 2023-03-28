@@ -13,6 +13,7 @@ import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/PlayerSystem';
 import { Network } from './networking/Network';
+import { PacketType } from '@virtcon2/network-packet';
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
@@ -56,13 +57,13 @@ export default class Game extends Scene implements SceneStates {
       });
       Game.network.join(worldId);
     });
-    events.subscribe('networkLoadWorld', (world) => {
+    events.subscribe('networkLoadWorld', ({world, player}) => {
       console.log('Loading world data...');
 
       Game.clockSystem = new ClockSystem(Game.tps);
       Game.playerSystem = new PlayerSystem(this);
 
-      const mainPlayer = world.player;
+      const mainPlayer = player;
 
       // setup players
       for (const player of world.players) {

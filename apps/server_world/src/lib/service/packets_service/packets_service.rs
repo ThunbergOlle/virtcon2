@@ -16,24 +16,23 @@ pub trait NetworkPacket {
 }
 
 pub fn tick(
-  world_id: String,
-  message_receiver: &std::sync::mpsc::Receiver<String>,
-  connection: &mut redis::Connection,
+    world_id: String,
+    message_receiver: &std::sync::mpsc::Receiver<String>,
+    connection: &mut redis::Connection,
 ) {
-  let mut world = world_service::get_world(&world_id, connection).expect("World not found");
+    let mut world = world_service::get_world(&world_id, connection).expect("World not found");
 
-  let client_packets = message_receiver
-      .try_iter()
-      .map(|x| x)
-      .collect::<Vec<String>>();
+    let client_packets = message_receiver
+        .try_iter()
+        .map(|x| x)
+        .collect::<Vec<String>>();
 
-  /* Run handler that will check and handle all of the newly received packets. */
-  handle_packets(client_packets, &mut world, connection);
+    /* Run handler that will check and handle all of the newly received packets. */
+    handle_packets(client_packets, &mut world, connection);
 
-  /* Save the world after we are done modifying it for this tick */
-  save_world(&world, connection);
+    /* Save the world after we are done modifying it for this tick */
+    save_world(&world, connection);
 }
-
 
 pub fn handle_packets(
     client_packets: Vec<String>,
@@ -45,19 +44,19 @@ pub fn handle_packets(
     }
 }
 pub fn on_packet(packet: String, world: &mut world::World, connection: &mut redis::Connection) {
-  println!("Packet: {}", packet);
-  let packet_parts = packet.split("#").collect::<Vec<&str>>();
-  let packet_type = packet_parts[0];
-  let packet = packet_parts[1].to_string();
+    println!("Packet: {}", packet);
+    let packet_parts = packet.split("#").collect::<Vec<&str>>();
+    let packet_type = packet_parts[0];
+    let packet_target = packet_parts[1];
+    let packet_data = packet_parts[2].to_string();
 
-  match packet_type {
-      "join" => packets::packet_join_world(packet, world, connection),
-      "disconnect" => packets::packet_disconnect(packet, world, connection),
-      "playerMove" => packets::packet_player_move(packet, world, connection),
-      _ => println!("Packet not found"),
-  }
+    match packet_type {
+        "join" => packets::packet_join_world(packet_data, world, connection, packet_target),
+        "disconnect" => packets::packet_disconnect(packet_data, world, connection),
+        "playerMove" => packets::packet_player_move(packet_data, world, connection),
+        _ => println!("Packet not found"),
+    }
 }
-
 
 /* Section for publishing of new packets  */
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,6 +69,7 @@ pub struct PublishablePacket {
 pub fn publish_packet(
     packet: &impl NetworkPacket,
     world_id: &str,
+    target: Option<&str>,
     connection: &mut redis::Connection,
 ) {
     // serialize json
@@ -80,10 +80,12 @@ pub fn publish_packet(
     };
     let serialized_packet = serde_json::to_string(&packet).unwrap();
 
-    match connection.publish::<String, String, i32>(
-        format!("from_world:{}", packet.world_id),
-        serialized_packet,
-    ) {
+    // if no target, send to world
+    let channel = match target {
+        Some(target) => format!("socket:{}", target),
+        None => format!("world:{}", world_id),
+    };
+    match connection.publish::<String, String, i32>(channel, serialized_packet) {
         Ok(_) => {}
         Err(e) => {
             println!("Error: {:?}", e);

@@ -1,11 +1,11 @@
-import { ServerLobby, ServerPlayer } from '@shared';
+import { ServerLobby } from '@shared';
 
 import { Socket, io } from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
 import { events } from '../../events/Events';
 import Game from '../Game';
-import { v4 as uuidv4 } from 'uuid';
 
-import { JoinPacketData, NetworkPacketData, PacketType, UseNetworkPacket } from '@virtcon2/network-packet';
+import { JoinPacketData, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
 
 export class Network {
   socket: Socket;
@@ -21,23 +21,23 @@ export class Network {
       this.isConnected = true;
     });
 
-    socket.on('packet', (packet: string) => {
-      const packetJSON = JSON.parse(packet) as NetworkPacketData<unknown>;
+    socket.on('packet', (packetJSON: NetworkPacketData<unknown>) => {
+
       const event = packetJSON.packet_type.charAt(0).toUpperCase() + packetJSON.packet_type.slice(1);
 
-      console.log(`Received packet: ${packetJSON.packet_type} ${JSON.stringify(packetJSON.data)}`);
+      console.log(`Received packet: ${event} ${JSON.stringify(packetJSON.data)}`);
       events.notify(('network' + event) as any, packetJSON.data);
     });
   }
 
   join(worldId: string) {
     Game.worldId = worldId;
-    const packet: NetworkPacketData<JoinPacketData> = { data: { name: 'Olle', id: uuidv4(), position: [0, 0] }, packet_type: PacketType.JOIN, world_id: Game.worldId };
+    const packet: NetworkPacketData<JoinPacketData> = { data: { name: 'Olle', id: uuidv4(), position: [0, 0], socket_id: '' }, packet_type: PacketType.JOIN, world_id: Game.worldId };
 
     this.sendPacket(packet);
   }
   disconnect() {
-    console.log("Disconnecting from server")
+    console.log('Disconnecting from server');
     this.socket.disconnect();
   }
   sendPacket(packet: NetworkPacketData<unknown>) {

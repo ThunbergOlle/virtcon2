@@ -7,7 +7,7 @@ import * as http from 'http';
 import { cwd } from 'process';
 import { createClient } from 'redis';
 import * as socketio from 'socket.io';
-import { Redis } from './database/Redis';
+import { Redis, RedisPublisher } from './database/Redis';
 import { World } from './functions/world/world';
 import { worldService } from './services/world_service';
 import { LogApp, LogLevel, log } from '@shared';
@@ -47,23 +47,28 @@ io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redis);
     if (!player) return;
-    await redisPubSub.publish(player.world_id, PacketType.DISCONNECT + '#' + JSON.stringify({ id: player.id }));
+    await new RedisPublisher(redisPubSub).channel(player.world_id).packet_type(PacketType.DISCONNECT).data({ id: player.id }).build().publish();
   });
 
   socket.on('packet', async (packet: string) => {
     const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
-    if (!socket.rooms.has(packetJson.world_id)) {
-      if (packetJson.packet_type === PacketType.JOIN) {
-        packetJson.data = { ...packetJson.data as JoinPacketData, socket_id: socket.id };
-        await redisPubSub.publish(packetJson.world_id, packetJson.packet_type + '#' + JSON.stringify(packetJson.data));
-        return;
-      }
+    if (packetJson.packet_type === PacketType.JOIN) packetJson.data = { ...(packetJson.data as JoinPacketData), socket_id: socket.id };
+
+    if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.JOIN) {
       log(`Player tried to send packet to world they are not in: ${packetJson.world_id}`, LogLevel.WARN, LogApp.SERVER);
       socket.emit('error', 'You are not in this world!');
       return;
     }
+
     log(`Sending packet: ${packetJson.packet_type} ${JSON.stringify(packetJson.data)}`, LogLevel.INFO, LogApp.SERVER);
-    await redisPubSub.publish(packetJson.world_id, packetJson.packet_type + '#' + JSON.stringify(packetJson.data));
+    let packetBuilder = new RedisPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
+
+    packetBuilder = packetJson.packet_type === PacketType.JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
+
+    packetBuilder = packetBuilder.data(packetJson.data);
+
+    await packetBuilder.build().publish();
+
   });
 });
 
@@ -90,11 +95,27 @@ process.on('SIGINT', async () => {
 (async () => {
   const client = createClient();
   await client.connect();
-  client.pSubscribe('from_world:*', (message, channel) => {
+  // channel looks like: world:<world_id>
+  client.pSubscribe('world:*', (message, channel) => {
     // get world id from channel
     const worldId = channel.split(':')[1];
+
     const packet = JSON.parse(message) as NetworkPacketData<unknown>;
     log(`Packet received from WORLD_SERVER: ${packet.packet_type} on channel: ${channel}`, LogLevel.INFO, LogApp.SERVER);
-    io.to(worldId).emit('packet', message);
+
+    io.sockets.to(worldId).emit('packet', message);
+  });
+  client.pSubscribe('socket:*', (message, channel) => {
+    // get world id from channel
+    const socket = channel.split(':')[1];
+
+    const packetWithStringData = JSON.parse(message) as NetworkPacketData<string>;
+    const packetData = JSON.parse(packetWithStringData.data)
+
+    const packet = { ...packetWithStringData, data: packetData } as NetworkPacketData<unknown>;
+
+    log(`Packet received from WORLD_SERVER: ${packet.packet_type} on channel: ${channel}`, LogLevel.INFO, LogApp.SERVER);
+
+    io.sockets.to(socket).emit('packet', packet);
   });
 })();

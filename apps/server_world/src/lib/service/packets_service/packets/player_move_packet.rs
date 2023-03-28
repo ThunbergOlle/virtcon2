@@ -20,7 +20,7 @@ pub fn packet_player_move(
   connection: &mut redis::Connection,
 ) {
   let deserialized_packet: PlayerMovePacket = serde_json::from_str(&packet).unwrap();
-  publish_packet(&deserialized_packet, &world.id, connection);
+  publish_packet(&deserialized_packet, &world.id, None, connection);
 
   // get the player from the world
   match world.players.iter_mut().find(|x| x.id == deserialized_packet.player_id) {

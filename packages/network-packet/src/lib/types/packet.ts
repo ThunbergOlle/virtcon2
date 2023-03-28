@@ -10,6 +10,7 @@ export enum PacketType {
 export interface NetworkPacketData<T> {
   world_id: string;
   packet_type: PacketType;
+  packet_target?: string;
   data: T;
 }
 

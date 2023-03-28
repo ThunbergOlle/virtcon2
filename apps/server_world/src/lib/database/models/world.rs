@@ -2,7 +2,7 @@ use derive_redis_json::RedisJsonValue;
 use serde::{Serialize, Deserialize};
 
 
-#[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct World {
     pub id: String,
     pub name: String,
@@ -10,7 +10,7 @@ pub struct World {
     pub buildings : Vec<Building>,
 }
 
-#[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct Player {
   pub id: String,
   pub name: String,
@@ -20,7 +20,7 @@ pub struct Player {
 }
 
 
-#[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct Building {
   pub id: String,
   pub name: String,

@@ -6,3 +6,5 @@ export * from './lib/service/packets/JoinPacket';
 
 export * from './lib/service/packets/PlayerMovePacket';
 
+export * from './lib/service/packets/LoadWorldPacket';
+
