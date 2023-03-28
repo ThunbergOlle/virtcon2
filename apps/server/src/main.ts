@@ -104,28 +104,22 @@ process.on('SIGINT', async () => {
     if (!packets.length) return;
     log(`Received ${packets.length} packets from ${channel}`, LogLevel.INFO, LogApp.SERVER);
 
-    for (const packet of packets) {
-      const [packetTarget, packetData] = packet.split('#');
+    for(let i = 0; i < packets.length; i++) {
+      const [packetTarget, packetData] = packets[i].split('#');
+
+      const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;
+      const packetDataJson = JSON.parse(packetWithStringData.data);
+
+      const packet = { ...packetWithStringData, data: packetDataJson } as NetworkPacketData<unknown>;
+
+      const target = packetTarget.split(':')[1];
 
       if (packetTarget.startsWith('socket:')) {
-        // get world id from channel
-        const socket = packetTarget.split(':')[1];
-
-        const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;
-        const packetDataJson = JSON.parse(packetWithStringData.data);
-
-        const packet = { ...packetWithStringData, data: packetDataJson } as NetworkPacketData<unknown>;
-
-        io.sockets.to(socket).emit('packet', packet);
+        io.sockets.to(target).emit('packet', packet);
       } else if (packetTarget.startsWith('world:')) {
-        const worldId = packetTarget.split(':')[1];
-
-        const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;
-        const packetDataJson = JSON.parse(packetWithStringData.data);
-
-        const packet = { ...packetWithStringData, data: packetDataJson } as NetworkPacketData<unknown>;
-
-        io.sockets.to(worldId).emit('packet', packet);
+        io.sockets.to(target).emit('packet', packet);
+      } else {
+        log(`Unknown packet target: ${packetTarget}`, LogLevel.WARN, LogApp.SERVER);
       }
     }
   });
