@@ -2,6 +2,7 @@ use redis::Commands;
 
 pub fn tick(
     tps: i32,
+    world_id: String,
     tick: &mut i32,
     last_tick: &mut std::time::Instant,
     connection: &mut redis::Connection,
@@ -12,15 +13,13 @@ pub fn tick(
         .map(|x| x)
         .collect::<Vec<String>>();
 
-    for packet in send_packets {
-        let packet_parts = packet.split("#").collect::<Vec<&str>>();
-        let packet_channel = packet_parts[0].to_string();
-        let serialized_packet = packet_parts[1].to_string();
-        match connection.publish::<String, String, i32>(packet_channel, serialized_packet) {
-            Ok(_) => {}
-            Err(e) => {
-                println!("Error: {:?}", e);
-            }
+
+    let channel = format!("tick_{}", world_id);
+
+    match connection.publish::<String, String, i32>(channel, send_packets.join(";;")){
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error publishing to channel: {:?}", e);
         }
     }
 

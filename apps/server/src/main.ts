@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    log(`Sending packet: ${packetJson.packet_type} ${JSON.stringify(packetJson.data)}`, LogLevel.INFO, LogApp.SERVER);
+
     let packetBuilder = new RedisPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
 
     packetBuilder = packetJson.packet_type === PacketType.JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
@@ -97,28 +97,36 @@ process.on('SIGINT', async () => {
 (async () => {
   const client = createClient();
   await client.connect();
-  // channel looks like: world:<world_id>
-  client.pSubscribe('world:*', (message, channel) => {
-    // get world id from channel
-    const worldId = channel.split(':')[1];
 
-    const packetWithStringData = JSON.parse(message) as NetworkPacketData<string>;
-    const packetData = JSON.parse(packetWithStringData.data);
+  client.pSubscribe('tick_*', (message, channel) => {
+    const packets = message.split(';;').filter((packet) => packet.length);
 
-    const packet = { ...packetWithStringData, data: packetData } as NetworkPacketData<unknown>;
+    if (!packets.length) return;
+    log(`Received ${packets.length} packets from ${channel}`, LogLevel.INFO, LogApp.SERVER);
 
+    for (const packet of packets) {
+      const [packetTarget, packetData] = packet.split('#');
 
-    io.sockets.to(worldId).emit('packet', packet);
-  });
-  client.pSubscribe('socket:*', (message, channel) => {
-    // get world id from channel
-    const socket = channel.split(':')[1];
+      if (packetTarget.startsWith('socket:')) {
+        // get world id from channel
+        const socket = packetTarget.split(':')[1];
 
-    const packetWithStringData = JSON.parse(message) as NetworkPacketData<string>;
-    const packetData = JSON.parse(packetWithStringData.data);
+        const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;
+        const packetDataJson = JSON.parse(packetWithStringData.data);
 
-    const packet = { ...packetWithStringData, data: packetData } as NetworkPacketData<unknown>;
+        const packet = { ...packetWithStringData, data: packetDataJson } as NetworkPacketData<unknown>;
 
-    io.sockets.to(socket).emit('packet', packet);
+        io.sockets.to(socket).emit('packet', packet);
+      } else if (packetTarget.startsWith('world:')) {
+        const worldId = packetTarget.split(':')[1];
+
+        const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;
+        const packetDataJson = JSON.parse(packetWithStringData.data);
+
+        const packet = { ...packetWithStringData, data: packetDataJson } as NetworkPacketData<unknown>;
+
+        io.sockets.to(worldId).emit('packet', packet);
+      }
+    }
   });
 })();

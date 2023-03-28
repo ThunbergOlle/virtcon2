@@ -46,6 +46,6 @@ fn main() {
 
     loop {
         packets_service::tick(world_id.clone(),&on_receive_packet, &publish_send_packet, &mut redis_connection);
-        tick_service::tick(tps, &mut tick, &mut last_tick, &mut redis_connection,&on_send_packet);
+        tick_service::tick(tps, world_id.clone(), &mut tick, &mut last_tick, &mut redis_connection,&on_send_packet);
     }
 }

@@ -42,7 +42,6 @@ export class Network {
   }
   sendPacket(packet: NetworkPacketData<unknown>) {
     if (!packet.world_id || !packet.packet_type) return;
-    console.log(`Sending packet: ${packet.packet_type} ${JSON.stringify(packet)}`);
     this.socket.emit('packet', JSON.stringify(packet));
   }
 }
