@@ -45,3 +45,5 @@ yarn.lock
 
 # Environment variables
 .env
+
+.VSCodeCounter
