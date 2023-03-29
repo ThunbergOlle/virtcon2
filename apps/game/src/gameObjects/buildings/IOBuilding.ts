@@ -17,7 +17,6 @@ export abstract class IOBuilding extends Building {
   public abstract io: FactoryIO;
   constructor(scene: Phaser.Scene, id: number, type: BuildingType, pos: TileCoordinates, rotation = 0) {
     super(scene, id, type, pos, rotation);
-
   }
   setupInOut() {
     const surroundingBuildings = Game.buildingSystem.getSurrondingBuildings(this);

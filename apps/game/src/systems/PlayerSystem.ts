@@ -1,7 +1,8 @@
 import { ServerPlayer, playerPositionUpdateRate } from '@shared';
 import { events } from '../events/Events';
 import { Player } from '../gameObjects/player/Player';
-import { PlayerMovePacketData } from '@virtcon2/network-packet';
+import { DisconnectPacketData, PlayerMovePacketData } from '@virtcon2/network-packet';
+import Game from '../scenes/Game';
 
 export class PlayerSystem {
   private scene: Phaser.Scene;
@@ -17,7 +18,6 @@ export class PlayerSystem {
       const playerObject = this.getPlayerById(player.player_id);
       if (playerObject) {
         playerObject.networkPosition = { x: player.position[0], y: player.position[1] };
-        console.log(`X: ${playerObject.x} Y: ${playerObject.y}`)
         this.scene.physics.moveTo(playerObject, playerObject.networkPosition.x, playerObject.networkPosition.y, 100, 50);
       }
     });
@@ -31,10 +31,10 @@ export class PlayerSystem {
         }, playerPositionUpdateRate);
       }
     });
-    events.subscribe('networkNewPlayer', (player) => {
-      this.newPlayer(player);
+    events.subscribe('networkNewPlayer', ({player}) => {
+      if (player.id !== Game.mainPlayer.id) this.newPlayer(player);
     });
-    events.subscribe('networkPlayerDisconnect', (player: ServerPlayer) => {
+    events.subscribe('networkPlayerDisconnect', (player: DisconnectPacketData) => {
       const playerObject = this.getPlayerById(player.id);
       if (playerObject) {
         playerObject.destroy();

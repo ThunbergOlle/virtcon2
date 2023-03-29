@@ -5,7 +5,6 @@ import { Furnace } from '../gameObjects/factory/Furnace';
 import { BuildingItem } from '../gameObjects/item/BuildingItem';
 import Item from '../gameObjects/item/Item';
 import { BuildingSystem } from '../systems/BuildingSystem';
-import { ClockSystem } from '../systems/ClockSystem';
 import { SceneStates } from './interfaces';
 
 import { ItemType } from '@shared';
@@ -13,14 +12,12 @@ import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/PlayerSystem';
 import { Network } from './networking/Network';
-import { PacketType } from '@virtcon2/network-packet';
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
 
   public static network: Network;
   public static mainPlayer: MainPlayer;
-  public static clockSystem: ClockSystem;
   public static buildingSystem: BuildingSystem;
   public static playerSystem: PlayerSystem;
 
@@ -60,7 +57,6 @@ export default class Game extends Scene implements SceneStates {
     events.subscribe('networkLoadWorld', ({world, player}) => {
       console.log('Loading world data...');
 
-      Game.clockSystem = new ClockSystem(Game.tps);
       Game.playerSystem = new PlayerSystem(this);
 
       const mainPlayer = player;
@@ -94,9 +90,6 @@ export default class Game extends Scene implements SceneStates {
     // handle player movement
     if (this.input.keyboard.enabled && Game.mainPlayer) {
       Game.mainPlayer.update(t, dt);
-    }
-    if (Game.clockSystem) {
-      Game.clockSystem.update(t, dt);
     }
     if (Game.playerSystem) {
       //Game.playerSystem.update(t, dt);

@@ -8,3 +8,7 @@ export * from './lib/service/packets/PlayerMovePacket';
 
 export * from './lib/service/packets/LoadWorldPacket';
 
+export * from './lib/service/packets/DisconnectPacket'
+;
+export * from './lib/service/packets/NewPlayerPacket';
+

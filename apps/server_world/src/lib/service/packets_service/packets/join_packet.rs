@@ -41,6 +41,7 @@ pub fn packet_join_world(
     let deserialized_packet: JoinPacket = serde_json::from_str(&packet).unwrap();
 
     publish_packet(&deserialized_packet, &world.id, None, publish_send_packet);
+
     let player = world::Player {
         id: deserialized_packet.id,
         name: deserialized_packet.name,
@@ -52,7 +53,19 @@ pub fn packet_join_world(
         world: world.clone(),
         player: player.clone(),
     };
-    publish_packet(&load_world_packet, &world.id, Some(sender), publish_send_packet);
+
+    publish_packet(
+        &load_world_packet,
+        &world.id,
+        Some(sender),
+        publish_send_packet,
+    );
+
+    let new_player_packet = NewPlayerPacket {
+        player: player.clone(),
+    };
+
+    publish_packet(&new_player_packet, &world.id, None, publish_send_packet);
 
     world.players.append(&mut vec![player]);
 }
