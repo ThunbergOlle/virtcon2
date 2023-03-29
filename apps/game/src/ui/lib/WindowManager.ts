@@ -2,6 +2,7 @@
 export enum WindowType {
   VIEW_BUILDING = "view_building",
   VIEW_PLAYER_INVENTORY = "view_player_inventory",
+  VIEW_MENU = "view_menu",
 }
 
 export interface WindowStack {

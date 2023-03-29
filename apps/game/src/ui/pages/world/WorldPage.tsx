@@ -16,6 +16,7 @@ import BuildingWindow from "../../windows/building/BuildingWindow";
 import PlayerInventoryWindow from "../../windows/playerInventory/PlayerInventory";
 import { events } from "../../../events/Events";
 import Game from "../../../scenes/Game";
+import MenuWindow from "../../windows/menu/MenuWindow";
 
 
 function GamePage() {
@@ -28,10 +29,15 @@ function GamePage() {
       navigate("/");
       return;
     }
+    // instantiate the game
+    const container = document.createElement("div");
+    container.id = "phaser-container";
+    document.getElementById('phaser-application')?.appendChild(container);
 
     const phaserGame = new Phaser.Game(GameConfig);
     setGame(phaserGame);
     (window as any).game = phaserGame;
+
     console.log("Joining world", worldId)
     events.notify("joinWorld", worldId);
   }, [worldId])
@@ -39,10 +45,11 @@ function GamePage() {
   useEffect(() => {
     return () => {
       if (game) {
-        Game.destroy();
         console.log("Destroying game");
-        game.destroy(true);
+        Game.destroy();
+        game.destroy(false);
 
+        document.getElementById("phaser-container")?.remove();
       }
     };
   }, [game]);
@@ -83,6 +90,7 @@ function GamePage() {
       <PlayerInventoryWindow
         windowManager={windowManagerObj}
       ></PlayerInventoryWindow>
+      <MenuWindow windowManager={windowManagerObj}></MenuWindow>
     </div>
   );
 }

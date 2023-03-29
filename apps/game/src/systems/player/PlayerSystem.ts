@@ -1,8 +1,8 @@
 import { ServerPlayer, playerPositionUpdateRate } from '@shared';
-import { events } from '../events/Events';
-import { Player } from '../gameObjects/player/Player';
+import { events } from '../../events/Events';
+import { Player } from '../../gameObjects/player/Player';
 import { DisconnectPacketData, PlayerMovePacketData } from '@virtcon2/network-packet';
-import Game from '../scenes/Game';
+import Game from '../../scenes/Game';
 
 export class PlayerSystem {
   private scene: Phaser.Scene;
@@ -14,7 +14,6 @@ export class PlayerSystem {
   }
   setupListeners() {
     events.subscribe('networkPlayerMove', (player: PlayerMovePacketData) => {
-      console.log(`player ${player.player_id} moved to ${player.position[0]}, ${player.position[1]}`);
       const playerObject = this.getPlayerById(player.player_id);
       if (playerObject) {
         playerObject.networkPosition = { x: player.position[0], y: player.position[1] };
@@ -34,8 +33,9 @@ export class PlayerSystem {
     events.subscribe('networkNewPlayer', ({player}) => {
       if (player.id !== Game.mainPlayer.id) this.newPlayer(player);
     });
-    events.subscribe('networkPlayerDisconnect', (player: DisconnectPacketData) => {
+    events.subscribe('networkDisconnect', (player: DisconnectPacketData) => {
       const playerObject = this.getPlayerById(player.id);
+      console.timeLog("player disconnected", player.id)
       if (playerObject) {
         playerObject.destroy();
         this.players = this.players.filter((p) => p.id !== player.id);
@@ -54,7 +54,7 @@ export class PlayerSystem {
     events.unsubscribe('networkPlayerMove', () => {});
     events.unsubscribe('networkPlayerSetPosition', () => {});
     events.unsubscribe('networkNewPlayer', () => {});
-    events.unsubscribe('networkPlayerDisconnect', () => {});
+    events.unsubscribe('networkDisconnect', () => {});
 
     this.players.forEach((p) => p.destroy());
   }

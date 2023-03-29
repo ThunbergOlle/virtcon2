@@ -4,13 +4,13 @@ import { Pipe } from '../gameObjects/buildings/Pipe';
 import { Furnace } from '../gameObjects/factory/Furnace';
 import { BuildingItem } from '../gameObjects/item/BuildingItem';
 import Item from '../gameObjects/item/Item';
-import { BuildingSystem } from '../systems/BuildingSystem';
+import { BuildingSystem } from '../systems/building/BuildingSystem';
 import { SceneStates } from './interfaces';
 
 import { ItemType } from '@shared';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
-import { PlayerSystem } from '../systems/PlayerSystem';
+import { PlayerSystem } from '../systems/player/PlayerSystem';
 import { Network } from './networking/Network';
 
 export default class Game extends Scene implements SceneStates {
@@ -27,7 +27,7 @@ export default class Game extends Scene implements SceneStates {
 
   constructor() {
     super('game');
-    Game.buildingSystem = new BuildingSystem(this);
+
   }
 
   disableKeys() {
@@ -58,6 +58,8 @@ export default class Game extends Scene implements SceneStates {
       console.log('Loading world data...');
 
       Game.playerSystem = new PlayerSystem(this);
+      Game.buildingSystem = new BuildingSystem(this);
+      Game.buildingSystem.setupCollisions();
 
       const mainPlayer = player;
 
@@ -66,17 +68,13 @@ export default class Game extends Scene implements SceneStates {
         if (player.id === mainPlayer.id) {
           continue;
         }
-        console.log(player);
         Game.playerSystem.newPlayer(player);
       }
 
       Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
       Game.mainPlayer.setPosition(mainPlayer.position[0], mainPlayer.position[1]);
       Game.mainPlayer.addToInventory(new BuildingItem(this, ItemType.BUILDING_PIPE, 1, [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]));
-      this.spawnFactories();
 
-      Game.buildingSystem.setupCollisions();
-      Game.buildingSystem.setupIO();
       new Item(this, ItemType.WOOD, 10).spawnGameObject({ x: 8, y: 10 });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -96,25 +94,14 @@ export default class Game extends Scene implements SceneStates {
     }
   }
 
-  spawnFactories() {
-    const furnace = new Furnace(this, 1, { x: 10, y: 10 });
-    furnace.addToInventory(new Item(this, ItemType.COAL, 10));
-    furnace.addToInventory(new Item(this, ItemType.SAND, 10));
-
-    const connectedPipe = new Pipe(this, 2, { x: 11, y: 10 }, 0);
-    connectedPipe.source.push(furnace);
-    furnace.destination = connectedPipe;
-
-    Game.buildingSystem.addBuilding(furnace);
-    Game.buildingSystem.addBuilding(connectedPipe);
-  }
   static destroy() {
     if (Game.network) Game.network.disconnect();
     if (Game.buildingSystem) Game.buildingSystem.destroy();
     if (Game.playerSystem) Game.playerSystem.destroy();
-
+    if (Game.mainPlayer) Game.mainPlayer.destroy();
     events.unsubscribe('joinWorld', () => {});
     events.unsubscribe('networkLoadWorld', () => {});
+
 
   }
 }

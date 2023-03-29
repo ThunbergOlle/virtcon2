@@ -38,14 +38,14 @@ export default function Window(props: {
     >
       <Card
         ref={nodeRef}
-        className={"window " + props.windowManager.getClass(props.windowType)}
+        className={"window  " + props.windowManager.getClass(props.windowType)}
         style={{ width: props.width, height: props.height }}
       >
         <WindowHeader
           title={props.title}
           onClose={() => props.windowManager.closeWindow(props.windowType)}
         ></WindowHeader>
-        <div className="content h-full">{props.children}</div>
+        <div className="content h-full text-white">{props.children}</div>
       </Card>
     </Draggable>
   );

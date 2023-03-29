@@ -4,7 +4,7 @@ import Game from '../../../scenes/Game';
 import { BuildingPlacementEvents } from './BuildingPlacementEvents';
 
 export class PlayerEvents {
-  private buildingPlacementEvents: BuildingPlacementEvents
+  private buildingPlacementEvents: BuildingPlacementEvents;
   private scene: Scene;
   private isInventoryOpen: boolean = false;
 
@@ -27,5 +27,21 @@ export class PlayerEvents {
         this.isInventoryOpen = true;
       }
     });
+    this.scene.input.keyboard.on('keydown-ESC', () => {
+      const inventoryWasOpen = this.isInventoryOpen;
+      this.isInventoryOpen = false;
+      events.notify('onPlayerInventoryClosed');
+      events.notify('onPlaceBuildingIntentCancelled');
+      if(!inventoryWasOpen) {
+        // player wants to open the menu.
+        events.notify('onPlayerMenuOpened');
+      }
+    });
+
+  }
+  destroy() {
+    this.buildingPlacementEvents.destroy();
+    this.scene.input.keyboard.off('keydown-E');
+    this.scene.input.keyboard.off('esc');
   }
 }

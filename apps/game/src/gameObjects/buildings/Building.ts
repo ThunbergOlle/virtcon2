@@ -15,12 +15,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
   private inventory = new Array<Item>();
   public abstract inventorySize: number;
 
-  public abstract processingTicks: number;
-  public abstract requiredForProcessing: Item[];
-
-  protected isProcessing: boolean = false;
-
-
   constructor(scene: Phaser.Scene, id: number, type: BuildingType, pos: TileCoordinates, rotation: number = 0) {
     const { x, y } = toPhaserPos({ x: pos.x, y: pos.y });
     super(scene, x, y, type.toString());
@@ -52,16 +46,6 @@ export abstract class Building extends Physics.Arcade.Sprite {
       this.isUIVisable = true;
     });
   }
-  /* Eject item is run if there is no destination */
-  protected ejectItem(item: Item): void {
-    const { x, y } = fromPhaserPos({ x: this.x, y: this.y });
-    // drop the item on the grown
-    item.spawnGameObject({ x, y }); // TODO: Change this to be destination direction.
-    this.removeFromInventory(item);
-  }
-  public onItemReceive(item: Item) {
-    this.addToInventory(item);
-  }
 
   public getInventory(): Item[] {
     return this.inventory;
@@ -86,35 +70,5 @@ export abstract class Building extends Physics.Arcade.Sprite {
     } else {
       this.inventory.push(item);
     }
-  }
-
-  public removeFromInventory(item: Item): void {
-    const itemWithSameType = this.inventory.find((i) => i.type === item.type);
-
-    if (itemWithSameType) {
-      itemWithSameType.amount -= item.amount;
-      if (itemWithSameType.amount <= 0) {
-        this.inventory = this.inventory.filter((i) => i !== itemWithSameType);
-      }
-    }
-  }
-
-  /**
-   *
-   * @returns true if the factory can process the items in its inventory.
-   */
-  protected canProcess(): boolean {
-    return this.requiredForProcessing.every((item) => {
-      const isInInventory = this.inventory.find((i) => i.type === item.type);
-      const canProcess: boolean = isInInventory ? isInInventory.amount >= item.amount : false;
-      return canProcess;
-    });
-  }
-
-  protected onProcessingFinished(): void {
-    console.log('Processing finished for ' + this.buildingType);
-  }
-  protected onBeginProcessing(): void {
-    this.isProcessing = true;
   }
 }

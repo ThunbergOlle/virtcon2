@@ -9,13 +9,15 @@ import { DisconnectPacketData, LoadWorldPacketData, NewPlayerPacketData, PlayerM
 type Events = {
   onBuildingClicked: (building: Building) => void;
   onPlaceBuildingIntent: (building: BuildingItem) => void;
+  onPlaceBuildingIntentCancelled: () => void;
   onPlayerInventoryOpened: (player: Player) => void;
   onPlayerInventoryClosed: () => void;
   onPlayerInventoryUpdate: () => void;
+  onPlayerMenuOpened: () => void;
   joinWorld: (worldId: string) => void;
   networkLoadWorld: (data: LoadWorldPacketData) => void;
   networkNewPlayer: (player: NewPlayerPacketData) => void;
-  networkPlayerDisconnect: (player: DisconnectPacketData) => void;
+  networkDisconnect: (player: DisconnectPacketData) => void;
   networkPlayerMove: (data: PlayerMovePacketData) => void;
   networkPlayerSetPosition: (player: PlayerMovePacketData) => void;
   networkError: (error: {message: string; type: ErrorType}) => void;

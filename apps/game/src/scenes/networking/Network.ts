@@ -25,7 +25,6 @@ export class Network {
 
       const event = packetJSON.packet_type.charAt(0).toUpperCase() + packetJSON.packet_type.slice(1);
 
-      console.log(`Received packet: ${event} ${JSON.stringify(packetJSON.data)}`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       events.notify(('network' + event) as any, packetJSON.data);
     });
@@ -33,7 +32,8 @@ export class Network {
 
   join(worldId: string) {
     Game.worldId = worldId;
-    const packet: NetworkPacketData<JoinPacketData> = { data: { name: 'Olle', id: uuidv4(), position: [0, 0], socket_id: '' }, packet_type: PacketType.JOIN, world_id: Game.worldId };
+    const id = uuidv4();
+    const packet: NetworkPacketData<JoinPacketData> = { data: { name: 'Olle', id: id, position: [0, 0], socket_id: '' }, packet_type: PacketType.JOIN, world_id: Game.worldId };
 
     this.sendPacket(packet);
   }

@@ -22,6 +22,10 @@ export class BuildingPlacementEvents {
     this.scene = scene;
     this.setupListeners();
   }
+  cancelPlacement(){
+    this.buildingPlacement.sprite?.destroy();
+    this.resetBuildingPlacement();
+  }
   setupListeners() {
     /* Listener for "rotate" key */
     this.scene.input.keyboard.on('keydown-R', () => {
@@ -32,10 +36,7 @@ export class BuildingPlacementEvents {
     });
     this.scene.input.keyboard.on('keydown-ESC', () => {
       // Cancel building placement
-      if (this.buildingPlacement.isPlacing) {
-        this.buildingPlacement.sprite?.destroy();
-        this.resetBuildingPlacement();
-      }
+      if (this.buildingPlacement.isPlacing) this.cancelPlacement();
     });
 
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -43,6 +44,9 @@ export class BuildingPlacementEvents {
         const { x, y } = fromPhaserPos({ x: this.buildingPlacement.sprite.x, y: this.buildingPlacement.sprite.y });
         this.buildingPlacement.building?.placeBuilding(x, y, this.buildingPlacement.building.allowedRotations[this.buildingPlacement.rotationIndex]);
       }
+    });
+    events.subscribe('onPlaceBuildingIntentCancelled', () => {
+      this.cancelPlacement();
     });
     /* Listen for an event when a player wants to place a new building down. */
     events.subscribe('onPlaceBuildingIntent', (building: BuildingItem) => {
@@ -90,5 +94,11 @@ export class BuildingPlacementEvents {
     // convert to degrees for phaser
     const angle = this.buildingPlacement.building.allowedRotations[this.buildingPlacement.rotationIndex] * (180 / Math.PI);
     this.buildingPlacement.sprite.angle = angle;
+  }
+  destroy(){
+    this.scene.input.keyboard.off('keydown-R');
+    this.scene.input.keyboard.off('keydown-ESC');
+    this.scene.input.off('pointerdown');
+    this.scene.input.off(Phaser.Input.Events.POINTER_MOVE);
   }
 }

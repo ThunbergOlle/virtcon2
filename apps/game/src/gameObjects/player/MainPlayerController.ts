@@ -41,7 +41,6 @@ export default class MainPlayerController {
     const newX = this.player.x + xSpeed * dt;
     const newY = this.player.y + ySpeed * dt;
     if (this.player.x !== newX || this.player.y !== newY) {
-      console.log('MY NEW POSITION: ', newX, newY);
       const packet: NetworkPacketData<PlayerMovePacketData> = {
         data: {
           player_id: this.player.id,
