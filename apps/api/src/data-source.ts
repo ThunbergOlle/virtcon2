@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { User } from './entity/user/User';
+import entities from './entity/entities';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: 'localhost',
@@ -8,8 +8,7 @@ export const AppDataSource = new DataSource({
   password: '',
   database: 'virtcon',
   synchronize: true,
-  logging: true,
-  entities: [User],
+  entities: entities,
   subscribers: [],
   migrations: [],
 });

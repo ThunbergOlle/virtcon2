@@ -1,41 +1,43 @@
-import { ObjectType, Field, Resolver, Mutation, Arg, InputType } from 'type-graphql';
+import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { User } from '../../entity/user/User';
+import { RequestContext } from '../../graphql/RequestContext';
+import { EmailService } from '../../service/EmailService';
+import { GenerateToken } from '../../utils/GenerateToken';
 import { HashPassword } from '../../utils/HashPassword';
 import RandomCode from '../../utils/RandomCode';
-import { User } from '../../entity/user/User';
-import { EmailService } from '../../service/EmailService';
-
-@ObjectType()
-class UserNewResponse {
-  @Field(() => Boolean)
-  success: boolean;
-
-  @Field(() => String)
-  message?: string;
-}
-@InputType()
-class PlayerLoginInput {
-  @Field()
-  email: string;
-
-  @Field()
-  password: string;
-}
-@InputType()
-class PlayerNewInput extends PlayerLoginInput {
-  @Field()
-  display_name: string;
-
-  @Field()
-  referralCode: string;
-}
-
+import { UserNewInput } from './UserRequest';
+import { UserLoginResponse, UserNewResponse } from './UserResponse';
+import { LogApp, LogLevel, log } from '@shared';
 @Resolver()
 export class UserResolver {
+
+  @Mutation(() => UserLoginResponse, { nullable: true })
+  async UserLogin(
+    @Arg('email', () => String, { nullable: false })
+    email: string,
+    @Arg('password', () => String, { nullable: false })
+    password: string,
+  ): Promise<UserLoginResponse> {
+    const passwordHash = HashPassword(password);
+    // get user
+    const user = await User.findOne({
+      where: { email: email, password: passwordHash },
+    });
+    if (user) {
+      const token = GenerateToken();
+      User.update({ id: user.id }, { token: token });
+      return { user: user, token: token, success: true };
+    } else {
+      return { success: false, message: 'Email or password is incorrect' };
+    }
+  }
+
   @Mutation(() => UserNewResponse, { nullable: true })
   async UserNew(
-    @Arg('options', () => PlayerNewInput, { nullable: false })
-    options: PlayerNewInput,
+    @Arg('options', () => UserNewInput, { nullable: false })
+    options: UserNewInput,
   ): Promise<UserNewResponse> {
+    log(`New user: ${options.email} (${options.display_name})`, LogLevel.INFO, LogApp.API)
     // Hash password and generate one-time confirmation code
     const passwordHash = HashPassword(options.password);
     const confirmationCode = RandomCode();
@@ -55,13 +57,18 @@ export class UserResolver {
     else if (playerWithSameDisplayName) return { success: false, message: 'Name already exists' };
 
     /* Create database entry */
-    const player = await User.create({
-      ...options
-
+    await User.create({
+      ...options,
+      confirmationCode,
+      isConfirmed: process.env.NODE_ENV === 'production' ? false : true,
     }).save();
 
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 
     return { success: true };
+  }
+  @Query(() => User, { nullable: true })
+  me(@Ctx() context: RequestContext) {
+    return context.user;
   }
 }

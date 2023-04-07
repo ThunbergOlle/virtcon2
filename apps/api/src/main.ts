@@ -1,29 +1,51 @@
 import 'reflect-metadata';
+import { ApolloServer } from '@apollo/server';
 import { LogApp, LogLevel, log } from '@shared';
+import http from 'http';
 
-import express from 'express';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import cors from 'cors';
+import express from 'express';
+import { buildSchema } from 'type-graphql';
 import { AppDataSource } from './data-source';
-
-/* Initialize database */
-AppDataSource.initialize()
-  .then(() => {
-    log('Database initialized', LogLevel.INFO, LogApp.API);
-  })
-  .catch((error) => console.log(error));
+import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
+import { UserResolver } from './resolvers/user/UserResolver';
+import { FormatGraphQLErrorResponse } from './graphql/FormatGraphQLErrorResponse';
 
 const host = process.env.HOST ?? 'localhost';
-const port = 3002;
+const port = 3000;
 
-const app = express();
+(async () => {
+  /* Initialize database */
+  await AppDataSource.initialize();
 
-app.use(cors());
-app.use(express.json());
+  log('Database initialized', LogLevel.INFO, LogApp.API);
 
-app.get('/', (req, res) => {
-  res.send({ message: 'Hello API' });
-});
+  const app = express();
+  const httpServer = http.createServer(app);
 
-app.listen(port, host, () => {
-  log(`API service started running on http://${host}:${port}`, LogLevel.INFO, LogApp.API);
-});
+  const apolloServer = new ApolloServer<RequestContext>({
+    schema: await buildSchema({
+      resolvers: [UserResolver],
+    }),
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    formatError: FormatGraphQLErrorResponse,
+  });
+  await apolloServer.start();
+
+  app.use(cors());
+  app.use(express.json());
+  app.use(
+    expressMiddleware(apolloServer, {
+      context: ContextMiddleware,
+    }),
+  );
+  app.get('/', (req, res) => {
+    res.send({ message: 'Hello API' });
+  });
+
+  app.listen(port, host, () => {
+    log(`API service started running on http://${host}:${port}`, LogLevel.INFO, LogApp.API);
+  });
+})();
