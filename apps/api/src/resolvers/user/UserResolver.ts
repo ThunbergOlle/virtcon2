@@ -8,9 +8,11 @@ import RandomCode from '../../utils/RandomCode';
 import { UserNewInput } from './UserRequest';
 import { UserLoginResponse, UserNewResponse } from './UserResponse';
 import { LogApp, LogLevel, log } from '@shared';
+import { World } from '../../entity/world/World';
+import { AccessLevel, WorldWhitelist } from '../../entity/world_whitelist/WorldWhitelist';
+import { AppDataSource } from '../../data-source';
 @Resolver()
 export class UserResolver {
-
   @Mutation(() => UserLoginResponse, { nullable: true })
   async UserLogin(
     @Arg('email', () => String, { nullable: false })
@@ -37,7 +39,7 @@ export class UserResolver {
     @Arg('options', () => UserNewInput)
     options: UserNewInput,
   ): Promise<UserNewResponse> {
-    log(`New user: ${options.email} (${options.display_name})`, LogLevel.INFO, LogApp.API)
+    log(`New user: ${options.email} (${options.display_name})`, LogLevel.INFO, LogApp.API);
     // Hash password and generate one-time confirmation code
     const passwordHash = HashPassword(options.password);
     const confirmationCode = RandomCode();
@@ -56,12 +58,25 @@ export class UserResolver {
     if (playerWithSameEmail) return { success: false, message: 'Email already exists' };
     else if (playerWithSameDisplayName) return { success: false, message: 'Name already exists' };
 
-    /* Create database entry */
-    await User.create({
-      ...options,
-      confirmationCode,
-      isConfirmed: process.env.NODE_ENV === 'production' ? false : true,
-    }).save();
+    await AppDataSource.manager.transaction(async (transactionalEntityManager) => {
+      /* Create database entry */
+      const newUserTransaction = User.create({
+        ...options,
+        confirmationCode,
+        isConfirmed: process.env.NODE_ENV === 'production' ? false : true,
+      });
+      const newUser = await transactionalEntityManager.save(newUserTransaction);
+      const newWorldTransaction = World.create({ id: newUser.id });
+      const newWorld = await transactionalEntityManager.save(newWorldTransaction);
+
+      const newWorldWhitelist = WorldWhitelist.create({
+        world: newWorld,
+        user: newUser,
+        access_level: AccessLevel.owner,
+      });
+
+      await transactionalEntityManager.save(newWorldWhitelist);
+    });
 
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 

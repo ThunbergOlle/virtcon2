@@ -1,4 +1,5 @@
-import { InputType, Field } from 'type-graphql';
+import { MaxLength, MinLength } from 'class-validator';
+import { Field, InputType } from 'type-graphql';
 @InputType()
 export class UserLoginInput {
   @Field(() => String)
@@ -10,9 +11,11 @@ export class UserLoginInput {
 
 @InputType()
 export class UserNewInput extends UserLoginInput {
+  @MinLength(3)
+  @MaxLength(30)
   @Field(() => String)
   display_name: string;
 
   @Field(() => String, { nullable: true })
-  referralCode: string;
+  referral_code: string;
 }
