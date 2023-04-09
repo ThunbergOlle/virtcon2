@@ -34,7 +34,7 @@ export class UserResolver {
 
   @Mutation(() => UserNewResponse, { nullable: true })
   async UserNew(
-    @Arg('options', () => UserNewInput, { nullable: false })
+    @Arg('options', () => UserNewInput)
     options: UserNewInput,
   ): Promise<UserNewResponse> {
     log(`New user: ${options.email} (${options.display_name})`, LogLevel.INFO, LogApp.API)

@@ -6,7 +6,7 @@ export class UserNewResponse {
   @Field(() => Boolean)
   success: boolean;
 
-  @Field(() => String)
+  @Field(() => String, {nullable: true})
   message?: string;
 }
 

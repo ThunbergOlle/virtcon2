@@ -8,13 +8,13 @@ export interface RequestContext {
 export const ContextMiddleware = async ({ req, res }: {req: Request, res: Response}) => {
   const token = req.headers.authorization || '';
 
-  const player = await User.findOne({
+  const user = await User.findOne({
     where: { token: req.headers.authorization },
   });
-  if (player) {
-    User.update({ id: player.id }, { last_login: new Date() });
+  if (user) {
+    User.update({ id: user.id }, { last_login: new Date() });
     return {
-      player: { ...player },
+      user: { ...user },
       token: token,
       ...req,
       ...res,

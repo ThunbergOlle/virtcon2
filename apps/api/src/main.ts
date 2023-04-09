@@ -28,6 +28,9 @@ const port = 3000;
   const apolloServer = new ApolloServer<RequestContext>({
     schema: await buildSchema({
       resolvers: [UserResolver],
+      validate: {
+        forbidUnknownValues: false,
+      }
     }),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     formatError: FormatGraphQLErrorResponse,
