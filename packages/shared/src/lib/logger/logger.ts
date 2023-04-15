@@ -12,6 +12,7 @@ export enum LogApp {
   SERVER = 'SERVER',
   WORLD_SERVER = 'WORLD_SERVER',
   SHARED = 'SHARED',
+  API = 'API',
   NETWORK = 'NETWORK',
 }
 function getAppPrefix(app: LogApp) {
@@ -21,6 +22,7 @@ function getAppPrefix(app: LogApp) {
     [LogApp.GAME]: chalk.green,
     [LogApp.SERVER]: chalk.yellow,
     [LogApp.WORLD_SERVER]: chalk.magenta,
+    [LogApp.API]: chalk.green,
     [LogApp.SHARED]: chalk.cyan,
     [LogApp.NETWORK]: chalk.red,
   };
