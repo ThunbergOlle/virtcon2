@@ -66,7 +66,7 @@ export class UserResolver {
         isConfirmed: process.env.NODE_ENV === 'production' ? false : true,
       });
       const newUser = await transactionalEntityManager.save(newUserTransaction);
-      const newWorldTransaction = World.create({ id: newUser.id });
+      const newWorldTransaction = World.create({ id: newUser.display_name });
       const newWorld = await transactionalEntityManager.save(newWorldTransaction);
 
       const newWorldWhitelist = WorldWhitelist.create({
