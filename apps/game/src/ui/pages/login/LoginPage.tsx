@@ -1,4 +1,5 @@
 import { gql, useMutation } from '@apollo/client';
+import { ME_QUERY, client } from '../../../App';
 import { useEffect, useState } from 'react';
 import { Button, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -21,14 +22,19 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Sending login request");
+    console.log('Sending login request');
     mutateLogin({ variables: { email, password } });
   };
 
   useEffect(() => {
     if (data?.UserLogin?.success) {
       sessionStorage.setItem('token', data.UserLogin.token);
-      navigate('/');
+
+      client
+        .refetchQueries({
+          include: [ME_QUERY],
+        })
+        .then(() => navigate('/'));
     }
   }, [data, navigate]);
 

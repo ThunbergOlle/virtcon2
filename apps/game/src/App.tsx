@@ -8,7 +8,7 @@ import WorldPage from './ui/pages/world/WorldPage';
 import networkError from './ui/errors/network/networkError';
 import { useNavigate } from 'react-router-dom';
 import LoginPage from './ui/pages/login/LoginPage';
-import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from '@apollo/client';
+import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache, gql, useQuery } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { apiUrl } from '@shared';
 
@@ -16,7 +16,6 @@ const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
 const authLink = setContext(async (_, { headers }) => {
   // get the authentication token from local storage if it exists
   const token = sessionStorage.getItem('token');
-
   // return the headers to the context so httpLink can read them
   return {
     headers: {
@@ -36,14 +35,31 @@ export const client = new ApolloClient({
 export default function App() {
   return (
     <div className="App">
-      <ToastContainer />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <ApolloProvider client={client}>
+        <ToastContainer />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </ApolloProvider>
     </div>
   );
 }
+
+export const ME_QUERY = gql`
+  query Me {
+    Me {
+      balance
+      display_name
+      email
+      id
+      isConfirmed
+      last_login
+    }
+  }
+`;
 function AppRoutes() {
+  const { loading, error, data } = useQuery(ME_QUERY);
+
   const navigate = useNavigate();
   useEffect(() => {
     events.subscribe('networkError', ({ message, type }) => {
@@ -54,14 +70,21 @@ function AppRoutes() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    if (data?.Me == null && !loading) {
+      navigate('/login');
+    }
+  }, [data, loading, navigate]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>
+
   return (
-    <ApolloProvider client={client}>
-      <Routes>
-        <Route path="/" element={<LobbyPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/world/:worldId" element={<WorldPage />} />
-        <Route path="*" element={<LobbyPage />} />
-      </Routes>
-    </ApolloProvider>
+    <Routes>
+      <Route path="/" element={<LobbyPage />} />
+      {!data.Me && <Route path="/login" element={<LoginPage />} />}
+      <Route path="/world/:worldId" element={<WorldPage />} />
+      <Route path="*" element={<LobbyPage />} />
+    </Routes>
   );
 }
