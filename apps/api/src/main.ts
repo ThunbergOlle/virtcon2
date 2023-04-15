@@ -12,6 +12,7 @@ import { AppDataSource } from './data-source';
 import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
 import { UserResolver } from './resolvers/user/UserResolver';
 import { FormatGraphQLErrorResponse } from './graphql/FormatGraphQLErrorResponse';
+import { setupDatabase } from './import/setup-database';
 
 const host = process.env.HOST ?? 'localhost';
 const port = 3000;
@@ -19,7 +20,7 @@ const port = 3000;
 (async () => {
   /* Initialize database */
   await AppDataSource.initialize();
-
+  await setupDatabase();
   log('Database initialized', LogLevel.INFO, LogApp.API);
 
   const app = express();
@@ -30,7 +31,7 @@ const port = 3000;
       resolvers: [UserResolver],
       validate: {
         forbidUnknownValues: false,
-      }
+      },
     }),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     formatError: FormatGraphQLErrorResponse,

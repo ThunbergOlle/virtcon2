@@ -1,10 +1,10 @@
 import { BuildingType } from '../building';
-import { ItemType } from '../item';
+import { ItemName } from '../item';
 
 export class ServerBuilding {
   id: string;
   position = [0, 0]
-  inventory: { type: ItemType }[] = [];
+  inventory: { type: ItemName }[] = [];
   building_type: BuildingType;
 
   constructor(id: string, building_type: BuildingType) {

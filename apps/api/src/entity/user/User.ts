@@ -1,5 +1,6 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { UserInventorItem } from '../user_inventory_item/UserInventoryItem';
 
 @ObjectType()
 @Entity()
@@ -36,4 +37,9 @@ export class User extends BaseEntity {
   @Field(() => Boolean)
   @Column('boolean', { nullable: false, default: false })
   isConfirmed: boolean;
+
+  @Field(() => [UserInventorItem])
+  @OneToMany(() => UserInventorItem, userInventoryItem => userInventoryItem.id)
+  inventory: UserInventorItem[];
+
 }

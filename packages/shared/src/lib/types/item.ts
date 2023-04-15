@@ -1,4 +1,4 @@
-export enum ItemType {
+export enum ItemName {
   WOOD = "wood",
   SAND = "sand",
   GLASS = "glass",
