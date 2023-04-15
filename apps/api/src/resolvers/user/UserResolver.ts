@@ -83,7 +83,7 @@ export class UserResolver {
     return { success: true };
   }
   @Query(() => User, { nullable: true })
-  me(@Ctx() context: RequestContext) {
+  Me(@Ctx() context: RequestContext) {
     return context.user;
   }
 }

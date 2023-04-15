@@ -9,10 +9,10 @@ import cors from 'cors';
 import express from 'express';
 import { buildSchema } from 'type-graphql';
 import { AppDataSource } from './data-source';
-import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
-import { UserResolver } from './resolvers/user/UserResolver';
 import { FormatGraphQLErrorResponse } from './graphql/FormatGraphQLErrorResponse';
+import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
 import { setupDatabase } from './import/setup-database';
+import { resolvers } from './resolvers/resolvers';
 
 const host = process.env.HOST ?? 'localhost';
 const port = 3000;
@@ -28,7 +28,7 @@ const port = 3000;
 
   const apolloServer = new ApolloServer<RequestContext>({
     schema: await buildSchema({
-      resolvers: [UserResolver],
+      resolvers: resolvers,
       validate: {
         forbidUnknownValues: false,
       },
