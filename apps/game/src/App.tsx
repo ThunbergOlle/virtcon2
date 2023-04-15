@@ -7,6 +7,31 @@ import LobbyPage from './ui/pages/lobby/LobbyPage';
 import WorldPage from './ui/pages/world/WorldPage';
 import networkError from './ui/errors/network/networkError';
 import { useNavigate } from 'react-router-dom';
+import LoginPage from './ui/pages/login/LoginPage';
+import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { apiUrl } from '@shared';
+
+const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
+const authLink = setContext(async (_, { headers }) => {
+  // get the authentication token from local storage if it exists
+  const token = sessionStorage.getItem('token');
+
+  // return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: token || '',
+    },
+  };
+});
+
+// Initialize Apollo Client
+export const client = new ApolloClient({
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache(),
+  defaultOptions: {},
+});
 
 export default function App() {
   return (
@@ -27,12 +52,16 @@ function AppRoutes() {
     return () => {
       events.unsubscribe('networkError', () => {});
     };
-  }, []);
+  }, [navigate]);
+
   return (
-    <Routes>
-      <Route path="/" element={<LobbyPage />} />
-      <Route path="/world/:worldId" element={<WorldPage />} />
-      <Route path="*" element={<LobbyPage />} />
-    </Routes>
+    <ApolloProvider client={client}>
+      <Routes>
+        <Route path="/" element={<LobbyPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/world/:worldId" element={<WorldPage />} />
+        <Route path="*" element={<LobbyPage />} />
+      </Routes>
+    </ApolloProvider>
   );
 }

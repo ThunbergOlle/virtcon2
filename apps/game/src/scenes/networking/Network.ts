@@ -13,7 +13,7 @@ export class Network {
   lobbies: ServerLobby[] = [];
 
   constructor() {
-    const socket = io('ws://localhost:3000');
+    const socket = io('ws://localhost:4000');
     this.socket = socket;
 
     socket.on('connect', () => {

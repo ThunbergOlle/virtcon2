@@ -82,8 +82,8 @@ app.get('/worlds', async (_req, res) => {
   res.send(worlds);
 });
 
-server.listen(3000, () => {
-  log('Server started on port 3000', LogLevel.INFO, LogApp.SERVER);
+server.listen(4000, () => {
+  log('Server started on port 4000', LogLevel.INFO, LogApp.SERVER);
 });
 
 /* Implement SIGKILL logic */

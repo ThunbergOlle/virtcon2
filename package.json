@@ -9,6 +9,7 @@
   },
   "private": true,
   "dependencies": {
+    "@apollo/client": "^3.7.12",
     "@apollo/server": "^4.6.0",
     "@monodon/rust": "^1.1.1",
     "@types/express": "~4.17.13",
