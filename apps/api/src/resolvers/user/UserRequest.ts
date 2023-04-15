@@ -12,7 +12,7 @@ export class UserLoginInput {
 @InputType()
 export class UserNewInput extends UserLoginInput {
   @MinLength(3)
-  @MaxLength(30)
+  @MaxLength(15)
   @Field(() => String)
   display_name: string;
 
