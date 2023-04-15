@@ -1,4 +1,4 @@
-import { ItemType } from '@shared';
+import { ItemName } from '@shared';
 import Game from '../../scenes/Game';
 import { Pipe } from '../buildings/Pipe';
 import { Furnace } from '../factory/Furnace';
@@ -7,15 +7,15 @@ import Item from './Item';
 
 export class BuildingItem extends Item {
   public allowedRotations: number[] = [];
-  constructor(scene: Phaser.Scene, type: ItemType, amount: number, allowedRotations: number[] = []) {
+  constructor(scene: Phaser.Scene, type: ItemName, amount: number, allowedRotations: number[] = []) {
     super(scene, type, amount);
     this.allowedRotations = allowedRotations;
   }
   getBuildingType() {
     switch (this.type) {
-      case ItemType.BUILDING_PIPE:
+      case ItemName.BUILDING_PIPE:
         return Pipe;
-      case ItemType.BUILDING_FURNACE:
+      case ItemName.BUILDING_FURNACE:
         return Furnace;
       default:
         throw new Error('Building type not found');

@@ -1,4 +1,4 @@
-import { ItemType } from "@shared";
+import { ItemName } from "@shared";
 import { events } from "../../events/Events";
 import Game from "../../scenes/Game";
 import { TileCoordinates, toPhaserPos } from "../../ui/lib/coordinates";
@@ -6,7 +6,7 @@ import { TileCoordinates, toPhaserPos } from "../../ui/lib/coordinates";
 
 
 export default class Item {
-  public type: ItemType;
+  public type: ItemName;
   public amount: number;
   public gameObject: Phaser.GameObjects.Sprite | null = null;
 
@@ -14,7 +14,7 @@ export default class Item {
 
   public position = new Phaser.Math.Vector2(0, 0);
 
-  constructor(scene: Phaser.Scene, type: ItemType, amount: number) {
+  constructor(scene: Phaser.Scene, type: ItemName, amount: number) {
     this.scene = scene;
     this.type = type;
     this.amount = amount;
