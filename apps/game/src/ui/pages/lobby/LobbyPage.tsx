@@ -1,5 +1,6 @@
 import { ServerPlayer, serverUrl } from '@shared';
 import { useEffect, useState } from 'react';
+import { Button, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 export default function LobbyPage() {
@@ -20,15 +21,27 @@ export default function LobbyPage() {
     <div className="p-20">
       <h2>Worlds</h2>
       <em>Press to join a world in the list</em>
-      <ul>
-        {worlds.map((world) => {
-          return (
-            <li key={world.id} onClick={() => joinWorld(world.id)} className="hover:cursor-pointer text-green-400">
-              {world.name} ({world.players.length} players)
-            </li>
-          );
-        })}
-      </ul>
+      <Button className="float-right">Join my world</Button>
+      <Table className="text-white my-5" bordered>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Players</th>
+          </tr>
+
+        </thead>
+        <tbody>
+          {worlds.map((world) => {
+            return (
+              <tr key={world.id} onClick={() => joinWorld(world.id)} className="hover:cursor-pointer text-green-400">
+                <td>{world.name}</td>
+                <td>{world.players.length}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
+
     </div>
   );
 }
