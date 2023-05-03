@@ -8,7 +8,7 @@ import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 @ObjectType()
 @Entity()
 export class Item extends BaseEntity {
-  @PrimaryColumn({ type: 'numeric', unique: true })
+  @PrimaryColumn({ type: 'int', unique: true })
   @Field(() => Int)
   id: number;
 

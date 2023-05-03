@@ -13,7 +13,7 @@ export enum AccessLevel {
 @ObjectType()
 @Entity()
 export class WorldWhitelist extends BaseEntity {
-  @PrimaryGeneratedColumn({ type: 'numeric' })
+  @PrimaryGeneratedColumn({ type: 'int' })
   @Field(() => Number)
   id: number;
 

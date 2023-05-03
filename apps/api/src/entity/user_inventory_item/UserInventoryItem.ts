@@ -20,7 +20,7 @@ export class UserInventoryItem extends BaseEntity {
   item: Item;
 
   @Field(() => Int)
-  @Column({ type: 'numeric' })
+  @Column({ type: 'int' })
   quantity: number;
 
 }
