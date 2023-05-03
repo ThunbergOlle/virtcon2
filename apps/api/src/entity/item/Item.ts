@@ -1,6 +1,7 @@
 import { ItemName } from '@shared';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 
 
 
@@ -34,5 +35,9 @@ export class Item extends BaseEntity {
   @Field(() => String)
   @Column({ type: 'text' })
   rarity: string;
+
+  @Field(() => [UserInventoryItem])
+  @OneToMany(() => UserInventoryItem, (i) => i.id)
+  inventory: UserInventoryItem[];
 
 }

@@ -11,6 +11,7 @@ import { LogApp, LogLevel, log } from '@shared';
 import { World } from '../../entity/world/World';
 import { AccessLevel, WorldWhitelist } from '../../entity/world_whitelist/WorldWhitelist';
 import { AppDataSource } from '../../data-source';
+import { UserInventoryItem } from '../../entity/user_inventory_item/UserInventoryItem';
 @Resolver()
 export class UserResolver {
   @Mutation(() => UserLoginResponse, { nullable: true })
@@ -81,6 +82,17 @@ export class UserResolver {
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 
     return { success: true };
+  }
+  @Query(() => [UserInventoryItem], { nullable: false })
+  async UserInventory(
+    @Arg('userId', () => String, { nullable: false })
+    userId: string,
+  ) {
+    const user = await User.findOne({
+      where: { id: userId },
+      relations: ['inventory'],
+    });
+    return user;
   }
   @Query(() => User, { nullable: true })
   Me(@Ctx() context: RequestContext) {

@@ -1,11 +1,11 @@
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from '../user/User';
 import { Item } from '../item/Item';
+import { User } from '../user/User';
 
 @ObjectType()
 @Entity()
-export class UserInventorItem extends BaseEntity {
+export class UserInventoryItem extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn('increment')
   id: number;
