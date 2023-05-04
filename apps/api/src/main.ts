@@ -13,6 +13,8 @@ import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
 import { resolvers } from './resolvers/resolvers';
 import { AppDataSource, setupDatabase } from '@virtcon2/database-postgres';
 
+log('Starting API', LogLevel.INFO, LogApp.API);
+
 const host = process.env.HOST ?? 'localhost';
 const port = 3000;
 

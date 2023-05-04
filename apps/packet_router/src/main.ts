@@ -1,25 +1,27 @@
 import cors from 'cors';
 
-import { JoinPacketData, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
+import { JoinPacketData, NetworkPacketData, PacketType, RedisPacketPublisher } from '@virtcon2/network-packet';
 import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
 import { cwd } from 'process';
-import { createClient } from 'redis';
+import { RedisClientType, createClient } from 'redis';
 import * as socketio from 'socket.io';
-import { Redis, RedisPublisher } from './database/Redis';
 import { World } from './functions/world/world';
 import { worldService } from './services/world_service';
+import {createClient as createRedisClient} from 'redis';
 import { LogApp, LogLevel, log } from '@shared';
 
 dotenv.config({ path: `${cwd()}/.env` });
 
-const redis = new Redis();
+const redisClient = createRedisClient() as RedisClientType;
+
+redisClient.on('error', (err) => console.log('Redis Client Error', err));
 
 /* Temporary code, will be moved later. */
-redis.connectClient().then(async () => {
-  await redis.client.json.set('worlds', '$', {});
-  worldService.createWorld('Test World', redis);
+redisClient.connect().then(async () => {
+  await redisClient.json.set('worlds', '$', {});
+  worldService.createWorld('Test World', redisClient);
 });
 
 const redisPubSub = createClient();
@@ -45,9 +47,9 @@ const io = new socketio.Server(server, {
 
 io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
-    const player = await World.getPlayerBySocketId(socket.id, redis);
+    const player = await World.getPlayerBySocketId(socket.id, redisClient);
     if (!player) return;
-    await new RedisPublisher(redisPubSub).channel(player.world_id).packet_type(PacketType.DISCONNECT).data({ id: player.id }).build().publish();
+    await new RedisPacketPublisher(redisPubSub).channel(player.world_id).packet_type(PacketType.DISCONNECT).data({ id: player.id }).build().publish();
   });
 
   socket.on('packet', async (packet: string) => {
@@ -63,7 +65,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    let packetBuilder = new RedisPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
+    let packetBuilder = new RedisPacketPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
 
     packetBuilder = packetJson.packet_type === PacketType.JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
 
@@ -74,7 +76,7 @@ io.on('connection', (socket) => {
 });
 
 app.get('/worlds', async (_req, res) => {
-  const worlds = await redis.client.json.get('worlds', {
+  const worlds = await redisClient.json.get('worlds', {
     path: '$.*',
   });
 
@@ -87,7 +89,7 @@ server.listen(4000, () => {
 
 /* Implement SIGKILL logic */
 process.on('SIGINT', async () => {
-  await redis.client.disconnect();
+  await redisClient.disconnect();
 
   process.exit();
 });

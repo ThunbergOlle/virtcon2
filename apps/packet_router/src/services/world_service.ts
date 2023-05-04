@@ -1,10 +1,10 @@
-import { exec } from 'child_process';
-import { Redis } from '../database/Redis';
-import { World } from '../functions/world/world';
-import { cwd } from 'process';
 import { LogApp, LogLevel, TPS, log } from '@shared';
+import { exec } from 'child_process';
+import { cwd } from 'process';
+import { RedisClientType } from 'redis';
+import { World } from '../functions/world/world';
 
-const createWorld = async (name: string, redis: Redis) => {
+const createWorld = async (name: string, redis: RedisClientType) => {
   const world = await World.registerWorld(name, redis);
   const worldProcess = exec(`$(which cargo) run`, {
     cwd: `${cwd()}/apps/packet_tick_server`,

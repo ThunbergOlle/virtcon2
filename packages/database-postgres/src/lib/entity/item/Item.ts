@@ -1,13 +1,11 @@
-import { ItemName, ServerItem } from '@shared';
+import { ItemName } from '@shared';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 
-
-
 @ObjectType()
 @Entity()
-export class Item extends BaseEntity implements ServerItem {
+export class Item extends BaseEntity {
   @PrimaryColumn({ type: 'int', unique: true })
   @Field(() => Int)
   id: number;
@@ -39,5 +37,4 @@ export class Item extends BaseEntity implements ServerItem {
   @Field(() => [UserInventoryItem])
   @OneToMany(() => UserInventoryItem, (i) => i.id)
   inventory: UserInventoryItem[];
-
 }
