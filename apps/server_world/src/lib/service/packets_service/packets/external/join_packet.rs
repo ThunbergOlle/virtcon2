@@ -32,10 +32,11 @@ impl NetworkPacket for JoinPacket {
 pub fn packet_join_world(
     packet: String,
     world: &mut world::World,
-    _: &mut redis::Connection,
     sender: &str,
     publish_send_packet: &mpsc::Sender<String>,
 ) {
+    // we need to get the user from the PostgreSQL database
+
     let world_id = world.id.clone();
     // deserialize packet
     let deserialized_packet: JoinPacket = serde_json::from_str(&packet).unwrap();
@@ -46,9 +47,11 @@ pub fn packet_join_world(
         id: deserialized_packet.id,
         name: deserialized_packet.name,
         position: deserialized_packet.position,
+        inventory: vec![],
         socket_id: deserialized_packet.socket_id,
         world_id: world_id,
     };
+
     let load_world_packet = LoadWorldPacket {
         world: world.clone(),
         player: player.clone(),

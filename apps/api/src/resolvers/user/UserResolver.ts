@@ -90,9 +90,9 @@ export class UserResolver {
   ) {
     const user = await User.findOne({
       where: { id: userId },
-      relations: ['inventory'],
+      relations: ['inventory', "inventory.item"],
     });
-    return user;
+    return user.inventory;
   }
   @Query(() => User, { nullable: true })
   Me(@Ctx() context: RequestContext) {

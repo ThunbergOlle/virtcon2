@@ -30,12 +30,18 @@ export class PlayerSystem {
         }, playerPositionUpdateRate);
       }
     });
-    events.subscribe('networkNewPlayer', ({player}) => {
+    events.subscribe('networkNewPlayer', ({ player }) => {
       if (player.id !== Game.mainPlayer.id) this.newPlayer(player);
+    });
+    events.subscribe('networkPlayerInventory', ({ player_id, inventory }) => {
+      const playerObject = this.getPlayerById(player_id);
+      if (playerObject) {
+        playerObject.setInventory(inventory);
+      }
     });
     events.subscribe('networkDisconnect', (player: DisconnectPacketData) => {
       const playerObject = this.getPlayerById(player.id);
-      console.timeLog("player disconnected", player.id)
+      console.timeLog('player disconnected', player.id);
       if (playerObject) {
         playerObject.destroy();
         this.players = this.players.filter((p) => p.id !== player.id);

@@ -1,10 +1,11 @@
+import { ServerInventoryItem } from '@shared';
+import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import { Physics } from 'phaser';
-import { BuildingItem } from '../item/BuildingItem';
-import Item from '../item/Item';
+import Game from '../../scenes/Game';
 
 export class Player extends Physics.Arcade.Sprite {
   public id: string;
-  private inventory = new Array<Item | BuildingItem>();
+  private inventoryCache: Array<ServerInventoryItem> | null = null;
   public inventorySize: number = 1000;
   public networkPosition = { x: 0, y: 0 };
   constructor(scene: Phaser.Scene, playerId: string) {
@@ -15,39 +16,31 @@ export class Player extends Physics.Arcade.Sprite {
 
     this.scene.physics.add.existing(this);
     this.scene.add.existing(this);
-
   }
 
-  update(t: number, dt: number) {
+  update(t: number, dt: number) {}
 
-  }
-  public addToInventory(item: Item) {
-    const currentInventorySize = this.getCurrentInventorySize();
-
-    if (currentInventorySize + item.amount > this.inventorySize) {
-      // TODO: Implement better way to handle this!
-      console.log('Inventory full');
-      return;
-    }
-    const sameTypeItem = this.inventory.find((i) => i.type === item.type);
-    if (sameTypeItem) sameTypeItem.amount += item.amount;
-    else this.inventory.push(item);
+  /* Updates inventory cache*/
+  public setInventory(inventory: ServerInventoryItem[]) {
+    this.inventoryCache = inventory;
   }
 
-  public removeFromInventory(item: Item) {
-    const sameTypeItem = this.getInventory().find((i) => i.type === item.type);
-    if (sameTypeItem) {
-      sameTypeItem.amount -= item.amount;
-      if (sameTypeItem.amount <= 0) {
-        this.inventory = this.getInventory().filter((i) => i.type !== item.type);
-      }
-    }
-  }
   public getCurrentInventorySize(): number {
-    return this.inventory.reduce((acc, item) => acc + item.amount, 0);
+    return this.getInventory().reduce((acc, item) => acc + item.quantity, 0);
   }
-  public getInventory(): Item[] {
-    return this.inventory;
+  public getInventory(): ServerInventoryItem[] {
+    if (this.inventoryCache === null) {
+      // send network packet to get inventory
+      const requestInventoryPacket: NetworkPacketData<RequestPlayerInventoryPacket> = {
+        data: { player_id: this.id },
+        packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
+        world_id: Game.worldId,
+        packet_target: this.id,
+      };
+
+      Game.network.sendPacket(requestInventoryPacket);
+    }
+    return this.inventoryCache || [];
   }
   public destroy() {
     super.destroy();

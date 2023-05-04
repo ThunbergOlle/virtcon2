@@ -1,4 +1,4 @@
-import { ItemName } from '@shared';
+import { ItemName, ServerItem } from '@shared';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
@@ -7,7 +7,7 @@ import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 
 @ObjectType()
 @Entity()
-export class Item extends BaseEntity {
+export class Item extends BaseEntity implements ServerItem {
   @PrimaryColumn({ type: 'int', unique: true })
   @Field(() => Int)
   id: number;

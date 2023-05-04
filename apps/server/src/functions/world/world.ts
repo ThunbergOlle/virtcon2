@@ -6,6 +6,7 @@ import { ServerPlayer } from '@shared';
 const getWorld = async (id: string, redis: Redis) => {
   const world = (await redis.client.json.get(`worlds`, {
     path: `$.${id}`,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any as RedisWorld[];
   if (!world || !world[0]) return null;
   return world[0];

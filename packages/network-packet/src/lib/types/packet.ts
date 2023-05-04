@@ -4,8 +4,8 @@ export enum PacketType {
   PLAYER_MOVE = 'playerMove',
   LOAD_WORLD = 'loadWorld',
   PLAYER_SET_POSITION = 'playerSetPosition',
+  REQUEST_PLAYER_INVENTORY = 'requestPlayerInventory',
 }
-
 
 export interface NetworkPacketData<T> {
   world_id: string;
@@ -14,16 +14,3 @@ export interface NetworkPacketData<T> {
   data: T;
 }
 
-export const UseNetworkPacket = <T>() => ({
-  serialize: (packet_type: PacketType, data: T, world_id: string): string => {
-    const packetData: NetworkPacketData<T> = {
-      packet_type: packet_type,
-      data,
-      world_id,
-    };
-    return JSON.stringify(packetData);
-  },
-  deserialize: (data: string): NetworkPacketData<T> => {
-    return JSON.parse(data);
-  },
-});

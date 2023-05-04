@@ -1,8 +1,4 @@
-use std::{
-    sync::{mpsc},
-};
-
-
+use std::sync::mpsc;
 
 // import mod world
 #[path = "./lib/database/models/world.rs"]
@@ -20,7 +16,6 @@ mod packets_service;
 #[path = "./lib/service/world_service/world_service.rs"]
 mod world_service;
 
-
 fn main() {
     /* Setup redis connection */
     let redis_client =
@@ -34,7 +29,6 @@ fn main() {
     let env_tps = std::env::var("TPS").expect("TPS must be set");
     let tps = env_tps.parse::<i32>().expect("TPS must be a number");
 
-
     let (publish_receive_packet, on_receive_packet) = mpsc::channel();
     let (publish_send_packet, on_send_packet) = mpsc::channel();
 
@@ -45,7 +39,19 @@ fn main() {
     let mut last_tick = std::time::Instant::now();
 
     loop {
-        packets_service::tick(world_id.clone(),&on_receive_packet, &publish_send_packet, &mut redis_connection);
-        tick_service::tick(tps, world_id.clone(), &mut tick, &mut last_tick, &mut redis_connection,&on_send_packet);
+        packets_service::tick(
+            world_id.clone(),
+            &on_receive_packet,
+            &publish_send_packet,
+            &mut redis_connection,
+        );
+        tick_service::tick(
+            tps,
+            world_id.clone(),
+            &mut tick,
+            &mut last_tick,
+            &mut redis_connection,
+            &on_send_packet,
+        );
     }
 }

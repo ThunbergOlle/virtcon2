@@ -39,7 +39,7 @@ export class User extends BaseEntity {
   isConfirmed: boolean;
 
   @Field(() => [UserInventoryItem])
-  @OneToMany(() => UserInventoryItem, userInventoryItem => userInventoryItem.id)
+  @OneToMany(() => UserInventoryItem, userInventoryItem => userInventoryItem.user)
   inventory: UserInventoryItem[];
 
 }

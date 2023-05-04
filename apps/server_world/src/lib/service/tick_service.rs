@@ -5,7 +5,7 @@ pub fn tick(
     world_id: String,
     tick: &mut i32,
     last_tick: &mut std::time::Instant,
-    connection: &mut redis::Connection,
+    redis_connection: &mut redis::Connection,
     on_send_packet: &std::sync::mpsc::Receiver<String>,
 ) {
     let send_packets = on_send_packet
@@ -16,7 +16,7 @@ pub fn tick(
 
     let channel = format!("tick_{}", world_id);
 
-    match connection.publish::<String, String, i32>(channel, send_packets.join(";;")){
+    match redis_connection.publish::<String, String, i32>(channel, send_packets.join(";;")){
         Ok(_) => {}
         Err(e) => {
             println!("Error publishing to channel: {:?}", e);

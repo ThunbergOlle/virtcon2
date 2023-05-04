@@ -1,9 +1,9 @@
-import { ErrorType, ServerPlayer } from "@shared";
+import { ErrorType } from "@shared";
+import { DisconnectPacketData, LoadWorldPacketData, NewPlayerPacketData, PlayerInventoryPacketData, PlayerMovePacketData } from "@virtcon2/network-packet";
 import EventSystem from "events-system";
 import { Building } from "../gameObjects/buildings/Building";
 import { BuildingItem } from "../gameObjects/item/BuildingItem";
 import { Player } from "../gameObjects/player/Player";
-import { DisconnectPacketData, LoadWorldPacketData, NewPlayerPacketData, PlayerMovePacketData } from "@virtcon2/network-packet";
 
 
 type Events = {
@@ -20,6 +20,7 @@ type Events = {
   networkDisconnect: (player: DisconnectPacketData) => void;
   networkPlayerMove: (data: PlayerMovePacketData) => void;
   networkPlayerSetPosition: (player: PlayerMovePacketData) => void;
+  networkPlayerInventory: (playerInventoryPacket: PlayerInventoryPacketData) => void;
   networkError: (error: {message: string; type: ErrorType}) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   networkTick: (...args: any) => void;

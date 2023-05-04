@@ -13,7 +13,7 @@ export class UserInventoryItem extends BaseEntity {
 
   @ManyToOne(() => User, (user) => user.id)
   @Field(() => User)
-  user: User; // world ID is the player's display name
+  user: User;
 
   @Field(() => Item)
   @ManyToOne(() => Item, (item) => item.id)

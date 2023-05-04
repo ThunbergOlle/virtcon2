@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import entities from './entity/entities';
-export const enableSQLLogging = true;
+export const enableSQLLogging = false;
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: 'localhost',

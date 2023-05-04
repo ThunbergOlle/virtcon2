@@ -1,4 +1,4 @@
-import { NetworkPacketData, PacketType, PlayerMovePacketData, UseNetworkPacket } from '@virtcon2/network-packet';
+import { NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
 import { events } from '../../events/Events';
 import Game from '../../scenes/Game';
 import { Player } from './Player';
