@@ -63,7 +63,6 @@ io.on('connection', (socket) => {
       return;
     }
 
-
     let packetBuilder = new RedisPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
 
     packetBuilder = packetJson.packet_type === PacketType.JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
@@ -104,7 +103,7 @@ process.on('SIGINT', async () => {
     if (!packets.length) return;
     log(`Received ${packets.length} packets from ${channel}`, LogLevel.INFO, LogApp.SERVER);
 
-    for(let i = 0; i < packets.length; i++) {
+    for (let i = 0; i < packets.length; i++) {
       const [packetTarget, packetData] = packets[i].split('#');
 
       const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;

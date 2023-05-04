@@ -1,7 +1,7 @@
 {
-  "name": "server",
+  "name": "packet_router",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/server/src",
+  "sourceRoot": "apps/packet_router/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -10,12 +10,12 @@
       "defaultConfiguration": "production",
       "options": {
         "platform": "node",
-        "outputPath": "dist/apps/server",
+        "outputPath": "dist/apps/packet_router",
         "format": ["cjs"],
         "bundle": false,
-        "main": "apps/server/src/main.ts",
-        "tsConfig": "apps/server/tsconfig.app.json",
-        "assets": ["apps/server/src/assets"],
+        "main": "apps/packet_router/src/main.ts",
+        "tsConfig": "apps/packet_router/tsconfig.app.json",
+        "assets": ["apps/packet_router/src/assets"],
         "esbuildOptions": {
           "sourcemap": true,
           "outExtension": {
@@ -39,14 +39,14 @@
       "executor": "@nrwl/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "server:build"
+        "buildTarget": "packet_router:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "server:build:development"
+          "buildTarget": "packet_router:build:development"
         },
         "production": {
-          "buildTarget": "server:build:production"
+          "buildTarget": "packet_router:build:production"
         }
       }
     },
@@ -54,14 +54,14 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/server/**/*.ts"]
+        "lintFilePatterns": ["apps/packet_router/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/server/jest.config.ts",
+        "jestConfig": "apps/packet_router/jest.config.ts",
         "passWithNoTests": true
       },
       "configurations": {

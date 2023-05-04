@@ -31,7 +31,7 @@ export class Redis {
 /* Use Builder pattern */
 export class RedisPublisher {
   public client: ReturnType<typeof createClient>;
-  private _channel= '';
+  private _channel = '';
   private _packet_type = '';
   private _target = 'all';
   private _data = '';
@@ -68,7 +68,4 @@ export class RedisPublisher {
     }
     await this.client.publish(this._channel, this._packet);
   }
-
 }
-
-

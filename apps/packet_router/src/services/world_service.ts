@@ -15,10 +15,10 @@ const createWorld = async (name: string, redis: Redis) => {
     shell: process.env.SHELL,
   });
   worldProcess.stdout.on('data', (data) => {
-      log(data, LogLevel.INFO, LogApp.WORLD_SERVER);
+    log(data, LogLevel.INFO, LogApp.WORLD_SERVER);
   });
   worldProcess.stderr.on('data', (data) => {
-      log(data, LogLevel.INFO, LogApp.WORLD_SERVER);
+    log(data, LogLevel.INFO, LogApp.WORLD_SERVER);
   });
 
   log(`Created world "${name}", --> process id: ${worldProcess.pid}`, LogLevel.OK, LogApp.SERVER);
@@ -26,4 +26,4 @@ const createWorld = async (name: string, redis: Redis) => {
 
 export const worldService = {
   createWorld,
-}
+};
