@@ -7,7 +7,7 @@ import { LogApp, LogLevel, TPS, log } from '@shared';
 const createWorld = async (name: string, redis: Redis) => {
   const world = await World.registerWorld(name, redis);
   const worldProcess = exec(`$(which cargo) run`, {
-    cwd: `${cwd()}/apps/server_world`,
+    cwd: `${cwd()}/apps/packet_tick_server`,
     env: {
       WORLD_ID: world.id,
       TPS: TPS.toString(),
