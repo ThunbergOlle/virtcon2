@@ -8,11 +8,10 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import cors from 'cors';
 import express from 'express';
 import { buildSchema } from 'type-graphql';
-import { AppDataSource } from './data-source';
 import { FormatGraphQLErrorResponse } from './graphql/FormatGraphQLErrorResponse';
 import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
-import { setupDatabase } from './import/setup-database';
 import { resolvers } from './resolvers/resolvers';
+import { AppDataSource, setupDatabase } from '@virtcon2/database-postgres';
 
 const host = process.env.HOST ?? 'localhost';
 const port = 3000;

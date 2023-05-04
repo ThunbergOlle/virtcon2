@@ -10,7 +10,9 @@ export enum LogApp {
   DEFAULT = 'DEFAULT',
   GAME = 'GAME',
   SERVER = 'SERVER',
-  WORLD_SERVER = 'WORLD_SERVER',
+  PACKET_TICK_SERVER = 'PACKET_TICK_SERVER',
+  PACKET_DATA_SERVER = 'PACKET_DATA_SERVER',
+  DATABASE_POSTGRES = 'DATABASE_POSTGRES',
   SHARED = 'SHARED',
   API = 'API',
   NETWORK = 'NETWORK',
@@ -21,10 +23,12 @@ function getAppPrefix(app: LogApp) {
     [LogApp.DEFAULT]: chalk.blue,
     [LogApp.GAME]: chalk.green,
     [LogApp.SERVER]: chalk.yellow,
-    [LogApp.WORLD_SERVER]: chalk.magenta,
+    [LogApp.PACKET_TICK_SERVER]: chalk.magenta,
     [LogApp.API]: chalk.green,
     [LogApp.SHARED]: chalk.cyan,
     [LogApp.NETWORK]: chalk.red,
+    [LogApp.PACKET_DATA_SERVER]: chalk.magenta,
+    [LogApp.DATABASE_POSTGRES]: chalk.magenta,
   };
 
   return colors[app](app);
@@ -42,5 +46,4 @@ export function getLogLevelPrefix(level: LogLevel) {
 }
 export const log = (message: string, level: LogLevel = LogLevel.INFO, app: LogApp = LogApp.DEFAULT) => {
   console.log(`[${chalk.cyan(new Date().toLocaleTimeString())}] ${getLogLevelPrefix(level)} [${getAppPrefix(app)}] → ${message}`);
-
 };

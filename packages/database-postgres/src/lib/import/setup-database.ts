@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import fs from 'fs/promises';
+import { promises as fs } from 'fs';
 import { glob } from 'glob';
 import { validate } from 'jsonschema';
 import { Item } from '../entity/item/Item';
@@ -23,11 +23,11 @@ async function SetupItems() {
 }
 
 async function getJsonSchema(type: string) {
-  const jsonSchema = await fs.readFile(`apps/api/src/import/db/${type}/_schema.json`, 'utf-8');
+  const jsonSchema = await fs.readFile(`packages/database-postgres/src/lib/import/db/${type}/_schema.json`, 'utf-8');
   return JSON.parse(jsonSchema);
 }
 async function getFiles(type: string) {
-  return glob.sync(`apps/api/src/import/db/${type}/*.json`, { ignore: '*/**/_schema.json' });
+  return glob.sync(`packages/database-postgres/src/lib/import/db/${type}/*.json`, { ignore: '*/**/_schema.json' });
 }
 
 async function readLocalFile<T>(name: string): Promise<T> {

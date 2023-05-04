@@ -1,6 +1,6 @@
+import { User, enableSQLLogging } from '@virtcon2/database-postgres';
 import { Request, Response } from 'express';
-import { User } from '../entity/user/User';
-import { enableSQLLogging } from '../data-source';
+
 
 export interface RequestContext {
   token?: string;

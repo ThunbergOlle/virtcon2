@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@shared": ["packages/shared/src/index.ts"],
+      "@virtcon2/database-postgres": ["packages/database-postgres/src/index.ts"],
       "@virtcon2/network-packet": ["packages/network-packet/src/index.ts"]
     }
   },

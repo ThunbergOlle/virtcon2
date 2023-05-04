@@ -1,5 +1,5 @@
+import { Item } from '@virtcon2/database-postgres';
 import { Query, Resolver } from 'type-graphql';
-import { Item } from '../../entity/item/Item';
 @Resolver()
 export class ItemResolver {
   @Query(() => [Item], { nullable: true })

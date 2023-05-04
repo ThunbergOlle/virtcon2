@@ -1,7 +1,7 @@
 import { LogLevel, LogApp } from '@shared';
+import { RequestLog } from '@virtcon2/database-postgres';
 import { log } from 'console';
 import { GraphQLFormattedError } from 'graphql';
-import { RequestLog } from '../entity/log/RequestLog';
 
 export function FormatGraphQLErrorResponse(error: GraphQLFormattedError): GraphQLFormattedError {
   RequestLog.create({

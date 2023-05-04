@@ -1,5 +1,5 @@
+import { User } from '@virtcon2/database-postgres';
 import { ObjectType, Field } from 'type-graphql';
-import { User } from '../../entity/user/User';
 
 @ObjectType()
 export class UserNewResponse {

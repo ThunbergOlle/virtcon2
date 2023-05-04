@@ -1,5 +1,4 @@
 import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { User } from '../../entity/user/User';
 import { RequestContext } from '../../graphql/RequestContext';
 import { EmailService } from '../../service/EmailService';
 import { GenerateToken } from '../../utils/GenerateToken';
@@ -8,10 +7,8 @@ import RandomCode from '../../utils/RandomCode';
 import { UserNewInput } from './UserRequest';
 import { UserLoginResponse, UserNewResponse } from './UserResponse';
 import { LogApp, LogLevel, log } from '@shared';
-import { World } from '../../entity/world/World';
-import { AccessLevel, WorldWhitelist } from '../../entity/world_whitelist/WorldWhitelist';
-import { AppDataSource } from '../../data-source';
-import { UserInventoryItem } from '../../entity/user_inventory_item/UserInventoryItem';
+import { User, AppDataSource, World, WorldWhitelist, AccessLevel, UserInventoryItem } from '@virtcon2/database-postgres';
+
 @Resolver()
 export class UserResolver {
   @Mutation(() => UserLoginResponse, { nullable: true })
