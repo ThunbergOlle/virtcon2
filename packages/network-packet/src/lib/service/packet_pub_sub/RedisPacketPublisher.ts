@@ -3,6 +3,7 @@ import { createClient } from 'redis';
 /* Use Builder pattern */
 export class RedisPacketPublisher {
   public client: ReturnType<typeof createClient>;
+  static channel_prefix = 'router_';
   private _channel = '';
   private _packet_type = '';
   private _target = 'all';
@@ -12,7 +13,7 @@ export class RedisPacketPublisher {
     this.client = client;
   }
   channel(channel: string) {
-    this._channel = channel;
+    this._channel = RedisPacketPublisher.channel_prefix + channel;
     return this;
   }
   packet_type(packet_type: string) {
