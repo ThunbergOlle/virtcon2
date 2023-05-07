@@ -19,3 +19,4 @@ export * from './lib/service/packets/PlayerInventoryPacket';
 export * from './lib/service/packets/RequestPlayerInventoryPacket';
 
 export * from './lib/service/packets/RequestJoinPacket';
+

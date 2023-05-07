@@ -2,9 +2,9 @@ import { LogApp, LogLevel, TPS, log } from '@shared';
 import { exec } from 'child_process';
 import { cwd } from 'process';
 import { RedisClientType } from 'redis';
-import { World } from '../functions/world/world';
+import { World } from './world_utils';
 
-const createWorld = async (name: string, redis: RedisClientType) => {
+const createWorld = async (name: string, redis: RedisClientType, ) => {
   const world = await World.registerWorld(name, redis);
   const worldProcess = exec(`$(which cargo) run`, {
     cwd: `${cwd()}/apps/packet_tick_server`,
@@ -12,12 +12,12 @@ const createWorld = async (name: string, redis: RedisClientType) => {
       WORLD_ID: world.id,
       TPS: TPS.toString(),
     },
-    shell: process.env.SHELL,
+    shell: process.env['SHELL'],
   });
-  worldProcess.stdout.on('data', (data) => {
+  worldProcess.stdout?.on('data', (data) => {
     log(data, LogLevel.INFO, LogApp.PACKET_TICK_SERVER);
   });
-  worldProcess.stderr.on('data', (data) => {
+  worldProcess.stderr?.on('data', (data) => {
     log(data, LogLevel.INFO, LogApp.PACKET_TICK_SERVER);
   });
 

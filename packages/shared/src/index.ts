@@ -21,3 +21,5 @@ export * from './lib/config/urls';
 export * from './lib/logger/logger';
 
 export * from './lib/types/redis/RedisBuilding';
+
+export * from './lib/types/redis/RedisWorld';

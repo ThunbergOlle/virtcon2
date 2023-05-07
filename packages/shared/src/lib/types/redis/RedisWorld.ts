@@ -1,4 +1,7 @@
-import { RedisJSONObject, ServerBuilding, ServerPlayer } from '@shared';
+import { ServerBuilding } from "./RedisBuilding";
+import { ServerPlayer } from "./RedisPlayer";
+import { RedisJSONObject } from "./RedisTypes";
+
 
 export interface RedisWorld extends RedisJSONObject {
   players: ServerPlayer[];

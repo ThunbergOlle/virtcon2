@@ -8,8 +8,7 @@ import * as http from 'http';
 import { cwd } from 'process';
 import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import * as socketio from 'socket.io';
-import { World } from './functions/world/world';
-import { worldService } from './services/world_service';
+import { World, worldService } from '@virtcon2/database-redis';
 
 dotenv.config({ path: `${cwd()}/.env` });
 

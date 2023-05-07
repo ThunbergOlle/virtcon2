@@ -1,8 +1,7 @@
-import { ServerPlayer } from '@shared';
+import { RedisWorld, ServerPlayer } from '@shared';
 import { RedisClientType } from 'redis';
 import * as socketio from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import { RedisWorld } from '../../database/schemas/RedisWorld';
 
 const getWorld = async (id: string, redisClient: RedisClientType) => {
   const world = (await redisClient.json.get(`worlds`, {
@@ -31,7 +30,7 @@ const unregisterWorld = async (id: string, redisClient: RedisClientType) => {
 };
 
 const addPlayer = async (player: ServerPlayer, worldId: string, socket: socketio.Socket, redisClient: RedisClientType) => {
-  await redisClient.json.arrAppend('worlds', `$.${worldId}.players`, player as any);
+  await redisClient.json.arrAppend('worlds', `$.${worldId}.players`, player as never);
   socket.join(worldId);
 };
 
@@ -44,18 +43,18 @@ const removePlayer = async (player: ServerPlayer, worldId: string, socket: socke
   socket.leave(worldId);
 };
 
-const getPlayer = async (playerId: string, redisClient: RedisClientType): Promise<ServerPlayer> => {
+const getPlayer = async (playerId: string, redisClient: RedisClientType): Promise<ServerPlayer | null> => {
   const player = (await redisClient.json.get('worlds', {
     path: `$.*.players[?(@.id=='${playerId}')]`,
-  })) as any as ServerPlayer[];
+  })) as unknown as ServerPlayer[];
   if (!player || !player[0]) return null;
   return player[0];
 };
-const getPlayerBySocketId = async (socketId: string, redisClient: RedisClientType): Promise<ServerPlayer> => {
-  const player = await redisClient.json.get('worlds', {
+const getPlayerBySocketId = async (socketId: string, redisClient: RedisClientType): Promise<ServerPlayer | null> => {
+  const player = (await redisClient.json.get('worlds', {
     path: `$.*.players[?(@.socket_id=='${socketId}')]`,
-  });
-  if (!player || !player[0]) return null;
+  })) as ServerPlayer[];
+  if (!player || !player.length) return null;
   return player[0];
 };
 const savePlayer = async (player: ServerPlayer, redisClient: RedisClientType) => {

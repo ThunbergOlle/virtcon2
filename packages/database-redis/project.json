@@ -1,0 +1,19 @@
+{
+  "name": "database-redis",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/database-redis/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/database-redis",
+        "main": "packages/database-redis/src/index.ts",
+        "tsConfig": "packages/database-redis/tsconfig.lib.json",
+        "assets": ["packages/database-redis/*.md"]
+      }
+    }
+  },
+  "tags": []
+}
