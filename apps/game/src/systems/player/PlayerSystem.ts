@@ -33,7 +33,7 @@ export class PlayerSystem {
     events.subscribe('networkNewPlayer', ({ player }) => {
       if (player.id !== Game.mainPlayer.id) this.newPlayer(player);
     });
-    events.subscribe('networkPlayerInventory', ({ player_id, inventory }) => {
+    events.subscribe('networkPlayerInventoryPacket', ({ player_id, inventory }) => {
       const playerObject = this.getPlayerById(player_id);
       if (playerObject) {
         playerObject.setInventory(inventory);

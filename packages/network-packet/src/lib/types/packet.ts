@@ -5,6 +5,8 @@ export enum PacketType {
   LOAD_WORLD = 'loadWorld',
   PLAYER_SET_POSITION = 'playerSetPosition',
   REQUEST_PLAYER_INVENTORY = 'requestPlayerInventory',
+  PLAYER_INVENTORY = 'playerInventory',
+  REQUEST_JOIN = 'requestJoin',
 }
 
 export interface NetworkPacketData<T> {

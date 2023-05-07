@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { events } from '../../events/Events';
 import Game from '../Game';
 
-import { JoinPacketData, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
+import { JoinPacketData, NetworkPacketData, PacketType, RequestJoinPacketData } from '@virtcon2/network-packet';
 
 export class Network {
   socket: Socket;
@@ -22,9 +22,7 @@ export class Network {
     });
 
     socket.on('packet', (packetJSON: NetworkPacketData<unknown>) => {
-
       const event = packetJSON.packet_type.charAt(0).toUpperCase() + packetJSON.packet_type.slice(1);
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       events.notify(('network' + event) as any, packetJSON.data);
     });
@@ -32,9 +30,8 @@ export class Network {
 
   join(worldId: string) {
     Game.worldId = worldId;
-    const id = uuidv4();
-    const packet: NetworkPacketData<JoinPacketData> = { data: { name: 'Olle', id: id, position: [0, 0], socket_id: '' }, packet_type: PacketType.JOIN, world_id: Game.worldId };
-
+    const token = localStorage.getItem('token');
+    const packet: NetworkPacketData<RequestJoinPacketData> = { data: { socket_id: '', token: token || '' }, packet_type: PacketType.REQUEST_JOIN, world_id: Game.worldId };
     this.sendPacket(packet);
   }
   disconnect() {

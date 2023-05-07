@@ -12,7 +12,6 @@ type Events = {
   onPlaceBuildingIntentCancelled: () => void;
   onPlayerInventoryOpened: (player: Player) => void;
   onPlayerInventoryClosed: () => void;
-  onPlayerInventoryUpdate: () => void;
   onPlayerMenuOpened: () => void;
   joinWorld: (worldId: string) => void;
   networkLoadWorld: (data: LoadWorldPacketData) => void;
@@ -20,7 +19,7 @@ type Events = {
   networkDisconnect: (player: DisconnectPacketData) => void;
   networkPlayerMove: (data: PlayerMovePacketData) => void;
   networkPlayerSetPosition: (player: PlayerMovePacketData) => void;
-  networkPlayerInventory: (playerInventoryPacket: PlayerInventoryPacketData) => void;
+  networkPlayerInventoryPacket: (playerInventoryPacket: PlayerInventoryPacketData) => void;
   networkError: (error: {message: string; type: ErrorType}) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   networkTick: (...args: any) => void;

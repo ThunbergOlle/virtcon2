@@ -48,12 +48,7 @@ pub fn handle_packets(
     publish_send_packet: &mpsc::Sender<String>,
 ) {
     for i in client_packets {
-        on_packet(
-            i,
-            world,
-            redis_connection,
-            publish_send_packet,
-        );
+        on_packet(i, world, redis_connection, publish_send_packet);
     }
 }
 pub fn on_packet(
@@ -68,12 +63,9 @@ pub fn on_packet(
     let packet_data = packet_parts[2].to_string();
 
     match packet_type {
-        "join" => packets::packet_join_world(
-            packet_data,
-            world,
-            packet_target,
-            publish_send_packet,
-        ),
+        "join" => {
+            packets::packet_join_world(packet_data, world, packet_target, publish_send_packet)
+        }
         "disconnect" => {
             packets::packet_disconnect(packet_data, world, redis_connection, publish_send_packet)
         }
@@ -86,7 +78,10 @@ pub fn on_packet(
             redis_connection,
             publish_send_packet,
         ),
-        _ => println!("Packet not found"),
+        "playerInventory" => packets::packet_player_inventory(packet_data, world, publish_send_packet),
+        _ => {
+            println!("Unknown packet type: {}", packet_type);
+        }
     }
 }
 

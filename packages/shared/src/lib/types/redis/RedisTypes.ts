@@ -4,3 +4,7 @@ export interface RedisJSONObject {
   [key: string]: RedisJSON;
   [key: number]: RedisJSON;
 }
+
+export const asRedisItem = <T>(item: unknown): T => {
+  return item as T;
+};

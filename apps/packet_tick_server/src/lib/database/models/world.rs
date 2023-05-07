@@ -30,6 +30,7 @@ pub struct Building {
 pub struct InventoryItem {
     pub id: i32,
     pub quantity: i32,
+    pub item: Item,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]

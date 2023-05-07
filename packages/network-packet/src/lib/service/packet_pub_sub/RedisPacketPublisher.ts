@@ -1,15 +1,15 @@
-import { createClient } from 'redis';
+import { RedisClientType } from 'redis';
 
 /* Use Builder pattern */
 export class RedisPacketPublisher {
-  public client: ReturnType<typeof createClient>;
+  public client: RedisClientType;
   static channel_prefix = 'router_';
   private _channel = '';
   private _packet_type = '';
   private _target = 'all';
   private _data = '';
   private _packet: string;
-  constructor(client: ReturnType<typeof createClient>) {
+  constructor(client: RedisClientType) {
     this.client = client;
   }
   channel(channel: string) {

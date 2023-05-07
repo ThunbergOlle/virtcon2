@@ -15,7 +15,7 @@ import { apiUrl } from '@shared';
 const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
 const authLink = setContext(async (_, { headers }) => {
   // get the authentication token from local storage if it exists
-  const token = sessionStorage.getItem('token');
+  const token = localStorage.getItem('token');
   // return the headers to the context so httpLink can read them
   return {
     headers: {
@@ -78,6 +78,7 @@ function AppRoutes() {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>
+
 
   return (
     <Routes>

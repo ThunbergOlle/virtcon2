@@ -13,6 +13,7 @@ include!("./external/player_move_packet.rs");
 include!("./external/load_world_packet.rs");
 include!("./external/player_set_position_packet.rs");
 include!("./external/new_player_packet.rs");
+include!("./external/player_inventory_packet.rs");
 
 // packet type
 #[derive(Debug, Serialize, Deserialize)]
@@ -23,6 +24,7 @@ pub enum PacketTypes {
     PlayerMovePacket,
     LoadWorldPacket,
     NewPlayerPacket,
+    PlayerInventoryPacket,
 }
 
 
