@@ -1,6 +1,7 @@
 import cors from 'cors';
 
 import { LogApp, LogLevel, log } from '@shared';
+import { World } from '@virtcon2/database-redis';
 import { NetworkPacketData, PacketType, RedisPacketPublisher, RequestJoinPacketData } from '@virtcon2/network-packet';
 import dotenv from 'dotenv';
 import * as express from 'express';
@@ -8,7 +9,6 @@ import * as http from 'http';
 import { cwd } from 'process';
 import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import * as socketio from 'socket.io';
-import { World, worldService } from '@virtcon2/database-redis';
 
 dotenv.config({ path: `${cwd()}/.env` });
 
@@ -19,7 +19,6 @@ redisClient.on('error', (err) => console.log('Redis Client Error', err));
 /* Temporary code, will be moved later. */
 redisClient.connect().then(async () => {
   await redisClient.json.set('worlds', '$', {});
-  worldService.createWorld('Test World', redisClient);
 });
 
 const redisPubSub = createClient() as RedisClientType;
@@ -52,6 +51,8 @@ io.on('connection', (socket) => {
 
   socket.on('packet', async (packet: string) => {
     const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
+    packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
+
     if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
       packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
       socket.join(packetJson.world_id);

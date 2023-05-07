@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { BaseEntity, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { BaseEntity, BeforeInsert, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { WorldWhitelist } from '../world_whitelist/WorldWhitelist';
 
 @ObjectType()
@@ -10,6 +10,11 @@ export class World extends BaseEntity {
   id: string; // world ID is the player's display name
 
   @Field(() => [WorldWhitelist])
-  @OneToMany(() => WorldWhitelist, worldWhitelist => worldWhitelist.world)
+  @OneToMany(() => WorldWhitelist, (worldWhitelist) => worldWhitelist.world)
   whitelist: string;
+
+  @BeforeInsert()
+  replaceSpacesInId() {
+    this.id = this.id.replace(/\s/g, '_');
+  }
 }

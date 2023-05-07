@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct World {
     pub id: String,
-    pub name: String,
     pub players: Vec<Player>,
     pub buildings: Vec<Building>,
 }

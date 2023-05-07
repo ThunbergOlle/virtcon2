@@ -4,13 +4,7 @@ import { cwd } from 'process';
 import { RedisClientType } from 'redis';
 import { World } from './world_utils';
 
-const createWorld = async (world_id: string, redis: RedisClientType) => {
-  const new_world: RedisWorld = {
-    id: world_id,
-    players: [],
-    whitelist: [],
-    buildings: [],
-  };
+const startWorldProcess = async (new_world: RedisWorld, redis: RedisClientType) => {
   const world = await World.registerWorld(new_world, redis);
   const worldProcess = exec(`$(which cargo) run`, {
     cwd: `${cwd()}/apps/packet_tick_server`,
@@ -27,9 +21,9 @@ const createWorld = async (world_id: string, redis: RedisClientType) => {
     log(data, LogLevel.INFO, LogApp.PACKET_TICK_SERVER);
   });
 
-  log(`Created world "${name}", --> process id: ${worldProcess.pid}`, LogLevel.OK, LogApp.SERVER);
+  log(`Created world "${new_world.id}", --> process id: ${worldProcess.pid}`, LogLevel.OK, LogApp.SERVER);
 };
 
 export const worldService = {
-  createWorld,
+  startWorldProcess,
 };
