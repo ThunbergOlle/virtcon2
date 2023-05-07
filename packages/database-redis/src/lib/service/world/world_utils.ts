@@ -1,7 +1,6 @@
 import { RedisWorld, ServerPlayer } from '@shared';
 import { RedisClientType } from 'redis';
 import * as socketio from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
 
 const getWorld = async (id: string, redisClient: RedisClientType) => {
   const world = (await redisClient.json.get(`worlds`, {
@@ -11,17 +10,8 @@ const getWorld = async (id: string, redisClient: RedisClientType) => {
   if (!world || !world[0]) return null;
   return world[0];
 };
-const registerWorld = async (name: string, redisClient: RedisClientType) => {
-  /* Register world */
-  const id = uuidv4();
-  const world: RedisWorld = {
-    id,
-    name,
-    players: [],
-    buildings: [],
-  };
-  await redisClient.json.set('worlds', `$.${id}`, world);
-
+const registerWorld = async (world: RedisWorld, redisClient: RedisClientType) => {
+  await redisClient.json.set('worlds', `$.${world.id}`, world);
   return world;
 };
 
