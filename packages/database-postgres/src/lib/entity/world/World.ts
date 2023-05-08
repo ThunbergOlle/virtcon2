@@ -32,12 +32,13 @@ export class World extends BaseEntity {
     this.id = this.id.replace(/\s/g, '_');
   }
   static Get2DWorldMap(seed: number, size = WorldSettings.world_size): number[][] {
-    const noise = createNoise2D(() => seed);
+    const randomGenerator = seedRandom(seed);
+    const noise = createNoise2D(randomGenerator);
     const map = [];
     for (let x = 0; x < size; x++) {
       map[x] = [];
       for (let y = 0; y < size; y++) {
-        map[x][y] = noise(x / 10, y / 10);
+        map[x][y] = noise(x / 20, y / 20);
       }
     }
     return map;
@@ -64,8 +65,8 @@ export class World extends BaseEntity {
       for (let y = 0; y < size; y++) {
         for (const resource of WorldSettings.resource_spawn_rates) {
           if (resource.minHeight <= world_map[x][y] && resource.maxHeight >= world_map[x][y]) {
-            const randomSpawnNumber = seededRandom()
-            console.log(randomSpawnNumber, resource.spawnRate)
+            const randomSpawnNumber = seededRandom();
+            console.log(randomSpawnNumber, resource.spawnRate);
             if (randomSpawnNumber > resource.spawnRate) {
               continue;
             }

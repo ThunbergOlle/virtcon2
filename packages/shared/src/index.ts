@@ -27,3 +27,5 @@ export * from './lib/types/redis/RedisBuilding';
 export * from './lib/types/redis/RedisWorld';
 
 export * from './lib/types/redis/RedisWorldResource';
+
+export * from './lib/utils/worldMapParser';

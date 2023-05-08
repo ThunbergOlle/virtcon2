@@ -30,7 +30,8 @@ const loadWorld = async (world_id: string): Promise<RedisWorld> => {
   if (!world) {
     throw new Error(`World ${world_id} does not exist.`);
   }
-  await PostgresWorldEntity.RegenerateWorld(world.id)
+  /* Uncomment this when debugging procedural world generation */
+  // await PostgresWorldEntity.RegenerateWorld(world.id)
 
   return {
     id: world.id,

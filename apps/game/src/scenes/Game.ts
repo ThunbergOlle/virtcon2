@@ -5,7 +5,7 @@ import Item from '../gameObjects/item/Item';
 import { BuildingSystem } from '../systems/building/BuildingSystem';
 import { SceneStates } from './interfaces';
 
-import { ItemName } from '@shared';
+import { ItemName, WorldSettings, worldMapParser } from '@shared';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/player/PlayerSystem';
@@ -21,11 +21,10 @@ export default class Game extends Scene implements SceneStates {
 
   // * Ticks per second, read more in ClockSystem.ts
   public static tps = 1;
-  public static worldId = "";
+  public static worldId = '';
 
   constructor() {
     super('game');
-
   }
 
   disableKeys() {
@@ -42,24 +41,22 @@ export default class Game extends Scene implements SceneStates {
     events.subscribe('joinWorld', (worldId) => {
       console.log('creating scene');
       this.physics.world.createDebugGraphic();
-
-      /* TODO: fetch this data from the backend */
-      this.map = this.make.tilemap({ key: 'tilemap' });
+      Game.network.join(worldId);
+    });
+    events.subscribe('networkLoadWorld', ({ world, player }) => {
+      console.log('Loading world data...');
+      this.map = this.make.tilemap({
+        tileWidth: 16,
+        tileHeight: 16,
+        width: world.height_map.length,
+        height: world.height_map[0].length,
+        data: worldMapParser(world.height_map),
+      });
       const tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 0, 0);
 
       this.map.layers.forEach((layer, index) => {
         this.map.createLayer(index, tileSet, 0, 0);
       });
-      Game.network.join(worldId);
-    });
-    events.subscribe('networkLoadWorld', ({world, player}) => {
-      world.height_map.forEach((row, y) => {
-        row.forEach((tile, x) => {
-           const text = this.add.text(x * 16, y * 16, `${tile.toFixed(3)}`, {resolution: 10, fontSize: '4px'});
-        });
-      });
-
-      console.log('Loading world data...');
 
       Game.playerSystem = new PlayerSystem(this);
       Game.buildingSystem = new BuildingSystem(this);
@@ -80,8 +77,7 @@ export default class Game extends Scene implements SceneStates {
 
       world.resources.forEach((resource) => {
         new Item(this, ItemName.WOOD, 10).spawnGameObject({ x: resource.x, y: resource.y });
-      })
-
+      });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
@@ -107,7 +103,5 @@ export default class Game extends Scene implements SceneStates {
     if (Game.mainPlayer) Game.mainPlayer.destroy();
     events.unsubscribe('joinWorld', () => {});
     events.unsubscribe('networkLoadWorld', () => {});
-
-
   }
 }
