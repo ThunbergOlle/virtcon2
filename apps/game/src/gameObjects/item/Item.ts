@@ -37,8 +37,7 @@ export default class Item {
       Game.mainPlayer.body.gameObject,
       sprite,
       () => {
-        Game.mainPlayer.addToInventory(this);
-        events.notify("onPlayerInventoryUpdate")
+        // TODO: implement pickup logic
         sprite.destroy();
       }
     );

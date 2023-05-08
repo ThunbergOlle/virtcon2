@@ -11,11 +11,12 @@ import LoginPage from './ui/pages/login/LoginPage';
 import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache, gql, useQuery } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { apiUrl } from '@shared';
+import { UserContext } from './ui/context/user/UserContext';
 
 const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
 const authLink = setContext(async (_, { headers }) => {
   // get the authentication token from local storage if it exists
-  const token = sessionStorage.getItem('token');
+  const token = localStorage.getItem('token');
   // return the headers to the context so httpLink can read them
   return {
     headers: {
@@ -77,14 +78,16 @@ function AppRoutes() {
   }, [data, loading, navigate]);
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <Routes>
-      <Route path="/" element={<LobbyPage />} />
-      {!data.Me && <Route path="/login" element={<LoginPage />} />}
-      <Route path="/world/:worldId" element={<WorldPage />} />
-      <Route path="*" element={<LobbyPage />} />
-    </Routes>
+    <UserContext.Provider value={data.Me}>
+      <Routes>
+        <Route path="/" element={<LobbyPage />} />
+        {!data.Me && <Route path="/login" element={<LoginPage />} />}
+        <Route path="/world/:worldId" element={<WorldPage />} />
+        <Route path="*" element={<LobbyPage />} />
+      </Routes>
+    </UserContext.Provider>
   );
 }

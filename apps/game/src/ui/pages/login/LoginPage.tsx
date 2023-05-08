@@ -28,7 +28,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (data?.UserLogin?.success) {
-      sessionStorage.setItem('token', data.UserLogin.token);
+      localStorage.setItem('token', data.UserLogin.token);
 
       client
         .refetchQueries({

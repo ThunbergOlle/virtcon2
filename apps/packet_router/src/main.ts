@@ -1,16 +1,14 @@
 import cors from 'cors';
 
-import { JoinPacketData, NetworkPacketData, PacketType, RedisPacketPublisher } from '@virtcon2/network-packet';
+import { LogApp, LogLevel, log } from '@shared';
+import { World } from '@virtcon2/database-redis';
+import { NetworkPacketData, PacketType, RedisPacketPublisher, RequestJoinPacketData } from '@virtcon2/network-packet';
 import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
 import { cwd } from 'process';
-import { RedisClientType, createClient } from 'redis';
+import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import * as socketio from 'socket.io';
-import { World } from './functions/world/world';
-import { worldService } from './services/world_service';
-import {createClient as createRedisClient} from 'redis';
-import { LogApp, LogLevel, log } from '@shared';
 
 dotenv.config({ path: `${cwd()}/.env` });
 
@@ -21,10 +19,9 @@ redisClient.on('error', (err) => console.log('Redis Client Error', err));
 /* Temporary code, will be moved later. */
 redisClient.connect().then(async () => {
   await redisClient.json.set('worlds', '$', {});
-  worldService.createWorld('Test World', redisClient);
 });
 
-const redisPubSub = createClient();
+const redisPubSub = createClient() as RedisClientType;
 redisPubSub.on('error', (err) => log(err, LogLevel.ERROR, LogApp.SERVER));
 redisPubSub.connect();
 
@@ -54,12 +51,14 @@ io.on('connection', (socket) => {
 
   socket.on('packet', async (packet: string) => {
     const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
-    if (packetJson.packet_type === PacketType.JOIN) {
-      packetJson.data = { ...(packetJson.data as JoinPacketData), socket_id: socket.id };
+    packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
+
+    if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
+      packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
       socket.join(packetJson.world_id);
     }
 
-    if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.JOIN) {
+    if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.REQUEST_JOIN) {
       log(`Player tried to send packet to world they are not in: ${packetJson.world_id}`, LogLevel.WARN, LogApp.SERVER);
       socket.emit('error', 'You are not in this world!');
       return;
@@ -67,7 +66,7 @@ io.on('connection', (socket) => {
 
     let packetBuilder = new RedisPacketPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
 
-    packetBuilder = packetJson.packet_type === PacketType.JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
+    packetBuilder = packetJson.packet_type === PacketType.REQUEST_JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
 
     packetBuilder = packetBuilder.data(packetJson.data);
 
@@ -115,9 +114,7 @@ process.on('SIGINT', async () => {
 
       const target = packetTarget.split(':')[1];
 
-      if (packetTarget.startsWith('socket:')) {
-        io.sockets.to(target).emit('packet', packet);
-      } else if (packetTarget.startsWith('world:')) {
+      if (packetTarget.startsWith('socket:') || packetTarget.startsWith('world:')) {
         io.sockets.to(target).emit('packet', packet);
       } else {
         log(`Unknown packet target: ${packetTarget}`, LogLevel.WARN, LogApp.SERVER);
