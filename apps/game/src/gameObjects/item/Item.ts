@@ -1,9 +1,7 @@
-import { ItemName } from "@shared";
-import { events } from "../../events/Events";
-import Game from "../../scenes/Game";
-import { TileCoordinates, toPhaserPos } from "../../ui/lib/coordinates";
-
-
+import { ItemName } from '@shared';
+import { events } from '../../events/Events';
+import Game from '../../scenes/Game';
+import { TileCoordinates, toPhaserPos } from '../../ui/lib/coordinates';
 
 export default class Item {
   public type: ItemName;
@@ -21,26 +19,18 @@ export default class Item {
   }
 
   spawnGameObject(pos: TileCoordinates) {
-    const { x, y } = toPhaserPos({ x: pos.x, y: pos.y }) ;
+    const { x, y } = toPhaserPos({ x: pos.x, y: pos.y });
     if (this.gameObject != null) this.gameObject.destroy();
 
     /* Add the sprite to the scene */
-    const sprite = this.scene.physics.add.sprite(
-      x,
-      y,
-      this.type.toString()
-    );
-
-    sprite.setScale(0.8);
+    const sprite = this.scene.physics.add.sprite(x, y, this.type.toString());
+    // add text to sprite
+    const text = this.scene.add.text(x, y, `${pos.x},${pos.y}`, { fontSize: '10px', color: 'black' });
+    sprite.setScale(1);
     // add collision between item and player. if collision, add item to inventory
-    this.scene.physics.add.overlap(
-      Game.mainPlayer.body.gameObject,
-      sprite,
-      () => {
-        // TODO: implement pickup logic
-        sprite.destroy();
-      }
-    );
-
+    this.scene.physics.add.overlap(Game.mainPlayer.body.gameObject, sprite, () => {
+      // TODO: implement pickup logic
+      sprite.destroy();
+    });
   }
 }

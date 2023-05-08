@@ -39,7 +39,9 @@ const port = 3000;
   });
   await apolloServer.start();
 
-  app.use(cors());
+  app.use(cors(
+    {methods: ['GET', 'POST'], origin: ['http://localhost:4200', 'http://localhost:3000']}
+  ));
   app.use(express.json());
   app.use(
     expressMiddleware(apolloServer, {

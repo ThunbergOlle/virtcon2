@@ -53,6 +53,12 @@ export default class Game extends Scene implements SceneStates {
       Game.network.join(worldId);
     });
     events.subscribe('networkLoadWorld', ({world, player}) => {
+      world.height_map.forEach((row, y) => {
+        row.forEach((tile, x) => {
+           const text = this.add.text(x * 16, y * 16, `${tile.toFixed(3)}`, {resolution: 10, fontSize: '4px'});
+        });
+      });
+
       console.log('Loading world data...');
 
       Game.playerSystem = new PlayerSystem(this);
@@ -72,7 +78,10 @@ export default class Game extends Scene implements SceneStates {
       Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
       Game.mainPlayer.setPosition(mainPlayer.position[0], mainPlayer.position[1]);
 
-      new Item(this, ItemName.WOOD, 10).spawnGameObject({ x: 8, y: 10 });
+      world.resources.forEach((resource) => {
+        new Item(this, ItemName.WOOD, 10).spawnGameObject({ x: resource.x, y: resource.y });
+      })
+
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 

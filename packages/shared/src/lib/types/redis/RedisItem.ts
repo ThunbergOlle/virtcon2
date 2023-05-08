@@ -1,6 +1,6 @@
 import { RedisJSONObject } from './RedisTypes';
 
-export interface ServerItem extends RedisJSONObject {
+export interface RedisItem extends RedisJSONObject {
   id: number;
   name: string;
   display_name: string;

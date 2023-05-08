@@ -1,3 +1,5 @@
+import { LogApp, LogLevel, log } from '@shared';
+import { User, UserInventoryItem, World } from '@virtcon2/database-postgres';
 import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
 import { EmailService } from '../../service/EmailService';
@@ -6,8 +8,6 @@ import { HashPassword } from '../../utils/HashPassword';
 import RandomCode from '../../utils/RandomCode';
 import { UserNewInput } from './UserRequest';
 import { UserLoginResponse, UserNewResponse } from './UserResponse';
-import { LogApp, LogLevel, log } from '@shared';
-import { User, AppDataSource, World, WorldWhitelist, AccessLevel, UserInventoryItem } from '@virtcon2/database-postgres';
 
 @Resolver()
 export class UserResolver {
@@ -56,25 +56,15 @@ export class UserResolver {
     if (playerWithSameEmail) return { success: false, message: 'Email already exists' };
     else if (playerWithSameDisplayName) return { success: false, message: 'Name already exists' };
 
-    await AppDataSource.manager.transaction(async (transactionalEntityManager) => {
-      /* Create database entry */
-      const newUserTransaction = User.create({
-        ...options,
-        confirmationCode,
-        isConfirmed: process.env.NODE_ENV === 'production' ? false : true,
-      });
-      const newUser = await transactionalEntityManager.save(newUserTransaction);
-      const newWorldTransaction = World.create({ id: newUser.display_name });
-      const newWorld = await transactionalEntityManager.save(newWorldTransaction);
-
-      const newWorldWhitelist = WorldWhitelist.create({
-        world: newWorld,
-        user: newUser,
-        access_level: AccessLevel.owner,
-      });
-
-      await transactionalEntityManager.save(newWorldWhitelist);
+    /* Create database entry */
+    const newUserEntity = User.create({
+      ...options,
+      confirmationCode,
+      isConfirmed: process.env.NODE_ENV === 'production' ? false : true,
     });
+
+    await User.save(newUserEntity);
+    await World.GenerateNewWorld(newUserEntity);
 
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 
@@ -87,7 +77,7 @@ export class UserResolver {
   ) {
     const user = await User.findOne({
       where: { id: userId },
-      relations: ['inventory', "inventory.item"],
+      relations: ['inventory', 'inventory.item'],
     });
     return user.inventory;
   }

@@ -6,6 +6,8 @@ pub struct World {
     pub id: String,
     pub players: Vec<Player>,
     pub buildings: Vec<Building>,
+    pub resources: Vec<Resource>,
+    pub height_map: Vec<Vec<f32>>,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
@@ -40,4 +42,16 @@ pub struct Item {
     pub description: String,
     pub icon: String,
     pub rarity: String,
+}
+
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct Resource {
+    pub id: i32,
+    pub x: i32,
+    pub y: i32,
+    pub item: ResourceItem,
+}
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct ResourceItem {
+    pub id: i32,
 }
