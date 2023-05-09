@@ -9,7 +9,7 @@ import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/player/PlayerSystem';
 import { Network } from './networking/Network';
-import Resource from '../gameObjects/resource/resource';
+import Resource from '../gameObjects/resource/Resource';
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;

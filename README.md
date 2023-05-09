@@ -13,7 +13,7 @@ The second version of the Virtcon project. This is a complete rewrite of the ori
 7. Run `yarn install` in the root directory
 8. Install nx cli with `yarn global add nx`
 9. Run `yarn start` in the root directory to start all apps
-Note that this may not work for linux users if it doesn't try `yarn linux` if the issue continues submit an issue on github.
+Note that this may not work for linux users if it doesn't try `yarn linux`
 
 
 ## Understand this workspace
