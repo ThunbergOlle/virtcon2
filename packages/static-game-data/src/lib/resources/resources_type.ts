@@ -9,7 +9,6 @@ export interface ResourcesType {
   item: DBItemName;
   width: number;
   height: number;
-  hardness: number;
   full_health: number;
 }
 
@@ -19,7 +18,6 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
     sprite: 'resource_wood',
     width: 1,
     height: 2,
-    hardness: 0.1,
     full_health: 5,
   },
 };
