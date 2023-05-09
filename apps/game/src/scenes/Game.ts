@@ -1,11 +1,10 @@
 import { Scene, Tilemaps } from 'phaser';
 
-import { BuildingItem } from '../gameObjects/item/BuildingItem';
 import Item from '../gameObjects/item/Item';
 import { BuildingSystem } from '../systems/building/BuildingSystem';
 import { SceneStates } from './interfaces';
 
-import { ItemName, WorldSettings, worldMapParser } from '@shared';
+import { ItemName, worldMapParser } from '@shared';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/player/PlayerSystem';
@@ -45,13 +44,14 @@ export default class Game extends Scene implements SceneStates {
     });
     events.subscribe('networkLoadWorld', ({ world, player }) => {
       console.log('Loading world data...');
+
       this.map = this.make.tilemap({
         tileWidth: 16,
         tileHeight: 16,
-        width: world.height_map.length,
-        height: world.height_map[0].length,
         data: worldMapParser(world.height_map),
       });
+
+
       const tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 0, 0);
 
       this.map.layers.forEach((layer, index) => {
@@ -77,6 +77,8 @@ export default class Game extends Scene implements SceneStates {
 
       world.resources.forEach((resource) => {
         new Item(this, ItemName.WOOD, 10).spawnGameObject({ x: resource.x, y: resource.y });
+        // debug text
+        this.add.text(resource.x * 16, resource.y * 16 + 8, `${resource.x},${resource.y}`, { fontSize: '5px', color: 'white', resolution: 12 });
       });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);

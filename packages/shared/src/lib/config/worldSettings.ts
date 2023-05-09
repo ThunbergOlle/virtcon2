@@ -12,16 +12,19 @@ export const WorldSettings = {
   height_map_texture_not_found_index: 0,
   height_map_texture_settings: [
     {
+      /* Deep water */
       min: -1,
       max: -0.85,
       tilemapIndex: 34,
     },
     {
+      /* Medium deep water */
       min: -0.85,
       max: -0.7,
       tilemapIndex: 33,
     },
     {
+      /* Medium water */
       min: -0.7,
       max: -0.5,
       tilemapIndex: 32,

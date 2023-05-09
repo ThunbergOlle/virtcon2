@@ -24,8 +24,7 @@ export default class Item {
 
     /* Add the sprite to the scene */
     const sprite = this.scene.physics.add.sprite(x, y, this.type.toString());
-    // add text to sprite
-    const text = this.scene.add.text(x, y, `${pos.x},${pos.y}`, { fontSize: '10px', color: 'black' });
+
     sprite.setScale(1);
     // add collision between item and player. if collision, add item to inventory
     this.scene.physics.add.overlap(Game.mainPlayer.body.gameObject, sprite, () => {

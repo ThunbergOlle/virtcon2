@@ -64,9 +64,9 @@ export class World extends BaseEntity {
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
         for (const resource of WorldSettings.resource_spawn_rates) {
-          if (resource.minHeight <= world_map[x][y] && resource.maxHeight >= world_map[x][y]) {
+          const tileHeight = world_map[x][y];
+          if (tileHeight >= resource.minHeight && tileHeight <= resource.maxHeight) {
             const randomSpawnNumber = seededRandom();
-            console.log(randomSpawnNumber, resource.spawnRate);
             if (randomSpawnNumber > resource.spawnRate) {
               continue;
             }
