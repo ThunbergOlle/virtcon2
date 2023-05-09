@@ -28,10 +28,6 @@ export class Item extends BaseEntity {
 
   @Field(() => String)
   @Column({ type: 'text' })
-  type: string;
-
-  @Field(() => String)
-  @Column({ type: 'text' })
   rarity: string;
 
   @Field(() => [UserInventoryItem])
