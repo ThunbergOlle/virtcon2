@@ -1,4 +1,4 @@
-import { ItemName } from '@shared';
+ import { ItemName } from '@shared';
 import { events } from '../../events/Events';
 import Game from '../../scenes/Game';
 import { TileCoordinates, toPhaserPos } from '../../ui/lib/coordinates';

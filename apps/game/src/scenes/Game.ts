@@ -4,11 +4,12 @@ import Item from '../gameObjects/item/Item';
 import { BuildingSystem } from '../systems/building/BuildingSystem';
 import { SceneStates } from './interfaces';
 
-import { ItemName, worldMapParser } from '@shared';
+import { ItemName, ResourceNames, worldMapParser } from '@shared';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/player/PlayerSystem';
 import { Network } from './networking/Network';
+import Resource from '../gameObjects/resource/resource';
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
@@ -51,11 +52,11 @@ export default class Game extends Scene implements SceneStates {
         data: worldMapParser(world.height_map),
       });
 
-
       const tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 0, 0);
 
       this.map.layers.forEach((layer, index) => {
-        this.map.createLayer(index, tileSet, 0, 0);
+        const new_layer = this.map.createLayer(index, tileSet, 0, 0);
+        new_layer.setCollisionBetween(32, 34);
       });
 
       Game.playerSystem = new PlayerSystem(this);
@@ -63,6 +64,8 @@ export default class Game extends Scene implements SceneStates {
       Game.buildingSystem.setupCollisions();
 
       const mainPlayer = player;
+      Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
+      Game.mainPlayer.setupCollisions(this, this.map);
 
       // setup players
       for (const player of world.players) {
@@ -72,13 +75,11 @@ export default class Game extends Scene implements SceneStates {
         Game.playerSystem.newPlayer(player);
       }
 
-      Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
       Game.mainPlayer.setPosition(mainPlayer.position[0], mainPlayer.position[1]);
 
       world.resources.forEach((resource) => {
-        new Item(this, ItemName.WOOD, 10).spawnGameObject({ x: resource.x, y: resource.y });
-        // debug text
-        this.add.text(resource.x * 16, resource.y * 16 + 8, `${resource.x},${resource.y}`, { fontSize: '5px', color: 'white', resolution: 12 });
+        // spawn new resource
+        new Resource(this, ResourceNames.WOOD).spawnGameObject({ x: resource.x, y: resource.y });
       });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);

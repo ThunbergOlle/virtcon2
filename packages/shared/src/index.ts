@@ -2,6 +2,8 @@ export * from './lib/types/building';
 
 export * from './lib/types/item';
 
+export * from './lib/types/resource';
+
 export * from './lib/types/redis/RedisTypes';
 
 export * from './lib/types/redis/RedisPlayer';

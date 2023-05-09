@@ -20,6 +20,9 @@ export default class Preload extends Phaser.Scene implements SceneStates {
     this.load.image("glass", "../../assets/sprites/items/glass.png");
     this.load.image("coal", "../../assets/sprites/items/coal.png");
 
+    /* Resources */
+    this.load.image("resource_wood", "../../assets/sprites/resources/wood.png");
+
     console.log("preloading scene done");
   }
 
