@@ -10,6 +10,7 @@ export interface ResourcesType {
   width: number;
   height: number;
   hardness: number;
+  full_health: number;
 }
 
 export const Resources: Record<ResourceNames, ResourcesType> = {
@@ -19,5 +20,6 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
     width: 1,
     height: 2,
     hardness: 0.1,
+    full_health: 5,
   },
 };
