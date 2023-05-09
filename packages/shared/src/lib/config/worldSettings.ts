@@ -1,14 +1,5 @@
 export const WorldSettings = {
   world_size: 50,
-  resource_spawn_rates: [
-    {
-      /* Wood */
-      id: 1,
-      minHeight: 0,
-      maxHeight: 0.2,
-      spawnRate: 0.4,
-    },
-  ],
   height_map_texture_not_found_index: 0,
   height_map_texture_settings: [
     {

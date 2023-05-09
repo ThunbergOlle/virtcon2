@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "nx run-many --target=serve",
+    "start": "nx run-many --parallel --target=serve --maxParallel=100",
     "linux": "yarn nx run-many --target=serve",
     "redis": "docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest"
   },

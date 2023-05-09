@@ -4,12 +4,14 @@ import Item from '../gameObjects/item/Item';
 import { BuildingSystem } from '../systems/building/BuildingSystem';
 import { SceneStates } from './interfaces';
 
-import { ItemName, ResourceNames, worldMapParser } from '@shared';
+import { worldMapParser } from '@shared';
 import { events } from '../events/Events';
 import { MainPlayer } from '../gameObjects/player/MainPlayer';
 import { PlayerSystem } from '../systems/player/PlayerSystem';
 import { Network } from './networking/Network';
-import Resource from '../gameObjects/resource/resource';
+import Resource from '../gameObjects/resource/Resource';
+import { ResourceNames } from '@virtcon2/static-game-data';
+
 
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;

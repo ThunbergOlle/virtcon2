@@ -1,9 +1,0 @@
-{
-  "id": 1,
-  "name": "wood",
-  "display_name": "wood",
-  "description": "Wood is a natural resource that can be used to craft items.",
-  "icon": "wood.png",
-  "type": "resource",
-  "rarity": "common"
-}

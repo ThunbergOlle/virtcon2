@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { events } from '../../../events/Events';
-import { BuildingItem } from '../../../gameObjects/item/BuildingItem';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType } from '../../lib/WindowManager';
-import { useNavigate } from 'react-router-dom';
 
 export default function MenuWindow(props: { windowManager: WindowManager }) {
   const navigate = useNavigate();

@@ -1,10 +1,9 @@
- import { ItemName } from '@shared';
-import { events } from '../../events/Events';
+import { DBItemName } from '@virtcon2/static-game-data';
 import Game from '../../scenes/Game';
 import { TileCoordinates, toPhaserPos } from '../../ui/lib/coordinates';
 
 export default class Item {
-  public type: ItemName;
+  public type: DBItemName;
   public amount: number;
   public gameObject: Phaser.GameObjects.Sprite | null = null;
 
@@ -12,7 +11,7 @@ export default class Item {
 
   public position = new Phaser.Math.Vector2(0, 0);
 
-  constructor(scene: Phaser.Scene, type: ItemName, amount: number) {
+  constructor(scene: Phaser.Scene, type: DBItemName, amount: number) {
     this.scene = scene;
     this.type = type;
     this.amount = amount;

@@ -23,11 +23,11 @@ async function SetupItems() {
 }
 
 async function getJsonSchema(type: string) {
-  const jsonSchema = await fs.readFile(`packages/database-postgres/src/lib/import/db/${type}/_schema.json`, 'utf-8');
+  const jsonSchema = await fs.readFile(`packages/static-game-data/src/lib/${type}/db/_schema.json`, 'utf-8');
   return JSON.parse(jsonSchema);
 }
 async function getFiles(type: string) {
-  return glob.sync(`packages/database-postgres/src/lib/import/db/${type}/*.json`, { ignore: '*/**/_schema.json' });
+  return glob.sync(`packages/static-game-data/src/lib/${type}/db/*.json`, { ignore: '*/**/_schema.json' });
 }
 
 async function readLocalFile<T>(name: string): Promise<T> {

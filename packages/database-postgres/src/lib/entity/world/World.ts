@@ -8,6 +8,7 @@ import { Item } from '../item/Item';
 import { User } from '../user/User';
 import { WorldResource } from '../world_resource/WorldResource';
 import { AccessLevel, WorldWhitelist } from '../world_whitelist/WorldWhitelist';
+import { all_db_items } from '@virtcon2/static-game-data';
 @ObjectType()
 @Entity()
 export class World extends BaseEntity {
@@ -59,24 +60,25 @@ export class World extends BaseEntity {
   }
   static async GenerateResources(world: World, world_map: number[][], seed: number, size = WorldSettings.world_size): Promise<Array<WorldResource>> {
     const seededRandom: () => number = seedRandom(seed);
+
     // spawn resources based on world map
     const resources: Array<WorldResource> = [];
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
-        for (const resource of WorldSettings.resource_spawn_rates) {
+        for (const item of all_db_items) {
           const tileHeight = world_map[x][y];
-          if (tileHeight >= resource.minHeight && tileHeight <= resource.maxHeight) {
+          if (tileHeight >= item.spawnSettings.minHeight && tileHeight <= item.spawnSettings.maxHeight) {
             const randomSpawnNumber = seededRandom();
-            if (randomSpawnNumber > resource.spawnRate) {
+            if (randomSpawnNumber > item.spawnSettings.chance) {
               continue;
             }
             // spawn resource
             const newResource = WorldResource.create();
-            const item = await Item.findOne({ where: { id: resource.id } });
+            const db_item = await Item.findOne({ where: { id: item.id } });
             newResource.world = world;
             newResource.x = x;
             newResource.y = y;
-            newResource.item = item;
+            newResource.item = db_item;
             resources.push(newResource);
           }
         }

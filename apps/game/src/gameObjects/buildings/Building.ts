@@ -1,8 +1,8 @@
-import { Physics } from 'phaser';
-import Item from '../item/Item';
-import { events } from '../../events/Events';
-import { TileCoordinates, fromPhaserPos, toPhaserPos } from '../../ui/lib/coordinates';
 import { BuildingType } from '@shared';
+import { Physics } from 'phaser';
+import { events } from '../../events/Events';
+import { TileCoordinates, toPhaserPos } from '../../ui/lib/coordinates';
+import Item from '../item/Item';
 
 export abstract class Building extends Physics.Arcade.Sprite {
   public isUIVisable: boolean = false;

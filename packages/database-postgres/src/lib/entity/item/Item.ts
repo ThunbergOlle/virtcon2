@@ -1,7 +1,7 @@
-import { ItemName } from '@shared';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
+import { DBItemName } from '@virtcon2/static-game-data';
 
 @ObjectType()
 @Entity()
@@ -16,7 +16,7 @@ export class Item extends BaseEntity {
 
   @Field(() => String)
   @Column({ type: 'text' })
-  display_name: ItemName;
+  display_name: DBItemName;
 
   @Field(() => String)
   @Column({ type: 'text' })

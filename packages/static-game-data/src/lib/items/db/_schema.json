@@ -17,14 +17,27 @@
     "icon": {
       "type": "string"
     },
-    "type": {
-      "type": "string",
-      "enum": ["resource"]
-    },
     "rarity": {
       "type": "string",
       "enum": ["common", "uncommon", "rare", "epic", "legendary"]
+    },
+    "spawnSettings": {
+      "type": "object",
+      "properties": {
+        "minHeight": {
+          "type": "number"
+        },
+        "maxHeight": {
+          "type": "number"
+        },
+        "chance": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["minHeight", "maxHeight", "chance"]
     }
   },
+  "additionalProperties": false,
   "required": ["id", "name", "description", "icon", "type", "rarity", "display_name"]
 }
