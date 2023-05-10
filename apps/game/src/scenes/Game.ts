@@ -12,7 +12,6 @@ import { Network } from './networking/Network';
 import Resource from '../gameObjects/resource/Resource';
 import { ResourceNames } from '@virtcon2/static-game-data';
 
-
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
 

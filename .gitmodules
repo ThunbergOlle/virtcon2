@@ -1,0 +1,3 @@
+[submodule "packages/virt-bit-ecs"]
+	path = packages/virt-bit-ecs
+	url = git@github.com:ThunbergOlle/virtBitECS.git
