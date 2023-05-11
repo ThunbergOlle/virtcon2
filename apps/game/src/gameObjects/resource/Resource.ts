@@ -1,5 +1,4 @@
 import { ResourceNames, Resources } from '@virtcon2/static-game-data';
-import Game from '../../scenes/Game';
 import { TileCoordinates, toPhaserPos } from '../../ui/lib/coordinates';
 import { ResourceEvents } from './events/ResourceEvents';
 
@@ -42,7 +41,7 @@ export default class Resource {
     sprite.setScale(1);
     sprite.body.setImmovable(true);
     sprite.setInteractive();
-    this.scene.physics.add.collider(Game.mainPlayer.body.gameObject, sprite);
+    //this.scene.physics.add.collider(Game.mainPlayer.body.gameObject, sprite);
 
     this.gameObject = sprite;
     this.resourceEvents = new ResourceEvents(this.scene, this);
