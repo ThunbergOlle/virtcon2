@@ -16,7 +16,7 @@ export const createPlayerSendNetworkSystem = () => {
       const packet: NetworkPacketData<PlayerMovePacketData> = {
         data: {
           player_id: state.playerById[mainPlayerEntity],
-          position: [sprite.body.position.x, sprite.body.position.y],
+          position: [sprite.body.position.x + 8, sprite.body.position.y + 8],
         },
         packet_type: PacketType.PLAYER_SET_POSITION,
         world_id: state.world_id,
