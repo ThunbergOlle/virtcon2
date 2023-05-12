@@ -1,11 +1,10 @@
 import { ErrorType } from "@shared";
-import { DisconnectPacketData, LoadWorldPacketData, NewPlayerPacketData, PlayerInventoryPacketData, PlayerMovePacketData } from "@virtcon2/network-packet";
+import { LoadWorldPacketData, PlayerInventoryPacketData } from "@virtcon2/network-packet";
 import EventSystem from "events-system";
-import { Player } from "../gameObjects/player/Player";
 
 
 type Events = {
-  onPlayerInventoryOpened: (player: Player) => void;
+  // onPlayerInventoryOpened: (player: Player) => void;
   onPlayerInventoryClosed: () => void;
   onPlayerMenuOpened: () => void;
   joinWorld: (worldId: string) => void;

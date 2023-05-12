@@ -13,14 +13,13 @@ import { Player } from '../components/Player';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { Velocity } from '../components/Velocity';
-import Resource from '../gameObjects/resource/Resource';
 import { Network } from '../networking/Network';
+import { createColliderSystem } from '../systems/ColliderSystem';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
-import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
-import { createColliderSystem } from '../systems/ColliderSystem';
-import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
+import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
+import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 
 export interface GameState {
   dt: number;
