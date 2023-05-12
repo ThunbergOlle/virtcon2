@@ -12,7 +12,7 @@ import { Sprite } from '../components/Sprite';
 const playerNetworkQuery = defineQuery([Not(MainPlayer), Position, Player]);
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Player]);
 
-export const createPlayerNetworkSystem = () => {
+export const createPlayerReceiveNetworkSystem = () => {
   return defineSystem((world: IWorld, state: GameState, packets) => {
     const entities = playerNetworkQuery(world);
 
@@ -41,9 +41,6 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   addComponent(world, Position, player);
   Position.x[player] = joinPacket.position[0];
   Position.y[player] = joinPacket.position[1];
-  addComponent(world, Velocity, player);
-  Velocity.x[player] = 0;
-  Velocity.y[player] = 0;
   addComponent(world, Sprite, player);
   Sprite.texture[player] = 0;
   addComponent(world, Player, player);

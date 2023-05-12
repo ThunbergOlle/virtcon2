@@ -16,8 +16,11 @@ import { Velocity } from '../components/Velocity';
 import Resource from '../gameObjects/resource/Resource';
 import { Network } from '../networking/Network';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
-import { createNewPlayerEntity, createPlayerNetworkSystem } from '../systems/PlayerNetworkSystem';
-import { createSpriteSystem } from '../systems/SpriteSystem';
+import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
+import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
+import { createColliderSystem } from '../systems/ColliderSystem';
+import { createNewResourceEntity } from '../systems/ResourceSystem';
+import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
 
 export interface GameState {
   dt: number;
@@ -36,8 +39,12 @@ export default class Game extends Scene implements SceneStates {
     playerById: {},
   };
   public spriteSystem?: System<GameState>;
+  public spriteRegisterySystem?: System<GameState>;
   public mainPlayerSystem?: System<GameState>;
-  public playerNetworkSystem?: System<GameState>;
+  public playerReceiveNetworkSystem?: System<GameState>;
+  public playerSendNetworkSystem?: System<GameState>;
+  public colliderSystem?: System<GameState>;
+
 
   public static network: Network;
 
@@ -71,9 +78,13 @@ export default class Game extends Scene implements SceneStates {
 
       const ecsWorld = createWorld();
       this.world = ecsWorld;
-      this.spriteSystem = createSpriteSystem(this, ['player_character', 'stone_drill', 'building_furnace', 'building_pipe', 'wood', 'sand', 'glass', 'coal', 'resource_wood']);
+      this.spriteSystem = createSpriteSystem();
+      this.spriteRegisterySystem = createSpriteRegisterySystem(this, ['player_character', 'stone_drill', 'building_furnace', 'building_pipe', 'wood', 'sand', 'glass', 'coal', 'resource_wood']);
       this.mainPlayerSystem = createMainPlayerSystem(this.cameras.main, this.input.keyboard.createCursorKeys());
-      this.playerNetworkSystem = createPlayerNetworkSystem();
+      this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem();
+      this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
+      this.colliderSystem = createColliderSystem(this);
+
       this.map = this.make.tilemap({
         tileWidth: 16,
         tileHeight: 16,
@@ -88,8 +99,12 @@ export default class Game extends Scene implements SceneStates {
       });
 
       world.resources.forEach((resource) => {
+        createNewResourceEntity(ecsWorld, {
+          pos: { x: resource.x, y: resource.y },
+          resourceName: ResourceNames.WOOD,
+        } );
         // spawn new resource
-        new Resource(this, ResourceNames.WOOD).spawnGameObject({ x: resource.x, y: resource.y });
+        // new Resource(this, ResourceNames.WOOD).spawnGameObject({ x: resource.x, y: resource.y });
       });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -125,12 +140,15 @@ export default class Game extends Scene implements SceneStates {
   }
   preload() {}
   update(t: number, dt: number) {
-    if (!this.spriteSystem || !this.world || !this.mainPlayerSystem || !this.playerNetworkSystem) return;
+    if (!this.spriteSystem || !this.world || !this.mainPlayerSystem || !this.playerReceiveNetworkSystem || !this.colliderSystem || !this.spriteRegisterySystem || !this.playerSendNetworkSystem) return;
     const packets = Game.network.get_received_packets();
     let newState = { ...this.state, dt: dt };
-    newState = this.playerNetworkSystem(this.world, newState, packets).state;
-    newState = this.spriteSystem(this.world, newState, packets).state;
+    newState = this.spriteRegisterySystem(this.world, newState, packets).state;
     newState = this.mainPlayerSystem(this.world, newState, packets).state;
+    newState = this.colliderSystem(this.world, newState, packets).state;
+    newState = this.playerReceiveNetworkSystem(this.world, newState, packets).state;
+    newState = this.spriteSystem(this.world, newState, packets).state;
+    newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
     this.state = newState;
     Game.network.clear_received_packets();
   }
