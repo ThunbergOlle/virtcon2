@@ -8,6 +8,7 @@ import { filterPacket } from '../networking/Filters';
 import { DisconnectPacketData, JoinPacketData, NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
 import { Velocity } from '../components/Velocity';
 import { Sprite } from '../components/Sprite';
+import { Collider } from '../components/Collider';
 
 const playerNetworkQuery = defineQuery([Not(MainPlayer), Position, Player]);
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Player]);
@@ -46,6 +47,8 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   addComponent(world, Player, player);
   state.playerById[player] = joinPacket.id;
   Player.player[player] = player;
+  addComponent(world, Collider, player);
+  Collider.static[player] = 1;
 };
 
 export const handleJoinPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]) => {
