@@ -20,3 +20,5 @@ export * from './lib/service/packets/RequestPlayerInventoryPacket';
 
 export * from './lib/service/packets/RequestJoinPacket';
 
+export * from './lib/service/packets/RequestDestroyResourcePacket';
+

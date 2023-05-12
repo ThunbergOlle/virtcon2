@@ -2,7 +2,7 @@ import { Scene, Tilemaps } from 'phaser';
 
 import { SceneStates } from './interfaces';
 
-import { worldMapParser } from '@shared';
+import { RedisWorldResource, worldMapParser } from '@shared';
 import { ResourceNames } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
@@ -19,7 +19,7 @@ import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
-import { createNewResourceEntity } from '../systems/ResourceSystem';
+import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
 
 export interface GameState {
@@ -27,6 +27,7 @@ export interface GameState {
   world_id: string;
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
+  resourcesById: { [key: number]: RedisWorldResource }; /* entity id to resource id string in database */
 }
 export default class Game extends Scene implements SceneStates {
   private world?: IWorld;
@@ -37,6 +38,7 @@ export default class Game extends Scene implements SceneStates {
     world_id: '',
     spritesById: {},
     playerById: {},
+    resourcesById: {},
   };
   public spriteSystem?: System<GameState>;
   public spriteRegisterySystem?: System<GameState>;
@@ -44,7 +46,7 @@ export default class Game extends Scene implements SceneStates {
   public playerReceiveNetworkSystem?: System<GameState>;
   public playerSendNetworkSystem?: System<GameState>;
   public colliderSystem?: System<GameState>;
-
+  public resourceSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -84,6 +86,7 @@ export default class Game extends Scene implements SceneStates {
       this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem();
       this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
       this.colliderSystem = createColliderSystem(this);
+      this.resourceSystem = createResourceSystem();
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -99,10 +102,11 @@ export default class Game extends Scene implements SceneStates {
       });
 
       world.resources.forEach((resource) => {
-        createNewResourceEntity(ecsWorld, {
+        const resourceEntityId = createNewResourceEntity(ecsWorld, {
           pos: { x: resource.x, y: resource.y },
           resourceName: ResourceNames.WOOD,
-        } );
+        });
+        this.state.resourcesById[resourceEntityId] = resource;
         // spawn new resource
         // new Resource(this, ResourceNames.WOOD).spawnGameObject({ x: resource.x, y: resource.y });
       });
@@ -140,7 +144,17 @@ export default class Game extends Scene implements SceneStates {
   }
   preload() {}
   update(t: number, dt: number) {
-    if (!this.spriteSystem || !this.world || !this.mainPlayerSystem || !this.playerReceiveNetworkSystem || !this.colliderSystem || !this.spriteRegisterySystem || !this.playerSendNetworkSystem) return;
+    if (
+      !this.spriteSystem ||
+      !this.world ||
+      !this.mainPlayerSystem ||
+      !this.playerReceiveNetworkSystem ||
+      !this.colliderSystem ||
+      !this.spriteRegisterySystem ||
+      !this.playerSendNetworkSystem ||
+      !this.resourceSystem
+    )
+      return;
     const packets = Game.network.get_received_packets();
     let newState = { ...this.state, dt: dt };
     newState = this.spriteRegisterySystem(this.world, newState, packets).state;
@@ -148,6 +162,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.colliderSystem(this.world, newState, packets).state;
     newState = this.playerReceiveNetworkSystem(this.world, newState, packets).state;
     newState = this.spriteSystem(this.world, newState, packets).state;
+    newState = this.resourceSystem(this.world, newState, packets).state;
     newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
     this.state = newState;
     Game.network.clear_received_packets();

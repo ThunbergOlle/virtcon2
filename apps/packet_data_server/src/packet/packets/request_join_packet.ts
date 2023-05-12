@@ -28,6 +28,7 @@ export default async function request_join_packet(packet: NetworkPacketData<Requ
     .packet_type(PacketType.JOIN)
     .data({ id: player.id, name: player.display_name, world_id: packet.world_id, socket_id: packet.data.socket_id, position: [0, 0] } as JoinPacketData)
     .target(packet.data.socket_id)
+    .sender(null)
     .channel(packet.world_id)
     .build();
 

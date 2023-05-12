@@ -46,10 +46,11 @@ io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
     const player = await World.getPlayerBySocketId(socket.id, redisClient);
     if (!player) return;
-    await new RedisPacketPublisher(redisPubSub).channel(player.world_id).packet_type(PacketType.DISCONNECT).data({ id: player.id }).build().publish();
+    await new RedisPacketPublisher(redisPubSub).channel(player.world_id).sender(player).packet_type(PacketType.DISCONNECT).data({ id: player.id }).build().publish();
   });
 
   socket.on('packet', async (packet: string) => {
+    const sender = await World.getPlayerBySocketId(socket.id, redisClient);
     const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
     packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
 
@@ -66,7 +67,7 @@ io.on('connection', (socket) => {
 
     let packetBuilder = new RedisPacketPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
 
-    packetBuilder = packetJson.packet_type === PacketType.REQUEST_JOIN ? packetBuilder.target(socket.id) : packetBuilder.target(packetJson.packet_target);
+    packetBuilder = packetJson.packet_type === PacketType.REQUEST_JOIN ? packetBuilder.target(socket.id).sender(null) : packetBuilder.target(packetJson.packet_target).sender(sender);
 
     packetBuilder = packetBuilder.data(packetJson.data);
 

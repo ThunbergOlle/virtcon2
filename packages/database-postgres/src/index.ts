@@ -8,3 +8,4 @@ export * from './lib/entity/user/User';
 export * from './lib/entity/user_inventory_item/UserInventoryItem';
 export * from './lib/entity/world/World';
 export * from './lib/entity/world_whitelist/WorldWhitelist';
+export * from './lib/entity/world_resource/WorldResource';

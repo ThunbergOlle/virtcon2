@@ -1,14 +1,13 @@
 import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, removeEntity } from '@virtcon2/virt-bit-ecs';
-import { GameState } from '../scenes/Game';
 import { MainPlayer } from '../components/MainPlayer';
+import { GameState } from '../scenes/Game';
 
+import { DisconnectPacketData, JoinPacketData, NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
+import { Collider } from '../components/Collider';
 import { Player } from '../components/Player';
 import { Position } from '../components/Position';
-import { filterPacket } from '../networking/Filters';
-import { DisconnectPacketData, JoinPacketData, NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
-import { Velocity } from '../components/Velocity';
 import { Sprite } from '../components/Sprite';
-import { Collider } from '../components/Collider';
+import { filterPacket } from '../networking/Filters';
 
 const playerNetworkQuery = defineQuery([Not(MainPlayer), Position, Player]);
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Player]);
