@@ -20,10 +20,11 @@ export const createColliderSystem = (scene: Phaser.Scene) => {
       const eid = enterEntities[i];
       const sprite = state.spritesById[eid];
       if (sprite) {
-        const collider = scene.physics.add.existing(sprite) as Phaser.Physics.Arcade.Sprite;
+        const collider = scene.physics.add.existing(sprite) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
         collider.body.setSize(Collider.sizeWidth[eid], Collider.sizeHeight[eid]);
         collider.body.setOffset(Collider.offsetX[eid], Collider.offsetY[eid]);
         collider.setScale(Collider.scale[eid] || 1);
+        collider.body.setImmovable(Collider.static[eid] === 1);
         // add collide with player
         for (let j = 0; j < playerEntities.length; j++) {
           const playerEntityId = playerEntities[j];

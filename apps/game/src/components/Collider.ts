@@ -6,4 +6,5 @@ export const Collider = defineComponent({
   offsetX: Types.i32,
   offsetY: Types.i32,
   scale: Types.f32,
+  static: Types.ui8, // 0 = false, 1 = true
 });
