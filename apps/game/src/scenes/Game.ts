@@ -26,7 +26,7 @@ export interface GameState {
   world_id: string;
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
-  resourcesById: { [key: number]: RedisWorldResource }; /* entity id to resource id string in database */
+  resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
 }
 export default class Game extends Scene implements SceneStates {
   private world?: IWorld;
@@ -106,8 +106,6 @@ export default class Game extends Scene implements SceneStates {
           resourceName: ResourceNames.WOOD,
         });
         this.state.resourcesById[resourceEntityId] = resource;
-        // spawn new resource
-        // new Resource(this, ResourceNames.WOOD).spawnGameObject({ x: resource.x, y: resource.y });
       });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);

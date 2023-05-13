@@ -37,7 +37,7 @@ export default function App() {
   return (
     <div className="App">
       <ApolloProvider client={client}>
-        <ToastContainer />
+        <ToastContainer theme='dark'/>
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>

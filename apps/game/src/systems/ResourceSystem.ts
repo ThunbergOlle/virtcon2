@@ -1,4 +1,4 @@
-import { ResourceNames, Resources } from '@virtcon2/static-game-data';
+import { ResourceNames, Resources, get_item_by_id } from '@virtcon2/static-game-data';
 import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from '@virtcon2/virt-bit-ecs';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
@@ -8,6 +8,7 @@ import Game, { GameState } from '../scenes/Game';
 import { Resource } from '../components/Resource';
 import { Types } from 'phaser';
 import { RequestDestroyResourcePacket, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
+import { toast } from 'react-toastify';
 
 const resourceQuery = defineQuery([Resource, Sprite, Collider]);
 const resourceEnterQuery = enterQuery(resourceQuery);
@@ -27,7 +28,7 @@ export const createResourceSystem = () => {
 };
 const setupResourceEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDynamicBody, eid: number, state: GameState) => {
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
-    // tint the resource red
+    // tint the resource red to indicate that it is being damanged
     sprite.setTint(0xff0000);
     setTimeout(() => {
       sprite.clearTint();
@@ -37,6 +38,7 @@ const setupResourceEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
     Resource.health[eid] -= 1;
     if (Resource.health[eid] <= 0) {
       // send resource destroy packet
+      toast(`+1 ${get_item_by_id(state.resourcesById[eid].item.id)?.display_name} added to inventory`, { type: 'success', autoClose: 1000 });
       const destroyResourcePacket: NetworkPacketData<RequestDestroyResourcePacket> = {
         data: {
           resourceId: state.resourcesById[eid].id,
