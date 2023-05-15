@@ -8,11 +8,12 @@ import { Player } from '../components/Player';
 import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { GameState } from '../scenes/Game';
+import { events } from '../events/Events';
 
 const speed = 750;
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player]);
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
-export const createMainPlayerSystem = (camera: Cameras.Scene2D.Camera, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
+export const createMainPlayerSystem = (scene: Phaser.Scene, camera: Cameras.Scene2D.Camera, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
   return defineSystem((world: IWorld, state: GameState, _) => {
     const enterEntities = mainPlayerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
@@ -31,6 +32,11 @@ export const createMainPlayerSystem = (camera: Cameras.Scene2D.Camera, cursors: 
         Collider.sizeHeight[id] = 16;
         Collider.scale[id] = 1;
       }
+      /* Add event listeners */
+      /* Event listener for invenotry event */
+      scene.input.keyboard.on('keydown-E', () => {
+        events.notify('onInventoryButtonPressed');
+      });
     }
     const entities = mainPlayerQuery(world);
     for (let i = 0; i < entities.length; i++) {
@@ -45,7 +51,6 @@ export const createMainPlayerSystem = (camera: Cameras.Scene2D.Camera, cursors: 
 
       Velocity.x[entities[i]] = xVel * speed;
       Velocity.y[entities[i]] = yVel * speed;
-
     }
     return { world, state };
   });

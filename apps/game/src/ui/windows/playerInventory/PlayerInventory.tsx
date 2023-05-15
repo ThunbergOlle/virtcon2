@@ -1,32 +1,39 @@
 import { ServerInventoryItem } from '@shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { events } from '../../../events/Events';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType } from '../../lib/WindowManager';
-
+import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import Game from '../../../scenes/Game';
 export default function PlayerInventoryWindow(props: { windowManager: WindowManager }) {
+  const isOpen = useRef(false);
   const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
 
   useEffect(() => {
-    console.log('Setting up player inventory window listener');
-    events.subscribe('onPlayerInventoryOpened', (player) => {
-      if (player.getInventory().length) {
-        setInventory(player.getInventory());
+    events.subscribe('onInventoryButtonPressed', () => {
+      if (!isOpen.current) {
+        /* Send request inventory packet */
+        const packet: NetworkPacketData<RequestPlayerInventoryPacket> = {
+          data: {},
+          packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
+        };
+        Game.network.sendPacket(packet);
+        props.windowManager.openWindow(WindowType.VIEW_PLAYER_INVENTORY);
+        isOpen.current = true;
+      } else {
+        props.windowManager.closeWindow(WindowType.VIEW_PLAYER_INVENTORY);
+        isOpen.current = false;
       }
-      props.windowManager.openWindow(WindowType.VIEW_PLAYER_INVENTORY);
-    });
-    events.subscribe('onPlayerInventoryClosed', () => {
-      props.windowManager.closeWindow(WindowType.VIEW_PLAYER_INVENTORY);
     });
     events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
       setInventory(inventory);
     });
 
     return () => {
-      events.unsubscribe('onPlayerInventoryOpened', () => {});
-      events.unsubscribe('onPlayerInventoryClosed', () => {});
+      events.unsubscribe('onInventoryButtonPressed', () => {});
       events.unsubscribe('networkPlayerInventoryPacket', () => {});
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -46,7 +53,7 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
                 key={inventoryItem.id}
                 className="flex flex-col text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
               >
-                <img alt={inventoryItem.item.name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${inventoryItem.item.display_name}.png`}></img>
+                <img alt={inventoryItem.item.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${inventoryItem.item.name}.png`}></img>
                 <p className="flex-1 m-[-8px]">x{inventoryItem.quantity}</p>
               </div>
             );

@@ -1,16 +1,15 @@
-import { ErrorType } from "@shared";
-import { LoadWorldPacketData, PlayerInventoryPacketData } from "@virtcon2/network-packet";
-import EventSystem from "events-system";
-
+import { ErrorType } from '@shared';
+import { LoadWorldPacketData, PlayerInventoryPacketData } from '@virtcon2/network-packet';
+import EventSystem from 'events-system';
 
 type Events = {
-  // onPlayerInventoryOpened: (player: Player) => void;
-  onPlayerInventoryClosed: () => void;
+  onInventoryButtonPressed: () => void;
+  onCrafterButtonPressed: () => void;
   onPlayerMenuOpened: () => void;
   joinWorld: (worldId: string) => void;
   networkLoadWorld: (data: LoadWorldPacketData) => void;
   networkPlayerInventoryPacket: (playerInventoryPacket: PlayerInventoryPacketData) => void;
-  networkError: (error: {message: string; type: ErrorType}) => void;
+  networkError: (error: { message: string; type: ErrorType }) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _: (...args: any) => void;
 };

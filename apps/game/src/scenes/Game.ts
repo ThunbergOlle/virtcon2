@@ -81,7 +81,7 @@ export default class Game extends Scene implements SceneStates {
       this.world = ecsWorld;
       this.spriteSystem = createSpriteSystem();
       this.spriteRegisterySystem = createSpriteRegisterySystem(this, ['player_character', 'stone_drill', 'building_furnace', 'building_pipe', 'wood', 'sand', 'glass', 'coal', 'resource_wood']);
-      this.mainPlayerSystem = createMainPlayerSystem(this.cameras.main, this.input.keyboard.createCursorKeys());
+      this.mainPlayerSystem = createMainPlayerSystem(this, this.cameras.main, this.input.keyboard.createCursorKeys());
       this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem();
       this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
       this.colliderSystem = createColliderSystem(this);

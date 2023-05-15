@@ -46,7 +46,11 @@ export class Network {
     this.socket.disconnect();
   }
   sendPacket(packet: NetworkPacketData<unknown>) {
-    if (!packet.world_id || !packet.packet_type) return;
+    packet.world_id = Game.worldId;
+    if (!packet.packet_type || !packet.world_id) {
+      console.log('Invalid packet');
+      return;
+    }
     this.socket.emit('packet', JSON.stringify(packet));
   }
 }
