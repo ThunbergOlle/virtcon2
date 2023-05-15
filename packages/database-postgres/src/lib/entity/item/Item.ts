@@ -2,6 +2,7 @@ import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 import { DBItemName } from '@virtcon2/static-game-data';
+import { ItemRecipe } from '../item_recipe/ItemRecipe';
 
 @ObjectType()
 @Entity()
@@ -30,7 +31,11 @@ export class Item extends BaseEntity {
   @Column({ type: 'text' })
   rarity: string;
 
-  @Field(() => [UserInventoryItem])
+
   @OneToMany(() => UserInventoryItem, (i) => i.id)
   inventory: UserInventoryItem[];
+
+  @Field(() => [ItemRecipe])
+  @OneToMany(() => ItemRecipe, (i) => i.resultingItem, {nullable: true})
+  recipe: ItemRecipe[];
 }

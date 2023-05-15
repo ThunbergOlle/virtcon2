@@ -4,6 +4,6 @@ import { Query, Resolver } from 'type-graphql';
 export class ItemResolver {
   @Query(() => [Item], { nullable: true })
   async Items() {
-    return await Item.find();
+    return await Item.find({relations: ['recipe', 'recipe.requiredItem']});
   }
 }

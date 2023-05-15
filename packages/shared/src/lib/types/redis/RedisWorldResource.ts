@@ -1,7 +1,7 @@
 import { RedisJSONObject } from './RedisTypes';
 
 export interface RedisWorldResource extends RedisJSONObject {
-  id: number;
+  id: string;
   x: number;
   y: number;
   item: {

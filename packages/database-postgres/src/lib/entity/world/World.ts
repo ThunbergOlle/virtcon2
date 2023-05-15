@@ -8,7 +8,7 @@ import { Item } from '../item/Item';
 import { User } from '../user/User';
 import { WorldResource } from '../world_resource/WorldResource';
 import { AccessLevel, WorldWhitelist } from '../world_whitelist/WorldWhitelist';
-import { all_db_items } from '@virtcon2/static-game-data';
+import { all_db_items, all_spawnable_db_items } from '@virtcon2/static-game-data';
 @ObjectType()
 @Entity()
 export class World extends BaseEntity {
@@ -65,7 +65,7 @@ export class World extends BaseEntity {
     const resources: Array<WorldResource> = [];
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
-        for (const item of all_db_items) {
+        for (const item of all_spawnable_db_items) {
           const tileHeight = world_map[x][y];
           if (tileHeight >= item.spawnSettings.minHeight && tileHeight <= item.spawnSettings.maxHeight) {
             const randomSpawnNumber = seededRandom();

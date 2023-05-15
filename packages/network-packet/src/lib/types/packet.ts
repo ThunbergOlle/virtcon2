@@ -1,3 +1,5 @@
+import { ServerPlayer } from "@shared";
+
 export enum PacketType {
   JOIN = 'join',
   DISCONNECT = 'disconnect',
@@ -7,12 +9,17 @@ export enum PacketType {
   REQUEST_PLAYER_INVENTORY = 'requestPlayerInventory',
   PLAYER_INVENTORY = 'playerInventory',
   REQUEST_JOIN = 'requestJoin',
+  REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
 }
 
 export interface NetworkPacketData<T> {
-  world_id: string;
+  world_id?: string;
   packet_type: PacketType;
   packet_target?: string;
   data: T;
+}
+export interface NetworkPacketDataWithSender<T> extends NetworkPacketData<T> {
+  packet_sender: ServerPlayer;
+  world_id: string;
 }
 

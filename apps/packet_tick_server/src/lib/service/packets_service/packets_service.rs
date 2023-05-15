@@ -60,7 +60,8 @@ pub fn on_packet(
     let packet_parts = packet.split("#").collect::<Vec<&str>>();
     let packet_type = packet_parts[0];
     let packet_target = packet_parts[1];
-    let packet_data = packet_parts[2].to_string();
+    let packet_sender = packet_parts[2]; // TODO: deserialize this
+    let packet_data = packet_parts[3].to_string();
 
     match packet_type {
         "join" => {

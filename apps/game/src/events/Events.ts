@@ -1,27 +1,16 @@
-import { ErrorType } from "@shared";
-import { DisconnectPacketData, LoadWorldPacketData, NewPlayerPacketData, PlayerInventoryPacketData, PlayerMovePacketData } from "@virtcon2/network-packet";
-import EventSystem from "events-system";
-import { Building } from "../gameObjects/buildings/Building";
-import { BuildingItem } from "../gameObjects/item/BuildingItem";
-import { Player } from "../gameObjects/player/Player";
-
+import { ErrorType } from '@shared';
+import { LoadWorldPacketData, PlayerInventoryPacketData } from '@virtcon2/network-packet';
+import EventSystem from 'events-system';
 
 type Events = {
-  onBuildingClicked: (building: Building) => void;
-  onPlaceBuildingIntent: (building: BuildingItem) => void;
-  onPlaceBuildingIntentCancelled: () => void;
-  onPlayerInventoryOpened: (player: Player) => void;
-  onPlayerInventoryClosed: () => void;
+  onInventoryButtonPressed: () => void;
+  onCrafterButtonPressed: () => void;
   onPlayerMenuOpened: () => void;
   joinWorld: (worldId: string) => void;
   networkLoadWorld: (data: LoadWorldPacketData) => void;
-  networkNewPlayer: (player: NewPlayerPacketData) => void;
-  networkDisconnect: (player: DisconnectPacketData) => void;
-  networkPlayerMove: (data: PlayerMovePacketData) => void;
-  networkPlayerSetPosition: (player: PlayerMovePacketData) => void;
   networkPlayerInventoryPacket: (playerInventoryPacket: PlayerInventoryPacketData) => void;
-  networkError: (error: {message: string; type: ErrorType}) => void;
+  networkError: (error: { message: string; type: ErrorType }) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  networkTick: (...args: any) => void;
+  _: (...args: any) => void;
 };
 export const events = new EventSystem<Events>();

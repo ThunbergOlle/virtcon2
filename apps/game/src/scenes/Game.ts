@@ -1,25 +1,53 @@
 import { Scene, Tilemaps } from 'phaser';
 
-import Item from '../gameObjects/item/Item';
-import { BuildingSystem } from '../systems/building/BuildingSystem';
 import { SceneStates } from './interfaces';
 
-import { worldMapParser } from '@shared';
-import { events } from '../events/Events';
-import { MainPlayer } from '../gameObjects/player/MainPlayer';
-import { PlayerSystem } from '../systems/player/PlayerSystem';
-import { Network } from './networking/Network';
-import Resource from '../gameObjects/resource/Resource';
+import { RedisWorldResource, worldMapParser } from '@shared';
 import { ResourceNames } from '@virtcon2/static-game-data';
+import { events } from '../events/Events';
 
+import { JoinPacketData } from '@virtcon2/network-packet';
+import { IWorld, System, addComponent, addEntity, createWorld } from '@virtcon2/virt-bit-ecs';
+import { MainPlayer } from '../components/MainPlayer';
+import { Player } from '../components/Player';
+import { Position } from '../components/Position';
+import { Sprite } from '../components/Sprite';
+import { Velocity } from '../components/Velocity';
+import { Network } from '../networking/Network';
+import { createColliderSystem } from '../systems/ColliderSystem';
+import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
+import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
+import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
+import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
+import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 
+export interface GameState {
+  dt: number;
+  world_id: string;
+  spritesById: { [key: number]: Phaser.GameObjects.Sprite };
+  playerById: { [key: number]: string };
+  resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
+}
 export default class Game extends Scene implements SceneStates {
+  private world?: IWorld;
   private map!: Tilemaps.Tilemap;
 
+  public state: GameState = {
+    dt: 0,
+    world_id: '',
+    spritesById: {},
+    playerById: {},
+    resourcesById: {},
+  };
+  public spriteSystem?: System<GameState>;
+  public spriteRegisterySystem?: System<GameState>;
+  public mainPlayerSystem?: System<GameState>;
+  public playerReceiveNetworkSystem?: System<GameState>;
+  public playerSendNetworkSystem?: System<GameState>;
+  public colliderSystem?: System<GameState>;
+  public resourceSystem?: System<GameState>;
+
   public static network: Network;
-  public static mainPlayer: MainPlayer;
-  public static buildingSystem: BuildingSystem;
-  public static playerSystem: PlayerSystem;
 
   // * Ticks per second, read more in ClockSystem.ts
   public static tps = 1;
@@ -46,7 +74,18 @@ export default class Game extends Scene implements SceneStates {
       Game.network.join(worldId);
     });
     events.subscribe('networkLoadWorld', ({ world, player }) => {
+      this.state.world_id = world.id;
       console.log('Loading world data...');
+
+      const ecsWorld = createWorld();
+      this.world = ecsWorld;
+      this.spriteSystem = createSpriteSystem();
+      this.spriteRegisterySystem = createSpriteRegisterySystem(this, ['player_character', 'stone_drill', 'building_furnace', 'building_pipe', 'wood', 'sand', 'glass', 'coal', 'resource_wood']);
+      this.mainPlayerSystem = createMainPlayerSystem(this, this.cameras.main, this.input.keyboard.createCursorKeys());
+      this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem();
+      this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
+      this.colliderSystem = createColliderSystem(this);
+      this.resourceSystem = createResourceSystem();
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -61,51 +100,73 @@ export default class Game extends Scene implements SceneStates {
         new_layer.setCollisionBetween(32, 34);
       });
 
-      Game.playerSystem = new PlayerSystem(this);
-      Game.buildingSystem = new BuildingSystem(this);
-      Game.buildingSystem.setupCollisions();
-
-      const mainPlayer = player;
-      Game.mainPlayer = new MainPlayer(this, mainPlayer.id);
-      Game.mainPlayer.setupCollisions(this, this.map);
-
-      // setup players
-      for (const player of world.players) {
-        if (player.id === mainPlayer.id) {
-          continue;
-        }
-        Game.playerSystem.newPlayer(player);
-      }
-
-      Game.mainPlayer.setPosition(mainPlayer.position[0], mainPlayer.position[1]);
-
       world.resources.forEach((resource) => {
-        // spawn new resource
-        new Resource(this, ResourceNames.WOOD).spawnGameObject({ x: resource.x, y: resource.y });
+        const resourceEntityId = createNewResourceEntity(ecsWorld, {
+          pos: { x: resource.x, y: resource.y },
+          resourceName: ResourceNames.WOOD,
+        });
+        this.state.resourcesById[resourceEntityId] = resource;
       });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
-      this.cameras.main.startFollow(Game.mainPlayer, false);
-      this.cameras.main.setZoom(4);
+      const mainPlayer = addEntity(ecsWorld);
+      addComponent(ecsWorld, Position, mainPlayer);
+      Position.x[mainPlayer] = 200;
+      Position.y[mainPlayer] = 200;
+      addComponent(ecsWorld, Velocity, mainPlayer);
+      Velocity.x[mainPlayer] = 0;
+      Velocity.y[mainPlayer] = 0;
+      addComponent(ecsWorld, Sprite, mainPlayer);
+      Sprite.texture[mainPlayer] = 0;
+      addComponent(ecsWorld, MainPlayer, mainPlayer);
+      addComponent(ecsWorld, Player, mainPlayer);
+      this.state.playerById[mainPlayer] = player.id;
+      Player.player[mainPlayer] = mainPlayer;
+
+      /* Load players that are already on the world */
+      for (const worldPlayer of world.players) {
+        if (worldPlayer.id === player.id) {
+          continue;
+        }
+        const join_packet: JoinPacketData = {
+          id: worldPlayer.id,
+          position: worldPlayer.position,
+          name: 'todo',
+          socket_id: '',
+        };
+        createNewPlayerEntity(join_packet, ecsWorld, this.state);
+      }
     });
   }
   preload() {}
   update(t: number, dt: number) {
-    // handle player movement
-    if (this.input.keyboard.enabled && Game.mainPlayer) {
-      Game.mainPlayer.update(t, dt);
-    }
-    if (Game.playerSystem) {
-      //Game.playerSystem.update(t, dt);
-    }
+    if (
+      !this.spriteSystem ||
+      !this.world ||
+      !this.mainPlayerSystem ||
+      !this.playerReceiveNetworkSystem ||
+      !this.colliderSystem ||
+      !this.spriteRegisterySystem ||
+      !this.playerSendNetworkSystem ||
+      !this.resourceSystem
+    )
+      return;
+    const packets = Game.network.get_received_packets();
+    let newState = { ...this.state, dt: dt };
+    newState = this.spriteRegisterySystem(this.world, newState, packets).state;
+    newState = this.mainPlayerSystem(this.world, newState, packets).state;
+    newState = this.colliderSystem(this.world, newState, packets).state;
+    newState = this.playerReceiveNetworkSystem(this.world, newState, packets).state;
+    newState = this.spriteSystem(this.world, newState, packets).state;
+    newState = this.resourceSystem(this.world, newState, packets).state;
+    newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
+    this.state = newState;
+    Game.network.clear_received_packets();
   }
 
   static destroy() {
     if (Game.network) Game.network.disconnect();
-    if (Game.buildingSystem) Game.buildingSystem.destroy();
-    if (Game.playerSystem) Game.playerSystem.destroy();
-    if (Game.mainPlayer) Game.mainPlayer.destroy();
     events.unsubscribe('joinWorld', () => {});
     events.unsubscribe('networkLoadWorld', () => {});
   }
