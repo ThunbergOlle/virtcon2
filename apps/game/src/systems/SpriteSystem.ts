@@ -13,7 +13,6 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene, textures: strin
       const id = enterEntities[i];
       const texId = Sprite.texture[id];
       const texture = textures[texId];
-      console.log(`Entity ${id} has texture ${texture} as pos ${Position.x[id]}, ${Position.y[id]}`);
       const sprite = scene.add.sprite(Position.x[id], Position.y[id], texture);
       state.spritesById[id] = sprite;
     }

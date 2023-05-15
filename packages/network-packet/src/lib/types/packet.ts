@@ -13,12 +13,13 @@ export enum PacketType {
 }
 
 export interface NetworkPacketData<T> {
-  world_id: string;
+  world_id?: string;
   packet_type: PacketType;
   packet_target?: string;
   data: T;
 }
 export interface NetworkPacketDataWithSender<T> extends NetworkPacketData<T> {
   packet_sender: ServerPlayer;
+  world_id: string;
 }
 

@@ -1,3 +1,5 @@
+import { DBItemRecipe } from '../items_recipe/item_recipe_type';
+
 export enum DBItemRarity {
   common = 'common',
   uncommon = 'uncommon',
@@ -7,6 +9,7 @@ export enum DBItemRarity {
 }
 export enum DBItemName {
   WOOD = 'wood',
+  STICK = 'stick',
   SAND = 'sand',
   GLASS = 'glass',
   COAL = 'coal',
@@ -25,5 +28,6 @@ export interface DBItem {
   description: string;
   icon: string;
   rarity: DBItemRarity;
-  spawnSettings: DBItemSpawnSettings;
+  spawnSettings?: DBItemSpawnSettings;
+  recipe?: DBItemRecipe[];
 }

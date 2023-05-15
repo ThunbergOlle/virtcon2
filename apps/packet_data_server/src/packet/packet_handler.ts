@@ -7,7 +7,7 @@ import request_destroy_resource_packet from './packets/request_destroy_resource_
 export default function packet_handler(packet: NetworkPacketData<unknown>, redisPubClient: RedisClientType) {
   switch (packet.packet_type) {
     case PacketType.REQUEST_PLAYER_INVENTORY: {
-      request_player_inventory_packet(packet as NetworkPacketData<RequestPlayerInventoryPacket>, redisPubClient);
+      request_player_inventory_packet(packet as NetworkPacketDataWithSender<RequestPlayerInventoryPacket>, redisPubClient);
       break;
     }
     case PacketType.REQUEST_JOIN: {

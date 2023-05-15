@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import { events } from '../../../events/Events';
-import { Building } from '../../../gameObjects/buildings/Building';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType, windowManager } from '../../lib/WindowManager';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
