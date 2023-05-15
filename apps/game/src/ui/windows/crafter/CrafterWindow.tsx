@@ -1,21 +1,24 @@
-import { RedisItem, ServerInventoryItem } from '@shared';
+import { useMutation, useQuery } from '@apollo/client';
+import { ServerInventoryItem } from '@shared';
+import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
 import { useEffect, useRef, useState } from 'react';
+import { Button } from 'react-bootstrap';
 import { events } from '../../../events/Events';
+import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType } from '../../lib/WindowManager';
-import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
-import Game from '../../../scenes/Game';
-import { ITEMS_QUERY } from './CrafterWindowGraphQL';
-import { useQuery } from '@apollo/client';
-import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
-import { Button } from 'react-bootstrap';
+import { CRAFT_MUTATION, ITEMS_QUERY } from './CrafterWindowGraphQL';
 
 export default function CrafterWindow(props: { windowManager: WindowManager }) {
   const isOpen = useRef(false);
   const itemsQuery = useQuery(ITEMS_QUERY);
+  const [mutateCraftItem, craftItemMutation] = useMutation(CRAFT_MUTATION);
+
   const quantityInput = useRef<HTMLInputElement>(null);
   const [quantityToCraft, setQuantityToCraft] = useState<string>('1');
   const [selectedItem, setSelectedItem] = useState<DBItem | null>(null);
+  const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
 
   useEffect(() => {
     props.windowManager.openWindow(WindowType.VIEW_CRAFTER);
@@ -34,6 +37,9 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
         isOpen.current = false;
       }
     });
+    events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
+      setInventory(inventory);
+    });
 
     return () => {
       events.unsubscribe('onCrafterButtonPressed', () => {});
@@ -41,11 +47,24 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+  const craftItem = () => {
+    mutateCraftItem({
+      variables: {
+        quantity: parseInt(quantityToCraft),
+        itemId: selectedItem?.id,
+      },
+      onCompleted: () => {
+        Game.network.sendPacket({
+          data: {},
+          packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
+        });
+      },
+    });
+  };
   return (
     <Window
-      loading={[itemsQuery.loading]}
-      errors={[itemsQuery.error]}
+      loading={[itemsQuery.loading, craftItemMutation.loading]}
+      errors={[itemsQuery.error, craftItemMutation.error]}
       windowManager={props.windowManager}
       title="Crafter"
       width={800}
@@ -82,10 +101,14 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
 
               <div className="flex flex-[5] flex-row flex-wrap  bg-[#282828] mx-10 ">
                 {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => {
+                  // optimize this later
+                  const inventoryItem = inventory.find((i) => i.item.id === recipeItem.requiredItem.id);
                   return (
                     <div key={'recipe_item_' + recipeItem.id} className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]">
                       <img alt={recipeItem.requiredItem.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${recipeItem.requiredItem.name}.png`}></img>
-                      <p className="flex-1 m-[-8px]">x{recipeItem.requiredQuantity} </p>
+                      <p className="flex-1 m-[-8px]">
+                      {inventoryItem?.quantity || 0}/{recipeItem.requiredQuantity}
+                      </p>
                       <p className="flex-1 text-[11px]">{recipeItem.requiredItem.display_name}</p>
                     </div>
                   );
@@ -110,7 +133,7 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
                   />
                 </div>
                 <div className="flex-1">
-                  <Button variant="primary" disabled={!quantityInput.current?.validity.valid} className="float-right">
+                  <Button onClick={() => craftItem()} variant="primary" disabled={!quantityInput.current?.validity.valid} className="float-right">
                     Craft
                   </Button>
                 </div>

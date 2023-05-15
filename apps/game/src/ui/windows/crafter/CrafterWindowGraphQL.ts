@@ -19,3 +19,15 @@ export const ITEMS_QUERY = gql`
     }
   }
 `;
+export const CRAFT_MUTATION = gql`
+  mutation CraftItem($quantity: Int!, $itemId: Int!) {
+    craftItem(quantity: $quantity, itemId: $itemId) {
+      quantity
+      item {
+        name
+        display_name
+        description
+      }
+    }
+  }
+`;

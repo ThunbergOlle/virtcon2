@@ -10,9 +10,7 @@ export class UserInventoryItem extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-
   @ManyToOne(() => User, (user) => user.id)
-  @Field(() => User)
   user: User;
 
   @Field(() => Item)
@@ -23,4 +21,20 @@ export class UserInventoryItem extends BaseEntity {
   @Column({ type: 'int' })
   quantity: number;
 
+  static async addToInventory(userId: string, itemId: number, quantiy: number): Promise<UserInventoryItem> {
+    const userInventoryItem = await UserInventoryItem.findOne({ where: { user: { id: userId }, item: { id: itemId } }, relations: ['item'] });
+    if (userInventoryItem) {
+      userInventoryItem.quantity += quantiy;
+      await userInventoryItem.save();
+      return userInventoryItem;
+    } else {
+      const new_user_inventory_item = {
+        user: { id: userId },
+        item: { id: itemId },
+        quantity: quantiy,
+      } as UserInventoryItem;
+      await UserInventoryItem.create(new_user_inventory_item).save();
+      return UserInventoryItem.findOne({ where: { user: { id: userId }, item: { id: itemId } }, relations: ['item'] });
+    }
+  }
 }
