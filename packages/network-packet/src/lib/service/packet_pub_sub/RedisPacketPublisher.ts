@@ -8,14 +8,15 @@ export class RedisPacketPublisher {
   private _channel = '';
   private _packet_type = '';
   private _target = 'all';
-  private _sender: ServerPlayer;
+  private _sender: ServerPlayer = { id: '', name: '', inventory: [], position: [0, 0], socket_id: '', world_id: '' };
   private _data = '';
   private _packet: string;
   constructor(client: RedisClientType) {
     this.client = client;
   }
-  sender(sender: ServerPlayer | null) {
-    this._sender = sender ?? { id: '', name: '', inventory: [], position: [0, 0], socket_id: '', world_id: '' };
+  sender(sender: ServerPlayer) {
+    if (!sender) return this;
+    this._sender = sender;
     return this;
   }
   channel(channel: string) {
@@ -36,7 +37,7 @@ export class RedisPacketPublisher {
   }
   build() {
     if (!this._channel || !this._packet_type || !this._data || !this._sender) {
-      throw new Error('Packet not correctly built');
+      throw new Error('Packet not correctly built, missing data: ' + JSON.stringify({ channel: this._channel, packet_type: this._packet_type, data: this._data, sender: this._sender }));
     }
 
     this._packet = this._packet_type + '#' + this._target + '#' + JSON.stringify(this._sender) + '#' + this._data;
