@@ -3,6 +3,7 @@ export enum WindowType {
   VIEW_BUILDING = "view_building",
   VIEW_PLAYER_INVENTORY = "view_player_inventory",
   VIEW_MENU = "view_menu",
+  VIEW_CRAFTER = "view_crafter",
 }
 
 export interface WindowStack {
@@ -75,7 +76,6 @@ const openWindow = (
   window: WindowType,
   stack: WindowStack[]
 ): WindowStack[] => {
-  console.log("Opening window: " + window + " in WindowManager.ts");
   const item = stack.find((i) => i.type === window);
   if (item) {
     item.open = true;
