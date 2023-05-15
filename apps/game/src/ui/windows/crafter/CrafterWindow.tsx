@@ -21,7 +21,6 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
   const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
 
   useEffect(() => {
-    props.windowManager.openWindow(WindowType.VIEW_CRAFTER);
     events.subscribe('onCrafterButtonPressed', () => {
       if (!isOpen.current) {
         /* Send request inventory packet */

@@ -33,9 +33,13 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, camera: Cameras.Scen
         Collider.scale[id] = 1;
       }
       /* Add event listeners */
-      /* Event listener for invenotry event */
+      /* Event listener for inventory event */
       scene.input.keyboard.on('keydown-E', () => {
         events.notify('onInventoryButtonPressed');
+      });
+      /* Event listener for crafter event */
+      scene.input.keyboard.on('keydown-C', () => {
+        events.notify('onCrafterButtonPressed');
       });
     }
     const entities = mainPlayerQuery(world);

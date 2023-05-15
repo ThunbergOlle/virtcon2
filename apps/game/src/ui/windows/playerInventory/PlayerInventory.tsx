@@ -33,7 +33,7 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
       events.unsubscribe('onInventoryButtonPressed', () => {});
       events.unsubscribe('networkPlayerInventoryPacket', () => {});
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -41,23 +41,25 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
       <div className="flex flex-col h-full">
         <div className="flex-1">
           <h2 className="text-2xl">Inventory</h2>
-          {inventory.map((inventoryItem) => {
-            return (
-              <div
-                onClick={() => {
-                  // NOTE: Should maybe be removed in future.
-                  // if (item instanceof BuildingItem) {
-                  //   events.notify('onPlaceBuildingIntent', item);
-                  // }
-                }}
-                key={inventoryItem.id}
-                className="flex flex-col text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
-              >
-                <img alt={inventoryItem.item.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${inventoryItem.item.name}.png`}></img>
-                <p className="flex-1 m-[-8px]">x{inventoryItem.quantity}</p>
-              </div>
-            );
-          })}
+          <div className="flex flex-row flex-wrap">
+            {inventory.map((inventoryItem) => {
+              return (
+                <div
+                  onClick={() => {
+                    // NOTE: Should maybe be removed in future.
+                    // if (item instanceof BuildingItem) {
+                    //   events.notify('onPlaceBuildingIntent', item);
+                    // }
+                  }}
+                  key={inventoryItem.id}
+                  className="flex flex-col m-2 text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
+                >
+                  <img alt={inventoryItem.item.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${inventoryItem.item.name}.png`}></img>
+                  <p className="flex-1 m-[-8px]">x{inventoryItem.quantity}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </Window>
