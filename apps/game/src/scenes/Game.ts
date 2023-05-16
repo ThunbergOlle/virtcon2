@@ -20,6 +20,7 @@ import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../syst
 import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
 import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
+import { Collider } from '../components/Collider';
 
 export interface GameState {
   dt: number;
@@ -81,7 +82,7 @@ export default class Game extends Scene implements SceneStates {
       this.world = ecsWorld;
       this.spriteSystem = createSpriteSystem();
       this.spriteRegisterySystem = createSpriteRegisterySystem(this, ['player_character', 'stone_drill', 'building_furnace', 'building_pipe', 'wood', 'sand', 'glass', 'coal', 'resource_wood']);
-      this.mainPlayerSystem = createMainPlayerSystem(this, this.cameras.main, this.input.keyboard.createCursorKeys());
+      this.mainPlayerSystem = createMainPlayerSystem(this, this.input.keyboard.createCursorKeys());
       this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem();
       this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
       this.colliderSystem = createColliderSystem(this);
@@ -93,7 +94,7 @@ export default class Game extends Scene implements SceneStates {
         data: worldMapParser(world.height_map),
       });
 
-      const tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 0, 0);
+      const tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 1);
 
       this.map.layers.forEach((layer, index) => {
         const new_layer = this.map.createLayer(index, tileSet, 0, 0);
@@ -123,6 +124,13 @@ export default class Game extends Scene implements SceneStates {
       addComponent(ecsWorld, Player, mainPlayer);
       this.state.playerById[mainPlayer] = player.id;
       Player.player[mainPlayer] = mainPlayer;
+      /* Add collider to entity */
+      addComponent(ecsWorld, Collider, mainPlayer);
+      Collider.offsetX[mainPlayer] = 0;
+      Collider.offsetY[mainPlayer] = 0;
+      Collider.sizeWidth[mainPlayer] = 16;
+      Collider.sizeHeight[mainPlayer] = 16;
+      Collider.scale[mainPlayer] = 1;
 
       /* Load players that are already on the world */
       for (const worldPlayer of world.players) {
@@ -155,8 +163,8 @@ export default class Game extends Scene implements SceneStates {
     const packets = Game.network.get_received_packets();
     let newState = { ...this.state, dt: dt };
     newState = this.spriteRegisterySystem(this.world, newState, packets).state;
-    newState = this.mainPlayerSystem(this.world, newState, packets).state;
     newState = this.colliderSystem(this.world, newState, packets).state;
+    newState = this.mainPlayerSystem(this.world, newState, packets).state;
     newState = this.playerReceiveNetworkSystem(this.world, newState, packets).state;
     newState = this.spriteSystem(this.world, newState, packets).state;
     newState = this.resourceSystem(this.world, newState, packets).state;

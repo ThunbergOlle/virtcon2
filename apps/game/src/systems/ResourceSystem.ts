@@ -27,6 +27,10 @@ export const createResourceSystem = () => {
   });
 };
 const setupResourceEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDynamicBody, eid: number, state: GameState) => {
+  if (!sprite.body) {
+    console.error(`No body for resource ${eid}`);
+    return;
+  }
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
     // tint the resource red to indicate that it is being damanged
     sprite.setTint(0xff0000);

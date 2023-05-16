@@ -9,6 +9,7 @@ import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType } from '../../lib/WindowManager';
 import { CRAFT_MUTATION, ITEMS_QUERY } from './CrafterWindowGraphQL';
+import { toast } from 'react-toastify';
 
 export default function CrafterWindow(props: { windowManager: WindowManager }) {
   const isOpen = useRef(false);
@@ -57,6 +58,7 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
           data: {},
           packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
         });
+        toast(`Crafted ${quantityToCraft}x ${selectedItem?.display_name}`, { type: 'success' });
       },
     });
   };
@@ -106,7 +108,7 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
                     <div key={'recipe_item_' + recipeItem.id} className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]">
                       <img alt={recipeItem.requiredItem.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${recipeItem.requiredItem.name}.png`}></img>
                       <p className="flex-1 m-[-8px]">
-                      {inventoryItem?.quantity || 0}/{recipeItem.requiredQuantity}
+                        {inventoryItem?.quantity || 0}/{recipeItem.requiredQuantity}
                       </p>
                       <p className="flex-1 text-[11px]">{recipeItem.requiredItem.display_name}</p>
                     </div>

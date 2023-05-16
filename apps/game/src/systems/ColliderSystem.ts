@@ -25,6 +25,7 @@ export const createColliderSystem = (scene: Phaser.Scene) => {
         collider.body.setOffset(Collider.offsetX[eid], Collider.offsetY[eid]);
         collider.setScale(Collider.scale[eid] || 1);
         collider.body.setImmovable(Collider.static[eid] === 1);
+
         // add collide with player
         for (let j = 0; j < playerEntities.length; j++) {
           const playerEntityId = playerEntities[j];

@@ -44,10 +44,9 @@ export const createSpriteSystem = () => {
     const velocityEntities = spriteVelocityQuery(world);
     for (let i = 0; i < velocityEntities.length; i++) {
       const id = velocityEntities[i];
-      const sprite = state.spritesById[id];
+      const sprite = state.spritesById[id] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       if (sprite && sprite.body) {
-        sprite.body.velocity.x = Velocity.x[id];
-        sprite.body.velocity.y = Velocity.y[id];
+        sprite.body.setVelocity(Velocity.x[id], Velocity.y[id]);
       }
     }
     return { world, state };
