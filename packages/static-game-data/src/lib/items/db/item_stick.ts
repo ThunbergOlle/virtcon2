@@ -7,5 +7,6 @@ const item_stick: DBItem = {
   description: 'Stick is a natural resource that can be used to craft items.',
   icon: 'stick.png',
   rarity: DBItemRarity.common,
+  is_building: false,
 };
 export default item_stick;

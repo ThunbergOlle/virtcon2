@@ -1,8 +1,9 @@
-import { ErrorType } from '@shared';
+import { ErrorType, RedisItem } from '@shared';
 import { LoadWorldPacketData, PlayerInventoryPacketData } from '@virtcon2/network-packet';
 import EventSystem from 'events-system';
 
 type Events = {
+  placeBuildingIntent: (buildingItem: RedisItem) => void;
   onInventoryButtonPressed: () => void;
   onCrafterButtonPressed: () => void;
   onPlayerMenuOpened: () => void;

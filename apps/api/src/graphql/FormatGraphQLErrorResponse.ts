@@ -10,9 +10,10 @@ export function FormatGraphQLErrorResponse(error: GraphQLFormattedError): GraphQ
     message: String(error.message),
     time: 0,
     timestamp: new Date(),
+    stack_trace: String(error.extensions.stacktrace),
     url: String(error.path),
   }).save();
 
-  log(error.message, LogLevel.ERROR, LogApp.API);
+  log(error, LogLevel.ERROR, LogApp.API);
   return error;
 }

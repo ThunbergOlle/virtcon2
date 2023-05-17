@@ -10,6 +10,7 @@ export enum PacketType {
   PLAYER_INVENTORY = 'playerInventory',
   REQUEST_JOIN = 'requestJoin',
   REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
+  REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
 }
 
 export interface NetworkPacketData<T> {

@@ -31,8 +31,6 @@ function GamePage() {
     setGame(phaserGame);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).game = phaserGame;
-
-    console.log('Joining world', worldId);
     events.notify('joinWorld', worldId);
   }, [worldId]);
 
@@ -43,7 +41,7 @@ function GamePage() {
         Game.destroy();
         game.destroy(false);
 
-        document.getElementById('phaser-container')?.remove();
+        document.getElementById('phaser-application')?.remove();
       }
     };
   }, [game]);

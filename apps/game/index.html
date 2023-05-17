@@ -8,7 +8,6 @@
   <body>
     <div id="root"></div>
     <div id="phaser-application">
-      <div id="phaser-container"></div>
     </div>
 
     <script type="module" src="/src/main.tsx"></script>
@@ -17,6 +16,9 @@
     /* Z-Index has to be > 0 if we want mousemove event to fire in Phaser */
     #phaser-container {
       z-index: 1;
+    }
+    #phaser-application {
+      position: relative;
     }
   </style>
 </html>

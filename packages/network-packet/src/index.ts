@@ -22,3 +22,5 @@ export * from './lib/service/packets/RequestJoinPacket';
 
 export * from './lib/service/packets/RequestDestroyResourcePacket';
 
+export * from './lib/service/packets/RequestPlaceBuilding';
+

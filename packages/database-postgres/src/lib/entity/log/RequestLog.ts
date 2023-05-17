@@ -22,4 +22,7 @@ export class RequestLog extends BaseEntity {
 
   @Column({ nullable: true, type: 'text' })
   message?: string;
+
+  @Column({ nullable: true, type: 'text' })
+  stack_trace?: string;
 }

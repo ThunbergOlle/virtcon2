@@ -15,6 +15,7 @@ export enum DBItemName {
   COAL = 'coal',
   BUILDING_PIPE = 'building_pipe',
   BUILDING_FURNACE = 'building_furnace',
+  BUILDING_SAWMILL = 'building_sawmill',
 }
 export interface DBItemSpawnSettings {
   minHeight: number;
@@ -30,4 +31,5 @@ export interface DBItem {
   rarity: DBItemRarity;
   spawnSettings?: DBItemSpawnSettings;
   recipe?: DBItemRecipe[];
+  is_building: boolean
 }

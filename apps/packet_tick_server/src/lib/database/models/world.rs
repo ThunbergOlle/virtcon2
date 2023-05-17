@@ -42,6 +42,7 @@ pub struct Item {
     pub description: String,
     pub icon: String,
     pub rarity: String,
+    pub is_building: bool,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]

@@ -21,6 +21,7 @@ import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSyste
 import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { Collider } from '../components/Collider';
+import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 
 export interface GameState {
   dt: number;
@@ -47,6 +48,7 @@ export default class Game extends Scene implements SceneStates {
   public playerSendNetworkSystem?: System<GameState>;
   public colliderSystem?: System<GameState>;
   public resourceSystem?: System<GameState>;
+  public buildingPlacementSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -54,8 +56,17 @@ export default class Game extends Scene implements SceneStates {
   public static tps = 1;
   public static worldId = '';
 
+  /* Singelton pattern */
+  private static instance: Game;
+  public static getInstance(): Game {
+    return Game.instance;
+  }
   constructor() {
+    if (Game.instance) {
+      return Game.instance;
+    }
     super('game');
+    Game.instance = this;
   }
 
   disableKeys() {
@@ -87,6 +98,7 @@ export default class Game extends Scene implements SceneStates {
       this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
       this.colliderSystem = createColliderSystem(this);
       this.resourceSystem = createResourceSystem();
+      this.buildingPlacementSystem = createBuildingPlacementSystem(this);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -108,6 +120,7 @@ export default class Game extends Scene implements SceneStates {
         });
         this.state.resourcesById[resourceEntityId] = resource;
       });
+
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
@@ -157,7 +170,8 @@ export default class Game extends Scene implements SceneStates {
       !this.colliderSystem ||
       !this.spriteRegisterySystem ||
       !this.playerSendNetworkSystem ||
-      !this.resourceSystem
+      !this.resourceSystem ||
+      !this.buildingPlacementSystem
     )
       return;
     const packets = Game.network.get_received_packets();
@@ -168,6 +182,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.playerReceiveNetworkSystem(this.world, newState, packets).state;
     newState = this.spriteSystem(this.world, newState, packets).state;
     newState = this.resourceSystem(this.world, newState, packets).state;
+    newState = this.buildingPlacementSystem(this.world, newState, packets).state;
     newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
     this.state = newState;
     Game.network.clear_received_packets();

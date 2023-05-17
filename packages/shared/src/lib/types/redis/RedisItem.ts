@@ -8,4 +8,5 @@ export interface RedisItem extends RedisJSONObject {
   icon: string;
   type: string;
   rarity: string;
+  is_building: boolean
 }
