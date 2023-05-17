@@ -1,12 +1,8 @@
-import { ServerBuilding } from "./RedisBuilding";
-import { ServerPlayer } from "./RedisPlayer";
-import { RedisJSONObject } from "./RedisTypes";
-import { RedisWorldResource } from "./RedisWorldResource";
+import { ServerPlayer } from './RedisPlayer';
+import { RedisWorldResource } from './RedisWorldResource';
 
-
-export interface RedisWorld extends RedisJSONObject {
+export interface RedisWorld {
   players: ServerPlayer[];
-  buildings: ServerBuilding[];
   resources: RedisWorldResource[];
   height_map: number[][];
   id: string;

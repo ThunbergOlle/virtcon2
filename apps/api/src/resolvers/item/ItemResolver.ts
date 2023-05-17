@@ -5,7 +5,7 @@ import { RequestContext } from '../../graphql/RequestContext';
 export class ItemResolver {
   @Query(() => [Item], { nullable: true })
   async Items() {
-    return await Item.find({ relations: ['recipe', 'recipe.requiredItem'] });
+    return await Item.find({ relations: ['recipe', 'recipe.requiredItem', 'building', 'building.item_to_be_placed_on'] });
   }
 
   @Mutation(() => UserInventoryItem, { nullable: true })
@@ -25,7 +25,7 @@ export class ItemResolver {
 
     const userItems = await UserInventoryItem.find({ where: { user: { id: context.user.id } }, relations: ['item'] });
 
-    const usersItemsMap : Record<number, UserInventoryItem> = {};
+    const usersItemsMap: Record<number, UserInventoryItem> = {};
     userItems.forEach((userItem) => {
       usersItemsMap[userItem.item.id] = userItem;
     });

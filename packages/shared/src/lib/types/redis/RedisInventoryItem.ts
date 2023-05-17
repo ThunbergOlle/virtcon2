@@ -1,8 +1,9 @@
-import { RedisJSONObject } from "./RedisTypes";
-import { RedisItem } from "./RedisItem";
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { DBItem } from "@virtcon2/static-game-data";
 
-export interface ServerInventoryItem extends RedisJSONObject {
-    id: number;
-    quantity: number;
-    item: RedisItem
+
+export interface ServerInventoryItem {
+  id: number;
+  quantity: number;
+  item: DBItem ;
 }

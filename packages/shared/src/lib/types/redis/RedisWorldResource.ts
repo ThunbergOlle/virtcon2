@@ -1,6 +1,4 @@
-import { RedisJSONObject } from './RedisTypes';
-
-export interface RedisWorldResource extends RedisJSONObject {
+export interface RedisWorldResource {
   id: string;
   x: number;
   y: number;

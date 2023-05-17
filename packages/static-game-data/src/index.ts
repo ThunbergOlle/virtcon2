@@ -1,3 +1,4 @@
+import building_sawmill from './lib/buildings/db/building_sawmill';
 import item_sawmill from './lib/items/db/item_sawmill';
 import item_stick from './lib/items/db/item_stick';
 import item_wood from './lib/items/db/item_wood';
@@ -26,3 +27,7 @@ export * from './lib/items_recipe/db/item_stick';
 export * from './lib/items_recipe/db/item_sawmill';
 
 export const all_db_items_recipes = [...item_stick_recipe, ...item_sawmill_recipe];
+
+/* Buildings */
+export * from './lib/buildings/building_type';
+export const all_db_buildings = [building_sawmill];

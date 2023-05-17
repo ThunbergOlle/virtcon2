@@ -1,12 +1,12 @@
-import { RedisItem, ServerInventoryItem } from '@shared';
+import { ServerInventoryItem } from '@shared';
+import { NetworkPacketData, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
+import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType } from '../../lib/WindowManager';
-import { NetworkPacketData, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
-import Game from '../../../scenes/Game';
 import { fromPhaserPos } from '../../lib/coordinates';
-import { toast } from 'react-toastify';
 
 export default function PlayerInventoryWindow(props: { windowManager: WindowManager }) {
   const isOpen = useRef(false);
@@ -71,10 +71,9 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
     if (item.item.is_building) {
       toggleInventory();
       const game = Game.getInstance();
-      // add event listneer for click on map
-      console.log(game.textures);
 
       buildingBeingPlaced.current = item;
+      console.log(item.item.building)
       game.input.on('pointerdown', placeBuilding);
       game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
 

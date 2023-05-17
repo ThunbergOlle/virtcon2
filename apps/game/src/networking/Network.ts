@@ -1,4 +1,3 @@
-import { ServerLobby } from '@shared';
 
 import { Socket, io } from 'socket.io-client';
 import { events } from '../events/Events';
@@ -9,7 +8,7 @@ import { NetworkPacketData, PacketType, RequestJoinPacketData } from '@virtcon2/
 export class Network {
   socket: Socket;
   isConnected: boolean = false;
-  lobbies: ServerLobby[] = [];
+
   private received_packets: NetworkPacketData<unknown>[] = [];
 
   constructor() {

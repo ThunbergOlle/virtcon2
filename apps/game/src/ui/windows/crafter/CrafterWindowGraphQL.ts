@@ -16,6 +16,13 @@ export const ITEMS_QUERY = gql`
         }
         requiredQuantity
       }
+      building {
+        height
+        width
+        item_to_be_placed_on {
+          id
+        }
+      }
     }
   }
 `;

@@ -46,6 +46,6 @@ export class Item extends BaseEntity {
 
   /* Building relationship */
   @Field(() => Building, { nullable: true })
-  @OneToOne(() => Building, (b) => b.id, { nullable: true })
+  @OneToOne(() => Building, (b) => b.item, { nullable: true })
   building: Building;
 }

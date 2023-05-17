@@ -8,7 +8,7 @@ export default async function request_join_packet(packet: NetworkPacketData<Requ
   /* Check if world is currently running in Redis */
   const world = (await redisPubClient.json.get(`worlds`, {
     path: `$.${packet.world_id}`,
-  })) as RedisWorld[];
+  })) as unknown as Array<RedisWorld>;
   if (!world.length) {
     log(`World ${packet.world_id} is not running. Starting up world...`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
     try {
@@ -21,7 +21,6 @@ export default async function request_join_packet(packet: NetworkPacketData<Requ
 
   // get player inventory from database.
   const player = await User.findOne({ where: { token: packet.data.token } });
-
 
   // construct a JoinPacket
   const join_packet = new RedisPacketPublisher(redisPubClient)

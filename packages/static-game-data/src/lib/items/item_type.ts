@@ -1,3 +1,4 @@
+import { DBBuilding } from '../buildings/building_type';
 import { DBItemRecipe } from '../items_recipe/item_recipe_type';
 
 export enum DBItemRarity {
@@ -31,5 +32,6 @@ export interface DBItem {
   rarity: DBItemRarity;
   spawnSettings?: DBItemSpawnSettings;
   recipe?: DBItemRecipe[];
-  is_building: boolean
+  is_building: boolean;
+  building?: DBBuilding;
 }

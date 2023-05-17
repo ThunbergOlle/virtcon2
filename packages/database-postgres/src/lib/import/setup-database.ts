@@ -1,9 +1,10 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { all_db_items, all_db_items_recipes } from '@virtcon2/static-game-data';
+import { all_db_buildings, all_db_items, all_db_items_recipes } from '@virtcon2/static-game-data';
 import { promises as fs } from 'fs';
 import { validate } from 'jsonschema';
 import { Item } from '../entity/item/Item';
 import { ItemRecipe } from '../entity/item_recipe/ItemRecipe';
+import { Building } from '../entity/building/Building';
 export async function setupDatabase() {
   SetupItems();
 }
@@ -30,6 +31,9 @@ async function SetupItems() {
       continue;
     }
     await ItemRecipe.upsert(item_recipe as unknown as ItemRecipe, { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] });
+  }
+  for (const building of all_db_buildings) {
+    await Building.upsert(building as unknown as Building, { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] });
   }
 }
 

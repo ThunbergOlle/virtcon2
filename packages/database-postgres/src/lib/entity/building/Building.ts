@@ -30,4 +30,14 @@ export class Building extends BaseEntity {
   @Field(() => Int, { nullable: false, defaultValue: TPS * 5 })
   @Column({ type: 'int', default: TPS * 5 })
   processing_ticks: number;
+
+  // width and height in tiles
+  @Field(() => Int, { nullable: false, defaultValue: 1 })
+  @Column({ type: 'int', default: 1 })
+  width: number;
+
+  @Field(() => Int, { nullable: false, defaultValue: 1 })
+  @Column({ type: 'int', default: 1 })
+  height: number;
+
 }

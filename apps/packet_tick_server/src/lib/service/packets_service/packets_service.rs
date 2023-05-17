@@ -62,7 +62,6 @@ pub fn on_packet(
     let packet_target = packet_parts[1];
     let packet_sender = packet_parts[2]; // TODO: deserialize this
     let packet_data = packet_parts[3].to_string();
-
     match packet_type {
         "join" => {
             packets::packet_join_world(packet_data, world, packet_target, publish_send_packet)

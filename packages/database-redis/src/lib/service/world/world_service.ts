@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { cwd } from 'process';
 import { RedisClientType } from 'redis';
 import { World as WorldUtils } from './world_utils';
-import { World as PostgresWorldEntity} from '@virtcon2/database-postgres';
+import { World as PostgresWorldEntity } from '@virtcon2/database-postgres';
 
 const startWorldProcess = async (new_world: RedisWorld, redis: RedisClientType): Promise<number> => {
   const world = await WorldUtils.registerWorld(new_world, redis);
@@ -37,7 +37,7 @@ const loadWorld = async (world_id: string): Promise<RedisWorld> => {
     id: world.id,
     players: [],
     buildings: [],
-    resources: asRedisItem<RedisWorldResource[]>(world.resources),
+    resources: world.resources as unknown as Array<RedisWorldResource>,
     height_map: PostgresWorldEntity.Get2DWorldMap(world.seed),
   } as RedisWorld;
 };

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct World {
     pub id: String,
     pub players: Vec<Player>,
-    pub buildings: Vec<Building>,
+    // TODO: add support for world_buildings
     pub resources: Vec<Resource>,
     pub height_map: Vec<Vec<f32>>,
 }
@@ -22,9 +22,11 @@ pub struct Player {
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct Building {
-    pub id: String,
-    pub name: String,
-    pub position: Vec<f32>,
+    pub id: u32,
+    pub processing_ticks: u32,
+    pub width: u32,
+    pub height: u32,
+    pub item_to_be_placed_on: Option<Box<Item>>,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
@@ -43,6 +45,8 @@ pub struct Item {
     pub icon: String,
     pub rarity: String,
     pub is_building: bool,
+    /* Maybe has item_to_be_placed_on */
+    pub building: Option<Building>,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
