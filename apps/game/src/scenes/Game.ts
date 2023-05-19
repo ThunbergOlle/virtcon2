@@ -31,7 +31,7 @@ export interface GameState {
   resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
 }
 export default class Game extends Scene implements SceneStates {
-  private world?: IWorld;
+  public world?: IWorld;
   private map!: Tilemaps.Tilemap;
 
   public state: GameState = {

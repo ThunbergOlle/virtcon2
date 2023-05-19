@@ -7,16 +7,23 @@ import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
 import { WindowManager, WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
+import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
+import { GhostBuilding } from '../../../components/GhostBuilding';
+import { Sprite } from '../../../components/Sprite';
+import { Position } from '../../../components/Position';
 
 export default function PlayerInventoryWindow(props: { windowManager: WindowManager }) {
   const isOpen = useRef(false);
   const buildingBeingPlaced = useRef<ServerInventoryItem | null>(null);
+  const buildingBeingPlacedEntity = useRef<number | null>(null);
   const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
 
   const cancelPlaceBuildingIntent = () => {
     const game = Game.getInstance();
     game.input.off('pointerdown', placeBuilding);
     buildingBeingPlaced.current = null;
+    if(!game.world || !buildingBeingPlacedEntity.current) return;
+    removeEntity(game.world, buildingBeingPlacedEntity.current);
   };
 
   function placeBuilding(e: Phaser.Input.Pointer) {
@@ -71,9 +78,22 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
     if (item.item.is_building) {
       toggleInventory();
       const game = Game.getInstance();
+      if (!game.world) return;
+      /* Create ghost building entity */
+      const ghostBuilding = addEntity(game.world);
 
+      addComponent(game.world, GhostBuilding, ghostBuilding);
+      addComponent(game.world, Sprite, ghostBuilding)
+      addComponent(game.world, Position, ghostBuilding)
+      Sprite.texture[ghostBuilding] = 2;
+      Sprite.height[ghostBuilding] = 16;
+      Sprite.width[ghostBuilding] = 16;
+      Position.x[ghostBuilding] = 0;
+      Position.y[ghostBuilding] = 0;
+
+      buildingBeingPlacedEntity.current = ghostBuilding;
       buildingBeingPlaced.current = item;
-      console.log(item.item.building)
+      console.log(item.item.building);
       game.input.on('pointerdown', placeBuilding);
       game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
 

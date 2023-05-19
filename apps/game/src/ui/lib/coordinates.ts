@@ -7,7 +7,7 @@ export type TileCoordinates = {
   x: TileCoordinate;
   y: TileCoordinate;
 };
-const tileSize = 16;
+export const tileSize = 16;
 export function toPhaserPos(coordinates: TileCoordinates): Coordinates {
   return {
     x: coordinates.x * tileSize + tileSize / 2,

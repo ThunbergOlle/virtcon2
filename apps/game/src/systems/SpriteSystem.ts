@@ -3,6 +3,7 @@ import { Sprite } from '../components/Sprite';
 import { Position } from '../components/Position';
 import { GameState } from '../scenes/Game';
 import { Velocity } from '../components/Velocity';
+import { tileSize } from '../ui/lib/coordinates';
 const spriteQuery = defineQuery([Sprite, Position]);
 const spriteQueryEnter = enterQuery(spriteQuery);
 const spriteQueryExit = exitQuery(spriteQuery);
@@ -15,6 +16,9 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene, textures: strin
       const texture = textures[texId];
       const sprite = scene.add.sprite(Position.x[id], Position.y[id], texture);
       state.spritesById[id] = sprite;
+      if(Sprite.height[id] && Sprite.width[id]) {
+        sprite.setDisplaySize(Sprite.width[id], Sprite.height[id]);
+      }
     }
     const exitEntities = spriteQueryExit(world);
     for (let i = 0; i < exitEntities.length; i++) {
