@@ -2,7 +2,7 @@ import { Scene, Tilemaps } from 'phaser';
 
 import { SceneStates } from './interfaces';
 
-import { RedisWorldResource, worldMapParser } from '@shared';
+import { RedisWorld, RedisWorldBuilding, RedisWorldResource, ServerPlayer, worldMapParser } from '@shared';
 import { ResourceNames } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
@@ -15,19 +15,21 @@ import { Sprite } from '../components/Sprite';
 import { Velocity } from '../components/Velocity';
 import { Network } from '../networking/Network';
 import { createColliderSystem } from '../systems/ColliderSystem';
-import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
+import { createMainPlayerSystem, createNewMainPlayerEntity } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
 import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
 import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { Collider } from '../components/Collider';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
+import { createNewBuildingEntity } from '../systems/BuildingSystem';
 
 export interface GameState {
   dt: number;
   world_id: string;
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
+  buildingById: { [key: number]: RedisWorldBuilding };
   resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
 }
 export default class Game extends Scene implements SceneStates {
@@ -40,6 +42,7 @@ export default class Game extends Scene implements SceneStates {
     spritesById: {},
     playerById: {},
     resourcesById: {},
+    buildingById: {},
   };
   public spriteSystem?: System<GameState>;
   public spriteRegisterySystem?: System<GameState>;
@@ -113,52 +116,40 @@ export default class Game extends Scene implements SceneStates {
         new_layer.setCollisionBetween(32, 34);
       });
 
-      world.resources.forEach((resource) => {
-        const resourceEntityId = createNewResourceEntity(ecsWorld, {
-          pos: { x: resource.x, y: resource.y },
-          resourceName: ResourceNames.WOOD,
-        });
-        this.state.resourcesById[resourceEntityId] = resource;
-      });
-
-
-      this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-
-      const mainPlayer = addEntity(ecsWorld);
-      addComponent(ecsWorld, Position, mainPlayer);
-      Position.x[mainPlayer] = 200;
-      Position.y[mainPlayer] = 200;
-      addComponent(ecsWorld, Velocity, mainPlayer);
-      Velocity.x[mainPlayer] = 0;
-      Velocity.y[mainPlayer] = 0;
-      addComponent(ecsWorld, Sprite, mainPlayer);
-      Sprite.texture[mainPlayer] = 0;
-      addComponent(ecsWorld, MainPlayer, mainPlayer);
-      addComponent(ecsWorld, Player, mainPlayer);
-      this.state.playerById[mainPlayer] = player.id;
-      Player.player[mainPlayer] = mainPlayer;
-      /* Add collider to entity */
-      addComponent(ecsWorld, Collider, mainPlayer);
-      Collider.offsetX[mainPlayer] = 0;
-      Collider.offsetY[mainPlayer] = 0;
-      Collider.sizeWidth[mainPlayer] = 16;
-      Collider.sizeHeight[mainPlayer] = 16;
-      Collider.scale[mainPlayer] = 1;
-
-      /* Load players that are already on the world */
-      for (const worldPlayer of world.players) {
-        if (worldPlayer.id === player.id) {
-          continue;
-        }
-        const join_packet: JoinPacketData = {
-          id: worldPlayer.id,
-          position: worldPlayer.position,
-          name: 'todo',
-          socket_id: '',
-        };
-        createNewPlayerEntity(join_packet, ecsWorld, this.state);
-      }
+      this.setupWorld(ecsWorld, world, player);
     });
+  }
+  setupWorld(ecsWorld: IWorld, world: RedisWorld, player: ServerPlayer) {
+    world.resources.forEach((resource) => {
+      const resourceEntityId = createNewResourceEntity(ecsWorld, {
+        pos: { x: resource.x, y: resource.y },
+        resourceName: ResourceNames.WOOD,
+      });
+      this.state.resourcesById[resourceEntityId] = resource;
+    });
+
+    world.buildings.forEach((building) => {
+      const worldBuildingEntityId = createNewBuildingEntity(ecsWorld, building);
+      this.state.buildingById[worldBuildingEntityId] = building;
+    });
+
+    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+
+    createNewMainPlayerEntity(this.state, ecsWorld, player);
+
+    /* Load players that are already on the world */
+    for (const worldPlayer of world.players) {
+      if (worldPlayer.id === player.id) {
+        continue;
+      }
+      const join_packet: JoinPacketData = {
+        id: worldPlayer.id,
+        position: worldPlayer.position,
+        name: 'todo',
+        socket_id: '',
+      };
+      createNewPlayerEntity(join_packet, ecsWorld, this.state);
+    }
   }
   preload() {}
   update(t: number, dt: number) {

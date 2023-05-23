@@ -1,4 +1,4 @@
-import { IWorld, addComponent, defineQuery, defineSystem, enterQuery } from '@virtcon2/virt-bit-ecs';
+import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from '@virtcon2/virt-bit-ecs';
 import { Sprite } from '../components/Sprite';
 
 import { Collider } from '../components/Collider';
@@ -8,6 +8,7 @@ import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { events } from '../events/Events';
 import { GameState } from '../scenes/Game';
+import { ServerPlayer } from '@shared';
 
 const speed = 750;
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player, Collider]);
@@ -50,3 +51,26 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
     return { world, state };
   });
 };
+
+export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, serverPlayer: ServerPlayer) => {
+  const mainPlayer = addEntity(ecsWorld);
+  addComponent(ecsWorld, Position, mainPlayer);
+  Position.x[mainPlayer] = 200;
+  Position.y[mainPlayer] = 200;
+  addComponent(ecsWorld, Velocity, mainPlayer);
+  Velocity.x[mainPlayer] = 0;
+  Velocity.y[mainPlayer] = 0;
+  addComponent(ecsWorld, Sprite, mainPlayer);
+  Sprite.texture[mainPlayer] = 0;
+  addComponent(ecsWorld, MainPlayer, mainPlayer);
+  addComponent(ecsWorld, Player, mainPlayer);
+  state.playerById[mainPlayer] = serverPlayer.id;
+  Player.player[mainPlayer] = mainPlayer;
+  /* Add collider to entity */
+  addComponent(ecsWorld, Collider, mainPlayer);
+  Collider.offsetX[mainPlayer] = 0;
+  Collider.offsetY[mainPlayer] = 0;
+  Collider.sizeWidth[mainPlayer] = 16;
+  Collider.sizeHeight[mainPlayer] = 16;
+  Collider.scale[mainPlayer] = 1;
+}

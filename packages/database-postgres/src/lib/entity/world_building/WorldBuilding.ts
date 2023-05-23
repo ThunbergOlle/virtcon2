@@ -3,6 +3,7 @@ import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne,
 import { Building } from '../building/Building';
 import { WorldResource } from '../world_resource/WorldResource';
 import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
+import { World } from '../world/World';
 
 @ObjectType()
 @Entity()
@@ -11,11 +12,15 @@ export class WorldBuilding extends BaseEntity {
   @Field(() => String)
   id: string;
 
+  @Field(() => World)
+  @ManyToOne(() => World, (world) => world.id)
+  world: World;
+
   @ManyToOne(() => Building, (building) => building.id)
   @Field(() => Building)
   building: Building;
 
-  @OneToOne(() => WorldResource)
+  @OneToOne(() => WorldResource, { nullable: true })
   @Field(() => WorldResource)
   @JoinColumn()
   world_resource: WorldResource;
@@ -28,13 +33,13 @@ export class WorldBuilding extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   y: number;
 
-  @Field(() => [WorldBuildingInventory])
-  @OneToMany(() => WorldBuildingInventory, (wbi) => wbi.world_building)
+  @Field(() => [WorldBuildingInventory], {nullable: true})
+  @OneToMany(() => WorldBuildingInventory, (wbi) => wbi.world_building, {nullable: true})
   world_building_inventory: WorldBuildingInventory[];
 
   /* Outputs into building */
   @Field(() => WorldBuilding, { nullable: true })
   @OneToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
   @JoinColumn()
-  outputWorldBuilding: WorldBuilding;
+  output_world_building: WorldBuilding;
 }

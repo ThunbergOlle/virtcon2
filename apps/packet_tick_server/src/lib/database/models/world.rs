@@ -5,11 +5,25 @@ use serde::{Deserialize, Serialize};
 pub struct World {
     pub id: String,
     pub players: Vec<Player>,
-    // TODO: add support for world_buildings
+    pub buildings: Vec<WorldBuilding>,
     pub resources: Vec<Resource>,
     pub height_map: Vec<Vec<f32>>,
 }
-
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct WorldBuilding {
+    pub id: i32,
+    pub building: Building,
+    pub x: i32,
+    pub y: i32,
+    pub world_building_inventory: Option<Vec<WorldBuildingInventoryItem>>,
+    pub output_world_building: Option<Box<WorldBuilding>>,
+}
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct WorldBuildingInventoryItem {
+    pub id: i32,
+    pub quantity: i32,
+    pub item: Item,
+}
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct Player {
     pub id: String,

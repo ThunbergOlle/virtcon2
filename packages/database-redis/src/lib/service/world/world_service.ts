@@ -1,9 +1,9 @@
-import { LogApp, LogLevel, RedisWorld, RedisWorldResource, TPS, asRedisItem, log } from '@shared';
+import { LogApp, LogLevel, RedisWorld, RedisWorldBuilding, RedisWorldResource, TPS, asRedisItem, log } from '@shared';
 import { exec } from 'child_process';
 import { cwd } from 'process';
 import { RedisClientType } from 'redis';
 import { World as WorldUtils } from './world_utils';
-import { World as PostgresWorldEntity } from '@virtcon2/database-postgres';
+import { World as PostgresWorldEntity, WorldBuilding } from '@virtcon2/database-postgres';
 
 const startWorldProcess = async (new_world: RedisWorld, redis: RedisClientType): Promise<number> => {
   const world = await WorldUtils.registerWorld(new_world, redis);
@@ -32,11 +32,12 @@ const loadWorld = async (world_id: string): Promise<RedisWorld> => {
   }
   /* Uncomment this when debugging procedural world generation */
   // await PostgresWorldEntity.RegenerateWorld(world.id)
-
+  const buildings = await WorldBuilding.find({ where: { world: { id: world.id } }, relations: ['building', 'building.item_to_be_placed_on'] });
+  console.log(buildings)
   return {
     id: world.id,
     players: [],
-    buildings: [],
+    buildings: buildings as unknown as Array<RedisWorldBuilding>,
     resources: world.resources as unknown as Array<RedisWorldResource>,
     height_map: PostgresWorldEntity.Get2DWorldMap(world.seed),
   } as RedisWorld;

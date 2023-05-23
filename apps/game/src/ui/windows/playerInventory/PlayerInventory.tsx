@@ -32,6 +32,7 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
       return cancelPlaceBuildingIntent();
     }
     buildingBeingPlaced.current.quantity--;
+    toast('Placing building', { type: 'info' });
     /* Send network packet to backend that we want to place the building at the coordinates */
     /* Convert phaser coordinates to the tilemap coordinates*/
     const { x, y } = fromPhaserPos({ x: e.worldX, y: e.worldY });

@@ -1,4 +1,5 @@
 import { WorldSettings } from '@shared';
+import { all_spawnable_db_items } from '@virtcon2/static-game-data';
 import seedRandom from 'seedrandom';
 import { createNoise2D } from 'simplex-noise';
 import { Field, ObjectType } from 'type-graphql';
@@ -6,9 +7,9 @@ import { BaseEntity, BeforeInsert, Column, Entity, OneToMany, PrimaryColumn } fr
 import { AppDataSource } from '../../data-source';
 import { Item } from '../item/Item';
 import { User } from '../user/User';
+import { WorldBuilding } from '../world_building/WorldBuilding';
 import { WorldResource } from '../world_resource/WorldResource';
 import { AccessLevel, WorldWhitelist } from '../world_whitelist/WorldWhitelist';
-import { all_db_items, all_spawnable_db_items } from '@virtcon2/static-game-data';
 @ObjectType()
 @Entity()
 export class World extends BaseEntity {
@@ -27,6 +28,10 @@ export class World extends BaseEntity {
   @Field(() => [WorldResource])
   @OneToMany(() => WorldResource, (worldResource) => worldResource.world)
   resources: WorldResource[];
+
+  @Field(() => [WorldBuilding])
+  @OneToMany(() => WorldBuilding, (building) => building.world)
+  buildings: WorldBuilding[];
 
   @BeforeInsert()
   replaceSpacesInId() {
