@@ -9,6 +9,7 @@ import { Resource } from '../components/Resource';
 import { Types } from 'phaser';
 import { RequestDestroyResourcePacket, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
 import { toast } from 'react-toastify';
+import { AllTextureMaps } from '../config/SpriteMap';
 
 const resourceQuery = defineQuery([Resource, Sprite, Collider]);
 const resourceEnterQuery = enterQuery(resourceQuery);
@@ -68,7 +69,7 @@ export const createNewResourceEntity = (
   Position.x[resource] = x;
   Position.y[resource] = y;
   addComponent(world, Sprite, resource);
-  Sprite.texture[resource] = 8;
+  Sprite.texture[resource] = AllTextureMaps[data.resourceName]?.textureId ?? 0;
   addComponent(world, Collider, resource);
   Collider.sizeWidth[resource] = Resources[data.resourceName].width * 16;
   Collider.sizeHeight[resource] = Resources[data.resourceName].height * 16;

@@ -8,6 +8,7 @@ import { Player } from '../components/Player';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { filterPacket } from '../networking/Filters';
+import { MiscTextureMap } from '../config/SpriteMap';
 
 const playerNetworkQuery = defineQuery([Not(MainPlayer), Position, Player]);
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Player]);
@@ -42,7 +43,7 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   Position.x[player] = joinPacket.position[0];
   Position.y[player] = joinPacket.position[1];
   addComponent(world, Sprite, player);
-  Sprite.texture[player] = 0;
+  Sprite.texture[player] = MiscTextureMap['player_character']?.textureId ?? 0;
   addComponent(world, Player, player);
   state.playerById[player] = joinPacket.id;
   Player.player[player] = player;

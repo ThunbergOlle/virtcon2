@@ -4,6 +4,7 @@ import { toPhaserPos } from '../ui/lib/coordinates';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { Collider } from '../components/Collider';
+import { ItemTextureMap } from '../config/SpriteMap';
 
 export const createNewBuildingEntity = (world: IWorld, data: RedisWorldBuilding): number => {
   const { x, y } = toPhaserPos(data);
@@ -12,7 +13,7 @@ export const createNewBuildingEntity = (world: IWorld, data: RedisWorldBuilding)
   Position.x[building] = x;
   Position.y[building] = y;
   addComponent(world, Sprite, building);
-  Sprite.texture[building] = data.building.id;
+  Sprite.texture[building] = ItemTextureMap[data.building.item?.name]?.textureId ?? 0;
   addComponent(world, Collider, building);
   Collider.sizeWidth[building] = data.building.width * 16;
   Collider.sizeHeight[building] = data.building.height * 16;

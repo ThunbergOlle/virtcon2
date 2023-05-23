@@ -1,22 +1,26 @@
 import { IWorld, Not, defineQuery, defineSystem, enterQuery, exitQuery } from '@virtcon2/virt-bit-ecs';
-import { Sprite } from '../components/Sprite';
 import { Position } from '../components/Position';
-import { GameState } from '../scenes/Game';
+import { Sprite } from '../components/Sprite';
 import { Velocity } from '../components/Velocity';
-import { tileSize } from '../ui/lib/coordinates';
+import { getTextureNameFromTextureId } from '../config/SpriteMap';
+import { GameState } from '../scenes/Game';
 const spriteQuery = defineQuery([Sprite, Position]);
 const spriteQueryEnter = enterQuery(spriteQuery);
 const spriteQueryExit = exitQuery(spriteQuery);
-export const createSpriteRegisterySystem = (scene: Phaser.Scene, textures: string[]) => {
+export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
   return defineSystem((world: IWorld, state: GameState) => {
     const enterEntities = spriteQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       const texId = Sprite.texture[id];
-      const texture = textures[texId];
+      const texture = getTextureNameFromTextureId(texId);
+      if (!texture) {
+        console.error('Texture not found for id: ' + texId);
+        continue;
+      }
       const sprite = scene.add.sprite(Position.x[id], Position.y[id], texture);
       state.spritesById[id] = sprite;
-      if(Sprite.height[id] && Sprite.width[id]) {
+      if (Sprite.height[id] && Sprite.width[id]) {
         sprite.setDisplaySize(Sprite.width[id], Sprite.height[id]);
       }
     }

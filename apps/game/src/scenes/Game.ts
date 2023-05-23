@@ -7,22 +7,16 @@ import { ResourceNames } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
 import { JoinPacketData } from '@virtcon2/network-packet';
-import { IWorld, System, addComponent, addEntity, createWorld } from '@virtcon2/virt-bit-ecs';
-import { MainPlayer } from '../components/MainPlayer';
-import { Player } from '../components/Player';
-import { Position } from '../components/Position';
-import { Sprite } from '../components/Sprite';
-import { Velocity } from '../components/Velocity';
+import { IWorld, System, createWorld } from '@virtcon2/virt-bit-ecs';
 import { Network } from '../networking/Network';
+import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
+import { createNewBuildingEntity } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
 import { createMainPlayerSystem, createNewMainPlayerEntity } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
 import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
 import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
-import { Collider } from '../components/Collider';
-import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
-import { createNewBuildingEntity } from '../systems/BuildingSystem';
 
 export interface GameState {
   dt: number;
@@ -95,7 +89,7 @@ export default class Game extends Scene implements SceneStates {
       const ecsWorld = createWorld();
       this.world = ecsWorld;
       this.spriteSystem = createSpriteSystem();
-      this.spriteRegisterySystem = createSpriteRegisterySystem(this, ['player_character', 'stone_drill', 'building_furnace', 'building_pipe', 'wood', 'sand', 'glass', 'coal', 'resource_wood']);
+      this.spriteRegisterySystem = createSpriteRegisterySystem(this);
       this.mainPlayerSystem = createMainPlayerSystem(this, this.input.keyboard.createCursorKeys());
       this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem();
       this.playerSendNetworkSystem = createPlayerSendNetworkSystem();

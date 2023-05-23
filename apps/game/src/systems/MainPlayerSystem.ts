@@ -9,6 +9,7 @@ import { Velocity } from '../components/Velocity';
 import { events } from '../events/Events';
 import { GameState } from '../scenes/Game';
 import { ServerPlayer } from '@shared';
+import { AllTextureMaps, MiscTextureMap } from '../config/SpriteMap';
 
 const speed = 750;
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player, Collider]);
@@ -61,7 +62,7 @@ export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, se
   Velocity.x[mainPlayer] = 0;
   Velocity.y[mainPlayer] = 0;
   addComponent(ecsWorld, Sprite, mainPlayer);
-  Sprite.texture[mainPlayer] = 0;
+  Sprite.texture[mainPlayer] = MiscTextureMap['player_character']?.textureId ?? 0;
   addComponent(ecsWorld, MainPlayer, mainPlayer);
   addComponent(ecsWorld, Player, mainPlayer);
   state.playerById[mainPlayer] = serverPlayer.id;
@@ -73,4 +74,4 @@ export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, se
   Collider.sizeWidth[mainPlayer] = 16;
   Collider.sizeHeight[mainPlayer] = 16;
   Collider.scale[mainPlayer] = 1;
-}
+};

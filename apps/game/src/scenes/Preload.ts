@@ -1,33 +1,31 @@
-import Phaser from "phaser";
-import { SceneStates } from "./interfaces";
+import Phaser from 'phaser';
+import { SceneStates } from './interfaces';
+import { AllTextureMaps, ItemTextureMap, ResourceTextureMap } from '../config/SpriteMap';
+import { DBItemName, ResourceNames } from '@virtcon2/static-game-data';
 
 export default class Preload extends Phaser.Scene implements SceneStates {
   constructor() {
-    super("preload");
+    super('preload');
   }
 
   preload() {
-    console.log("preloading scene");
+    console.log('preloading scene');
 
-    this.load.image("tiles", "../../assets/tilemaps/tiles/tiles_extruded.png");
-    this.load.image("stone_drill", "../../assets/sprites/stone_drill.png");
-    this.load.image("building_furnace", "../../assets/sprites/buildings/furnace.png");
-    this.load.image("player_character", "../../assets/sprites/player_tmp.png");
+    /* Load all textures */
+    for (const textureMapKey in AllTextureMaps) {
+      const textureMap = AllTextureMaps[textureMapKey as keyof typeof AllTextureMaps];
+      if (textureMap) {
+        this.load.image(textureMap.textureName, '../../assets/' + textureMap.texturePath);
+      }
+    }
+    this.load.image('tiles', '../../assets/tilemaps/tiles/tiles_extruded.png');
 
-    this.load.spritesheet("building_pipe", "../../assets/tilesheets/pipe.png", {frameWidth: 16, frameHeight: 16,});
-    this.load.image("wood", "../../assets/sprites/items/wood.png");
-    this.load.image("sand", "../../assets/sprites/items/sand.png");
-    this.load.image("glass", "../../assets/sprites/items/glass.png");
-    this.load.image("coal", "../../assets/sprites/items/coal.png");
 
-    /* Resources */
-    this.load.image("resource_wood", "../../assets/sprites/resources/wood.png");
-
-    console.log("preloading scene done");
+    console.log('preloading scene done');
   }
 
   create() {
-    this.scene.start("game");
+    this.scene.start('game');
   }
 
   update(t: number, dt: number) {}
