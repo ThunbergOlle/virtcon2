@@ -3,7 +3,7 @@ import { Scene, Tilemaps } from 'phaser';
 import { SceneStates } from './interfaces';
 
 import { RedisWorld, RedisWorldBuilding, RedisWorldResource, ServerPlayer, worldMapParser } from '@shared';
-import { ResourceNames } from '@virtcon2/static-game-data';
+import { get_resource_by_item_name } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
 import { JoinPacketData } from '@virtcon2/network-packet';
@@ -115,9 +115,16 @@ export default class Game extends Scene implements SceneStates {
   }
   setupWorld(ecsWorld: IWorld, world: RedisWorld, player: ServerPlayer) {
     world.resources.forEach((resource) => {
+      console.log(resource.item.name);
+      const resourceName = get_resource_by_item_name(resource.item.name);
+      if (!resourceName) {
+        console.log(`Resource ${resource.item.name} not found in static game data.`)
+        return;
+      }
+
       const resourceEntityId = createNewResourceEntity(ecsWorld, {
         pos: { x: resource.x, y: resource.y },
-        resourceName: ResourceNames.WOOD,
+        resourceName: resourceName,
       });
       this.state.resourcesById[resourceEntityId] = resource;
     });

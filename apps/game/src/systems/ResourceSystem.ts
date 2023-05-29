@@ -73,7 +73,7 @@ export const createNewResourceEntity = (
   addComponent(world, Collider, resource);
   Collider.sizeWidth[resource] = Resources[data.resourceName].width * 16;
   Collider.sizeHeight[resource] = Resources[data.resourceName].height * 16;
-  Collider.offsetX[resource] = 0.5 * Resources[data.resourceName].height * 16;
+  Collider.offsetX[resource] = 0
   Collider.offsetY[resource] = 0;
   Collider.static[resource] = 1;
   addComponent(world, Resource, resource);

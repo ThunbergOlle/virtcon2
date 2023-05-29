@@ -40,6 +40,7 @@ pub struct Building {
     pub processing_ticks: u32,
     pub width: u32,
     pub height: u32,
+    pub item: Option<Box<Item>>,
     pub item_to_be_placed_on: Option<Box<Item>>,
 }
 
@@ -73,4 +74,5 @@ pub struct Resource {
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct ResourceItem {
     pub id: i32,
+    pub name: String,
 }

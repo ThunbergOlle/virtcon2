@@ -16,6 +16,11 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     textureName: 'wood',
     texturePath: 'sprites/items/wood.png',
   },
+  [DBItemName.WOOD_BIG]: {
+    textureId: 2,
+    textureName: 'wood',
+    texturePath: 'sprites/items/wood.png',
+  },
   [DBItemName.STICK]: {
     textureId: 3,
     textureName: 'stick',
@@ -49,8 +54,13 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
 };
 
 export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> = {
-  [ResourceNames.WOOD]: {
+  [ResourceNames.WOOD_BIG]: {
     textureId: 100,
+    textureName: 'resource_wood_big',
+    texturePath: 'sprites/resources/wood_big.png',
+  },
+  [ResourceNames.WOOD]: {
+    textureId: 101,
     textureName: 'resource_wood',
     texturePath: 'sprites/resources/wood.png',
   },
@@ -61,6 +71,11 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureId: 1000,
     textureName: 'player_character',
     texturePath: 'sprites/player_tmp.png',
+  },
+  unknown: {
+    textureId: 0,
+    textureName: 'unknown',
+    texturePath: 'sprites/misc/unknown.png',
   },
 };
 export const AllTextureMaps = {

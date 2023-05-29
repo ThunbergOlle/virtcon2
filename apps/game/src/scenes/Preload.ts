@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
+import { AllTextureMaps } from '../config/SpriteMap';
 import { SceneStates } from './interfaces';
-import { AllTextureMaps, ItemTextureMap, ResourceTextureMap } from '../config/SpriteMap';
-import { DBItemName, ResourceNames } from '@virtcon2/static-game-data';
 
 export default class Preload extends Phaser.Scene implements SceneStates {
   constructor() {
