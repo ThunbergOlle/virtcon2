@@ -19,7 +19,6 @@ export const createColliderSystem = (scene: Phaser.Scene) => {
         collider.body.setSize(Collider.sizeWidth[eid], Collider.sizeHeight[eid]);
         collider.body.setOffset(Collider.offsetX[eid], Collider.offsetY[eid]);
         collider.setScale(Collider.scale[eid] || 1);
-        console.log(collider.body.immovable)
         sprite.setInteractive();
         const collisionGroup = state.gameObjectGroups[Collider.group[eid] as GameObjectGroups];
         if (collisionGroup) {

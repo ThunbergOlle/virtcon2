@@ -19,8 +19,8 @@ impl NetworkPacket for DisconnectPacket {
 
 pub fn packet_disconnect(
   packet: String,
-  world: &mut world::World,
-  _: &mut redis::Connection,
+  world: &world::World,
+  redis_connection: &mut redis::Connection,
   publish_send_packet: &mpsc::Sender<String>,
 
 ) {
@@ -30,5 +30,6 @@ pub fn packet_disconnect(
   publish_packet(&deserialized_packet, &world.id, None, publish_send_packet);
 
   // remove player from world
-  world.players.retain(|x| x.id != deserialized_packet.id);
+  redis::cmd("JSON.DEL").arg("worlds").arg(format!("{}.players[?(@.id=='{}')]", world.id, deserialized_packet.id)).execute(redis_connection);
+
 }

@@ -31,7 +31,8 @@ impl NetworkPacket for JoinPacket {
 
 pub fn packet_join_world(
     packet: String,
-    world: &mut world::World,
+    world: &world::World,
+    redis_connection: &mut redis::Connection,
     sender: &str,
     publish_send_packet: &mpsc::Sender<String>,
 ) {
@@ -70,5 +71,12 @@ pub fn packet_join_world(
 
     publish_packet(&new_player_packet, &world.id, None, publish_send_packet);
 
-    world.players.append(&mut vec![player]);
+    // serialized player
+    let serialized_player = serde_json::to_string(&player).unwrap();
+    let worlds_player_query = format!("{}.players", world.id);
+    redis::cmd("JSON.ARRAPPEND")
+        .arg("worlds")
+        .arg(worlds_player_query)
+        .arg(serialized_player)
+        .execute(redis_connection);
 }

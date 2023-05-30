@@ -21,7 +21,7 @@ impl NetworkPacket for PlayerInventoryPacket {
 
 pub fn packet_player_inventory(
   packet: String,
-  world: &mut world::World,
+  world: &world::World,
   publish_send_packet: &mpsc::Sender<String>,
 ) {
   // print packet

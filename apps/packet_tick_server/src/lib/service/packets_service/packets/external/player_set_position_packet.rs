@@ -16,20 +16,20 @@ impl NetworkPacket for PlayerSetPositionPacket {
 }
 pub fn packet_player_set_position(
   packet: String,
-  world: &mut world::World,
-  _: &mut redis::Connection,
+  world: &world::World,
+  redis_connection: &mut redis::Connection,
   publish_send_packet: &mpsc::Sender<String>,
 ) {
   let deserialized_packet: PlayerSetPositionPacket = serde_json::from_str(&packet).unwrap();
   publish_packet(&deserialized_packet, &world.id, None, publish_send_packet);
 
   // get the player from the world
-  match world.players.iter_mut().find(|x| x.id == deserialized_packet.player_id) {
-      Some(player) => {
-          player.position = deserialized_packet.position;
-      }
-      None => {
-          println!("Player not found");
-      }
-  }
+  let player_query = format!("{}.players[?(@.id=='{}')].position", world.id, deserialized_packet.player_id);
+  // update player position in redis database
+  redis::cmd("JSON.SET")
+      .arg("worlds")
+      .arg(&player_query)
+      .arg(format!("{:?}", deserialized_packet.position))
+      .execute(redis_connection);
+
 }

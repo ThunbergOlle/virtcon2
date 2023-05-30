@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     world,
-    world_service::{self, save_world},
+    world_service::{self},
 };
 
 #[path = "./packets/packets.rs"]
@@ -22,7 +22,7 @@ pub fn tick(
     publish_send_packet: &mpsc::Sender<String>,
     redis_connection: &mut redis::Connection,
 ) {
-    let mut world = world_service::get_world(&world_id, redis_connection).expect("World not found");
+    let world = world_service::get_world(&world_id, redis_connection).expect("World not found");
 
     let client_packets = message_receiver
         .try_iter()
@@ -30,30 +30,25 @@ pub fn tick(
         .collect::<Vec<String>>();
 
     /* Run handler that will check and handle all of the newly received packets. */
-    handle_packets(
-        client_packets,
-        &mut world,
-        redis_connection,
-        publish_send_packet,
-    );
+    handle_packets(client_packets, &world, redis_connection, publish_send_packet);
 
     /* Save the world after we are done modifying it for this tick */
-    save_world(&world, redis_connection);
+    // save_world(&world, redis_connection);
 }
 
 pub fn handle_packets(
     client_packets: Vec<String>,
-    world: &mut world::World,
+    world: &world::World,
     redis_connection: &mut redis::Connection,
     publish_send_packet: &mpsc::Sender<String>,
 ) {
     for i in client_packets {
-        on_packet(i, world, redis_connection, publish_send_packet);
+        on_packet(i, &world, redis_connection, publish_send_packet);
     }
 }
 pub fn on_packet(
     packet: String,
-    world: &mut world::World,
+    world: &world::World,
     redis_connection: &mut redis::Connection,
     publish_send_packet: &mpsc::Sender<String>,
 ) {
@@ -63,9 +58,13 @@ pub fn on_packet(
     let packet_sender = packet_parts[2]; // TODO: deserialize this
     let packet_data = packet_parts[3].to_string();
     match packet_type {
-        "join" => {
-            packets::packet_join_world(packet_data, world, packet_target, publish_send_packet)
-        }
+        "join" => packets::packet_join_world(
+            packet_data,
+            world,
+            redis_connection,
+            packet_target,
+            publish_send_packet,
+        ),
         "disconnect" => {
             packets::packet_disconnect(packet_data, world, redis_connection, publish_send_packet)
         }
@@ -78,7 +77,9 @@ pub fn on_packet(
             redis_connection,
             publish_send_packet,
         ),
-        "playerInventory" => packets::packet_player_inventory(packet_data, world, publish_send_packet),
+        "playerInventory" => {
+            packets::packet_player_inventory(packet_data, world, publish_send_packet)
+        }
         _ => {
             println!("Unknown packet type: {}", packet_type);
         }
