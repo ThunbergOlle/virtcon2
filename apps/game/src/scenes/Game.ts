@@ -18,6 +18,11 @@ import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSyste
 import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 
+export enum GameObjectGroups {
+  PLAYER = 0,
+  BUILDING = 1,
+  RESOURCE = 2,
+}
 export interface GameState {
   dt: number;
   world_id: string;
@@ -25,6 +30,9 @@ export interface GameState {
   playerById: { [key: number]: string };
   buildingById: { [key: number]: RedisWorldBuilding };
   resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
+  gameObjectGroups: {
+    [key in GameObjectGroups]: Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup | null;
+  };
 }
 export default class Game extends Scene implements SceneStates {
   public world?: IWorld;
@@ -37,6 +45,11 @@ export default class Game extends Scene implements SceneStates {
     playerById: {},
     resourcesById: {},
     buildingById: {},
+    gameObjectGroups: {
+      [GameObjectGroups.PLAYER]: null,
+      [GameObjectGroups.BUILDING]: null,
+      [GameObjectGroups.RESOURCE]: null,
+    },
   };
   public spriteSystem?: System<GameState>;
   public spriteRegisterySystem?: System<GameState>;
@@ -76,6 +89,14 @@ export default class Game extends Scene implements SceneStates {
 
   create() {
     Game.network = new Network();
+    this.state.gameObjectGroups = {
+      [GameObjectGroups.PLAYER]: this.physics.add.group(),
+      [GameObjectGroups.BUILDING]: this.physics.add.staticGroup(),
+      [GameObjectGroups.RESOURCE]: this.physics.add.staticGroup(),
+    };
+
+    this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? []);
+    this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
 
     events.subscribe('joinWorld', (worldId) => {
       console.log('creating scene');
@@ -118,7 +139,7 @@ export default class Game extends Scene implements SceneStates {
       console.log(resource.item.name);
       const resourceName = get_resource_by_item_name(resource.item.name);
       if (!resourceName) {
-        console.log(`Resource ${resource.item.name} not found in static game data.`)
+        console.log(`Resource ${resource.item.name} not found in static game data.`);
         return;
       }
 

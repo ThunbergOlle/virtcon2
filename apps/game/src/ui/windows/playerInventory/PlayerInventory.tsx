@@ -11,6 +11,9 @@ import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
 import { GhostBuilding } from '../../../components/GhostBuilding';
 import { Sprite } from '../../../components/Sprite';
 import { Position } from '../../../components/Position';
+import { Collider } from '../../../components/Collider';
+import { ItemTextureMap } from '../../../config/SpriteMap';
+import { get_building_by_id } from '@virtcon2/static-game-data';
 
 export default function PlayerInventoryWindow(props: { windowManager: WindowManager }) {
   const isOpen = useRef(false);
@@ -22,7 +25,7 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
     const game = Game.getInstance();
     game.input.off('pointerdown', placeBuilding);
     buildingBeingPlaced.current = null;
-    if(!game.world || !buildingBeingPlacedEntity.current) return;
+    if (!game.world || !buildingBeingPlacedEntity.current) return;
     removeEntity(game.world, buildingBeingPlacedEntity.current);
   };
 
@@ -31,6 +34,7 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
       toast('You do not have any more of this building in your inventory', { type: 'error' });
       return cancelPlaceBuildingIntent();
     }
+    if (!buildingBeingPlacedEntity.current || !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current]) return;
     buildingBeingPlaced.current.quantity--;
     toast('Placing building', { type: 'info' });
     /* Send network packet to backend that we want to place the building at the coordinates */
@@ -84,11 +88,15 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
       const ghostBuilding = addEntity(game.world);
 
       addComponent(game.world, GhostBuilding, ghostBuilding);
-      addComponent(game.world, Sprite, ghostBuilding)
-      addComponent(game.world, Position, ghostBuilding)
-      Sprite.texture[ghostBuilding] = 2;
-      Sprite.height[ghostBuilding] = 16;
-      Sprite.width[ghostBuilding] = 16;
+      addComponent(game.world, Sprite, ghostBuilding);
+      addComponent(game.world, Position, ghostBuilding);
+      addComponent(game.world, Collider, ghostBuilding);
+
+      const buildingSettings = get_building_by_id(item.item.building?.id ?? 0);
+      Sprite.texture[ghostBuilding] = ItemTextureMap[item.item.name]?.textureId ?? 0;
+      Sprite.height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
+      Sprite.width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
+      Sprite.opacity[ghostBuilding] = 0.5;
       Position.x[ghostBuilding] = 0;
       Position.y[ghostBuilding] = 0;
 

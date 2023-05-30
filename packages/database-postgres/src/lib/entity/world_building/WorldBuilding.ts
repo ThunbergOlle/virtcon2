@@ -42,4 +42,9 @@ export class WorldBuilding extends BaseEntity {
   @OneToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
   @JoinColumn()
   output_world_building: WorldBuilding;
+
+  @Field(() => Boolean)
+  @Column({ type: 'boolean', default: false })
+  active: boolean;
+
 }

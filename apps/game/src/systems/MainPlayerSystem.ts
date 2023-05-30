@@ -7,7 +7,7 @@ import { Player } from '../components/Player';
 import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { events } from '../events/Events';
-import { GameState } from '../scenes/Game';
+import { GameObjectGroups, GameState } from '../scenes/Game';
 import { ServerPlayer } from '@shared';
 import { AllTextureMaps, MiscTextureMap } from '../config/SpriteMap';
 
@@ -74,4 +74,5 @@ export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, se
   Collider.sizeWidth[mainPlayer] = 16;
   Collider.sizeHeight[mainPlayer] = 16;
   Collider.scale[mainPlayer] = 1;
+  Collider.group[mainPlayer] = GameObjectGroups.PLAYER;
 };

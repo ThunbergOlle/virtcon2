@@ -15,6 +15,7 @@ export default async function request_join_packet(packet: NetworkPacketData<Requ
       const loaded_world = await worldService.loadWorld(packet.world_id);
       await worldService.startWorldProcess(loaded_world, redisPubClient);
     } catch (e) {
+      log(e, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER)
       return log(`Failed to start world ${packet.world_id}.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
     }
   }

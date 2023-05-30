@@ -16,29 +16,30 @@ export default async function request_place_building_packet(packet: NetworkPacke
   const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.item_to_be_placed_on'] });
   /* Get if there are any resources at the coordinates. */
   const resource = await WorldResource.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } }, relations: ['item'] });
-  /* Check if the item can be placed on the resource */
-  if (item.building.item_to_be_placed_on && item.building.item_to_be_placed_on.id !== resource?.item.id) {
-    log(`Player ${player_id} tried to place item ${packet.data.buildingItemId} on resource ${resource?.item.id}`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
-    return;
-  }
+
   /* Check if position is occupied */
   const occuping_building = await WorldBuilding.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });
   if (occuping_building) {
     log(`Player ${player_id} tried to place item ${packet.data.buildingItemId} on occupied position ${packet.data.x}, ${packet.data.y}`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
     return;
   }
-  console.log('adding building to world');
+  const isActive = item.building.item_to_be_placed_on ? item.building.item_to_be_placed_on?.id === resource?.item.id : true;
+
   /* Add the building to the database */
   const building = await WorldBuilding.create({
     x: packet.data.x,
     y: packet.data.y,
     building: item.building,
     world_resource: resource,
+    active: isActive,
     world: { id: packet.world_id },
   });
-  await building.save()
-  resource.world_building = building;
-  await resource.save();
+  await building.save();
+
+  if (resource !== null) {
+    resource.world_building = building;
+    await resource.save();
+  }
 
   /* Remove the item from players inventory */
   await UserInventoryItem.addToInventory(player_id, packet.data.buildingItemId, -1);

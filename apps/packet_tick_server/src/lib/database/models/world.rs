@@ -13,6 +13,7 @@ pub struct World {
 pub struct WorldBuilding {
     pub id: i32,
     pub building: Building,
+    pub active: bool,
     pub x: i32,
     pub y: i32,
     pub world_building_inventory: Option<Vec<WorldBuildingInventoryItem>>,

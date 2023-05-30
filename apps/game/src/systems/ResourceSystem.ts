@@ -4,7 +4,7 @@ import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { TileCoordinates, toPhaserPos } from '../ui/lib/coordinates';
 import { Collider } from '../components/Collider';
-import Game, { GameState } from '../scenes/Game';
+import Game, { GameObjectGroups, GameState } from '../scenes/Game';
 import { Resource } from '../components/Resource';
 import { Types } from 'phaser';
 import { RequestDestroyResourcePacket, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
@@ -73,9 +73,10 @@ export const createNewResourceEntity = (
   addComponent(world, Collider, resource);
   Collider.sizeWidth[resource] = Resources[data.resourceName].width * 16;
   Collider.sizeHeight[resource] = Resources[data.resourceName].height * 16;
-  Collider.offsetX[resource] = 0
+  Collider.offsetX[resource] = 0;
   Collider.offsetY[resource] = 0;
   Collider.static[resource] = 1;
+  Collider.group[resource] = GameObjectGroups.RESOURCE;
   addComponent(world, Resource, resource);
   Resource.health[resource] = 5;
   return resource;

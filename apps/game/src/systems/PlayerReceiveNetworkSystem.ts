@@ -1,6 +1,6 @@
 import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, removeEntity } from '@virtcon2/virt-bit-ecs';
 import { MainPlayer } from '../components/MainPlayer';
-import { GameState } from '../scenes/Game';
+import { GameObjectGroups, GameState } from '../scenes/Game';
 
 import { DisconnectPacketData, JoinPacketData, NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
 import { Collider } from '../components/Collider';
@@ -49,6 +49,7 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   Player.player[player] = player;
   addComponent(world, Collider, player);
   Collider.static[player] = 1;
+  Collider.group[player] = GameObjectGroups.PLAYER;
 };
 
 export const handleJoinPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]) => {

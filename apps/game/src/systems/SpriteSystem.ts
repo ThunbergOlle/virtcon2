@@ -23,6 +23,9 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
       if (Sprite.height[id] && Sprite.width[id]) {
         sprite.setDisplaySize(Sprite.width[id], Sprite.height[id]);
       }
+      if (Sprite.opacity[id]) {
+        sprite.setAlpha(Sprite.opacity[id]);
+      }
     }
     const exitEntities = spriteQueryExit(world);
     for (let i = 0; i < exitEntities.length; i++) {

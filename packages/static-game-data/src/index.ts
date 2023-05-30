@@ -38,3 +38,6 @@ export const all_db_items_recipes = [...item_stick_recipe, ...item_sawmill_recip
 export * from './lib/buildings/building_type';
 export const all_db_buildings = [building_sawmill];
 
+export const get_building_by_id = (id: number) => {
+  return all_db_buildings.find((building) => building.id === id);
+};

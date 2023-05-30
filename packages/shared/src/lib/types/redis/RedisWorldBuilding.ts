@@ -6,6 +6,7 @@ export interface RedisWorldBuilding {
   id: string;
   building: DBBuilding;
   world_resource?: RedisWorldResource;
+  active: boolean;
   x: number;
   y: number;
   world_building_inventory?: RedisWorldBuildingInventory[];
