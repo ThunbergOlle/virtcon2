@@ -3,7 +3,7 @@ import { DBBuilding, DBItem } from '@virtcon2/static-game-data';
 import { RedisWorldResource } from './RedisWorldResource';
 
 export interface RedisWorldBuilding {
-  id: string;
+  id: number;
   building: DBBuilding;
   world_resource?: RedisWorldResource;
   active: boolean;

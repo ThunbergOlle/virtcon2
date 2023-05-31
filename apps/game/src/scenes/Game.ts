@@ -10,7 +10,7 @@ import { JoinPacketData } from '@virtcon2/network-packet';
 import { IWorld, System, createWorld } from '@virtcon2/virt-bit-ecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
-import { createNewBuildingEntity } from '../systems/BuildingSystem';
+import { createBuildingSystem, createNewBuildingEntity } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
 import { createMainPlayerSystem, createNewMainPlayerEntity } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
@@ -59,6 +59,7 @@ export default class Game extends Scene implements SceneStates {
   public colliderSystem?: System<GameState>;
   public resourceSystem?: System<GameState>;
   public buildingPlacementSystem?: System<GameState>;
+  public buildingSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -117,6 +118,7 @@ export default class Game extends Scene implements SceneStates {
       this.colliderSystem = createColliderSystem(this);
       this.resourceSystem = createResourceSystem();
       this.buildingPlacementSystem = createBuildingPlacementSystem(this);
+      this.buildingSystem = createBuildingSystem();
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -136,7 +138,6 @@ export default class Game extends Scene implements SceneStates {
   }
   setupWorld(ecsWorld: IWorld, world: RedisWorld, player: ServerPlayer) {
     world.resources.forEach((resource) => {
-      console.log(resource.item.name);
       const resourceName = get_resource_by_item_name(resource.item.name);
       if (!resourceName) {
         console.log(`Resource ${resource.item.name} not found in static game data.`);
@@ -184,7 +185,8 @@ export default class Game extends Scene implements SceneStates {
       !this.spriteRegisterySystem ||
       !this.playerSendNetworkSystem ||
       !this.resourceSystem ||
-      !this.buildingPlacementSystem
+      !this.buildingPlacementSystem ||
+      !this.buildingSystem
     )
       return;
     const packets = Game.network.get_received_packets();
@@ -195,6 +197,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.playerReceiveNetworkSystem(this.world, newState, packets).state;
     newState = this.spriteSystem(this.world, newState, packets).state;
     newState = this.resourceSystem(this.world, newState, packets).state;
+    newState = this.buildingSystem(this.world, newState, packets).state;
     newState = this.buildingPlacementSystem(this.world, newState, packets).state;
     newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
     this.state = newState;

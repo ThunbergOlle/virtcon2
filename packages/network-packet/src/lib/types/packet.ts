@@ -11,6 +11,7 @@ export enum PacketType {
   REQUEST_JOIN = 'requestJoin',
   REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
   REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
+  PLACE_BUILDING = 'placeBuilding',
 }
 
 export interface NetworkPacketData<T> {

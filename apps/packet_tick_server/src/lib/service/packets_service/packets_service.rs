@@ -80,6 +80,9 @@ pub fn on_packet(
         "playerInventory" => {
             packets::packet_player_inventory(packet_data, world, publish_send_packet)
         }
+        "placeBuilding" => {
+            packets::packet_place_building(packet_data, world, redis_connection, publish_send_packet)
+        }
         _ => {
             println!("Unknown packet type: {}", packet_type);
         }

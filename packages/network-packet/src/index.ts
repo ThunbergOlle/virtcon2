@@ -24,3 +24,5 @@ export * from './lib/service/packets/RequestDestroyResourcePacket';
 
 export * from './lib/service/packets/RequestPlaceBuilding';
 
+export * from './lib/service/packets/PlaceBuildingPacket';
+

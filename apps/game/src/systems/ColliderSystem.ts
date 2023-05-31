@@ -22,7 +22,6 @@ export const createColliderSystem = (scene: Phaser.Scene) => {
         sprite.setInteractive();
         const collisionGroup = state.gameObjectGroups[Collider.group[eid] as GameObjectGroups];
         if (collisionGroup) {
-          console.log(`Adding collider to group ${Collider.group[eid]}`);
           collisionGroup.add(collider);
         }
       } else {
