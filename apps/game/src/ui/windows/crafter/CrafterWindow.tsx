@@ -2,16 +2,21 @@ import { useMutation, useQuery } from '@apollo/client';
 import { ServerInventoryItem } from '@shared';
 import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
-import { WindowManager, WindowType } from '../../lib/WindowManager';
+import { WindowStackContext } from '../../context/window/WindowContext';
+import { WindowType } from '../../lib/WindowManager';
 import { CRAFT_MUTATION, ITEMS_QUERY } from './CrafterWindowGraphQL';
-import { toast } from 'react-toastify';
+import { useForceUpdate } from '../../hooks/useForceUpdate';
 
-export default function CrafterWindow(props: { windowManager: WindowManager }) {
+export default function CrafterWindow() {
+  const windowManagerContext = useContext(WindowStackContext);
+  const forceUpdate = useForceUpdate();
+
   const isOpen = useRef(false);
   const itemsQuery = useQuery(ITEMS_QUERY);
   const [mutateCraftItem, craftItemMutation] = useMutation(CRAFT_MUTATION);
@@ -30,12 +35,12 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
           packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
         };
         Game.network.sendPacket(packet);
-        props.windowManager.openWindow(WindowType.VIEW_CRAFTER);
         isOpen.current = true;
       } else {
-        props.windowManager.closeWindow(WindowType.VIEW_CRAFTER);
         isOpen.current = false;
       }
+      windowManagerContext.setWindowStack({ type: 'toggle', windowType: WindowType.VIEW_CRAFTER });
+      forceUpdate();
     });
     events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
       setInventory(inventory);
@@ -66,7 +71,6 @@ export default function CrafterWindow(props: { windowManager: WindowManager }) {
     <Window
       loading={[itemsQuery.loading, craftItemMutation.loading]}
       errors={[itemsQuery.error, craftItemMutation.error]}
-      windowManager={props.windowManager}
       title="Crafter"
       width={800}
       height={600}

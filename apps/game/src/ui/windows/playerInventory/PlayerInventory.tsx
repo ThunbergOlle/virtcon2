@@ -1,6 +1,6 @@
 import { ServerInventoryItem } from '@shared';
 import { NetworkPacketData, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
@@ -14,9 +14,15 @@ import { Position } from '../../../components/Position';
 import { Collider } from '../../../components/Collider';
 import { ItemTextureMap } from '../../../config/SpriteMap';
 import { get_building_by_id } from '@virtcon2/static-game-data';
+import { WindowStackContext, windowStackReducer } from '../../context/window/WindowContext';
+import { useForceUpdate } from '../../hooks/useForceUpdate';
 
-export default function PlayerInventoryWindow(props: { windowManager: WindowManager }) {
+export default function PlayerInventoryWindow() {
+  const windowManagerContext = useContext(WindowStackContext);
+  const forceUpdate = useForceUpdate();
+
   const isOpen = useRef(false);
+
   const buildingBeingPlaced = useRef<ServerInventoryItem | null>(null);
   const buildingBeingPlacedEntity = useRef<number | null>(null);
   const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
@@ -50,33 +56,29 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
     };
     Game.network.sendPacket(packet);
   }
-  const toggleInventory = () => {
+  function toggleInventory() {
     if (!isOpen.current) {
-      /* Send request inventory packet */
       const packet: NetworkPacketData<RequestPlayerInventoryPacket> = {
         data: {},
         packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
       };
       Game.network.sendPacket(packet);
-      props.windowManager.openWindow(WindowType.VIEW_PLAYER_INVENTORY);
       isOpen.current = true;
     } else {
-      props.windowManager.closeWindow(WindowType.VIEW_PLAYER_INVENTORY);
       isOpen.current = false;
     }
-  };
-
+    windowManagerContext.setWindowStack({ type: 'toggle', windowType: WindowType.VIEW_PLAYER_INVENTORY });
+    forceUpdate();
+  }
   useEffect(() => {
     events.subscribe('onInventoryButtonPressed', toggleInventory);
     events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
       setInventory(inventory);
     });
-
     return () => {
-      events.unsubscribe('onInventoryButtonPressed', () => {});
       events.unsubscribe('networkPlayerInventoryPacket', () => {});
+      events.unsubscribe('onInventoryButtonPressed', () => {});
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onItemWasClicked = (item: ServerInventoryItem) => {
@@ -102,15 +104,13 @@ export default function PlayerInventoryWindow(props: { windowManager: WindowMana
 
       buildingBeingPlacedEntity.current = ghostBuilding;
       buildingBeingPlaced.current = item;
-      console.log(item.item.building);
       game.input.on('pointerdown', placeBuilding);
       game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
 
-      console.log('trying to place building: ', item.item.name);
     }
   };
   return (
-    <Window windowManager={props.windowManager} title="Inventory" width={800} height={800} defaultPosition={{ x: window.innerWidth / 2 - 400, y: 40 }} windowType={WindowType.VIEW_PLAYER_INVENTORY}>
+    <Window title="Inventory" width={800} height={800} defaultPosition={{ x: window.innerWidth / 2 - 400, y: 40 }} windowType={WindowType.VIEW_PLAYER_INVENTORY}>
       <div className="flex flex-col h-full">
         <div className="flex-1">
           <h2 className="text-2xl">Inventory</h2>
