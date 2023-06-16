@@ -9,8 +9,8 @@ import { World } from '../world/World';
 @Entity()
 export class WorldBuilding extends BaseEntity {
   @PrimaryGeneratedColumn()
-  @Field(() => String)
-  id: string;
+  @Field(() => Int)
+  id: number;
 
   @Field(() => World)
   @ManyToOne(() => World, (world) => world.id)

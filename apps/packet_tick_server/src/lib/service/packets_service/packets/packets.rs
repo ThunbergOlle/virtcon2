@@ -15,6 +15,7 @@ include!("./external/player_set_position_packet.rs");
 include!("./external/new_player_packet.rs");
 include!("./external/player_inventory_packet.rs");
 include!("./external/place_building.rs");
+include!("./external/world_building_packet.rs");
 
 
 

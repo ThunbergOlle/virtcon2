@@ -12,6 +12,8 @@ import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache, gql, useQuery } 
 import { setContext } from '@apollo/client/link/context';
 import { apiUrl } from '@shared';
 import { UserContext } from './ui/context/user/UserContext';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
 const authLink = setContext(async (_, { headers }) => {
@@ -37,10 +39,12 @@ export default function App() {
   return (
     <div className="App">
       <ApolloProvider client={client}>
-        <ToastContainer theme='dark'/>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <ToastContainer theme="dark" />
+        <DndProvider backend={HTML5Backend}>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </DndProvider>
       </ApolloProvider>
     </div>
   );

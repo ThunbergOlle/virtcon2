@@ -1,5 +1,6 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { DBBuilding, DBItem } from '@virtcon2/static-game-data';
+import { DBBuilding } from '@virtcon2/static-game-data';
+import { ServerInventoryItem } from './RedisInventoryItem';
 import { RedisWorldResource } from './RedisWorldResource';
 
 export interface RedisWorldBuilding {
@@ -9,12 +10,6 @@ export interface RedisWorldBuilding {
   active: boolean;
   x: number;
   y: number;
-  world_building_inventory?: RedisWorldBuildingInventory[];
+  world_building_inventory?: ServerInventoryItem[];
   output_world_building?: RedisWorldBuilding;
-}
-
-export interface RedisWorldBuildingInventory {
-  item: DBItem;
-  quantity: number;
-  id: string;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import GameConfig from '../../../GameConfig';
 import './WorldPage.css';
 
@@ -7,9 +7,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
 import { WindowStackContext, windowStackReducer } from '../../context/window/WindowContext';
-import { WindowManager, WindowType, windowManager } from '../../lib/WindowManager';
 import CrafterWindow from '../../windows/crafter/CrafterWindow';
 import PlayerInventoryWindow from '../../windows/playerInventory/PlayerInventory';
+import WorldBuildingWindow from '../../windows/building/WorldBuildingWindow';
 
 function GamePage() {
   const { worldId } = useParams();
@@ -51,6 +51,7 @@ function GamePage() {
       <div className="absolute">
         <PlayerInventoryWindow />
         <CrafterWindow />
+        <WorldBuildingWindow />
       </div>
     </WindowStackContext.Provider>
   );

@@ -1,21 +1,23 @@
 import { ServerInventoryItem } from '@shared';
 import { NetworkPacketData, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import { get_building_by_id } from '@virtcon2/static-game-data';
+import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { Collider } from '../../../components/Collider';
+import { GhostBuilding } from '../../../components/GhostBuilding';
+import { Position } from '../../../components/Position';
+import { Sprite } from '../../../components/Sprite';
+import { ItemTextureMap } from '../../../config/SpriteMap';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
-import { WindowManager, WindowType } from '../../lib/WindowManager';
-import { fromPhaserPos } from '../../lib/coordinates';
-import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
-import { GhostBuilding } from '../../../components/GhostBuilding';
-import { Sprite } from '../../../components/Sprite';
-import { Position } from '../../../components/Position';
-import { Collider } from '../../../components/Collider';
-import { ItemTextureMap } from '../../../config/SpriteMap';
-import { get_building_by_id } from '@virtcon2/static-game-data';
-import { WindowStackContext, windowStackReducer } from '../../context/window/WindowContext';
+import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
+import { WindowType } from '../../lib/WindowManager';
+import { fromPhaserPos } from '../../lib/coordinates';
+import InventoryItem, { InventoryType } from '../../components/inventoryItem/InventoryItem';
+
 
 export default function PlayerInventoryWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -115,21 +117,11 @@ export default function PlayerInventoryWindow() {
         <div className="flex-1">
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap">
-            {inventory.map((inventoryItem) => {
-              return (
-                <div
-                  onClick={() => onItemWasClicked(inventoryItem)}
-                  key={inventoryItem.id}
-                  className="flex flex-col m-2 text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
-                >
-                  <img alt={inventoryItem.item.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${inventoryItem.item.name}.png`}></img>
-                  <p className="flex-1 m-[-8px]">x{inventoryItem.quantity}</p>
-                </div>
-              );
-            })}
+            {inventory.map((inventoryItem) => <InventoryItem key={inventoryItem.item.id} item={inventoryItem} onClick={() => onItemWasClicked(inventoryItem)} fromInventoryType={InventoryType.PLAYER}/>)}
           </div>
         </div>
       </div>
     </Window>
   );
 }
+

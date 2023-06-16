@@ -3,6 +3,7 @@ import item_wood from '../../items/db/item_wood';
 import { DBBuilding } from '../building_type';
 
 const building_sawmill: DBBuilding = {
+  name: "Sawmill",
   id: 3,
   height: 2,
   width: 2,

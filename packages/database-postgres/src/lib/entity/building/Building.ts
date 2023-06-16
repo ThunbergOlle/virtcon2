@@ -11,6 +11,10 @@ export class Building extends BaseEntity {
   @Field(() => Int)
   id: number;
 
+  @Field(() => String)
+  @Column({ type: 'varchar', unique: true })
+  name: string;
+
   /* Item relationship */
   @Field(() => Item, { nullable: false })
   @OneToOne(() => Item, (i) => i.id, { nullable: false })

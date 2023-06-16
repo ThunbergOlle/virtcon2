@@ -83,6 +83,9 @@ pub fn on_packet(
         "placeBuilding" => {
             packets::packet_place_building(packet_data, world, redis_connection, publish_send_packet)
         }
+        "worldBuilding" => {
+            packets::packet_world_building(packet_data, world, redis_connection, publish_send_packet)
+        }
         _ => {
             println!("Unknown packet type: {}", packet_type);
         }

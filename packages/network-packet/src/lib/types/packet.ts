@@ -11,6 +11,8 @@ export enum PacketType {
   REQUEST_JOIN = 'requestJoin',
   REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
   REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
+  REQUEST_WORLD_BUILDING = 'requestWorldBuilding',
+  WORLD_BUILDING = 'worldBuilding',
   PLACE_BUILDING = 'placeBuilding',
 }
 
