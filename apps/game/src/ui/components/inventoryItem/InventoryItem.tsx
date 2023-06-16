@@ -1,10 +1,7 @@
-import { ServerInventoryItem } from '@shared';
+import { InventoryType, ServerInventoryItem } from '@shared';
 import { useDrag, useDrop } from 'react-dnd';
 
-export enum InventoryType {
-  PLAYER = 'PLAYER',
-  BUILDING = 'BUILDING',
-}
+
 
 export default function InventoryItem({ item, onClick, fromInventoryType }: { item: ServerInventoryItem; fromInventoryType: InventoryType; onClick: (item: ServerInventoryItem) => void }) {
   const [{ isDragging }, drag] = useDrag(() => ({

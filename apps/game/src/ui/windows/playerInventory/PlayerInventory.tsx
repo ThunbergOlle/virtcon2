@@ -1,4 +1,4 @@
-import { ServerInventoryItem } from '@shared';
+import { InventoryType, ServerInventoryItem } from '@shared';
 import { NetworkPacketData, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import { get_building_by_id } from '@virtcon2/static-game-data';
 import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
@@ -16,7 +16,7 @@ import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
-import InventoryItem, { InventoryType } from '../../components/inventoryItem/InventoryItem';
+import InventoryItem from '../../components/inventoryItem/InventoryItem';
 
 
 export default function PlayerInventoryWindow() {

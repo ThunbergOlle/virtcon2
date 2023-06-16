@@ -22,4 +22,21 @@ export class WorldBuildingInventory extends BaseEntity {
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })
   quantity: number;
+
+  static async addToInventory(worldBuildingId: number, itemId: number, quantiy: number): Promise<WorldBuildingInventory> {
+    const worldBuildingItem = await WorldBuildingInventory.findOne({ where: { world_building: {id: worldBuildingId}, item: { id: itemId } }, relations: ['item'] });
+    if (worldBuildingItem) {
+      worldBuildingItem.quantity += quantiy;
+      await worldBuildingItem.save();
+      return worldBuildingItem;
+    } else {
+      const new_world_building_item = {
+        world_building: { id: worldBuildingId },
+        item: { id: itemId },
+        quantity: quantiy,
+      } as WorldBuildingInventory;
+      await WorldBuildingInventory.create(new_world_building_item).save();
+      return WorldBuildingInventory.findOne({ where: { world_building: { id: worldBuildingId }, item: { id: itemId } }, relations: ['item'] });
+    }
+  }
 }

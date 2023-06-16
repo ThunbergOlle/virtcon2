@@ -1,4 +1,4 @@
-import { BuildingType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
+import { BuildingType, InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
 import { NetworkPacketData, PacketType, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { useContext, useEffect, useState } from 'react';
 import { events } from '../../../events/Events';
@@ -8,7 +8,7 @@ import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
-import InventoryItem, { InventoryItemPlaceholder, InventoryType } from '../../components/inventoryItem/InventoryItem';
+import InventoryItem, { InventoryItemPlaceholder } from '../../components/inventoryItem/InventoryItem';
 
 export default function WorldBuildingWindow() {
   const windowManagerContext = useContext(WindowStackContext);
