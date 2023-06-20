@@ -1,5 +1,5 @@
 import { BuildingType, InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
-import { NetworkPacketData, PacketType, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
+import { NetworkPacketData, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { useContext, useEffect, useState } from 'react';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
@@ -8,7 +8,8 @@ import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
-import InventoryItem, { InventoryItemPlaceholder } from '../../components/inventoryItem/InventoryItem';
+import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
+import { toast } from 'react-toastify';
 
 export default function WorldBuildingWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -46,7 +47,22 @@ export default function WorldBuildingWindow() {
       events.unsubscribe('networkWorldBuilding', () => {});
     };
   }, []);
-
+  const onInventoryDropItem = (item: InventoryItemType) => {
+    if (!activeWorldBuilding?.id) {
+      toast('You must have a building selected to drop items into it.', { type: 'error' });
+      return;
+    }
+    // Construct network packet to move the item to the new invenory.
+    const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
+      data: {
+        ...item,
+        toInventoryId: activeWorldBuilding?.id,
+        toInventoryType: InventoryType.BUILDING,
+      },
+      packet_type: PacketType.REQUEST_MOVE_INVENTORY_ITEM,
+    };
+    Game.network.sendPacket(packet);
+  };
   return (
     <Window title="Building Viewer" width={400} height={400} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
       <div className="flex flex-col h-full">
@@ -61,11 +77,16 @@ export default function WorldBuildingWindow() {
             {[...Array(10)]?.map((_, index) => {
               const item = activeWorldBuilding?.world_building_inventory && activeWorldBuilding?.world_building_inventory[index];
               return item ? (
-                <InventoryItem item={item} fromInventoryType={InventoryType.BUILDING} onClick={function (item: ServerInventoryItem): void {
-                  throw new Error('Function not implemented.');
-                } } />
+                <InventoryItem
+                  item={item}
+                  fromInventoryType={InventoryType.BUILDING}
+                  fromInventoryId={activeWorldBuilding.id}
+                  onClick={function (item: ServerInventoryItem): void {
+                    throw new Error('Function not implemented.');
+                  }}
+                />
               ) : (
-                <InventoryItemPlaceholder onDrop={(item) => console.log("Dropped item") } />
+                <InventoryItemPlaceholder onDrop={onInventoryDropItem} />
               );
             })}
           </div>

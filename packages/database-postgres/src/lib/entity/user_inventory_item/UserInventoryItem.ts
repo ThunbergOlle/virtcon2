@@ -22,11 +22,17 @@ export class UserInventoryItem extends BaseEntity {
   quantity: number;
 
   static async addToInventory(userId: string, itemId: number, quantiy: number): Promise<UserInventoryItem> {
+    console.log('addToInventory', userId, itemId, quantiy);
     const userInventoryItem = await UserInventoryItem.findOne({ where: { user: { id: userId }, item: { id: itemId } }, relations: ['item'] });
     if (userInventoryItem) {
       userInventoryItem.quantity += quantiy;
-      await userInventoryItem.save();
-      return userInventoryItem;
+      if (userInventoryItem.quantity <= 0) {
+        await userInventoryItem.remove();
+        return null;
+      } else {
+        await userInventoryItem.save();
+        return userInventoryItem;
+      }
     } else {
       const new_user_inventory_item = {
         user: { id: userId },

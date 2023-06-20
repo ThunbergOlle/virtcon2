@@ -5,6 +5,5 @@ export interface RequestMoveInventoryItemPacketData {
   fromInventoryId: number;
   toInventoryType: InventoryType;
   toInventoryId: number;
-  quantity: number;
   item: ServerInventoryItem
 }

@@ -23,7 +23,11 @@ pub struct WorldBuilding {
 pub struct WorldBuildingInventoryItem {
     pub id: i32,
     pub quantity: i32,
-    pub item: Option<Item>,
+    pub item: WorldBuildingInventoryItemItem,
+}
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct WorldBuildingInventoryItemItem {
+    pub id: i32,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct Player {

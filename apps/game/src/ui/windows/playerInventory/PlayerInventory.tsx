@@ -1,5 +1,11 @@
 import { InventoryType, ServerInventoryItem } from '@shared';
-import { NetworkPacketData, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import {
+  NetworkPacketData,
+  PacketType,
+  RequestMoveInventoryItemPacketData,
+  RequestPlaceBuildingPacketData,
+  RequestPlayerInventoryPacket,
+} from '@virtcon2/network-packet';
 import { get_building_by_id } from '@virtcon2/static-game-data';
 import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -16,8 +22,7 @@ import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
-import InventoryItem from '../../components/inventoryItem/InventoryItem';
-
+import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 
 export default function PlayerInventoryWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -108,20 +113,43 @@ export default function PlayerInventoryWindow() {
       buildingBeingPlaced.current = item;
       game.input.on('pointerdown', placeBuilding);
       game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
-
     }
   };
+  const onInventoryDropItem = (item: InventoryItemType) => {
+    // Construct network packet to move the item to the new invenory.
+    const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
+      data: {
+        ...item,
+        toInventoryId: 0,
+        toInventoryType: InventoryType.PLAYER,
+      },
+      packet_type: PacketType.REQUEST_MOVE_INVENTORY_ITEM,
+    };
+    Game.network.sendPacket(packet);
+  };
   return (
-    <Window title="Inventory" width={800} height={800} defaultPosition={{ x: window.innerWidth / 2 - 400, y: 40 }} windowType={WindowType.VIEW_PLAYER_INVENTORY}>
+    <Window
+      title="Inventory"
+      width={800}
+      height={800}
+      defaultPosition={{ x: window.innerWidth / 2 - 400, y: 40 }}
+      windowType={WindowType.VIEW_PLAYER_INVENTORY}
+    >
       <div className="flex flex-col h-full">
         <div className="flex-1">
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap">
-            {inventory.map((inventoryItem) => <InventoryItem key={inventoryItem.item.id} item={inventoryItem} onClick={() => onItemWasClicked(inventoryItem)} fromInventoryType={InventoryType.PLAYER}/>)}
+            {[...Array(20)]?.map((_, index) => {
+              const item = inventory[index];
+              return item ? (
+                <InventoryItem key={item.id} item={item} onClick={() => onItemWasClicked(item)} fromInventoryType={InventoryType.PLAYER} fromInventoryId={0} />
+              ) : (
+                <InventoryItemPlaceholder onDrop={onInventoryDropItem} />
+              );
+            })}
           </div>
         </div>
       </div>
     </Window>
   );
 }
-
