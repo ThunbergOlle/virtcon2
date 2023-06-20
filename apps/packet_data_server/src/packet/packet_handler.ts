@@ -7,6 +7,7 @@ import {
   RequestMoveInventoryItemPacketData,
   RequestPlaceBuildingPacketData,
   RequestPlayerInventoryPacket,
+  RequestWorldBuildingChangeOutput,
   RequestWorldBuildingPacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
@@ -16,6 +17,7 @@ import request_destroy_resource_packet from './packets/request_destroy_resource_
 import request_place_building_packet from './packets/request_place_building_packet';
 import request_world_building_packet from './packets/request_world_building_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
+import request_world_building_change_output from './packets/request_world_building_change_output';
 
 export default function packet_handler(packet: NetworkPacketData<unknown>, redisPubClient: RedisClientType) {
   switch (packet.packet_type) {
@@ -41,6 +43,10 @@ export default function packet_handler(packet: NetworkPacketData<unknown>, redis
     }
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM: {
       request_move_inventory_item_packet(packet as NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>, redisPubClient);
+      break;
+    }
+    case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT: {
+      request_world_building_change_output(packet as NetworkPacketDataWithSender<RequestWorldBuildingChangeOutput>, redisPubClient);
       break;
     }
     default: {

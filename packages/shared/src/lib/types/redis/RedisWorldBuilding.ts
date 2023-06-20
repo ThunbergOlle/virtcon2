@@ -12,4 +12,6 @@ export interface RedisWorldBuilding {
   y: number;
   world_building_inventory?: ServerInventoryItem[];
   output_world_building?: RedisWorldBuilding;
+  output_pos_x?: number;
+  output_pos_y?: number;
 }

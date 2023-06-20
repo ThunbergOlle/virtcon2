@@ -18,6 +18,8 @@ pub struct WorldBuilding {
     pub y: i32,
     pub world_building_inventory: Option<Vec<WorldBuildingInventoryItem>>,
     pub output_world_building: Option<Box<WorldBuilding>>,
+    pub output_pos_x: Option<i32>,
+    pub output_pos_y: Option<i32>,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct WorldBuildingInventoryItem {

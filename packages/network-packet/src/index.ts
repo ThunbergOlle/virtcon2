@@ -32,3 +32,5 @@ export * from './lib/service/packets/RequestMoveInventoryItemPacket';
 
 export * from './lib/service/packets/WorldBuildingPacket';
 
+export * from './lib/service/packets/RequestWorldBuildingChangeOutput';
+

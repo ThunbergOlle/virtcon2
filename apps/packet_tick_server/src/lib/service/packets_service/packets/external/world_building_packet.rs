@@ -17,6 +17,8 @@ pub struct WorldBuilding {
     pub y: i32,
     pub world_building_inventory: Option<Vec<world::WorldBuildingInventoryItem>>,
     pub output_world_building: Option<WorldBuildingId>,
+    pub output_pos_x: Option<i32>,
+    pub output_pos_y: Option<i32>,
 }
 
 impl NetworkPacket for WorldBuildingPacket {

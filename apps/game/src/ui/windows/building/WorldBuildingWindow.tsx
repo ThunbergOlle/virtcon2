@@ -1,15 +1,22 @@
-import { BuildingType, InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
-import { NetworkPacketData, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
+import { InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
+import {
+  NetworkPacketData,
+  PacketType,
+  RequestMoveInventoryItemPacketData,
+  RequestWorldBuildingChangeOutput,
+  RequestWorldBuildingPacket,
+} from '@virtcon2/network-packet';
+import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
 import { useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
+import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
-import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
-import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
-import { toast } from 'react-toastify';
+import WorldBuildingOutput from './WorldBuildingOutput';
 
 export default function WorldBuildingWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -63,9 +70,21 @@ export default function WorldBuildingWindow() {
     };
     Game.network.sendPacket(packet);
   };
+  const onNewOutputPositionSelected = (pos: { x: number; y: number }) => {
+    if (!activeWorldBuilding) return;
+    const packet: NetworkPacketData<RequestWorldBuildingChangeOutput> = {
+      data: {
+        building_id: activeWorldBuilding.id,
+        output_pos_x: pos.x,
+        output_pos_y: pos.y,
+      },
+      packet_type: PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT,
+    };
+    Game.network.sendPacket(packet);
+  };
 
   return (
-    <Window title="Building Viewer" width={400} height={400} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
+    <Window title="Building Viewer" width={500} height={500} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
       <div className="flex flex-col h-full">
         <div className="flex-1 flex flex-row">
           <div className="flex-1">
@@ -76,8 +95,20 @@ export default function WorldBuildingWindow() {
             </p>
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl">Output</h2>
-            <span role="img" className="text-3xl cursor-pointer" aria-label='Arrow right'>➡️</span>
+            <h2 className="text-2xl">Top view I/O</h2>
+            <WorldBuildingOutput
+              width={activeBuilding?.width || 0}
+              height={activeBuilding?.height || 0}
+              relativePosition={{
+                x: activeWorldBuilding?.x || 0,
+                y: activeWorldBuilding?.y || 0,
+              }}
+              onNewPositionSelected={onNewOutputPositionSelected}
+              currentOutputPosition={{
+                x: activeWorldBuilding?.output_pos_x || 0,
+                y: activeWorldBuilding?.output_pos_y || 0,
+              }}
+            />
           </div>
         </div>
         <div>

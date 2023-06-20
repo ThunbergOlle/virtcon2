@@ -10,7 +10,7 @@ import { JoinPacketData } from '@virtcon2/network-packet';
 import { IWorld, System, createWorld } from '@virtcon2/virt-bit-ecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
-import { createBuildingSystem, createNewBuildingEntity } from '../systems/BuildingSystem';
+import { createBuildingSystem, createNewBuildingEntity, handlePlaceBuildingPackets } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
 import { createMainPlayerSystem, createNewMainPlayerEntity } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
@@ -190,6 +190,10 @@ export default class Game extends Scene implements SceneStates {
     )
       return;
     const packets = Game.network.get_received_packets();
+
+    /* Handle packets. */
+    handlePlaceBuildingPackets(this.world, packets);
+
     let newState = { ...this.state, dt: dt };
     newState = this.spriteRegisterySystem(this.world, newState, packets).state;
     newState = this.colliderSystem(this.world, newState, packets).state;
@@ -201,6 +205,9 @@ export default class Game extends Scene implements SceneStates {
     newState = this.buildingPlacementSystem(this.world, newState, packets).state;
     newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
     this.state = newState;
+
+
+
     Game.network.clear_received_packets();
   }
 

@@ -17,7 +17,6 @@ const buildingQueryEnter = enterQuery(buildingQuery);
 
 export const createBuildingSystem = () => {
   return defineSystem((world: IWorld, state: GameState, packets) => {
-    handlePlaceBuildingPackets(world, packets);
 
     const enterEntities = buildingQueryEnter(world);
 
@@ -28,6 +27,7 @@ export const createBuildingSystem = () => {
         setupBuildingEventListeners(sprite, id, state);
       }
     }
+
     return { world, state };
   });
 };

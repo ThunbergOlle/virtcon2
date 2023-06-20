@@ -43,6 +43,14 @@ export class WorldBuilding extends BaseEntity {
   @JoinColumn()
   output_world_building: WorldBuilding;
 
+  @Field(() => Int, { nullable: true })
+  @Column({ type: 'int', nullable: true })
+  output_pos_x: number;
+
+  @Field(() => Int, { nullable: true })
+  @Column({ type: 'int', nullable: true })
+  output_pos_y: number;
+
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   active: boolean;
