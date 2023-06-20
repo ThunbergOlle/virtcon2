@@ -63,18 +63,27 @@ export default function WorldBuildingWindow() {
     };
     Game.network.sendPacket(packet);
   };
+
   return (
     <Window title="Building Viewer" width={400} height={400} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
       <div className="flex flex-col h-full">
-        <div className="flex-1">
-          <h2 className="text-2xl">Info</h2>
-          <p className="text-md">Name: {activeBuilding?.name}</p>
-          <p className="text-md">
-            Position: {activeWorldBuilding?.x}, {activeWorldBuilding?.y}
-          </p>
+        <div className="flex-1 flex flex-row">
+          <div className="flex-1">
+            <h2 className="text-2xl">Info</h2>
+            <p className="text-md">Name: {activeBuilding?.name}</p>
+            <p className="text-md">
+              Position: {activeWorldBuilding?.x}, {activeWorldBuilding?.y}
+            </p>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl">Output</h2>
+            <span role="img" className="text-3xl cursor-pointer" aria-label='Arrow right'>➡️</span>
+          </div>
+        </div>
+        <div>
           <h2 className="text-2xl">Inventory</h2>
-          <div className="flex flex-row  flex-wrap w-full ">
-            {[...Array(10)]?.map((_, index) => {
+          <div className="flex flex-row flex-wrap w-full ">
+            {[...Array(8)]?.map((_, index) => {
               const item = activeWorldBuilding?.world_building_inventory && activeWorldBuilding?.world_building_inventory[index];
               return item ? (
                 <InventoryItem
@@ -94,7 +103,7 @@ export default function WorldBuildingWindow() {
         <div className="justify-self-end place-items-end flex-1 flex">
           <div className="w-full my-3">
             <p className="text-md">Building processing progress</p>
-            {/* {activeWorldBuilding ? <ProgressBar max={activeWorldBuilding.processingTicks} now={activeWorldBuilding.processingTicks - activeWorldBuilding.processingTicksLeft} /> : null} */}
+            {/* {activeWorldBuilding ? <Progre  ssBar max={activeWorldBuilding.processingTicks} now={activeWorldBuilding.processingTicks - activeWorldBuilding.processingTicksLeft} /> : null} */}
           </div>
         </div>
       </div>
