@@ -12,12 +12,12 @@ export default function WorldBuildingOutput(props: {
     const gridWidth = props.width + 2;
     const gridHeight = props.height + 2;
     const new_grid = [];
-    const disabledCell = <div className="border-2  border-gray-400 w-8 h-8 bg-yellow-900 cursor-not-allowed"></div>;
+    const disabledCell = <div className="border-2  border-gray-400 w-8 h-8 bg-yellow-500 cursor-not-allowed text-center">B</div>;
     const emptyCell = <div className="w-8 h-8 cursor-not-allowed"></div>;
     for (let y = 0; y < gridHeight; y++) {
       for (let x = 0; x < gridWidth; x++) {
         if (x + props.relativePosition.x - 1 === props.currentOutputPosition.x && y + props.relativePosition.y - 1 === props.currentOutputPosition.y) {
-          new_grid.push(<div className="border-2  border-gray-400 w-8 h-8 bg-green-500 cursor-pointer"></div>);
+          new_grid.push(<div className="border-2  border-gray-400 w-8 h-8 bg-green-500 cursor-pointer text-center text-[10px]">OUT</div>);
         } else if (x === 0 || x === gridWidth - 1 || y === 0 || y === gridHeight - 1) {
           new_grid.push(
             <div
