@@ -1,21 +1,32 @@
 
-use crate::packets_service::NetworkPacket;
-use serde::{Deserialize, Serialize};
-use crate::packets_service::publish_packet;
-use crate::{world};
-use std::{
-  sync::{mpsc},
-};
 
-include!("./external/join_packet.rs");
-include!("./external/disconnect_packet.rs");
-include!("./external/player_move_packet.rs");
-include!("./external/load_world_packet.rs");
-include!("./external/player_set_position_packet.rs");
-include!("./external/new_player_packet.rs");
-include!("./external/player_inventory_packet.rs");
-include!("./external/place_building.rs");
-include!("./external/world_building_packet.rs");
+#[path = "./external/disconnect_packet.rs"]
+
+pub mod disconnect;
+
+#[path = "./external/player_move_packet.rs"]
+pub mod player_move;
+
+#[path = "./external/player_set_position_packet.rs"]
+pub mod player_set_position;
+
+#[path = "./external/join_packet.rs"]
+pub mod join;
+
+#[path = "./external/load_world_packet.rs"]
+pub mod load_world;
+
+#[path = "./external/new_player_packet.rs"]
+pub mod new_player;
+
+#[path = "./external/player_inventory_packet.rs"]
+pub mod player_inventory;
+
+#[path = "./external/place_building_packet.rs"]
+pub mod place_building;
+
+#[path = "./external/world_building_packet.rs"]
+pub mod world_building;
 
 
 

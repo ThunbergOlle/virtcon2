@@ -23,14 +23,18 @@ pub fn tick(
     redis_connection: &mut redis::Connection,
 ) {
     let world = world_service::get_world(&world_id, redis_connection).expect("World not found");
-
     let client_packets = message_receiver
         .try_iter()
         .map(|x| x)
         .collect::<Vec<String>>();
 
     /* Run handler that will check and handle all of the newly received packets. */
-    handle_packets(client_packets, &world, redis_connection, publish_send_packet);
+    handle_packets(
+        client_packets,
+        &world,
+        redis_connection,
+        publish_send_packet,
+    );
 
     /* Save the world after we are done modifying it for this tick */
     // save_world(&world, redis_connection);
@@ -58,34 +62,48 @@ pub fn on_packet(
     let _packet_sender = packet_parts[2]; // TODO: deserialize this
     let packet_data = packet_parts[3].to_string();
     match packet_type {
-        "join" => packets::packet_join_world(
+        "join" => packets::join::packet_join_world(
             packet_data,
             world,
             redis_connection,
             packet_target,
             publish_send_packet,
         ),
-        "disconnect" => {
-            packets::packet_disconnect(packet_data, world, redis_connection, publish_send_packet)
-        }
-        "playerMove" => {
-            packets::packet_player_move(packet_data, world, redis_connection, publish_send_packet)
-        }
-        "playerSetPosition" => packets::packet_player_set_position(
+        "disconnect" => packets::disconnect::packet_disconnect(
             packet_data,
             world,
             redis_connection,
             publish_send_packet,
         ),
-        "playerInventory" => {
-            packets::packet_player_inventory(packet_data, world, publish_send_packet)
-        }
-        "placeBuilding" => {
-            packets::packet_place_building(packet_data, world, redis_connection, publish_send_packet)
-        }
-        "worldBuilding" => {
-            packets::packet_world_building(packet_data, world, redis_connection, publish_send_packet)
-        }
+        "playerMove" => packets::player_move::packet_player_move(
+            packet_data,
+            world,
+            redis_connection,
+            publish_send_packet,
+        ),
+        "playerSetPosition" => packets::player_set_position::packet_player_set_position(
+            packet_data,
+            world,
+            redis_connection,
+            publish_send_packet,
+        ),
+        "playerInventory" => packets::player_inventory::packet_player_inventory(
+            packet_data,
+            world,
+            publish_send_packet,
+        ),
+        "placeBuilding" => packets::place_building::packet_place_building(
+            packet_data,
+            world,
+            redis_connection,
+            publish_send_packet,
+        ),
+        "worldBuilding" => packets::world_building::packet_world_building(
+            packet_data,
+            world,
+            redis_connection,
+            publish_send_packet,
+        ),
         _ => {
             println!("Unknown packet type: {}", packet_type);
         }

@@ -1,7 +1,11 @@
+use serde::{Serialize, Deserialize};
+
+use crate::{world, packets_service::NetworkPacket};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LoadWorldPacket {
-    world: world::World,
-    player: world::Player,
+    pub world: world::World,
+    pub player: world::Player,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LoadWorldPacketSerializeData {

@@ -1,5 +1,9 @@
 
-use crate::world::InventoryItem;
+use std::sync::mpsc;
+
+use serde::{Deserialize, Serialize};
+
+use crate::{world::{InventoryItem, self}, packets_service::{NetworkPacket, publish_packet}};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerInventoryPacket {

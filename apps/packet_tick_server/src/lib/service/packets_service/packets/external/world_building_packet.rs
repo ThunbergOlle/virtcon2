@@ -1,4 +1,9 @@
+use std::sync::mpsc;
+
 use derive_redis_json::RedisJsonValue;
+use serde::{Serialize, Deserialize};
+
+use crate::{packets_service::{publish_packet, NetworkPacket}, world};
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct WorldBuildingPacket {
@@ -36,9 +41,22 @@ impl NetworkPacket for WorldBuildingPacket {
 pub fn packet_world_building(
     packet: String,
     world: &world::World,
-    _: &mut redis::Connection,
+    redis_connection: &mut redis::Connection,
     publish_send_packet: &mpsc::Sender<String>,
 ) {
     let deserialized_packet: WorldBuildingPacket = serde_json::from_str(&packet).unwrap();
+
     publish_packet(&deserialized_packet, &world.id, None, publish_send_packet);
+
+    let building_query = format!(
+        "{}.buildings[?(@.id=={})]",
+        world.id, deserialized_packet.building.id
+    );
+
+    redis::cmd("JSON.SET")
+        .arg("worlds")
+        .arg(&building_query)
+        .arg(format!("{:?}", deserialized_packet.building))
+        .execute(redis_connection);
+
 }

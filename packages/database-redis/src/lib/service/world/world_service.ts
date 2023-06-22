@@ -10,6 +10,7 @@ const startWorldProcess = async (new_world: RedisWorld, redis: RedisClientType):
   const worldProcess = exec(`$(which cargo) run`, {
     cwd: `${cwd()}/apps/packet_tick_server`,
     env: {
+      RUST_BACKTRACE: '1',
       WORLD_ID: world.id,
       TPS: TPS.toString(),
     },
@@ -32,7 +33,7 @@ const loadWorld = async (world_id: string): Promise<RedisWorld> => {
   }
   /* Uncomment this when debugging procedural world generation */
   // await PostgresWorldEntity.RegenerateWorld(world.id)
-  const buildings = await WorldBuilding.find({ where: { world: { id: world.id } }, relations: ['building', 'building.item_to_be_placed_on','building.item'] });
+  const buildings = await WorldBuilding.find({ where: { world: { id: world.id } }, relations: ['building', 'building.item_to_be_placed_on', 'building.item'] });
   return {
     id: world.id,
     players: [],

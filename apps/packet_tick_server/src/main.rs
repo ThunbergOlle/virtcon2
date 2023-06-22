@@ -16,6 +16,9 @@ mod packets_service;
 #[path = "./lib/service/world_service/world_service.rs"]
 mod world_service;
 
+#[path = "./lib/service/building_process_service.rs"]
+mod building_process_service;
+
 fn main() {
     /* Setup redis connection */
     let redis_client =
@@ -39,6 +42,7 @@ fn main() {
     let mut last_tick = std::time::Instant::now();
 
     loop {
+        building_process_service::tick(&mut redis_connection);
         packets_service::tick(
             world_id.clone(),
             &on_receive_packet,

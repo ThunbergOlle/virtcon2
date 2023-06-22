@@ -1,3 +1,7 @@
+use serde::{Serialize, Deserialize};
+
+use crate::{packets_service::NetworkPacket, world};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewPlayerPacket {
     pub player: world::Player,
