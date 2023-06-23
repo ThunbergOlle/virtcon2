@@ -22,7 +22,17 @@ pub fn tick(
     publish_send_packet: &mpsc::Sender<String>,
     redis_connection: &mut redis::Connection,
 ) {
-    let world = world_service::get_world(&world_id, redis_connection).expect("World not found");
+    let world = world_service::get_world(&world_id, redis_connection);
+
+    if let Err(e) = world {
+        println!("Error getting world: {:?}", e);
+        println!("This is critical, exiting.");
+        panic!("{:?}", e);
+    }
+
+    let world = world.unwrap();
+
+
     let client_packets = message_receiver
         .try_iter()
         .map(|x| x)

@@ -19,6 +19,9 @@ mod world_service;
 #[path = "./lib/service/building_process_service.rs"]
 mod building_process_service;
 
+#[path = "./lib/utils/merge.rs"]
+mod merge;
+
 fn main() {
     /* Setup redis connection */
     let redis_client =
