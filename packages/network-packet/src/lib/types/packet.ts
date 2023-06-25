@@ -14,6 +14,7 @@ export enum PacketType {
   REQUEST_WORLD_BUILDING = 'requestWorldBuilding',
   REQUEST_MOVE_INVENTORY_ITEM = 'requestMoveInventoryItem',
   REQUEST_WORLD_BUILDING_CHANGE_OUTPUT = 'requestWorldBuildingChangeOutput',
+  INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING = 'internalWorldBuildingFinishedProcessing',
   WORLD_BUILDING = 'worldBuilding',
   PLACE_BUILDING = 'placeBuilding',
 }

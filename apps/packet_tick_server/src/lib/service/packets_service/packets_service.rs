@@ -1,6 +1,8 @@
 use std::sync::mpsc;
 
+use redis::Commands;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 use crate::{
     world,
@@ -8,7 +10,7 @@ use crate::{
 };
 
 #[path = "./packets/packets.rs"]
-mod packets;
+pub mod packets;
 
 pub trait NetworkPacket {
     fn get_packet_type(&self) -> String;
@@ -31,7 +33,6 @@ pub fn tick(
     }
 
     let world = world.unwrap();
-
 
     let client_packets = message_receiver
         .try_iter()
@@ -152,3 +153,39 @@ pub fn publish_packet(
     let publishable_packet = format!("{}#{}", channel, serialized_packet);
     publish_send_packet.send(publishable_packet).unwrap();
 }
+
+pub fn publish_internal_packet(
+    packet: &impl NetworkPacket,
+    world_id: &str,
+    redis_connection: &mut redis::Connection,
+) {
+    let channel = format!("router_{}", world_id);
+    let target = "internal";
+    let packet_data = packet.serialize();
+
+    let fake_sender = json!(
+    "{
+      \"id\": \"tick_server\",
+      \"name\": \"tick_server\",
+      \"socket_id\": \"tick_server\",
+      \"world_id\": \"tick_server\"
+    }"
+    );
+    // serialize fake sender
+    let sender = serde_json::to_string(&fake_sender).unwrap();
+
+    let data = format!(
+        "{}#{}#{}#{}",
+        packet.get_packet_type(),
+        target,
+        sender,
+        packet_data
+    );
+    match redis_connection.publish::<String, String, i32>(channel, data) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error publishing to channel: {:?}", e);
+        }
+    }
+}
+

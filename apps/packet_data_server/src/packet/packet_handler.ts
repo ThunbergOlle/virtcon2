@@ -1,4 +1,5 @@
 import {
+  InternalWorldBuildingFinishedProcessing,
   NetworkPacketData,
   NetworkPacketDataWithSender,
   PacketType,
@@ -18,6 +19,7 @@ import request_place_building_packet from './packets/request_place_building_pack
 import request_world_building_packet from './packets/request_world_building_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
 import request_world_building_change_output from './packets/request_world_building_change_output';
+import internal_world_building_finished_processing_packet from './packets/internal_world_building_finished_processing_packet';
 
 export default function packet_handler(packet: NetworkPacketData<unknown>, redisPubClient: RedisClientType) {
   switch (packet.packet_type) {
@@ -47,6 +49,10 @@ export default function packet_handler(packet: NetworkPacketData<unknown>, redis
     }
     case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT: {
       request_world_building_change_output(packet as NetworkPacketDataWithSender<RequestWorldBuildingChangeOutput>, redisPubClient);
+      break;
+    }
+    case PacketType.INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING: {
+      internal_world_building_finished_processing_packet(packet as NetworkPacketData<InternalWorldBuildingFinishedProcessing>, redisPubClient);
       break;
     }
     default: {

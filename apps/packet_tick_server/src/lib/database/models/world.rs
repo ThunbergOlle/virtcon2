@@ -14,6 +14,8 @@ pub struct WorldBuilding {
     pub id: i32,
     pub building: Option<Building>,
     pub active: bool,
+    #[serde(default)]
+    pub current_processing_ticks: u32,
     pub x: i32,
     pub y: i32,
     pub world_building_inventory: Option<Vec<WorldBuildingInventoryItem>>,
@@ -23,6 +25,16 @@ pub struct WorldBuilding {
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct WorldBuildingId {
+    pub id: i32,
+}
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct BuildingProcessingRequirement {
+    pub id: i32,
+    pub item: BuildingProcessingRequirementItemId,
+    pub quantity: i32,
+}
+#[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
+pub struct BuildingProcessingRequirementItemId {
     pub id: i32,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
@@ -53,6 +65,7 @@ pub struct Building {
     pub height: u32,
     pub item: Option<Box<Item>>,
     pub item_to_be_placed_on: Option<Box<Item>>,
+    pub processing_requirements: Option<Vec<BuildingProcessingRequirement>>,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]

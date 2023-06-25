@@ -34,3 +34,5 @@ export * from './lib/service/packets/WorldBuildingPacket';
 
 export * from './lib/service/packets/RequestWorldBuildingChangeOutput';
 
+export * from './lib/service/packets/InternalWorldBuildingFinishedProcessing';
+

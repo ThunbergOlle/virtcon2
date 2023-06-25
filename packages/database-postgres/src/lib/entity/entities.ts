@@ -1,4 +1,5 @@
 import { Building } from './building/Building';
+import { BuildingProcessingRequirement } from './building_processing_requirement/BuildingProcessingRequirement';
 import { Item } from './item/Item';
 import { ItemRecipe } from './item_recipe/ItemRecipe';
 import { RequestLog } from './log/RequestLog';
@@ -10,4 +11,17 @@ import { WorldBuildingInventory } from './world_building_inventory/WorldBuilding
 import { WorldResource } from './world_resource/WorldResource';
 import { WorldWhitelist } from './world_whitelist/WorldWhitelist';
 
-export default [User, RequestLog, WorldWhitelist, World, Item, UserInventoryItem, WorldBuilding, WorldResource, Building, ItemRecipe, WorldBuildingInventory];
+export default [
+  User,
+  RequestLog,
+  WorldWhitelist,
+  World,
+  Item,
+  UserInventoryItem,
+  WorldBuilding,
+  WorldResource,
+  Building,
+  ItemRecipe,
+  WorldBuildingInventory,
+  BuildingProcessingRequirement,
+];

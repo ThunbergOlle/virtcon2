@@ -28,5 +28,8 @@ pub mod place_building;
 #[path = "./external/world_building_packet.rs"]
 pub mod world_building;
 
+#[path = "./internal/world_building_finished_processing_packet.rs"]
+pub mod world_building_finished_processing;
+
 
 

@@ -5,6 +5,7 @@ export enum LogLevel {
   WARN = 'WARN',
   ERROR = 'ERROR',
   OK = 'OK',
+  DEBUG = 'DEBUG',
 }
 export enum LogApp {
   DEFAULT = 'DEFAULT',
@@ -40,6 +41,7 @@ export function getLogLevelPrefix(level: LogLevel) {
     [LogLevel.WARN]: chalk.bgYellow,
     [LogLevel.ERROR]: chalk.bgRed,
     [LogLevel.OK]: chalk.bgGreen,
+    [LogLevel.DEBUG]: chalk.bgCyan,
   };
 
   return colors[level](`[${chalk.black(level)}]`);

@@ -3,6 +3,7 @@ import { BaseEntity, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryCol
 import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { TPS } from '@shared';
+import { BuildingProcessingRequirement } from '../building_processing_requirement/BuildingProcessingRequirement';
 
 @ObjectType()
 @Entity()
@@ -35,6 +36,10 @@ export class Building extends BaseEntity {
   @Column({ type: 'int', default: TPS * 5 })
   processing_ticks: number;
 
+  @OneToMany(() => BuildingProcessingRequirement, (i) => i.building, { nullable: true })
+  @Field(() => [BuildingProcessingRequirement], { nullable: true, defaultValue: [] })
+  processing_requirements: BuildingProcessingRequirement[];
+
   // width and height in tiles
   @Field(() => Int, { nullable: false, defaultValue: 1 })
   @Column({ type: 'int', default: 1 })
@@ -43,5 +48,4 @@ export class Building extends BaseEntity {
   @Field(() => Int, { nullable: false, defaultValue: 1 })
   @Column({ type: 'int', default: 1 })
   height: number;
-
 }
