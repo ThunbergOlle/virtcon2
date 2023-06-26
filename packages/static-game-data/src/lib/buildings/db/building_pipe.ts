@@ -9,5 +9,7 @@ const building_pipe: DBBuilding = {
   item: item_pipe,
   processing_ticks: 40,
   item_to_be_placed_on: null,
+  output_item: null,
+  output_quantity: null,
 };
 export default building_pipe;

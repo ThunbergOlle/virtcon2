@@ -1,9 +1,6 @@
 use std::sync::mpsc;
 
-use crate::{
-    packets_service::{publish_internal_packet},
-    world,
-};
+use crate::{packets_service::publish_internal_packet, world};
 
 /* When ticking, we need to increase the state of each of the buildings */
 pub fn tick(
@@ -12,11 +9,17 @@ pub fn tick(
     _publish_send_packet: &mpsc::Sender<String>,
 ) {
     let world_building_query = format!("{}.buildings", world_id);
-    let buildings: String = redis::cmd("JSON.GET")
+    let buildings = redis::cmd("JSON.GET")
         .arg("worlds")
         .arg(world_building_query)
-        .query(redis_connection)
-        .unwrap();
+        .query(redis_connection);
+
+    if let Err(e) = buildings {
+        println!("Error getting buildings: {:?}", e);
+        return;
+    }
+
+    let buildings: String = buildings.unwrap();
 
     let buildings: Vec<world::WorldBuilding> = serde_json::from_str(&buildings).unwrap();
 

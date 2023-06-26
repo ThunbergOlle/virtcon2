@@ -1,5 +1,5 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { TPS } from '@shared';
@@ -21,6 +21,21 @@ export class Building extends BaseEntity {
   @OneToOne(() => Item, (i) => i.id, { nullable: false })
   @JoinColumn()
   item: Item;
+
+  /* What item it outputs */
+  @Field(() => Item, { nullable: true })
+  @ManyToOne(() => Item, (i) => i.id, { nullable: true })
+  output_item: Item | null;
+
+  // Output quantity
+  @Field(() => Int, { nullable: true })
+  @Column({ type: 'int', nullable: true })
+  output_quantity: number | null;
+
+  // Output quantity
+  @Field(() => Int, { nullable: false, defaultValue: 5 })
+  @Column({ type: 'int', nullable: false, default: 5 })
+  inventory_transfer_quantity_per_cycle: number;
 
   @OneToMany(() => WorldBuilding, (i) => i.building)
   world_buildings: WorldBuilding[];

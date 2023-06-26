@@ -115,9 +115,7 @@ pub fn on_packet(
             redis_connection,
             publish_send_packet,
         ),
-        _ => {
-            println!("Unknown packet type: {}", packet_type);
-        }
+        _ => {}
     }
 }
 
@@ -164,7 +162,7 @@ pub fn publish_internal_packet(
     let packet_data = packet.serialize();
 
     let fake_sender = json!(
-    "{
+        "{
       \"id\": \"tick_server\",
       \"name\": \"tick_server\",
       \"socket_id\": \"tick_server\",
@@ -188,4 +186,3 @@ pub fn publish_internal_packet(
         }
     }
 }
-

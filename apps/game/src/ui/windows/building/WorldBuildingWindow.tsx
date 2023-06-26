@@ -7,7 +7,7 @@ import {
   RequestWorldBuildingPacket,
 } from '@virtcon2/network-packet';
 import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
@@ -20,6 +20,7 @@ import WorldBuildingOutput from './WorldBuildingOutput';
 
 export default function WorldBuildingWindow() {
   const windowManagerContext = useContext(WindowStackContext);
+  const expectedWorldBuildingId = useRef<number | null>(null);
   const [activeWorldBuilding, setActiveWorldBuilding] = useState<RedisWorldBuilding | null>(null);
   const [activeBuilding, setActiveBuilding] = useState<DBBuilding | null>(null);
   const forceUpdate = useForceUpdate();
@@ -32,6 +33,7 @@ export default function WorldBuildingWindow() {
 
   function toggleWorldBuildingWindow(buildingId: number) {
     windowManagerContext.setWindowStack({ type: 'open', windowType: WindowType.VIEW_BUILDING });
+    expectedWorldBuildingId.current = buildingId;
     /* Send request view building packet */
     const packet: NetworkPacketData<RequestWorldBuildingPacket> = {
       data: {
@@ -45,7 +47,7 @@ export default function WorldBuildingWindow() {
   useEffect(() => {
     events.subscribe('onBuildingPressed', toggleWorldBuildingWindow);
     events.subscribe('networkWorldBuilding', (data) => {
-      console.log('networkWorldBuilding', data);
+      if (expectedWorldBuildingId.current !== data.building?.id) return;
       setActiveWorldBuilding(data.building || null);
       forceUpdate();
     });

@@ -5,7 +5,10 @@ export interface DBBuilding {
   id: number;
   item: DBItem;
   item_to_be_placed_on?: DBItem;
+  output_item: DBItem | null;
+  output_quantity: number | null;
   processing_ticks: number;
+  inventory_transfer_quantity_per_cycle?: number;
   width: number;
   height: number;
 }
