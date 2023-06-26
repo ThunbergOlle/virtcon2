@@ -7,6 +7,7 @@ import { RedisClientType, createClient as createRedisClient } from 'redis';
 import packet_handler from './packet/packet_handler';
 import { AppDataSource } from '@virtcon2/database-postgres';
 import { LogApp, LogLevel, log } from '@shared';
+import { worldService } from '@virtcon2/database-redis';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize();
@@ -24,3 +25,18 @@ redisSubClient.pSubscribe(`${RedisPacketPublisher.channel_prefix}*`, (message, c
   const deconstructed_packet = DeconstructRedisPacket<unknown>(message, channel);
   packet_handler(deconstructed_packet, redisPubClient);
 });
+
+async function exit() {
+  // remove all worlds from redis
+  await worldService.clearWorlds(redisPubClient);
+
+  redisSubClient.quit();
+  redisPubClient.quit();
+
+  log('Redis clients closed and worlds cleaned up.', LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+  process.exit(0);
+}
+// on sigint, close the redis clients
+process.on('SIGTERM', exit);
+process.on('SIGINT', exit);
+

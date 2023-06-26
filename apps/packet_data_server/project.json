@@ -2,6 +2,8 @@
   "name": "packet_data_server",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/packet_data_server/src",
+  "root": "apps/packet_data_server",
+  "implicitDependencies": ["packet_tick_server"],
   "projectType": "application",
   "targets": {
     "build": {
