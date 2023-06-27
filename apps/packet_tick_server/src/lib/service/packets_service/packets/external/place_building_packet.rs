@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     packets_service::{publish_packet, NetworkPacket},
-    world::{self, WorldBuildingInventoryItem, Building},
+    world::{self, Building, WorldBuildingInventoryItem},
 };
 
 // copy struct world::WorldBuilding
@@ -16,6 +16,7 @@ pub struct PlaceBuildingPacket {
     pub active: bool,
     pub x: i32,
     pub y: i32,
+    pub rotation: f32,
     pub world_building_inventory: Option<Vec<WorldBuildingInventoryItem>>,
     pub output_world_building: Option<WorldBuildingId>,
     pub output_pos_x: Option<i32>,

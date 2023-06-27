@@ -4,6 +4,7 @@ export interface DBBuilding {
   name: string;
   id: number;
   item: DBItem;
+  is_rotatable?: boolean;
   item_to_be_placed_on?: DBItem;
   output_item: DBItem | null;
   output_quantity: number | null;

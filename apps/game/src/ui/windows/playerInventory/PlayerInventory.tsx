@@ -23,6 +23,7 @@ import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
+import { Building } from '../../../components/Building';
 
 export default function PlayerInventoryWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -36,12 +37,19 @@ export default function PlayerInventoryWindow() {
 
   const cancelPlaceBuildingIntent = () => {
     const game = Game.getInstance();
+
     game.input.off('pointerdown', placeBuilding);
+    game.input.off('keydown-R', rotatePlaceBuildingIntent);
+
     buildingBeingPlaced.current = null;
     if (!game.world || !buildingBeingPlacedEntity.current) return;
     removeEntity(game.world, buildingBeingPlacedEntity.current);
   };
-
+  function rotatePlaceBuildingIntent() {
+    const game = Game.getInstance();
+    if (!game.world || !buildingBeingPlacedEntity.current) return;
+    Sprite.rotation[buildingBeingPlacedEntity.current] += (Math.PI / 2) % (Math.PI * 2);
+  }
   function placeBuilding(e: Phaser.Input.Pointer) {
     if (!buildingBeingPlaced.current || buildingBeingPlaced.current.quantity <= 0) {
       toast('You do not have any more of this building in your inventory', { type: 'error' });
@@ -53,14 +61,17 @@ export default function PlayerInventoryWindow() {
     /* Send network packet to backend that we want to place the building at the coordinates */
     /* Convert phaser coordinates to the tilemap coordinates*/
     const { x, y } = fromPhaserPos({ x: e.worldX, y: e.worldY });
+
     const packet: NetworkPacketData<RequestPlaceBuildingPacketData> = {
       data: {
         buildingItemId: buildingBeingPlaced.current.item.id,
         x,
+        rotation: Sprite.rotation[buildingBeingPlacedEntity.current],
         y,
       },
       packet_type: PacketType.REQUEST_PLACE_BUILDING,
     };
+
     Game.network.sendPacket(packet);
   }
   function toggleInventory() {
@@ -111,8 +122,14 @@ export default function PlayerInventoryWindow() {
 
       buildingBeingPlacedEntity.current = ghostBuilding;
       buildingBeingPlaced.current = item;
+
+      // Event listeners
       game.input.on('pointerdown', placeBuilding);
       game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
+      game.input.keyboard.once('keydown-Q', () => cancelPlaceBuildingIntent());
+      if (buildingSettings?.is_rotatable) {
+        game.input.keyboard.on('keydown-R', () => rotatePlaceBuildingIntent());
+      }
     }
   };
   const onInventoryDropItem = (item: InventoryItemType) => {

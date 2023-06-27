@@ -10,6 +10,7 @@ export interface RedisWorldBuilding {
   active: boolean;
   x: number;
   y: number;
+  rotation: number;
   world_building_inventory?: ServerInventoryItem[];
   current_processing_ticks: number;
   output_world_building?: RedisWorldBuilding;

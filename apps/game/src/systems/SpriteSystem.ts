@@ -50,6 +50,7 @@ export const createSpriteSystem = () => {
       const sprite = state.spritesById[id];
       if (sprite) {
         sprite.setPosition(Position.x[id], Position.y[id]);
+        sprite.setRotation(Sprite.rotation[id] || 0);
       }
     }
     const velocityEntities = spriteVelocityQuery(world);

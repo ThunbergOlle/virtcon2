@@ -63,4 +63,8 @@ export class Building extends BaseEntity {
   @Field(() => Int, { nullable: false, defaultValue: 1 })
   @Column({ type: 'int', default: 1 })
   height: number;
+
+  @Field(() => Boolean, { nullable: false, defaultValue: false })
+  @Column({ type: 'boolean', default: false })
+  is_rotatable: boolean;
 }

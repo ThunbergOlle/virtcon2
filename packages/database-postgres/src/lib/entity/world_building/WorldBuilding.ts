@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from 'type-graphql';
+import { Field, Float, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Building } from '../building/Building';
 import { WorldResource } from '../world_resource/WorldResource';
@@ -33,8 +33,12 @@ export class WorldBuilding extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   y: number;
 
-  @Field(() => [WorldBuildingInventory], {nullable: true})
-  @OneToMany(() => WorldBuildingInventory, (wbi) => wbi.world_building, {nullable: true})
+  @Field(() => Float)
+  @Column({ type: 'float', default: 0 }) // rotation in radians
+  rotation: number;
+
+  @Field(() => [WorldBuildingInventory], { nullable: true })
+  @OneToMany(() => WorldBuildingInventory, (wbi) => wbi.world_building, { nullable: true })
   world_building_inventory: WorldBuildingInventory[];
 
   /* Outputs into building */
@@ -53,5 +57,4 @@ export class WorldBuilding extends BaseEntity {
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   active: boolean;
-
 }

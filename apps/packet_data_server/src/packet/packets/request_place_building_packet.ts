@@ -1,10 +1,19 @@
 import { LogApp, LogLevel, log } from '@shared';
 import { Item, UserInventoryItem, WorldBuilding, WorldResource } from '@virtcon2/database-postgres';
-import { NetworkPacketDataWithSender, PacketType, RedisPacketPublisher, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import {
+  NetworkPacketDataWithSender,
+  PacketType,
+  RedisPacketPublisher,
+  RequestPlaceBuildingPacketData,
+  RequestPlayerInventoryPacket,
+} from '@virtcon2/network-packet';
 import request_player_inventory_packet from './request_player_inventory_packet';
 import { RedisClientType } from 'redis';
 
-export default async function request_place_building_packet(packet: NetworkPacketDataWithSender<RequestPlaceBuildingPacketData>, redisPubClient: RedisClientType) {
+export default async function request_place_building_packet(
+  packet: NetworkPacketDataWithSender<RequestPlaceBuildingPacketData>,
+  redisPubClient: RedisClientType,
+) {
   // get the sender
   const player_id = packet.packet_sender.id;
   // check if player has the item
@@ -13,14 +22,18 @@ export default async function request_place_building_packet(packet: NetworkPacke
     log(`Player ${player_id} does not have item ${packet.data.buildingItemId}`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
     return;
   }
-  const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.item_to_be_placed_on','building.item'] });
+  const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.item_to_be_placed_on', 'building.item'] });
   /* Get if there are any resources at the coordinates. */
   const resource = await WorldResource.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } }, relations: ['item'] });
 
   /* Check if position is occupied */
   const occuping_building = await WorldBuilding.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });
   if (occuping_building) {
-    log(`Player ${player_id} tried to place item ${packet.data.buildingItemId} on occupied position ${packet.data.x}, ${packet.data.y}`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
+    log(
+      `Player ${player_id} tried to place item ${packet.data.buildingItemId} on occupied position ${packet.data.x}, ${packet.data.y}`,
+      LogLevel.ERROR,
+      LogApp.PACKET_DATA_SERVER,
+    );
     return;
   }
   const isActive = item.building.item_to_be_placed_on ? item.building.item_to_be_placed_on?.id === resource?.item.id : true;
@@ -31,6 +44,7 @@ export default async function request_place_building_packet(packet: NetworkPacke
     building: item.building,
     world_resource: resource,
     active: isActive,
+    rotation: packet.data.rotation,
     world: { id: packet.world_id },
   };
   /* Add the building to the database */
@@ -58,5 +72,4 @@ export default async function request_place_building_packet(packet: NetworkPacke
   const placeBuildingPacket = new RedisPacketPublisher(redisPubClient).packet_type(PacketType.PLACE_BUILDING).data(building).channel(packet.world_id).build();
 
   placeBuildingPacket.publish();
-
 }

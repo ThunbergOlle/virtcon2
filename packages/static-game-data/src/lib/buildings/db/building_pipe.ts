@@ -8,6 +8,7 @@ const building_pipe: DBBuilding = {
   width: 1,
   item: item_pipe,
   processing_ticks: 40,
+  is_rotatable: true,
   item_to_be_placed_on: null,
   output_item: null,
   output_quantity: null,

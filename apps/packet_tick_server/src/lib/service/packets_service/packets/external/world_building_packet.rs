@@ -10,18 +10,19 @@ use crate::{
 };
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
 pub struct WorldBuildingId {
-  pub id: i32,
+    pub id: i32,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
 pub struct WorldBuilding {
-  pub id: i32,
-  pub building: WorldBuildingId,
-  pub x: i32,
-  pub y: i32,
-  pub world_building_inventory: Option<Vec<world::WorldBuildingInventoryItem>>,
-  pub output_world_building: Option<WorldBuildingId>,
-  pub output_pos_x: Option<i32>,
-  pub output_pos_y: Option<i32>,
+    pub id: i32,
+    pub building: WorldBuildingId,
+    pub x: i32,
+    pub y: i32,
+    pub rotation: f32,
+    pub world_building_inventory: Option<Vec<world::WorldBuildingInventoryItem>>,
+    pub output_world_building: Option<WorldBuildingId>,
+    pub output_pos_x: Option<i32>,
+    pub output_pos_y: Option<i32>,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
 pub struct WorldBuildingOutgoingPacket {
@@ -29,30 +30,30 @@ pub struct WorldBuildingOutgoingPacket {
 }
 
 impl NetworkPacket for WorldBuildingIncomingPacket {
-  fn get_packet_type(&self) -> String {
-    "worldBuilding".to_string()
-  }
-  fn deserialize(&self, data: String) -> WorldBuildingIncomingPacket {
-    serde_json::from_str(&data).unwrap()
-  }
-  fn serialize(&self) -> String {
-    serde_json::to_string(&self).unwrap()
-  }
+    fn get_packet_type(&self) -> String {
+        "worldBuilding".to_string()
+    }
+    fn deserialize(&self, data: String) -> WorldBuildingIncomingPacket {
+        serde_json::from_str(&data).unwrap()
+    }
+    fn serialize(&self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug)]
 pub struct WorldBuildingIncomingPacket {
     building: WorldBuilding,
 }
 impl NetworkPacket for WorldBuildingOutgoingPacket {
-  fn get_packet_type(&self) -> String {
-    "worldBuilding".to_string()
-  }
-  fn deserialize(&self, data: String) -> WorldBuildingOutgoingPacket {
-    serde_json::from_str(&data).unwrap()
-  }
-  fn serialize(&self) -> String {
-    serde_json::to_string(&self).unwrap()
-  }
+    fn get_packet_type(&self) -> String {
+        "worldBuilding".to_string()
+    }
+    fn deserialize(&self, data: String) -> WorldBuildingOutgoingPacket {
+        serde_json::from_str(&data).unwrap()
+    }
+    fn serialize(&self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
 }
 pub fn packet_world_building(
     packet: String,

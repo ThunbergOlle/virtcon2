@@ -17,7 +17,6 @@ const buildingQueryEnter = enterQuery(buildingQuery);
 
 export const createBuildingSystem = () => {
   return defineSystem((world: IWorld, state: GameState, packets) => {
-
     const enterEntities = buildingQueryEnter(world);
 
     for (let i = 0; i < enterEntities.length; i++) {
@@ -58,6 +57,7 @@ export const createNewBuildingEntity = (world: IWorld, data: RedisWorldBuilding)
 
   addComponent(world, Sprite, building);
   Sprite.texture[building] = ItemTextureMap[data.building.item?.name]?.textureId ?? 0;
+  Sprite.rotation[building] = data.rotation;
 
   addComponent(world, Collider, building);
   Collider.sizeWidth[building] = data.building.width * tileSize;
