@@ -39,8 +39,7 @@ export class WorldBuilding extends BaseEntity {
 
   /* Outputs into building */
   @Field(() => WorldBuilding, { nullable: true })
-  @OneToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
-  @JoinColumn()
+  @ManyToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
   output_world_building: WorldBuilding;
 
   @Field(() => Int, { nullable: true })
