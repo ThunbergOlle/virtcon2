@@ -11,6 +11,7 @@ export interface RedisWorldBuilding {
   x: number;
   y: number;
   world_building_inventory?: ServerInventoryItem[];
+  current_processing_ticks: number;
   output_world_building?: RedisWorldBuilding;
   output_pos_x?: number;
   output_pos_y?: number;

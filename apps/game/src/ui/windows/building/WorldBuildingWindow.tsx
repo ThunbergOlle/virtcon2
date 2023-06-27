@@ -1,4 +1,4 @@
-import { InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
+import { InventoryType, RedisWorldBuilding, ServerInventoryItem, TPS } from '@shared';
 import {
   NetworkPacketData,
   PacketType,
@@ -17,10 +17,12 @@ import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import WorldBuildingOutput from './WorldBuildingOutput';
+import { ProgressBar } from 'react-bootstrap';
 
 export default function WorldBuildingWindow() {
   const windowManagerContext = useContext(WindowStackContext);
   const expectedWorldBuildingId = useRef<number | null>(null);
+  const [tickProgress, setTickProgress] = useState(0);
   const [activeWorldBuilding, setActiveWorldBuilding] = useState<RedisWorldBuilding | null>(null);
   const [activeBuilding, setActiveBuilding] = useState<DBBuilding | null>(null);
   const forceUpdate = useForceUpdate();
@@ -43,6 +45,29 @@ export default function WorldBuildingWindow() {
     };
     Game.network.sendPacket(packet);
   }
+
+  /* This is for calculating the progress of a building. */
+  useEffect(() => {
+    const tps = TPS;
+    const current = activeWorldBuilding?.current_processing_ticks || 0;
+
+    setTickProgress(current);
+
+    const total = activeBuilding?.processing_ticks || 0;
+
+    const interval = setInterval(() => {
+      setTickProgress((prev) => {
+        if (prev >= total) {
+          return 0;
+        }
+        return prev + tps
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [activeWorldBuilding, activeBuilding]);
 
   useEffect(() => {
     events.subscribe('onBuildingPressed', toggleWorldBuildingWindow);
@@ -110,6 +135,7 @@ export default function WorldBuildingWindow() {
                 x: activeWorldBuilding?.output_pos_x || 0,
                 y: activeWorldBuilding?.output_pos_y || 0,
               }}
+              outputBuildingId={activeWorldBuilding?.output_world_building?.id || null}
             />
           </div>
         </div>
@@ -135,8 +161,8 @@ export default function WorldBuildingWindow() {
         </div>
         <div className="justify-self-end place-items-end flex-1 flex">
           <div className="w-full my-3">
-            <p className="text-md">Building processing progress</p>
-            {/* {activeWorldBuilding ? <Progre  ssBar max={activeWorldBuilding.processingTicks} now={activeWorldBuilding.processingTicks - activeWorldBuilding.processingTicksLeft} /> : null} */}
+            <p className="text-md">Building processing progress </p>
+            {activeWorldBuilding ? <ProgressBar now={tickProgress} max={activeBuilding?.processing_ticks || 0} /> : null}
           </div>
         </div>
       </div>

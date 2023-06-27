@@ -6,6 +6,7 @@ export default function WorldBuildingOutput(props: {
   width: number;
   height: number;
   relativePosition: { x: number; y: number };
+  outputBuildingId: number | null;
   onNewPositionSelected: (position: { x: number; y: number }) => void;
 }) {
   const grid = useMemo(() => {
@@ -17,7 +18,7 @@ export default function WorldBuildingOutput(props: {
     for (let y = 0; y < gridHeight; y++) {
       for (let x = 0; x < gridWidth; x++) {
         if (x + props.relativePosition.x - 1 === props.currentOutputPosition.x && y + props.relativePosition.y - 1 === props.currentOutputPosition.y) {
-          new_grid.push(<div className="border-2  border-gray-400 w-8 h-8 bg-green-500 cursor-pointer text-center text-[10px]">OUT</div>);
+          new_grid.push(<div className={`border-2  border-gray-400 w-8 h-8 bg-${props.outputBuildingId ? 'green':'yellow'}-500 cursor-pointer text-center text-[10px]`}>OUT</div>);
         } else if (x === 0 || x === gridWidth - 1 || y === 0 || y === gridHeight - 1) {
           new_grid.push(
             <div
