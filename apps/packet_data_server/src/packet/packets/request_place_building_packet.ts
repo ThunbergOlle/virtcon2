@@ -9,6 +9,7 @@ import {
 } from '@virtcon2/network-packet';
 import request_player_inventory_packet from './request_player_inventory_packet';
 import { RedisClientType } from 'redis';
+import request_world_building_change_output from './request_world_building_change_output';
 
 export default async function request_place_building_packet(
   packet: NetworkPacketDataWithSender<RequestPlaceBuildingPacketData>,
@@ -47,6 +48,7 @@ export default async function request_place_building_packet(
     rotation: packet.data.rotation,
     world: { id: packet.world_id },
   };
+
   /* Add the building to the database */
   const building = await WorldBuilding.create({ ...newWorldBuilding });
   await building.save();
@@ -72,4 +74,35 @@ export default async function request_place_building_packet(
   const placeBuildingPacket = new RedisPacketPublisher(redisPubClient).packet_type(PacketType.PLACE_BUILDING).data(building).channel(packet.world_id).build();
 
   placeBuildingPacket.publish();
+
+  // request set output for building
+  // convert rotation to degreees
+  const rotation = Math.round((newWorldBuilding.rotation * 180) / Math.PI); // convert radians to degrees because float is not precise enough
+
+  switch (rotation) {
+    case 0:
+      request_world_building_change_output(
+        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y } },
+        redisPubClient,
+      );
+      break;
+    case 90:
+      request_world_building_change_output(
+        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height } },
+        redisPubClient,
+      );
+      break;
+    case 180:
+      request_world_building_change_output(
+        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y } },
+        redisPubClient,
+      );
+      break;
+    case 270:
+      request_world_building_change_output(
+        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height } },
+        redisPubClient,
+      );
+      break;
+  }
 }
