@@ -15,6 +15,13 @@ const speed = 750;
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player, Collider]);
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
+  const [keyW, keyA, keyS, keyD] = [
+    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+  ];
+
   return defineSystem((world: IWorld, state: GameState, _) => {
     const enterEntities = mainPlayerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
@@ -34,11 +41,15 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
       scene.input.keyboard.on('keydown-C', () => {
         events.notify('onCrafterButtonPressed');
       });
+
+      // Add keys
     }
     const entities = mainPlayerQuery(world);
     for (let i = 0; i < entities.length; i++) {
-      let xVel: number = (Number(cursors.right.isDown) - Number(cursors.left.isDown)) / 10;
-      let yVel: number = (Number(cursors.down.isDown) - Number(cursors.up.isDown)) / 10;
+      let xVel: number =
+        (Number(cursors.right.isDown || scene.input.keyboard.checkDown(keyD)) - Number(cursors.left.isDown || scene.input.keyboard.checkDown(keyA))) / 10;
+      let yVel: number =
+        (Number(cursors.down.isDown || scene.input.keyboard.checkDown(keyS)) - Number(cursors.up.isDown || scene.input.keyboard.checkDown(keyW))) / 10;
 
       // Normalize speed in the diagonals
       if (yVel !== 0 && xVel !== 0) {
