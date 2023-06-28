@@ -66,6 +66,7 @@ pub struct Building {
     pub height: u32,
     pub item: Option<Box<Item>>,
     pub item_to_be_placed_on: Option<Box<Item>>,
+    pub inventory_slots: u32,
     pub processing_requirements: Option<Vec<BuildingProcessingRequirement>>,
 }
 

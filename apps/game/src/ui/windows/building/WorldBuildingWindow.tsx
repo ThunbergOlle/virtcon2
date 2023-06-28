@@ -142,7 +142,7 @@ export default function WorldBuildingWindow() {
         <div>
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap w-full ">
-            {[...Array(8)]?.map((_, index) => {
+            {[...Array(activeBuilding?.inventory_slots)]?.map((_, index) => {
               const item = activeWorldBuilding?.world_building_inventory && activeWorldBuilding?.world_building_inventory[index];
               return item ? (
                 <InventoryItem

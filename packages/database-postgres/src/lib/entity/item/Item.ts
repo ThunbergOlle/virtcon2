@@ -32,6 +32,10 @@ export class Item extends BaseEntity {
   @Column({ type: 'text' })
   rarity: string;
 
+  @Field(() => Int)
+  @Column({ type: 'int', default: 64 })
+  stack_size: number;
+
   @OneToMany(() => UserInventoryItem, (i) => i.id)
   inventory: UserInventoryItem[];
 

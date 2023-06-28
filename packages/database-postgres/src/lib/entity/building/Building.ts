@@ -37,6 +37,10 @@ export class Building extends BaseEntity {
   @Column({ type: 'int', nullable: false, default: 5 })
   inventory_transfer_quantity_per_cycle: number;
 
+  @Field(() => Int, { nullable: false, defaultValue: 5 })
+  @Column({ type: 'int', nullable: false, default: 5 })
+  inventory_slots: number;
+
   @OneToMany(() => WorldBuilding, (i) => i.building)
   world_buildings: WorldBuilding[];
 

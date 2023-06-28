@@ -7,6 +7,7 @@ const item_pipe: DBItem = {
   description: 'Use pipes to connect machines together.',
   icon: 'pipe.png',
   rarity: DBItemRarity.common,
+  stack_size: 64,
   is_building: true,
 };
 export default item_pipe;

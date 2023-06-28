@@ -12,6 +12,7 @@ const building_sawmill: DBBuilding = {
   item_to_be_placed_on: item_wood,
   is_rotatable: false,
   inventory_transfer_quantity_per_cycle: 5,
+  inventory_slots: 3,
   output_item: item_wood,
   output_quantity: 2,
 };

@@ -1,5 +1,5 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
-import { UserInventoryItem, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
+import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, InventoryFullError } from '@virtcon2/database-postgres';
 import { NetworkPacketDataWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
@@ -46,11 +46,11 @@ async function request_move_inventory_item_packet_to_player_inventory(
   }
 
   // remove / add to inventories
-  await Promise.all([
-    WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, -packet.data.item.quantity),
-    UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, packet.data.item.quantity),
-  ]);
 
+  // Todo: check if player inventory is full
+  const quantity_remainder = await UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, packet.data.item.quantity);
+
+  await WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, -packet.data.item.quantity);
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);
   const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
@@ -95,10 +95,8 @@ async function request_move_inventory_item_packet_to_building(
     return;
   }
 
-  await Promise.all([
-    UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, -packet.data.item.quantity),
-    WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, packet.data.item.quantity),
-  ]);
+  const quantity_remainder = await WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, packet.data.item.quantity);
+  await UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, -(packet.data.item.quantity - quantity_remainder));
 
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);

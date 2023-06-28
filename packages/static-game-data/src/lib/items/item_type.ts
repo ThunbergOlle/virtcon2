@@ -30,6 +30,7 @@ export interface DBItem {
   name: DBItemName;
   description: string;
   icon: string;
+  stack_size: number;
   rarity: DBItemRarity;
   spawnSettings?: DBItemSpawnSettings;
   recipe?: DBItemRecipe[];

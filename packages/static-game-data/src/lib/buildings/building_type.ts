@@ -10,6 +10,7 @@ export interface DBBuilding {
   output_quantity: number | null;
   processing_ticks: number;
   inventory_transfer_quantity_per_cycle?: number;
+  inventory_slots: number;
   width: number;
   height: number;
 }

@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
+import { InventoryFullError, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
 import {
   InternalWorldBuildingFinishedProcessing,
   NetworkPacketData,
@@ -81,8 +81,14 @@ async function handle_move_inventory_to_output(world_building_id: number) {
       return;
     }
     const quantity_to_be_moved = Math.min(capacity_left, inventory_item_to_be_moved.quantity);
-    await WorldBuildingInventory.addToInventory(world_building.output_world_building.id, inventory_item_to_be_moved.item.id, quantity_to_be_moved);
-    await WorldBuildingInventory.addToInventory(world_building.id, inventory_item_to_be_moved.item.id, -quantity_to_be_moved);
+
+    const quantity_remainder = await WorldBuildingInventory.addToInventory(
+      world_building.output_world_building.id,
+      inventory_item_to_be_moved.item.id,
+      quantity_to_be_moved,
+    );
+
+    await WorldBuildingInventory.addToInventory(world_building.id, inventory_item_to_be_moved.item.id, -(quantity_to_be_moved - quantity_remainder));
     world_building_inventory.shift();
     await move_items(capacity_left - quantity_to_be_moved, world_building_inventory);
   }
