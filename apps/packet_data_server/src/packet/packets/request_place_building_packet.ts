@@ -70,13 +70,25 @@ export default async function request_place_building_packet(
     redisPubClient,
   );
 
-  // construct a JoinPacket
   const placeBuildingPacket = new RedisPacketPublisher(redisPubClient).packet_type(PacketType.PLACE_BUILDING).data(building).channel(packet.world_id).build();
-
   placeBuildingPacket.publish();
 
-  // request set output for building
-  // convert rotation to degreees
+  // Update the output of the buildings that are next to the new building
+  const positionsThatBuildingOccupies: [number, number][] = [];
+  for (let i = 0; i < item.building.width; i++) {
+    for (let j = 0; j < item.building.height; j++) {
+      positionsThatBuildingOccupies.push([packet.data.x + i, packet.data.y + j]);
+    }
+  }
+
+  positionsThatBuildingOccupies.forEach(async (position) => {
+    const [x, y] = position;
+    const wb = await WorldBuilding.findOne({ where: { output_pos_x: x, output_pos_y: y, world: { id: packet.world_id } } });
+    if (wb) {
+      request_world_building_change_output({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } }, redisPubClient);
+    }
+  });
+
   const rotation = Math.round((newWorldBuilding.rotation * 180) / Math.PI); // convert radians to degrees because float is not precise enough
 
   switch (rotation) {
