@@ -12,12 +12,12 @@ export default async function request_move_inventory_item_packet(
   /* Handle differently depending on if items moves between player inventory or building inventory */
 
   if (packet.data.fromInventoryType === InventoryType.PLAYER && packet.data.toInventoryType === InventoryType.BUILDING) {
-    request_move_inventory_item_packet_to_building(packet, redisPubClient);
+    request_move_inventory_item_to_building(packet, redisPubClient);
   } else if (packet.data.fromInventoryType === InventoryType.BUILDING && packet.data.toInventoryType === InventoryType.PLAYER) {
-    request_move_inventory_item_packet_to_player_inventory(packet, redisPubClient);
+    request_move_inventory_item_to_player_inventory(packet, redisPubClient);
   }
 }
-async function request_move_inventory_item_packet_to_player_inventory(
+async function request_move_inventory_item_to_player_inventory(
   packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
@@ -48,9 +48,9 @@ async function request_move_inventory_item_packet_to_player_inventory(
   // remove / add to inventories
 
   // Todo: check if player inventory is full
+  await WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, -packet.data.item.quantity);
   const quantity_remainder = await UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, packet.data.item.quantity);
 
-  await WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, -packet.data.item.quantity);
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);
   const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
@@ -65,7 +65,7 @@ async function request_move_inventory_item_packet_to_player_inventory(
   request_world_building_packet(request_world_building_packet_data, redisPubClient);
 }
 
-async function request_move_inventory_item_packet_to_building(
+async function request_move_inventory_item_to_building(
   packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
