@@ -40,9 +40,9 @@ pub struct BuildingProcessingRequirementItemId {
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct WorldBuildingInventoryItem {
-    pub id: i32,
     pub quantity: i32,
-    pub item: WorldBuildingInventoryItemItem,
+    pub slot: i32,
+    pub item: Option<WorldBuildingInventoryItemItem>,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct WorldBuildingInventoryItemItem {
@@ -72,9 +72,9 @@ pub struct Building {
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct InventoryItem {
-    pub id: i32,
     pub quantity: i32,
-    pub item: Item,
+    pub item: Option<Item>,
+    pub slot: i32,
 }
 
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]

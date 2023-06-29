@@ -1,5 +1,5 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
-import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, InventoryFullError } from '@virtcon2/database-postgres';
+import { UserInventoryItem, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
 import { NetworkPacketDataWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
@@ -27,7 +27,7 @@ async function request_move_inventory_item_to_player_inventory(
   });
   if (!building_inventory_item) {
     log(
-      `Building ${packet.data.fromInventoryId} does not have item ${packet.data.item.id} but tried to move it from their inventory! Sus 📮`,
+      `Building ${packet.data.fromInventoryId} does not have item ${packet.data.item} but tried to move it from their inventory! Sus 📮`,
       LogLevel.ERROR,
       LogApp.PACKET_DATA_SERVER,
     );
@@ -46,10 +46,18 @@ async function request_move_inventory_item_to_player_inventory(
   }
 
   // remove / add to inventories
-
-  // Todo: check if player inventory is full
-  await WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, -packet.data.item.quantity);
-  const quantity_remainder = await UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, packet.data.item.quantity);
+  const quantity_remainder = await UserInventoryItem.addToInventory(
+    packet.packet_sender.id,
+    packet.data.item.item.id,
+    packet.data.item.quantity,
+    packet.data.toInventorySlot,
+  );
+  await WorldBuildingInventory.addToInventory(
+    building_to_drop_in.id,
+    packet.data.item.item.id,
+    -(packet.data.item.quantity - quantity_remainder),
+    packet.data.fromInventorySlot,
+  );
 
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);
@@ -73,12 +81,12 @@ async function request_move_inventory_item_to_building(
   // check if the player has the item
 
   const player_inventory_item = await UserInventoryItem.findOne({
-    where: { id: packet.data.item.id, user: { id: packet.packet_sender.id } },
+    where: { slot: packet.data.item.slot, user: { id: packet.packet_sender.id } },
     relations: ['item'],
   });
   if (!player_inventory_item) {
     log(
-      `Player ${packet.packet_sender.id} does not have item ${packet.data.item.id} but tried to move it from their inventory! Sus 📮`,
+      `Player ${packet.packet_sender.id} does not have item ${packet.data.item} but tried to move it from their inventory! Sus 📮`,
       LogLevel.ERROR,
       LogApp.PACKET_DATA_SERVER,
     );
@@ -95,8 +103,18 @@ async function request_move_inventory_item_to_building(
     return;
   }
 
-  const quantity_remainder = await WorldBuildingInventory.addToInventory(building_to_drop_in.id, packet.data.item.item.id, packet.data.item.quantity);
-  await UserInventoryItem.addToInventory(packet.packet_sender.id, packet.data.item.item.id, -(packet.data.item.quantity - quantity_remainder));
+  const quantity_remainder = await WorldBuildingInventory.addToInventory(
+    building_to_drop_in.id,
+    packet.data.item.item.id,
+    packet.data.item.quantity,
+    packet.data.toInventorySlot,
+  );
+  await UserInventoryItem.addToInventory(
+    packet.packet_sender.id,
+    packet.data.item.item.id,
+    -(packet.data.item.quantity - quantity_remainder),
+    packet.data.fromInventorySlot,
+  );
 
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);

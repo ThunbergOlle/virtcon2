@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { Item, UserInventoryItem, WorldBuilding, WorldResource } from '@virtcon2/database-postgres';
+import { Item, UserInventoryItem, WorldBuilding, WorldBuildingInventory, WorldResource } from '@virtcon2/database-postgres';
 import {
   NetworkPacketDataWithSender,
   PacketType,
@@ -50,12 +50,21 @@ export default async function request_place_building_packet(
   };
 
   /* Add the building to the database */
-  const building = await WorldBuilding.create({ ...newWorldBuilding });
+  const building = WorldBuilding.create({ ...newWorldBuilding });
   await building.save();
 
   if (resource !== null) {
     resource.world_building = building;
     await resource.save();
+  }
+  // Create all the slots
+  for (let i = 0; i < item.building.inventory_slots; i++) {
+    const inventoryItem = WorldBuildingInventory.create();
+    inventoryItem.world_building = building;
+    inventoryItem.quantity = 0;
+    inventoryItem.slot = i;
+    inventoryItem.item = null;
+    await inventoryItem.save();
   }
 
   /* Remove the item from players inventory */

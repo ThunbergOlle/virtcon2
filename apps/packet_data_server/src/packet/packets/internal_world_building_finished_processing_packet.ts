@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { InventoryFullError, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
+import { WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
 import {
   InternalWorldBuildingFinishedProcessing,
   NetworkPacketData,
@@ -16,6 +16,7 @@ export default async function internal_world_building_finished_processing_packet
 ) {
   // this packet is trusted and sent by the tick server.
   const world_building_id = packet.data.world_building_id;
+  log(`World building with id ${world_building_id} finished processing`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER)
 
   // get the world building
   const world_building = await WorldBuilding.findOne({
@@ -44,7 +45,7 @@ export default async function internal_world_building_finished_processing_packet
       : await handle_building_with_no_processing_requirements(world_building);
 
   await handle_resulting_items(resulting_items, world_building);
-  await handle_move_inventory_to_output(world_building.id);
+  if (world_building.output_world_building) await handle_move_inventory_to_output(world_building.id);
   // send a packet to the world server to update the world building inventory
   const world_building_packet: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
     data: {
@@ -73,14 +74,20 @@ async function handle_move_inventory_to_output(world_building_id: number) {
   if (!world_building.output_world_building) return;
 
   async function move_items(capacity_left: number, world_building_inventory: WorldBuildingInventory[]) {
-    if (capacity_left <= 0) {
+    if (capacity_left < 0) {
+      log(`Capacity left is less than 0. Potential quantity leak!`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
       return;
     }
-    const inventory_item_to_be_moved = world_building_inventory[0];
-    if (!inventory_item_to_be_moved || inventory_item_to_be_moved.quantity <= 0) {
+    if (capacity_left === 0) {
+      return;
+    }
+    const inventory_item_to_be_moved = world_building_inventory.find((i) => i.quantity > 0);
+    if (!inventory_item_to_be_moved) {
       return;
     }
     const quantity_to_be_moved = Math.min(capacity_left, inventory_item_to_be_moved.quantity);
+
+    capacity_left -= quantity_to_be_moved;
 
     const quantity_remainder = await WorldBuildingInventory.addToInventory(
       world_building.output_world_building.id,
@@ -88,9 +95,12 @@ async function handle_move_inventory_to_output(world_building_id: number) {
       quantity_to_be_moved,
     );
 
+    capacity_left += quantity_remainder;
+
     await WorldBuildingInventory.addToInventory(world_building.id, inventory_item_to_be_moved.item.id, -(quantity_to_be_moved - quantity_remainder));
+
     world_building_inventory.shift();
-    await move_items(capacity_left - quantity_to_be_moved, world_building_inventory);
+    await move_items(capacity_left, world_building_inventory);
   }
   await move_items(world_building.building.inventory_transfer_quantity_per_cycle, world_building.world_building_inventory);
 }

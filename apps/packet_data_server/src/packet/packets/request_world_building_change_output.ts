@@ -32,7 +32,6 @@ export default async function request_world_building_change_output(
   where wb."worldId"=$3 and $1 >= wb.x and $1 <= wb.x+b.width - 1 and $2 >= wb.y and $2 <= wb.y+b.height - 1;`,
     [packet.data.output_pos_x, packet.data.output_pos_y, packet.world_id],
   );
-  console.log(occupies)
 
   if (occupies.length > 0) {
     const matched_building = await WorldBuilding.findOne({ where: { id: occupies[0].id } });

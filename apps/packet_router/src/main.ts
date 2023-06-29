@@ -103,8 +103,6 @@ process.on('SIGINT', async () => {
     const packets = message.split(';;').filter((packet) => packet.length);
 
     if (!packets.length) return;
-    log(`Received ${packets.length} packets from ${channel}`, LogLevel.INFO, LogApp.SERVER);
-
     for (let i = 0; i < packets.length; i++) {
       const [packetTarget, packetData] = packets[i].split('#');
 

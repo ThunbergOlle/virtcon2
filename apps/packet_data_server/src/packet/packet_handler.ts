@@ -21,7 +21,13 @@ import request_move_inventory_item_packet from './packets/request_move_inventory
 import request_world_building_change_output from './packets/request_world_building_change_output';
 import internal_world_building_finished_processing_packet from './packets/internal_world_building_finished_processing_packet';
 
-export default function packet_handler(packet: NetworkPacketData<unknown>, redisPubClient: RedisClientType) {
+let is_busy: Promise<void> | null = null;
+
+export default async function packet_handler(packet: NetworkPacketData<unknown>, redisPubClient: RedisClientType) {
+  if (is_busy) {
+    await is_busy;
+    is_busy = null;
+  }
   switch (packet.packet_type) {
     case PacketType.REQUEST_PLAYER_INVENTORY: {
       request_player_inventory_packet(packet as NetworkPacketDataWithSender<RequestPlayerInventoryPacket>, redisPubClient);
@@ -44,15 +50,15 @@ export default function packet_handler(packet: NetworkPacketData<unknown>, redis
       break;
     }
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM: {
-      request_move_inventory_item_packet(packet as NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>, redisPubClient);
+      is_busy = request_move_inventory_item_packet(packet as NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>, redisPubClient);
       break;
     }
     case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT: {
-      request_world_building_change_output(packet as NetworkPacketDataWithSender<RequestWorldBuildingChangeOutput>, redisPubClient);
+      is_busy = request_world_building_change_output(packet as NetworkPacketDataWithSender<RequestWorldBuildingChangeOutput>, redisPubClient);
       break;
     }
     case PacketType.INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING: {
-      internal_world_building_finished_processing_packet(packet as NetworkPacketData<InternalWorldBuildingFinishedProcessing>, redisPubClient);
+      is_busy = internal_world_building_finished_processing_packet(packet as NetworkPacketData<InternalWorldBuildingFinishedProcessing>, redisPubClient);
       break;
     }
     default: {

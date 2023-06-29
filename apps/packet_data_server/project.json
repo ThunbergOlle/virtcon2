@@ -42,7 +42,8 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "packet_data_server:build"
+        "buildTarget": "packet_data_server:build",
+        "port": 7777
       },
       "configurations": {
         "development": {

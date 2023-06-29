@@ -27,6 +27,7 @@ pub fn tick(
         building.current_processing_ticks += 1;
         // check if the building is done processing
         if building.building.is_none() {
+            println!("Faulty building: {:?}", building);
             continue;
         }
         if building.current_processing_ticks >= building.building.as_ref().unwrap().processing_ticks

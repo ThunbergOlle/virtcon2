@@ -36,7 +36,7 @@ export class Item extends BaseEntity {
   @Column({ type: 'int', default: 64 })
   stack_size: number;
 
-  @OneToMany(() => UserInventoryItem, (i) => i.id)
+  @OneToMany(() => UserInventoryItem, (i) => i.item)
   inventory: UserInventoryItem[];
 
   @Field(() => [ItemRecipe])

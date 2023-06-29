@@ -68,6 +68,15 @@ export class UserResolver {
 
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 
+    // Create all inventory slots
+    for (let i = 0; i < 50; i++) {
+      const userInventoryItem = new UserInventoryItem();
+      userInventoryItem.user = newUserEntity;
+      userInventoryItem.slot = i;
+      userInventoryItem.quantity = 0;
+      await userInventoryItem.save();
+    }
+
     return { success: true };
   }
   @Query(() => [UserInventoryItem], { nullable: false })

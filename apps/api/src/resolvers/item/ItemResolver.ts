@@ -9,7 +9,11 @@ export class ItemResolver {
   }
 
   @Mutation(() => UserInventoryItem, { nullable: true })
-  async craftItem(@Arg('itemId', () => Int) itemId: number, @Arg('quantity', () => Int) quantity: number, @Ctx() context: RequestContext): Promise<UserInventoryItem> {
+  async craftItem(
+    @Arg('itemId', () => Int) itemId: number,
+    @Arg('quantity', () => Int) quantity: number,
+    @Ctx() context: RequestContext,
+  ): Promise<UserInventoryItem> {
     /* Get the recipe for the item with the item id */
     const item = await Item.findOne({ where: { id: itemId }, relations: ['recipe', 'recipe.requiredItem'] });
     if (!item) {
@@ -41,11 +45,12 @@ export class ItemResolver {
     await Promise.all(
       requiredItems.map(async (requiredItem) => {
         const userItem = usersItemsMap[requiredItem.item.id];
-        userItem.quantity -= requiredItem.quantity;
-        await userItem.save();
+        await UserInventoryItem.addToInventory(context.user.id, userItem.item.id, -requiredItem.quantity, userItem.slot);
       }),
     );
     /* Add the crafted item to the user's inventory */
-    return await UserInventoryItem.addToInventory(context.user.id, item.id, quantity);
+    await UserInventoryItem.addToInventory(context.user.id, item.id, quantity);
+    /* Return the crafted item */
+    return await UserInventoryItem.findOne({ where: { user: { id: context.user.id }, item: { id: item.id } }, relations: ['item'] });
   }
 }

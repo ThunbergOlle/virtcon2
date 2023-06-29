@@ -8,7 +8,7 @@ import {
 } from '@virtcon2/network-packet';
 import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { toast } from 'react-toastify';
+import { ProgressBar } from 'react-bootstrap';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
@@ -17,7 +17,6 @@ import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import WorldBuildingOutput from './WorldBuildingOutput';
-import { ProgressBar } from 'react-bootstrap';
 
 export default function WorldBuildingWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -34,6 +33,7 @@ export default function WorldBuildingWindow() {
   }, [activeWorldBuilding]);
 
   function toggleWorldBuildingWindow(buildingId: number) {
+    console.log('opening', buildingId, 'in world building window');
     windowManagerContext.setWindowStack({ type: 'open', windowType: WindowType.VIEW_BUILDING });
     expectedWorldBuildingId.current = buildingId;
     /* Send request view building packet */
@@ -60,7 +60,7 @@ export default function WorldBuildingWindow() {
         if (prev >= total) {
           return 0;
         }
-        return prev + tps
+        return prev + tps;
       });
     }, 1000);
 
@@ -81,17 +81,14 @@ export default function WorldBuildingWindow() {
       events.unsubscribe('networkWorldBuilding', () => {});
     };
   }, []);
-  const onInventoryDropItem = (item: InventoryItemType) => {
-    if (!activeWorldBuilding?.id) {
-      toast('You must have a building selected to drop items into it.', { type: 'error' });
-      return;
-    }
+  const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
     const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
       data: {
         ...item,
-        toInventoryId: activeWorldBuilding?.id,
+        toInventoryId: inventoryId,
         toInventoryType: InventoryType.BUILDING,
+        toInventorySlot: slot,
       },
       packet_type: PacketType.REQUEST_MOVE_INVENTORY_ITEM,
     };
@@ -117,6 +114,7 @@ export default function WorldBuildingWindow() {
           <div className="flex-1">
             <h2 className="text-2xl">Info</h2>
             <p className="text-md">Name: {activeBuilding?.name}</p>
+            <p className="text-md">ID (dev): {activeWorldBuilding?.id}</p>
             <p className="text-md">
               Position: {activeWorldBuilding?.x}, {activeWorldBuilding?.y}
             </p>
@@ -142,21 +140,23 @@ export default function WorldBuildingWindow() {
         <div>
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap w-full ">
-            {[...Array(activeBuilding?.inventory_slots)]?.map((_, index) => {
-              const item = activeWorldBuilding?.world_building_inventory && activeWorldBuilding?.world_building_inventory[index];
-              return item ? (
-                <InventoryItem
-                  item={item}
-                  fromInventoryType={InventoryType.BUILDING}
-                  fromInventoryId={activeWorldBuilding.id}
-                  onClick={function (item: ServerInventoryItem): void {
-                    throw new Error('Function not implemented.');
-                  }}
-                />
-              ) : (
-                <InventoryItemPlaceholder onDrop={onInventoryDropItem} />
-              );
-            })}
+            {activeWorldBuilding?.world_building_inventory
+              ?.sort((a, b) => a.slot - b.slot)
+              .map((item) => {
+                return item && item.item ? (
+                  <InventoryItem
+                    item={item}
+                    fromInventoryType={InventoryType.BUILDING}
+                    fromInventorySlot={item.slot}
+                    fromInventoryId={activeWorldBuilding.id}
+                    onClick={function (item: ServerInventoryItem): void {
+                      throw new Error('Function not implemented.');
+                    }}
+                  />
+                ) : (
+                  <InventoryItemPlaceholder inventoryId={activeWorldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
+                );
+              })}
           </div>
         </div>
         <div className="justify-self-end place-items-end flex-1 flex">

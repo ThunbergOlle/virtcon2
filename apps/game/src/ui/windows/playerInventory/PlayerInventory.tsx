@@ -17,13 +17,12 @@ import { Sprite } from '../../../components/Sprite';
 import { ItemTextureMap } from '../../../config/SpriteMap';
 import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
+import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { WindowStackContext } from '../../context/window/WindowContext';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
-import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
-import { Building } from '../../../components/Building';
 
 export default function PlayerInventoryWindow() {
   const windowManagerContext = useContext(WindowStackContext);
@@ -55,7 +54,7 @@ export default function PlayerInventoryWindow() {
       toast('You do not have any more of this building in your inventory', { type: 'error' });
       return cancelPlaceBuildingIntent();
     }
-    if (!buildingBeingPlacedEntity.current || !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current]) return;
+    if (!buildingBeingPlacedEntity.current || !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current] || !buildingBeingPlaced.current.item) return;
     buildingBeingPlaced.current.quantity--;
     toast('Placing building', { type: 'info' });
     /* Send network packet to backend that we want to place the building at the coordinates */
@@ -100,7 +99,7 @@ export default function PlayerInventoryWindow() {
   }, []);
 
   const onItemWasClicked = (item: ServerInventoryItem) => {
-    if (item.item.is_building) {
+    if (item.item?.is_building) {
       toggleInventory();
       const game = Game.getInstance();
       if (!game.world) return;
@@ -132,12 +131,13 @@ export default function PlayerInventoryWindow() {
       }
     }
   };
-  const onInventoryDropItem = (item: InventoryItemType) => {
+  const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
     const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
       data: {
         ...item,
-        toInventoryId: 0,
+        toInventoryId: inventoryId,
+        toInventorySlot: slot,
         toInventoryType: InventoryType.PLAYER,
       },
       packet_type: PacketType.REQUEST_MOVE_INVENTORY_ITEM,
@@ -156,14 +156,22 @@ export default function PlayerInventoryWindow() {
         <div className="flex-1">
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap">
-            {[...Array(20)]?.map((_, index) => {
-              const item = inventory[index];
-              return item ? (
-                <InventoryItem key={item.id} item={item} onClick={() => onItemWasClicked(item)} fromInventoryType={InventoryType.PLAYER} fromInventoryId={0} />
-              ) : (
-                <InventoryItemPlaceholder onDrop={onInventoryDropItem} />
-              );
-            })}
+            {inventory
+              ?.sort((a, b) => a.slot - b.slot)
+              .map((item) => {
+                return item && item.item ? (
+                  <InventoryItem
+                    key={item.slot}
+                    item={item}
+                    onClick={() => onItemWasClicked(item)}
+                    fromInventoryType={InventoryType.PLAYER}
+                    fromInventoryId={0}
+                    fromInventorySlot={item.slot}
+                  />
+                ) : (
+                  <InventoryItemPlaceholder inventoryId={0} slot={item.slot} onDrop={onInventoryDropItem} />
+                );
+              })}
           </div>
         </div>
       </div>
