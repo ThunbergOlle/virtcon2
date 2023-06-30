@@ -11,6 +11,11 @@ const getWorld = async (id: string, redisClient: RedisClientType) => {
   return world[0];
 };
 const registerWorld = async (world: RedisWorld, redisClient: RedisClientType) => {
+  // initialize processing tick for all buildings
+  // if this is not done, we will get a null pointer exception in Rust
+  world.buildings.forEach((b) => {
+    b.current_processing_ticks = 0;
+  });
   await redisClient.json.set('worlds', `$.${world.id}`, asRedisItem(world));
   return world;
 };
