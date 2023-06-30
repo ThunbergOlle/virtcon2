@@ -47,7 +47,7 @@ export async function addToInventory(
   }
   // if there is a stack with space, add to it
   if (stack_with_space) {
-    const new_quantity = Math.min(  stack_with_space.quantity + quantity, stack_size);
+    const new_quantity = Math.min(stack_with_space.quantity + quantity, stack_size);
     const remainder = Math.max(quantity - (stack_size - stack_with_space.quantity), 0);
     stack_with_space.quantity = new_quantity;
     await stack_with_space.save();
@@ -65,7 +65,6 @@ async function createNewStack(
   const slot = preferred_slot !== undefined ? empty_inventory_slots.find((s) => s.slot === preferred_slot) : empty_inventory_slots[0];
   slot.item = { id: itemId } as Item;
   slot.quantity = quantity;
-  log(`New quantity of item ${itemId} in slot ${slot.slot} is ${slot.quantity}`, LogLevel.INFO);
   await slot.save();
   return quantity - slot.quantity;
 }
@@ -86,15 +85,16 @@ async function handleNegativeQuantities(
     }
 
     // remove the item from the slot
-    const new_quantity = Math.max(slot_item.quantity + quantity, 0);
-    slot_item.quantity = new_quantity;
+    const new_quantity = slot_item.quantity + quantity;
 
-    if (new_quantity === 0) {
+    slot_item.quantity = new_quantity < 0 ? 0 : new_quantity;
+
+    if (slot_item.quantity === 0) {
       slot_item.item = null;
     }
 
     await slot_item.save();
-    return quantity - new_quantity;
+    return new_quantity < 0 ? new_quantity : 0;
   }
 
   const similiar_inventory_stack = inventorySlots.filter((i) => i.item && i.item.id === itemId);
@@ -120,8 +120,49 @@ async function handleNegativeQuantities(
   await Promise.all(similiar_inventory_stack.map((i) => i.save()));
   if (quantity_left_to_remove > 0) {
     log(`Could not remove ${quantity_left_to_remove} of item ${itemId} from inventory. Potential quantity leak`, LogLevel.ERROR);
-    console.trace();
   }
 
   return -quantity_left_to_remove;
+}
+
+export async function safe_move_items_between_inventories(transaction: {
+  fromId: number | string;
+  fromType: 'user' | 'building';
+  toId: number | string;
+  toType: 'user' | 'building';
+  toSlot?: number;
+  fromSlot?: number;
+  itemId: number;
+  quantity: number;
+}) {
+  const { fromId, fromType, toId, toType, toSlot, fromSlot, itemId, quantity } = transaction;
+
+  const fromInventory =
+    fromType === 'user'
+      ? UserInventoryItem.addToInventory(fromId as string, itemId, -quantity, fromSlot)
+      : WorldBuildingInventory.addToInventory(fromId as number, itemId, -quantity, fromSlot);
+  const toInventory =
+    toType === 'user'
+      ? UserInventoryItem.addToInventory(toId as string, itemId, quantity, toSlot)
+      : WorldBuildingInventory.addToInventory(toId as number, itemId, quantity, toSlot);
+
+  const [from_quantity_left, to_quantity_left] = await Promise.all([fromInventory, toInventory]);
+
+  if (from_quantity_left !== 0 || to_quantity_left !== 0) {
+    log(
+      `Suspicous inventory transaction. From: ${fromId} To: ${toId} Item: ${itemId} Quantity: ${quantity}, From quantity left: ${from_quantity_left}, To quantity left: ${to_quantity_left}`,
+      LogLevel.ERROR,
+    );
+    // If from_quantity_left is lower than 0, that means that we moved more items than we had in the inventory.
+    if (from_quantity_left < 0) {
+      log(`Tried to move items from inventory ${fromId} that we did not have.`, LogLevel.ERROR);
+      // we need to remove the items from the toInventory
+      const refundFromInventory =
+        toType === 'user'
+          ? UserInventoryItem.addToInventory(toId as string, itemId, from_quantity_left, toSlot)
+          : WorldBuildingInventory.addToInventory(toId as number, itemId, from_quantity_left, toSlot);
+      log(`Refunding ${from_quantity_left} of item ${itemId} from inventory ${toId} to inventory ${fromId}`, LogLevel.INFO);
+      await refundFromInventory;
+    }
+  }
 }

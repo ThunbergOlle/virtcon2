@@ -14,3 +14,6 @@ export * from './lib/entity/world_building_inventory/WorldBuildingInventory';
 
 /* Errors */
 export * from './lib/error/InventoryFullError';
+
+/* Misc */
+export * from './lib/shared/InventoryManagement';

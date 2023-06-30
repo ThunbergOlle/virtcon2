@@ -1,5 +1,5 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
-import { UserInventoryItem, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
+import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safe_move_items_between_inventories } from '@virtcon2/database-postgres';
 import { NetworkPacketDataWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
@@ -46,18 +46,16 @@ async function request_move_inventory_item_to_player_inventory(
   }
 
   // remove / add to inventories
-  const quantity_remainder = await UserInventoryItem.addToInventory(
-    packet.packet_sender.id,
-    packet.data.item.item.id,
-    packet.data.item.quantity,
-    packet.data.toInventorySlot,
-  );
-  await WorldBuildingInventory.addToInventory(
-    building_to_drop_in.id,
-    packet.data.item.item.id,
-    -(packet.data.item.quantity - quantity_remainder),
-    packet.data.fromInventorySlot,
-  );
+  await safe_move_items_between_inventories({
+    fromId: building_to_drop_in.id,
+    toId: packet.packet_sender.id,
+    itemId: packet.data.item.item.id,
+    quantity: packet.data.item.quantity,
+    fromType: 'building',
+    toType: 'user',
+    fromSlot: packet.data.fromInventorySlot,
+    toSlot: packet.data.toInventorySlot,
+  });
 
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);
