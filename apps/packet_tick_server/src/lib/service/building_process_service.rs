@@ -30,19 +30,23 @@ pub fn tick(
             println!("Faulty building: {:?}", building);
             continue;
         }
+
         if building.current_processing_ticks >= building.building.as_ref().unwrap().processing_ticks
         {
-            building.current_processing_ticks = 0;
-            send_done_processing_packet(&world_id, building.id, redis_connection);
+          building.current_processing_ticks = 0;
+          send_done_processing_packet(&world_id, building.id, redis_connection);
         }
+        // update processing ticks in redis
         redis::cmd("JSON.SET")
             .arg("worlds")
-            .arg(format!("{}.buildings[?(@.id=={})]", world_id, building.id))
-            .arg(building)
+            .arg(format!(
+                "{}.buildings[?(@.id=={})].current_processing_ticks",
+                world_id, building.id
+            ))
+            .arg(building.current_processing_ticks)
             .execute(redis_connection);
     }
 }
-
 fn send_done_processing_packet(
     world_id: &str,
     building_id: i32,

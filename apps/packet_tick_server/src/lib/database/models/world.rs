@@ -47,6 +47,7 @@ pub struct WorldBuildingInventoryItem {
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct WorldBuildingInventoryItemItem {
     pub id: i32,
+    pub stack_size: i32,
 }
 #[derive(Serialize, Deserialize, RedisJsonValue, Debug, Clone)]
 pub struct Player {
