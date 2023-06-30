@@ -47,10 +47,11 @@ export async function addToInventory(
   }
   // if there is a stack with space, add to it
   if (stack_with_space) {
-    const new_quantity = Math.min(stack_with_space.quantity + quantity, stack_size);
+    const new_quantity = Math.min(  stack_with_space.quantity + quantity, stack_size);
+    const remainder = Math.max(quantity - (stack_size - stack_with_space.quantity), 0);
     stack_with_space.quantity = new_quantity;
     await stack_with_space.save();
-    return quantity - new_quantity;
+    return remainder;
   }
 
   return quantity;

@@ -16,7 +16,6 @@ export default async function internal_world_building_finished_processing_packet
 ) {
   // this packet is trusted and sent by the tick server.
   const world_building_id = packet.data.world_building_id;
-  log(`World building with id ${world_building_id} finished processing`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER)
 
   // get the world building
   const world_building = await WorldBuilding.findOne({
