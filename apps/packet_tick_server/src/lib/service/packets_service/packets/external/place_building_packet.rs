@@ -17,6 +17,8 @@ pub struct PlaceBuildingPacket {
     pub x: i32,
     pub y: i32,
     pub rotation: f32,
+    #[serde(default)]
+    pub current_processing_ticks: u32,
     pub world_building_inventory: Option<Vec<WorldBuildingInventoryItem>>,
     pub output_world_building: Option<WorldBuildingId>,
     pub output_pos_x: Option<i32>,

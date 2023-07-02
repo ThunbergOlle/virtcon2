@@ -36,6 +36,7 @@ pub fn tick(
           building.current_processing_ticks = 0;
           send_done_processing_packet(&world_id, building.id, redis_connection);
         }
+
         // update processing ticks in redis
         redis::cmd("JSON.SET")
             .arg("worlds")

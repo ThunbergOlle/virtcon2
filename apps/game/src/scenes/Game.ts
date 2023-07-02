@@ -152,8 +152,7 @@ export default class Game extends Scene implements SceneStates {
     });
 
     world.buildings.forEach((building) => {
-      const worldBuildingEntityId = createNewBuildingEntity(ecsWorld, building);
-      this.state.buildingById[worldBuildingEntityId] = building;
+      createNewBuildingEntity(ecsWorld, this.state, building);
     });
 
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -189,12 +188,15 @@ export default class Game extends Scene implements SceneStates {
       !this.buildingSystem
     )
       return;
+
+    let newState = { ...this.state, dt: dt };
     const packets = Game.network.get_received_packets();
 
     /* Handle packets. */
-    handlePlaceBuildingPackets(this.world, packets);
+    /* Sometimes, we want to handle the packets before running through the systems */
 
-    let newState = { ...this.state, dt: dt };
+    newState = handlePlaceBuildingPackets(this.world, this.state, packets);
+
     newState = this.spriteRegisterySystem(this.world, newState, packets).state;
     newState = this.colliderSystem(this.world, newState, packets).state;
     newState = this.mainPlayerSystem(this.world, newState, packets).state;
@@ -204,9 +206,9 @@ export default class Game extends Scene implements SceneStates {
     newState = this.buildingSystem(this.world, newState, packets).state;
     newState = this.buildingPlacementSystem(this.world, newState, packets).state;
     newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
+
+    // Update state
     this.state = newState;
-
-
 
     Game.network.clear_received_packets();
   }

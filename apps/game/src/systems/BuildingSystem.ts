@@ -41,15 +41,16 @@ const setupBuildingEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
     events.notify('onBuildingPressed', buildingId);
   });
 };
-export const handlePlaceBuildingPackets = (world: IWorld, packets: NetworkPacketData<unknown>[]) => {
+export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]): GameState => {
   const placeBuildingPackets = filterPacket<PlaceBuildingPacket>(packets, PacketType.PLACE_BUILDING);
   /* Handle join packets. */
   for (let i = 0; i < placeBuildingPackets.length; i++) {
-    createNewBuildingEntity(world, placeBuildingPackets[i].data);
+    createNewBuildingEntity(world, state, placeBuildingPackets[i].data);
   }
+  return state;
 };
 
-export const createNewBuildingEntity = (world: IWorld, data: RedisWorldBuilding): number => {
+export const createNewBuildingEntity = (world: IWorld, state: GameState, data: RedisWorldBuilding): number => {
   const building = addEntity(world);
 
   addComponent(world, Building, building);
@@ -69,6 +70,8 @@ export const createNewBuildingEntity = (world: IWorld, data: RedisWorldBuilding)
   const { x, y } = toPhaserPos(data);
   Position.x[building] = x + (((data.building.width + 1) % 2) / 2) * tileSize;
   Position.y[building] = y + (((data.building.height + 1) % 2) / 2) * tileSize;
+
+  state.buildingById[building] = data;
 
   return building;
 };

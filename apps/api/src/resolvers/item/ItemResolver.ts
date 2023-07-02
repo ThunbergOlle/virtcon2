@@ -29,14 +29,16 @@ export class ItemResolver {
 
     const userItems = await UserInventoryItem.find({ where: { user: { id: context.user.id } }, relations: ['item'] });
 
-    const usersItemsMap: Record<number, UserInventoryItem> = {};
-    userItems.forEach((userItem) => {
-      usersItemsMap[userItem.item.id] = userItem;
-    });
+    const userItemQuantityMap: Record<number, number> = {};
+    userItems
+      .filter((i) => i.item !== null)
+      .forEach((userItem) => {
+        userItemQuantityMap[userItem.item.id] = (userItemQuantityMap[userItem.item.id] || 0) + userItem.quantity;
+      });
 
     const hasRequiredItems = requiredItems.every((requiredItem) => {
-      const userItem = usersItemsMap[requiredItem.item.id];
-      return userItem && userItem.quantity >= requiredItem.quantity;
+      const quantity = userItemQuantityMap[requiredItem.item.id];
+      return quantity && quantity >= requiredItem.quantity;
     });
     if (!hasRequiredItems) {
       throw new Error('Missing required items');
@@ -44,8 +46,7 @@ export class ItemResolver {
     /* Remove the required items from the user's inventory */
     await Promise.all(
       requiredItems.map(async (requiredItem) => {
-        const userItem = usersItemsMap[requiredItem.item.id];
-        await UserInventoryItem.addToInventory(context.user.id, userItem.item.id, -requiredItem.quantity, userItem.slot);
+        await UserInventoryItem.addToInventory(context.user.id, requiredItem.item.id, -requiredItem.quantity);
       }),
     );
     /* Add the crafted item to the user's inventory */

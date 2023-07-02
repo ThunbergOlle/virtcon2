@@ -107,12 +107,20 @@ export default function CrafterWindow() {
               <div className="flex flex-[5] flex-row flex-wrap  bg-[#282828] mx-10 ">
                 {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => {
                   // optimize this later
-                  const inventoryItem = inventory.find((i) => i.item.id === recipeItem.requiredItem.id);
+                  const quantity_in_inventory = inventory.filter((i) => i.item?.id === recipeItem.requiredItem.id).reduce((a, b) => a + b.quantity, 0);
+
                   return (
-                    <div key={'recipe_item_' + recipeItem.id} className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]">
-                      <img alt={recipeItem.requiredItem.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${recipeItem.requiredItem.name}.png`}></img>
+                    <div
+                      key={'recipe_item_' + recipeItem.id}
+                      className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
+                    >
+                      <img
+                        alt={recipeItem.requiredItem.display_name}
+                        className="flex-1 pixelart w-12  m-auto"
+                        src={`/assets/sprites/items/${recipeItem.requiredItem.name}.png`}
+                      ></img>
                       <p className="flex-1 m-[-8px]">
-                        {inventoryItem?.quantity || 0}/{recipeItem.requiredQuantity}
+                        {quantity_in_inventory || 0}/{recipeItem.requiredQuantity}
                       </p>
                       <p className="flex-1 text-[11px]">{recipeItem.requiredItem.display_name}</p>
                     </div>

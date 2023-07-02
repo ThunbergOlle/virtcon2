@@ -79,7 +79,11 @@ export default async function request_place_building_packet(
     redisPubClient,
   );
 
-  const placeBuildingPacket = new RedisPacketPublisher(redisPubClient).packet_type(PacketType.PLACE_BUILDING).data(building).channel(packet.world_id).build();
+  const placeBuildingPacket = new RedisPacketPublisher(redisPubClient)
+    .packet_type(PacketType.PLACE_BUILDING)
+    .data({ ...building, current_processing_ticks: 0 })
+    .channel(packet.world_id)
+    .build();
   placeBuildingPacket.publish();
 
   // Update the output of the buildings that are next to the new building
