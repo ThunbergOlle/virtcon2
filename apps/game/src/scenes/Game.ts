@@ -22,6 +22,7 @@ export enum GameObjectGroups {
   PLAYER = 0,
   BUILDING = 1,
   RESOURCE = 2,
+  TERRAIN = 3,
 }
 export interface GameState {
   dt: number;
@@ -49,6 +50,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.PLAYER]: null,
       [GameObjectGroups.BUILDING]: null,
       [GameObjectGroups.RESOURCE]: null,
+      [GameObjectGroups.TERRAIN]: null,
     },
   };
   public spriteSystem?: System<GameState>;
@@ -94,10 +96,12 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.PLAYER]: this.physics.add.group(),
       [GameObjectGroups.BUILDING]: this.physics.add.staticGroup(),
       [GameObjectGroups.RESOURCE]: this.physics.add.staticGroup(),
+      [GameObjectGroups.TERRAIN]: this.physics.add.staticGroup(),
     };
 
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? []);
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
+    this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? []);
 
     events.subscribe('joinWorld', (worldId) => {
       console.log('creating scene');
@@ -131,7 +135,9 @@ export default class Game extends Scene implements SceneStates {
       this.map.layers.forEach((layer, index) => {
         const new_layer = this.map.createLayer(index, tileSet, 0, 0);
         new_layer.setCollisionBetween(32, 34);
+        this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], new_layer);
       });
+
 
       this.setupWorld(ecsWorld, world, player);
     });
