@@ -105,13 +105,17 @@ export default function PlayerInventoryWindow() {
       if (!game.world) return;
       /* Create ghost building entity */
       const ghostBuilding = addEntity(game.world);
-
       addComponent(game.world, GhostBuilding, ghostBuilding);
       addComponent(game.world, Sprite, ghostBuilding);
       addComponent(game.world, Position, ghostBuilding);
       addComponent(game.world, Collider, ghostBuilding);
 
       const buildingSettings = get_building_by_id(item.item.building?.id ?? 0);
+
+      if (!buildingSettings) return;
+
+      game.state.ghostBuildingById[ghostBuilding] = buildingSettings;
+
       Sprite.texture[ghostBuilding] = ItemTextureMap[item.item.name]?.textureId ?? 0;
       Sprite.height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
       Sprite.width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;

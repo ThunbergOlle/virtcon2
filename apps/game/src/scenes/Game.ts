@@ -3,7 +3,7 @@ import { Scene, Tilemaps } from 'phaser';
 import { SceneStates } from './interfaces';
 
 import { RedisWorld, RedisWorldBuilding, RedisWorldResource, ServerPlayer, worldMapParser } from '@shared';
-import { get_resource_by_item_name } from '@virtcon2/static-game-data';
+import { DBBuilding, get_resource_by_item_name } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
 import { JoinPacketData } from '@virtcon2/network-packet';
@@ -31,6 +31,7 @@ export interface GameState {
   playerById: { [key: number]: string };
   buildingById: { [key: number]: RedisWorldBuilding };
   resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
+  ghostBuildingById: { [key: number]: DBBuilding };
   gameObjectGroups: {
     [key in GameObjectGroups]: Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup | null;
   };
@@ -46,6 +47,7 @@ export default class Game extends Scene implements SceneStates {
     playerById: {},
     resourcesById: {},
     buildingById: {},
+    ghostBuildingById: {},
     gameObjectGroups: {
       [GameObjectGroups.PLAYER]: null,
       [GameObjectGroups.BUILDING]: null,
