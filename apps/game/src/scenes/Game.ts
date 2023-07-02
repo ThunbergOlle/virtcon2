@@ -101,13 +101,15 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.TERRAIN]: this.physics.add.staticGroup(),
     };
 
+    // Add colliders between players and other objects
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? []);
-    this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
+    // this is commented out since we don't want to collide with resources. This may change in the future.
+    // this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? []);
 
     events.subscribe('joinWorld', (worldId) => {
       console.log('creating scene');
-      this.physics.world.createDebugGraphic();
+      // this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
     events.subscribe('networkLoadWorld', ({ world, player }) => {
@@ -139,7 +141,6 @@ export default class Game extends Scene implements SceneStates {
         new_layer.setCollisionBetween(32, 34);
         this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], new_layer);
       });
-
 
       this.setupWorld(ecsWorld, world, player);
     });

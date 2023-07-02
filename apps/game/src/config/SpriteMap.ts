@@ -51,6 +51,12 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     textureName: 'building_furnace',
     texturePath: 'sprites/items/building_furnace.png',
   },
+  [DBItemName.STONE]: {
+    textureId: 9,
+    textureName: 'stone',
+    texturePath: 'sprites/items/stone.png',
+  },
+  [DBItemName.BUILDING_DRILL]: null,
 };
 
 export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> = {
@@ -63,6 +69,11 @@ export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> =
     textureId: 101,
     textureName: 'resource_wood',
     texturePath: 'sprites/resources/wood.png',
+  },
+  [ResourceNames.STONE]: {
+    textureId: 102,
+    textureName: 'resource_stone',
+    texturePath: 'sprites/resources/stone.png',
   },
 };
 

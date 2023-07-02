@@ -65,12 +65,13 @@ export class World extends BaseEntity {
   }
   static async GenerateResources(world: World, world_map: number[][], seed: number, size = WorldSettings.world_size): Promise<Array<WorldResource>> {
     const seededRandom: () => number = seedRandom(seed);
-
+    // this will make some resources are more likely to spawn if they are higher in the array
+    const shuffled_spawnable_resources = all_spawnable_db_items.sort(() => 0.5 - seededRandom());
     // spawn resources based on world map
     const resources: Array<WorldResource> = [];
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
-        for (const item of all_spawnable_db_items) {
+        spawnable_resources_loop: for (const item of shuffled_spawnable_resources) {
           const tileHeight = world_map[x][y];
           if (tileHeight >= item.spawnSettings.minHeight && tileHeight <= item.spawnSettings.maxHeight) {
             const randomSpawnNumber = seededRandom();
@@ -85,6 +86,8 @@ export class World extends BaseEntity {
             newResource.y = y;
             newResource.item = db_item;
             resources.push(newResource);
+
+            break spawnable_resources_loop;
           }
         }
       }
