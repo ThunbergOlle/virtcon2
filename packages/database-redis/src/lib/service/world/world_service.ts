@@ -56,7 +56,7 @@ const loadWorld = async (world_id: string): Promise<RedisWorld> => {
   }
   /* Uncomment this when debugging procedural world generation */
   // await PostgresWorldEntity.RegenerateWorld(world.id)
-  const buildings = await WorldBuilding.find({ where: { world: { id: world.id } }, relations: ['building', 'building.item_to_be_placed_on', 'building.item'] });
+  const buildings = await WorldBuilding.find({ where: { world: { id: world.id } }, relations: ['building', 'building.items_to_be_placed_on', 'building.item'] });
   return {
     id: world.id,
     players: [],

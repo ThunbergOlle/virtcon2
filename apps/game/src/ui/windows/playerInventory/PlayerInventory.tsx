@@ -152,7 +152,7 @@ export default function PlayerInventoryWindow() {
     <Window
       title="Inventory"
       width={800}
-      height={800}
+      height={500}
       defaultPosition={{ x: window.innerWidth / 2 - 400, y: 40 }}
       windowType={WindowType.VIEW_PLAYER_INVENTORY}
     >

@@ -66,7 +66,7 @@ pub struct Building {
     pub width: u32,
     pub height: u32,
     pub item: Option<Box<Item>>,
-    pub item_to_be_placed_on: Option<Box<Item>>,
+    pub items_to_be_placed_on: Option<Vec<Box<Item>>>,
     pub inventory_slots: u32,
     pub processing_requirements: Option<Vec<BuildingProcessingRequirement>>,
 }
@@ -87,7 +87,7 @@ pub struct Item {
     pub icon: String,
     pub rarity: String,
     pub is_building: bool,
-    /* Maybe has item_to_be_placed_on */
+    /* Maybe has items_to_be_placed_on */
     pub building: Option<Building>,
 }
 

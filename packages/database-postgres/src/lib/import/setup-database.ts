@@ -5,6 +5,7 @@ import { validate } from 'jsonschema';
 import { Item } from '../entity/item/Item';
 import { ItemRecipe } from '../entity/item_recipe/ItemRecipe';
 import { Building } from '../entity/building/Building';
+import { AppDataSource } from '../data-source';
 export async function setupDatabase() {
   SetupItems();
 }
@@ -33,7 +34,16 @@ async function SetupItems() {
     await ItemRecipe.upsert(item_recipe as unknown as ItemRecipe, { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] });
   }
   for (const building of all_db_buildings) {
-    await Building.upsert(building as unknown as Building, { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] });
+    await Building.upsert(building as unknown as Building, {
+      upsertType: 'on-conflict-do-update',
+      conflictPaths: ['id'],
+    });
+    // For some reason, the upsert doesn't work for the many-to-many relationship, so we have to do it manually
+    for (const item of building.items_to_be_placed_on) {
+      await AppDataSource.query(
+        `INSERT INTO building_items_to_be_placed_on_item ("buildingId", "itemId") VALUES ('${building.id}', '${item.id}') ON CONFLICT DO NOTHING;`,
+      );
+    }
   }
 }
 

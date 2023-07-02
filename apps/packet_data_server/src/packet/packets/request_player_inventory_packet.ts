@@ -5,7 +5,7 @@ import { RedisClientType } from 'redis';
 
 export default async function request_player_inventory_packet(packet: NetworkPacketDataWithSender<RequestPlayerInventoryPacket>, redisPubClient: RedisClientType) {
   // get player inventory from database.
-  const inventory = await UserInventoryItem.find({ where: { user: { id: packet.packet_sender.id } }, relations: ['item', 'item.building', 'item.building.item_to_be_placed_on'] });
+  const inventory = await UserInventoryItem.find({ where: { user: { id: packet.packet_sender.id } }, relations: ['item', 'item.building', 'item.building.items_to_be_placed_on'] });
   // send player inventory to client.
   const packet_data: PlayerInventoryPacketData = {
     player_id: packet.packet_sender.id,

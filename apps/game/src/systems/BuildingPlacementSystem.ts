@@ -72,11 +72,14 @@ const checkGhostBuildingCollisions = (entity: number, state: GameState, scene: P
     console.error(`No building for entity ${entity}`);
     return;
   }
-  if (building.item_to_be_placed_on) {
+  if (building.items_to_be_placed_on && building.items_to_be_placed_on?.length) {
     GhostBuilding.placementIsValid[entity] = 0;
     scene.physics.collide(sprite, state.gameObjectGroups[GameObjectGroups.RESOURCE] || [], (_, collided) => {
-      if (collided.name === `resource-${building.item_to_be_placed_on?.name}`) {
-        GhostBuilding.placementIsValid[entity] = 1;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      for (const item of building.items_to_be_placed_on!) {
+        if (collided.name === `resource-${item.name}`) {
+          GhostBuilding.placementIsValid[entity] = 1;
+        }
       }
     });
   }

@@ -19,7 +19,7 @@ export const ITEMS_QUERY = gql`
       building {
         height
         width
-        item_to_be_placed_on {
+        items_to_be_placed_on {
           id
         }
       }

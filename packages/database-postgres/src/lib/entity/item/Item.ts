@@ -1,9 +1,9 @@
+import { DBItemName } from '@virtcon2/static-game-data';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
-import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
-import { DBItemName } from '@virtcon2/static-game-data';
-import { ItemRecipe } from '../item_recipe/ItemRecipe';
 import { Building } from '../building/Building';
+import { ItemRecipe } from '../item_recipe/ItemRecipe';
+import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 
 @ObjectType()
 @Entity()
@@ -39,7 +39,7 @@ export class Item extends BaseEntity {
   @OneToMany(() => UserInventoryItem, (i) => i.item)
   inventory: UserInventoryItem[];
 
-  @Field(() => [ItemRecipe])
+  @Field(() => [ItemRecipe], { nullable: true, defaultValue: [] })
   @OneToMany(() => ItemRecipe, (i) => i.resultingItem, { nullable: true })
   recipe: ItemRecipe[];
 

@@ -10,7 +10,7 @@ const building_pipe: DBBuilding = {
   processing_ticks: 40,
   is_rotatable: true,
   inventory_slots: 2,
-  item_to_be_placed_on: null,
+  items_to_be_placed_on: [],
   output_item: null,
   output_quantity: null,
 };

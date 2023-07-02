@@ -9,7 +9,7 @@ const building_sawmill: DBBuilding = {
   width: 2,
   item: item_sawmill,
   processing_ticks: 100,
-  item_to_be_placed_on: item_wood,
+  items_to_be_placed_on: [item_wood],
   is_rotatable: false,
   inventory_transfer_quantity_per_cycle: 5,
   inventory_slots: 3,

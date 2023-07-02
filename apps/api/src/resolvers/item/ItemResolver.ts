@@ -5,7 +5,7 @@ import { RequestContext } from '../../graphql/RequestContext';
 export class ItemResolver {
   @Query(() => [Item], { nullable: true })
   async Items() {
-    return await Item.find({ relations: ['recipe', 'recipe.requiredItem', 'building', 'building.item_to_be_placed_on'] });
+    return await Item.find({ relations: ['recipe', 'recipe.requiredItem', 'building', 'building.items_to_be_placed_on'] });
   }
 
   @Mutation(() => UserInventoryItem, { nullable: true })

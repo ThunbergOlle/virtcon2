@@ -1,5 +1,7 @@
+import building_drill from './lib/buildings/db/building_drill';
 import building_pipe from './lib/buildings/db/building_pipe';
 import building_sawmill from './lib/buildings/db/building_sawmill';
+import item_drill from './lib/items/db/item_drill';
 import item_pipe from './lib/items/db/item_pipe';
 import item_sawmill from './lib/items/db/item_sawmill';
 import item_stick from './lib/items/db/item_stick';
@@ -16,8 +18,9 @@ export * from './lib/items/db/item_wood';
 export * from './lib/items/db/item_stick';
 export * from './lib/items/db/item_sawmill';
 export * from './lib/items/db/item_pipe';
+export * from './lib/items/db/item_drill';
 
-export const all_db_items = [item_wood, item_stick, item_sawmill, item_pipe];
+export const all_db_items = [item_wood, item_stick, item_sawmill, item_pipe, item_drill];
 export const all_spawnable_db_items = all_db_items.filter((i) => i.spawnSettings);
 export const get_item_by_id = (id: number) => {
   return all_db_items.find((item) => item.id === id);
@@ -41,7 +44,7 @@ export const all_db_items_recipes = [...item_stick_recipe, ...item_sawmill_recip
 
 /* Buildings */
 export * from './lib/buildings/building_type';
-export const all_db_buildings = [building_sawmill, building_pipe];
+export const all_db_buildings = [building_sawmill, building_pipe, building_drill];
 
 export const get_building_by_id = (id: number) => {
   return all_db_buildings.find((building) => building.id === id);

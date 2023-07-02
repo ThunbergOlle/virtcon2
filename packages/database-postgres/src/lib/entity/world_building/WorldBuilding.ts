@@ -21,7 +21,7 @@ export class WorldBuilding extends BaseEntity {
   building: Building;
 
   @OneToOne(() => WorldResource, { nullable: true })
-  @Field(() => WorldResource)
+  @Field(() => WorldResource, { nullable: true })
   @JoinColumn()
   world_resource: WorldResource;
 

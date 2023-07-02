@@ -1,5 +1,5 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { TPS } from '@shared';
@@ -45,10 +45,10 @@ export class Building extends BaseEntity {
   world_buildings: WorldBuilding[];
 
   /* What item it can be placed on */
-  @Field(() => Item, { nullable: true })
-  @OneToOne(() => Item, (i) => i.id, { nullable: true })
-  @JoinColumn()
-  item_to_be_placed_on: Item;
+  @Field(() => [Item], { nullable: true, defaultValue: [] })
+  @ManyToMany(() => Item, { nullable: true, cascade: true })
+  @JoinTable()
+  items_to_be_placed_on: Item[];
 
   /* Processing time in ticks*/
   @Field(() => Int, { nullable: false, defaultValue: TPS * 5 })

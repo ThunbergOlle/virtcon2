@@ -23,7 +23,7 @@ export default async function request_place_building_packet(
     log(`Player ${player_id} does not have item ${packet.data.buildingItemId}`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
     return;
   }
-  const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.item_to_be_placed_on', 'building.item'] });
+  const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.items_to_be_placed_on', 'building.item'] });
   /* Get if there are any resources at the coordinates. */
   const resource = await WorldResource.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } }, relations: ['item'] });
 
@@ -37,7 +37,7 @@ export default async function request_place_building_packet(
     );
     return;
   }
-  const isActive = item.building.item_to_be_placed_on ? item.building.item_to_be_placed_on?.id === resource?.item.id : true;
+  const isActive = item.building.items_to_be_placed_on ? item.building.items_to_be_placed_on?.find((i) => i.id === resource?.item.id) && true : true;
 
   const newWorldBuilding = {
     x: packet.data.x,
