@@ -12,10 +12,61 @@ export default async function request_move_inventory_item_packet(
   /* Handle differently depending on if items moves between player inventory or building inventory */
 
   if (packet.data.fromInventoryType === InventoryType.PLAYER && packet.data.toInventoryType === InventoryType.BUILDING) {
-    request_move_inventory_item_to_building(packet, redisPubClient);
+    return request_move_inventory_item_to_building(packet, redisPubClient);
   } else if (packet.data.fromInventoryType === InventoryType.BUILDING && packet.data.toInventoryType === InventoryType.PLAYER) {
-    request_move_inventory_item_to_player_inventory(packet, redisPubClient);
+    return request_move_inventory_item_to_player_inventory(packet, redisPubClient);
+  } else if (packet.data.fromInventoryType === InventoryType.PLAYER && packet.data.toInventoryType === InventoryType.PLAYER) {
+    return request_move_inventory_item_inside_player_inventory(packet, redisPubClient);
+  } else if (packet.data.fromInventoryType === InventoryType.BUILDING && packet.data.toInventoryType === InventoryType.BUILDING) {
+    return request_move_inventory_item_inside_building_inventory(packet, redisPubClient);
   }
+
+  log(
+    `Cannot move item from ${packet.data.fromInventoryType} to ${packet.data.toInventoryType}. This is not supported!`,
+    LogLevel.ERROR,
+    LogApp.PACKET_DATA_SERVER,
+  );
+}
+async function request_move_inventory_item_inside_building_inventory(
+  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
+  redisPubClient: RedisClientType,
+) {
+  await safe_move_items_between_inventories({
+    fromId: packet.data.fromInventoryId,
+    toId: packet.data.toInventoryId,
+    itemId: packet.data.item.item.id,
+    quantity: packet.data.item.quantity,
+    fromType: 'building',
+    toType: 'building',
+    fromSlot: packet.data.fromInventorySlot,
+    toSlot: packet.data.toInventorySlot,
+  });
+  const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
+    packet_sender: packet.packet_sender,
+    packet_type: packet.packet_type,
+    data: {
+      building_id: packet.data.toInventoryId,
+    },
+    world_id: packet.world_id,
+  };
+
+  request_world_building_packet(request_world_building_packet_data, redisPubClient);
+}
+async function request_move_inventory_item_inside_player_inventory(
+  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
+  redisPubClient: RedisClientType,
+) {
+  await safe_move_items_between_inventories({
+    fromId: packet.packet_sender.id,
+    toId: packet.packet_sender.id,
+    itemId: packet.data.item.item.id,
+    quantity: packet.data.item.quantity,
+    fromType: 'user',
+    toType: 'user',
+    fromSlot: packet.data.fromInventorySlot,
+    toSlot: packet.data.toInventorySlot,
+  });
+  request_player_inventory_packet(packet, redisPubClient);
 }
 async function request_move_inventory_item_to_player_inventory(
   packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,

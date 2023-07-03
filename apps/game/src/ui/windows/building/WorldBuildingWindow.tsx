@@ -152,9 +152,12 @@ export default function WorldBuildingWindow() {
                     onClick={function (item: ServerInventoryItem): void {
                       throw new Error('Function not implemented.');
                     }}
+                    slot={item.slot}
+                    onDrop={onInventoryDropItem}
+                    key={item.slot}
                   />
                 ) : (
-                  <InventoryItemPlaceholder inventoryId={activeWorldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
+                  <InventoryItemPlaceholder key={item.slot} inventoryId={activeWorldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
                 );
               })}
           </div>

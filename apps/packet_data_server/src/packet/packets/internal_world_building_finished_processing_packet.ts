@@ -84,7 +84,7 @@ async function handle_move_inventory_to_output(world_building_id: number) {
       return;
     }
     const inventory_item_to_be_moved = world_building_inventory.find((i) => i.quantity > 0);
-    if (!inventory_item_to_be_moved) {
+    if (!inventory_item_to_be_moved || !inventory_item_to_be_moved.item) {
       return;
     }
     const quantity_to_be_moved = Math.min(capacity_left, inventory_item_to_be_moved.quantity);

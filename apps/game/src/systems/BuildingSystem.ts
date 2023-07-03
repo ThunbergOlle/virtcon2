@@ -26,7 +26,6 @@ export const createBuildingSystem = () => {
         setupBuildingEventListeners(sprite, id, state);
       }
     }
-
     return { world, state };
   });
 };

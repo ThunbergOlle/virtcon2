@@ -31,10 +31,11 @@ export async function addToInventory(
     }
     // add the item to the slot
     const new_quantity = Math.min(slot_item.quantity + quantity, stack_size);
+    const remainder = Math.max(quantity - (stack_size - slot_item.quantity), 0);
     slot_item.quantity = new_quantity;
 
     await slot_item.save();
-    return quantity - new_quantity;
+    return remainder;
   }
 
   const similiar_inventory_stack = inventorySlots.filter((i) => i.item && i.item.id === itemId);
@@ -163,6 +164,18 @@ export async function safe_move_items_between_inventories(transaction: {
           : WorldBuildingInventory.addToInventory(toId as number, itemId, from_quantity_left, toSlot);
       log(`Refunding ${from_quantity_left} of item ${itemId} from inventory ${toId} to inventory ${fromId}`, LogLevel.INFO);
       await refundFromInventory;
+    }
+    if (to_quantity_left > 0) {
+      log(`Tried to move items to inventory ${toId} that we did not have space for.`, LogLevel.ERROR);
+      // we need to remove the items from the fromInventory
+      const refundToInventory =
+        fromType === 'user'
+          ? UserInventoryItem.addToInventory(fromId as string, itemId, to_quantity_left, fromSlot)
+          : WorldBuildingInventory.addToInventory(fromId as number, itemId, to_quantity_left, fromSlot);
+      log(`Refunding ${to_quantity_left} of item ${itemId} from inventory ${fromId} to inventory ${toId}`, LogLevel.INFO);
+      await refundToInventory;
+    } else if (to_quantity_left < 0) {
+       log(`Tried to move items to inventory ${toId} that we did not have.`, LogLevel.ERROR);
     }
   }
 }

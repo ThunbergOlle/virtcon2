@@ -166,13 +166,15 @@ export default function PlayerInventoryWindow() {
                   <InventoryItem
                     key={item.slot}
                     item={item}
+                    slot={item.slot}
+                    onDrop={onInventoryDropItem}
                     onClick={() => onItemWasClicked(item)}
                     fromInventoryType={InventoryType.PLAYER}
                     fromInventoryId={0}
                     fromInventorySlot={item.slot}
                   />
                 ) : (
-                  <InventoryItemPlaceholder inventoryId={0} slot={item.slot} onDrop={onInventoryDropItem} />
+                  <InventoryItemPlaceholder key={item.slot} inventoryId={0} slot={item.slot} onDrop={onInventoryDropItem} />
                 );
               })}
           </div>
