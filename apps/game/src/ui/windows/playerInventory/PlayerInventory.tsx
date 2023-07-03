@@ -111,7 +111,6 @@ export default function PlayerInventoryWindow() {
       addComponent(game.world, Collider, ghostBuilding);
 
       const buildingSettings = get_building_by_id(item.item.building?.id ?? 0);
-
       if (!buildingSettings) return;
 
       game.state.ghostBuildingById[ghostBuilding] = buildingSettings;

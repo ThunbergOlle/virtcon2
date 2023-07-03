@@ -80,6 +80,7 @@ export default function CrafterWindow() {
       <div className="flex flex-row h-full">
         <div className="flex-1">
           {itemsQuery.data?.Items?.filter((i: DBItem) => i.recipe && i.recipe.length > 0).map((item: DBItem) => {
+            const icon = Game.getInstance().textures.getBase64(item?.name || '');
             return (
               <div
                 onClick={() => {
@@ -90,7 +91,7 @@ export default function CrafterWindow() {
               >
                 <p className="flex-1">{item.display_name}</p>
                 <div className="flex-1">
-                  <img alt={item.display_name} className="pixelart h-10 w-10 float-right" src={`/assets/sprites/items/${item.name}.png`}></img>
+                  <img alt={item.display_name} className="pixelart h-10 w-10 float-right" src={icon}></img>
                 </div>
               </div>
             );

@@ -1,7 +1,9 @@
 import { InventoryType, ServerInventoryItem } from '@shared';
 import { get_item_by_id } from '@virtcon2/static-game-data';
+import Game from '../../../scenes/Game';
 import { useMemo } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import { ItemTextureMap } from '../../../config/SpriteMap';
 
 export interface InventoryItemType {
   item: ServerInventoryItem;
@@ -37,6 +39,9 @@ export default function InventoryItem({
     }),
     [item],
   );
+
+  const icon = useMemo(() => Game.getInstance().textures.getBase64(itemMetaData?.name || ''), [itemMetaData]);
+
   return (
     <div
       ref={drag}
@@ -46,7 +51,7 @@ export default function InventoryItem({
         isDragging && 'cursor-grabbing'
       }`}
     >
-      <img alt={itemMetaData?.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${itemMetaData?.name}.png`}></img>
+      <img alt={itemMetaData?.display_name} className="flex-1 pixelart w-12  m-auto" src={icon}></img>
       <p className="flex-1 m-[-8px]">x{item.quantity}</p>
     </div>
   );
