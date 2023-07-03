@@ -14,11 +14,18 @@ export default class Preload extends Phaser.Scene implements SceneStates {
     for (const textureMapKey in AllTextureMaps) {
       const textureMap = AllTextureMaps[textureMapKey as keyof typeof AllTextureMaps];
       if (textureMap) {
-        this.load.image(textureMap.textureName, '../../assets/' + textureMap.texturePath);
+        if (textureMap.animations) {
+          if (!textureMap.spriteSheetFrameWidth || !textureMap.spriteSheetFrameHeight) {
+            throw new Error('SpriteSheetFrameWidth or SpriteSheetFrameHeight not set');
+          }
+          this.load.spritesheet(textureMap.textureName, '../../assets/' + textureMap.texturePath, {
+            frameWidth: textureMap.spriteSheetFrameWidth,
+            frameHeight: textureMap.spriteSheetFrameHeight,
+          });
+        } else this.load.image(textureMap.textureName, '../../assets/' + textureMap.texturePath);
       }
     }
     this.load.image('tiles', '../../assets/tilemaps/tiles/tiles_extruded.png');
-
 
     console.log('preloading scene done');
   }

@@ -4,6 +4,15 @@ export interface TextureMetaData {
   textureId: number; // for ECS
   textureName: string; // for Phaser
   texturePath: string; // for Phaser
+  animations?: {
+    name: string;
+    frames: number[];
+    frameRate: number;
+    repeat: number;
+    playOnCreate?: boolean;
+  }[];
+  spriteSheetFrameWidth?: number;
+  spriteSheetFrameHeight?: number;
 }
 export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
   [DBItemName.BUILDING_SAWMILL]: {
@@ -56,7 +65,38 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     textureName: 'stone',
     texturePath: 'sprites/items/stone.png',
   },
-  [DBItemName.BUILDING_DRILL]: null,
+  [DBItemName.BUILDING_DRILL]: {
+    textureId: 10,
+    textureName: 'building_drill',
+    texturePath: 'sprites/items/building_drill.png',
+    animations: [
+      {
+        name: 'idle',
+        frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+        frameRate: 20,
+        repeat: -1,
+        playOnCreate: true,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
+  },
+  [DBItemName.BUILDING_CONVEYOR]: {
+    textureId: 11,
+    textureName: 'building_conveyor',
+    texturePath: 'sprites/items/building_conveyor.png',
+    animations: [
+      {
+        name: 'idle',
+        frames: [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+        frameRate: 20,
+        repeat: -1,
+        playOnCreate: true,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
+  },
 };
 
 export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> = {
@@ -100,6 +140,16 @@ export const getTextureNameFromTextureId = (textureId: number): string | null =>
     const textureMap = AllTextureMaps[textureMapKey as keyof typeof AllTextureMaps];
     if (textureMap && textureMap.textureId === textureId) {
       return textureMap.textureName;
+    }
+  }
+  return null;
+};
+export const getTextureFromTextureId = (textureId: number): TextureMetaData | null => {
+  const allTextureMaps = Object.keys(AllTextureMaps) as string[];
+  for (const textureMapKey of allTextureMaps) {
+    const textureMap = AllTextureMaps[textureMapKey as keyof typeof AllTextureMaps];
+    if (textureMap && textureMap.textureId === textureId) {
+      return textureMap;
     }
   }
   return null;

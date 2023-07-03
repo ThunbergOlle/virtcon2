@@ -2,7 +2,7 @@ import { IWorld, Not, defineQuery, defineSystem, enterQuery, exitQuery } from '@
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { Velocity } from '../components/Velocity';
-import { getTextureNameFromTextureId } from '../config/SpriteMap';
+import { getTextureFromTextureId } from '../config/SpriteMap';
 import { GameState } from '../scenes/Game';
 const spriteQuery = defineQuery([Sprite, Position]);
 const spriteQueryEnter = enterQuery(spriteQuery);
@@ -13,12 +13,27 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       const texId = Sprite.texture[id];
-      const texture = getTextureNameFromTextureId(texId);
+      const texture = getTextureFromTextureId(texId);
       if (!texture) {
         console.error('Texture not found for id: ' + texId);
         continue;
       }
-      const sprite = scene.add.sprite(Position.x[id], Position.y[id], texture);
+      const sprite = scene.add.sprite(Position.x[id], Position.y[id], texture.textureName);
+      if (texture.animations) {
+        for (let i = 0; i < texture.animations.length; i++) {
+          const animation = texture.animations[i];
+          scene.anims.create({
+            key: texture.textureName + '_anim_' + animation.name,
+            frames: scene.anims.generateFrameNumbers(texture.textureName, { frames: animation.frames }),
+            frameRate: animation.frameRate,
+            repeat: animation.repeat,
+          });
+          if (animation.playOnCreate) {
+            sprite.anims.play(texture.textureName + '_anim_' + animation.name);
+          }
+        }
+      }
+
       sprite.setDataEnabled();
       state.spritesById[id] = sprite;
       if (Sprite.height[id] && Sprite.width[id]) {
