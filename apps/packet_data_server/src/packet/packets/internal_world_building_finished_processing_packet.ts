@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
+import { WorldBuilding, WorldBuildingInventory, safe_move_items_between_inventories } from '@virtcon2/database-postgres';
 import {
   InternalWorldBuildingFinishedProcessing,
   NetworkPacketData,
@@ -91,15 +91,14 @@ async function handle_move_inventory_to_output(world_building_id: number) {
 
     capacity_left -= quantity_to_be_moved;
 
-    const quantity_remainder = await WorldBuildingInventory.addToInventory(
-      world_building.output_world_building.id,
-      inventory_item_to_be_moved.item.id,
-      quantity_to_be_moved,
-    );
-
-    capacity_left += quantity_remainder;
-
-    await WorldBuildingInventory.addToInventory(world_building.id, inventory_item_to_be_moved.item.id, -(quantity_to_be_moved - quantity_remainder));
+    await safe_move_items_between_inventories({
+      fromId: world_building.id,
+      fromType: 'building',
+      toId: world_building.output_world_building.id,
+      toType: 'building',
+      itemId: inventory_item_to_be_moved.item.id,
+      quantity: quantity_to_be_moved,
+    });
 
     world_building_inventory.shift();
     await move_items(capacity_left, world_building_inventory);

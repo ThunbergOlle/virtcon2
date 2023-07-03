@@ -166,16 +166,15 @@ export async function safe_move_items_between_inventories(transaction: {
       await refundFromInventory;
     }
     if (to_quantity_left > 0) {
-      log(`Tried to move items to inventory ${toId} that we did not have space for.`, LogLevel.ERROR);
+      // this means that we moved more items than we had space for
       // we need to remove the items from the fromInventory
       const refundToInventory =
         fromType === 'user'
           ? UserInventoryItem.addToInventory(fromId as string, itemId, to_quantity_left, fromSlot)
           : WorldBuildingInventory.addToInventory(fromId as number, itemId, to_quantity_left, fromSlot);
-      log(`Refunding ${to_quantity_left} of item ${itemId} from inventory ${fromId} to inventory ${toId}`, LogLevel.INFO);
       await refundToInventory;
     } else if (to_quantity_left < 0) {
-       log(`Tried to move items to inventory ${toId} that we did not have.`, LogLevel.ERROR);
+      log(`Tried to move items to inventory ${toId} that we did not have.`, LogLevel.ERROR);
     }
   }
 }
