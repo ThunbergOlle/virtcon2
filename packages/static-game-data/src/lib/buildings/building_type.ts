@@ -13,4 +13,5 @@ export interface DBBuilding {
   inventory_slots: number;
   width: number;
   height: number;
+  can_collide: boolean;
 }

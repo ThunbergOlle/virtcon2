@@ -26,6 +26,7 @@ export const createBuildingSystem = () => {
         setupBuildingEventListeners(sprite, id, state);
       }
     }
+
     return { world, state };
   });
 };
@@ -80,7 +81,7 @@ export const createNewBuildingEntity = (world: IWorld, state: GameState, data: R
   Collider.sizeWidth[building] = data.building.width * tileSize;
   Collider.sizeHeight[building] = data.building.height * tileSize;
   Collider.static[building] = 1;
-  Collider.group[building] = GameObjectGroups.BUILDING;
+  Collider.group[building] = data.building.can_collide ? GameObjectGroups.BUILDING : GameObjectGroups.BUILDING_NO_COLLIDE;
 
   addComponent(world, Position, building);
   const { x, y } = toPhaserPos(data);

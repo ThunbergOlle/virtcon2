@@ -13,5 +13,6 @@ const building_conveyor: DBBuilding = {
   items_to_be_placed_on: [],
   output_item: null,
   output_quantity: null,
+  can_collide: false,
 };
 export default building_conveyor;

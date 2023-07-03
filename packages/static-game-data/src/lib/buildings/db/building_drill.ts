@@ -14,5 +14,6 @@ const building_drill: DBBuilding = {
   items_to_be_placed_on: [item_stone],
   output_item: null,
   output_quantity: 3,
+  can_collide: true,
 };
 export default building_drill;

@@ -71,4 +71,8 @@ export class Building extends BaseEntity {
   @Field(() => Boolean, { nullable: false, defaultValue: false })
   @Column({ type: 'boolean', default: false })
   is_rotatable: boolean;
+
+  @Field(() => Boolean, { nullable: false, defaultValue: false })
+  @Column({ type: 'boolean', default: false })
+  can_collide: boolean;
 }

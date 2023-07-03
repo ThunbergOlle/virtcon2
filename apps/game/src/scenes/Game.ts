@@ -23,6 +23,7 @@ export enum GameObjectGroups {
   BUILDING = 1,
   RESOURCE = 2,
   TERRAIN = 3,
+  BUILDING_NO_COLLIDE = 4,
 }
 export interface GameState {
   dt: number;
@@ -55,6 +56,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.BUILDING]: null,
       [GameObjectGroups.RESOURCE]: null,
       [GameObjectGroups.TERRAIN]: null,
+      [GameObjectGroups.BUILDING_NO_COLLIDE]: null,
     },
   };
   public spriteSystem?: System<GameState>;
@@ -101,6 +103,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.BUILDING]: this.physics.add.staticGroup(),
       [GameObjectGroups.RESOURCE]: this.physics.add.staticGroup(),
       [GameObjectGroups.TERRAIN]: this.physics.add.staticGroup(),
+      [GameObjectGroups.BUILDING_NO_COLLIDE]: this.physics.add.staticGroup(),
     };
 
     // Add colliders between players and other objects

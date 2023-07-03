@@ -13,5 +13,6 @@ const building_pipe: DBBuilding = {
   items_to_be_placed_on: [],
   output_item: null,
   output_quantity: null,
+  can_collide: true,
 };
 export default building_pipe;

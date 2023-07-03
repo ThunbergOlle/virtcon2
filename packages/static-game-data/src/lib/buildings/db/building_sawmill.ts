@@ -14,6 +14,7 @@ const building_sawmill: DBBuilding = {
   inventory_transfer_quantity_per_cycle: 5,
   inventory_slots: 3,
   output_item: item_wood,
+  can_collide: true,
   output_quantity: 2,
 };
 export default building_sawmill;
