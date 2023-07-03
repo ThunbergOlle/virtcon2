@@ -11,7 +11,7 @@ const item_wood: DBItem = {
   spawnSettings: {
     minHeight: 0,
     maxHeight: 0.2,
-    chance: 0.4,
+    chance: 0.2,
   },
   is_building: false,
 };

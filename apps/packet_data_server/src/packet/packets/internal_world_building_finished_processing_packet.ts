@@ -121,7 +121,7 @@ async function handle_building_with_no_processing_requirements(world_building: W
   if (world_building.building.output_item) {
     // this is a building that can "create" an item, for example, a mining building
     return [{ item_id: world_building.building.output_item.id, quantity: world_building.building.output_quantity }];
-  } else if (world_building.building.output_quantity > 0 && world_building.building.items_to_be_placed_on.length) {
+  } else if (world_building.building.output_quantity > 0 && world_building.building.items_to_be_placed_on.length && world_building.world_resource) {
     return [{ item_id: world_building.world_resource.item.id, quantity: world_building.building.output_quantity }];
   }
   return [];

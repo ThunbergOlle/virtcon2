@@ -97,6 +97,11 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     spriteSheetFrameWidth: 16,
     spriteSheetFrameHeight: 16,
   },
+  [DBItemName.IRON]: {
+    textureId: 12,
+    textureName: 'iron',
+    texturePath: 'sprites/items/iron.png',
+  },
 };
 
 export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> = {
@@ -114,6 +119,16 @@ export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> =
     textureId: 102,
     textureName: 'resource_stone',
     texturePath: 'sprites/resources/stone.png',
+  },
+  [ResourceNames.IRON]: {
+    textureId: 103,
+    textureName: 'resource_iron',
+    texturePath: 'sprites/resources/iron.png',
+  },
+  [ResourceNames.COAL]: {
+    textureId: 104,
+    textureName: 'resource_coal',
+    texturePath: 'sprites/resources/coal.png',
   },
 };
 

@@ -54,6 +54,7 @@ export class World extends BaseEntity {
     if (!world) {
       throw new Error('World not found');
     }
+    await WorldBuilding.update({ world: { id: world.id } }, { world_resource: null });
     // delete all resources
     await WorldResource.delete({ world: { id: world.id } });
 

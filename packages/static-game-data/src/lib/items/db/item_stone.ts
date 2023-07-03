@@ -11,7 +11,7 @@ const item_stone: DBItem = {
   spawnSettings: {
     minHeight: 0.15,
     maxHeight: 0.3,
-    chance: 0.2,
+    chance: 0.15,
   },
   is_building: false,
 };
