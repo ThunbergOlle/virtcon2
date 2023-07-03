@@ -23,10 +23,13 @@ export default async function internal_world_building_finished_processing_packet
     relations: [
       'world_building_inventory',
       'world_building_inventory.item',
+      'world_resource',
+      'world_resource.item',
       'output_world_building',
       'building',
       'building.output_item',
       'building.processing_requirements',
+      'building.items_to_be_placed_on',
       'world',
     ],
   });
@@ -117,6 +120,8 @@ async function handle_building_with_no_processing_requirements(world_building: W
   if (world_building.building.output_item) {
     // this is a building that can "create" an item, for example, a mining building
     return [{ item_id: world_building.building.output_item.id, quantity: world_building.building.output_quantity }];
+  } else if (world_building.building.output_quantity > 0 && world_building.building.items_to_be_placed_on.length) {
+    return [{ item_id: world_building.world_resource.item.id, quantity: world_building.building.output_quantity }];
   }
   return [];
 }

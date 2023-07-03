@@ -17,6 +17,7 @@ export enum DBItemName {
   GLASS = 'glass',
   COAL = 'coal',
   BUILDING_PIPE = 'building_pipe',
+  BUILDING_CONVEYOR = 'building_conveyor',
   BUILDING_FURNACE = 'building_furnace',
   BUILDING_SAWMILL = 'building_sawmill',
   BUILDING_DRILL = 'building_drill',
@@ -38,4 +39,7 @@ export interface DBItem {
   recipe?: DBItemRecipe[];
   is_building: boolean;
   building?: DBBuilding;
+  animations?: {
+    idle: number[];
+  };
 }
