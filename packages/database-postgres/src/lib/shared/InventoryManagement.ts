@@ -150,12 +150,12 @@ export async function safe_move_items_between_inventories(transaction: {
   const [from_quantity_left, to_quantity_left] = await Promise.all([fromInventory, toInventory]);
 
   if (from_quantity_left !== 0 || to_quantity_left !== 0) {
-    log(
-      `Suspicous inventory transaction. From: ${fromId} To: ${toId} Item: ${itemId} Quantity: ${quantity}, From quantity left: ${from_quantity_left}, To quantity left: ${to_quantity_left}`,
-      LogLevel.ERROR,
-    );
     // If from_quantity_left is lower than 0, that means that we moved more items than we had in the inventory.
     if (from_quantity_left < 0) {
+      log(
+        `Suspicous inventory transaction. From: ${fromId} To: ${toId} Item: ${itemId} Quantity: ${quantity}, From quantity left: ${from_quantity_left}, To quantity left: ${to_quantity_left}`,
+        LogLevel.ERROR,
+      );
       log(`Tried to move items from inventory ${fromId} that we did not have.`, LogLevel.ERROR);
       // we need to remove the items from the toInventory
       const refundFromInventory =

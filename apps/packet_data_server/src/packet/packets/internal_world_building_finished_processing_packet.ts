@@ -83,8 +83,9 @@ async function handle_move_inventory_to_output(world_building_id: number) {
     if (capacity_left === 0) {
       return;
     }
-    const inventory_item_to_be_moved = world_building_inventory.find((i) => i.quantity > 0);
-    if (!inventory_item_to_be_moved || !inventory_item_to_be_moved.item) {
+    const inventory_item_to_be_moved_index = world_building_inventory.findIndex((i) => i.quantity > 0 && i.item);
+    const inventory_item_to_be_moved = world_building_inventory[inventory_item_to_be_moved_index];
+    if (!inventory_item_to_be_moved) {
       return;
     }
     const quantity_to_be_moved = Math.min(capacity_left, inventory_item_to_be_moved.quantity);
@@ -100,7 +101,8 @@ async function handle_move_inventory_to_output(world_building_id: number) {
       quantity: quantity_to_be_moved,
     });
 
-    world_building_inventory.shift();
+    world_building_inventory.splice(inventory_item_to_be_moved_index, 1);
+
     await move_items(capacity_left, world_building_inventory);
   }
   await move_items(world_building.building.inventory_transfer_quantity_per_cycle, world_building.world_building_inventory);
