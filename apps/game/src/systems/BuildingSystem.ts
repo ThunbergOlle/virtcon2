@@ -1,5 +1,5 @@
 import { RedisWorldBuilding } from '@shared';
-import { NetworkPacketData, PacketType, PlaceBuildingPacket } from '@virtcon2/network-packet';
+import { NetworkPacketData, PacketType, PlaceBuildingPacket, WorldBuildingPacketData } from '@virtcon2/network-packet';
 import { IWorld, addComponent, addEntity, defineSystem, defineQuery, enterQuery } from '@virtcon2/virt-bit-ecs';
 import { Collider } from '../components/Collider';
 import { Position } from '../components/Position';
@@ -35,6 +35,7 @@ const setupBuildingEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
     console.error(`No body for building ${eid}`);
     return;
   }
+
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
     /* Send on building pressed */
     const buildingId = state.buildingById[eid].id;
@@ -43,10 +44,26 @@ const setupBuildingEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
 };
 export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]): GameState => {
   const placeBuildingPackets = filterPacket<PlaceBuildingPacket>(packets, PacketType.PLACE_BUILDING);
-  /* Handle join packets. */
+  /* Handle place building packets. */
   for (let i = 0; i < placeBuildingPackets.length; i++) {
     createNewBuildingEntity(world, state, placeBuildingPackets[i].data);
   }
+  return state;
+};
+export const handleBuildingPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]): GameState => {
+  const worldBuildingPackets = filterPacket<WorldBuildingPacketData>(packets, PacketType.WORLD_BUILDING);
+  // get building by id
+  worldBuildingPackets.forEach((packet) => {
+    if (!packet.data.building) return;
+    const eid = state.buildingEntityIdById[packet.data.building.id];
+    if (eid) {
+      Sprite.rotation[eid] = packet.data.building.rotation;
+      const { x, y } = toPhaserPos(packet.data.building);
+      Position.x[eid] = x + (((packet.data.building.building.width + 1) % 2) / 2) * tileSize;
+      Position.y[eid] = y + (((packet.data.building.building.height + 1) % 2) / 2) * tileSize;
+      state.buildingById[eid] = packet.data.building;
+    }
+  });
   return state;
 };
 
@@ -72,6 +89,8 @@ export const createNewBuildingEntity = (world: IWorld, state: GameState, data: R
   Position.y[building] = y + (((data.building.height + 1) % 2) / 2) * tileSize;
 
   state.buildingById[building] = data;
+
+  state.buildingEntityIdById[data.id] = building;
 
   return building;
 };

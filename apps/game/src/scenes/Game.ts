@@ -10,7 +10,7 @@ import { JoinPacketData } from '@virtcon2/network-packet';
 import { IWorld, System, createWorld } from '@virtcon2/virt-bit-ecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
-import { createBuildingSystem, createNewBuildingEntity, handlePlaceBuildingPackets } from '../systems/BuildingSystem';
+import { createBuildingSystem, createNewBuildingEntity, handleBuildingPackets, handlePlaceBuildingPackets } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
 import { createMainPlayerSystem, createNewMainPlayerEntity } from '../systems/MainPlayerSystem';
 import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../systems/PlayerReceiveNetworkSystem';
@@ -30,6 +30,7 @@ export interface GameState {
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
   buildingById: { [key: number]: RedisWorldBuilding };
+  buildingEntityIdById: { [key: number]: number };
   resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
   ghostBuildingById: { [key: number]: DBBuilding };
   gameObjectGroups: {
@@ -47,6 +48,7 @@ export default class Game extends Scene implements SceneStates {
     playerById: {},
     resourcesById: {},
     buildingById: {},
+    buildingEntityIdById: {},
     ghostBuildingById: {},
     gameObjectGroups: {
       [GameObjectGroups.PLAYER]: null,
@@ -204,7 +206,8 @@ export default class Game extends Scene implements SceneStates {
     /* Handle packets. */
     /* Sometimes, we want to handle the packets before running through the systems */
 
-    newState = handlePlaceBuildingPackets(this.world, this.state, packets);
+    newState = handlePlaceBuildingPackets(this.world, newState, packets);
+    newState = handleBuildingPackets(this.world, newState, packets);
 
     newState = this.spriteRegisterySystem(this.world, newState, packets).state;
     newState = this.colliderSystem(this.world, newState, packets).state;
