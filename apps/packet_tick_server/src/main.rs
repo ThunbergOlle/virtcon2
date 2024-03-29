@@ -45,7 +45,11 @@ fn main() {
     let mut last_tick = std::time::Instant::now();
 
     loop {
-        building_process_service::tick(&mut redis_connection, world_id.clone(), &publish_send_packet);
+        building_process_service::tick(
+            &mut redis_connection,
+            world_id.clone(),
+            &publish_send_packet,
+        );
         packets_service::tick(
             world_id.clone(),
             &on_receive_packet,

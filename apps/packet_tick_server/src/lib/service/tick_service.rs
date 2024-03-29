@@ -3,7 +3,7 @@ use redis::Commands;
 pub fn tick(
     tps: i32,
     world_id: String,
-    tick: &mut i32,
+    tick: &mut u32,
     last_tick: &mut std::time::Instant,
     redis_connection: &mut redis::Connection,
     on_send_packet: &std::sync::mpsc::Receiver<String>,
