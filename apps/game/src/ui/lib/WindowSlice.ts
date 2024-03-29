@@ -10,7 +10,6 @@ export enum WindowType {
 }
 
 interface WindowStack {
-  stackIndex: number;
   type: WindowType;
   open: boolean;
 }
@@ -24,22 +23,18 @@ interface WindowState {
 const initialState: WindowState = {
   windows: [
     {
-      stackIndex: 0,
       type: WindowType.VIEW_BUILDING,
       open: false,
     },
     {
-      stackIndex: 1,
       type: WindowType.VIEW_PLAYER_INVENTORY,
       open: false,
     },
     {
-      stackIndex: 2,
       type: WindowType.VIEW_MENU,
       open: false,
     },
     {
-      stackIndex: 3,
       type: WindowType.VIEW_CRAFTER,
       open: false,
     },
@@ -52,43 +47,12 @@ export const windowSlice = createSlice({
   initialState,
   reducers: {
     select: (state, action: PayloadAction<WindowType>) => {
-      let stack = state.windows;
-      const selectedWindow = action.payload;
-      // If the window is already the highest in the stack, do nothing.
-      if (stack && stack[stack.length - 1]?.type === selectedWindow) state.windows[stack.length - 1].open = true;
-
-      const oldStackIndex = stack.find((i) => i.type === selectedWindow)?.stackIndex; // Find the old index of the window we want to bring to the top.
-      if (oldStackIndex === undefined) throw new Error('Window not found in stack');
-
-      stack = stack.filter((i) => i.type !== selectedWindow); // Update the stack and remove the item we want to put on top of the stack.
-
-      let biggestVal = 0;
-      for (let i = 0; i < stack.length; i++) {
-        // Loop throgh the stack and find the index and value of the item highest on the stack.
-        if (stack[i].stackIndex > biggestVal) {
-          biggestVal = stack[i].stackIndex;
-        }
-      }
-
-      const lesserStack = stack.filter((i) => i.stackIndex < oldStackIndex);
-
-      const higherStack = stack.filter((i) => i.stackIndex > oldStackIndex);
-
-      // Move all of the items in the stack that has a higher stack value to a lower stack value (-1). The goal is to not have any "gaps" in the stack values
-      higherStack.forEach((i) => {
-        i.stackIndex = i.stackIndex - 1;
-      });
-
-      stack = [...lesserStack, ...higherStack]; // Update the stack with the new values.
-
-      // Add the window to the top of the stack.
-      stack.push({
-        stackIndex: biggestVal,
-        type: selectedWindow,
-        open: true,
-      });
-
-      state.windows = stack;
+      const oldStackIndex = state.windows.findIndex((i) => i.type === action.payload);
+      if (oldStackIndex === -1) return;
+      const stack = state.windows;
+      const item = stack[oldStackIndex];
+      item.open = true;
+      state.windows = [...stack.slice(0, oldStackIndex), ...stack.slice(oldStackIndex + 1), item];
     },
     close: (state, action: PayloadAction<WindowType>) => {
       console.log('close');
@@ -113,8 +77,9 @@ export const windowSlice = createSlice({
 export const { select, close, toggle } = windowSlice.actions;
 
 export const selectClass = (state: RootState, window: WindowType) => {
-  const item = state.window.windows.find((i) => i.type === window)?.stackIndex; // The stackIndex represents the z-index of the window.
-  return item ? 'z' + item : 'z0';
+  const zIndex = state.window.windows.findIndex((i) => i.type === window);
+
+  return `z${zIndex}`;
 };
 
 export const isWindowOpen = (state: RootState, window: WindowType) => {
