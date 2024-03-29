@@ -14,8 +14,6 @@ import WorldBuildingWindow from '../../windows/building/WorldBuildingWindow';
 function GamePage() {
   const { worldId } = useParams();
 
-  const [windowStack, setWindowStack] = useReducer(windowStackReducer, []);
-  const value = useMemo(() => ({ windowStack, setWindowStack }), [windowStack]);
   const [game, setGame] = useState<Phaser.Game>();
   const navigate = useNavigate();
   useEffect(() => {
@@ -47,13 +45,11 @@ function GamePage() {
     };
   }, [game]);
   return (
-    <WindowStackContext.Provider value={value}>
-      <div className="absolute">
-        <PlayerInventoryWindow />
-        <CrafterWindow />
-        <WorldBuildingWindow />
-      </div>
-    </WindowStackContext.Provider>
+    <div className="absolute">
+      <PlayerInventoryWindow />
+      <CrafterWindow />
+      <WorldBuildingWindow />
+    </div>
   );
 }
 

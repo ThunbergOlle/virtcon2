@@ -1,4 +1,4 @@
 {
-    "cmake.configureOnOpen": false,
-    "files.exclude": {}
+  "cmake.configureOnOpen": false,
+  "files.exclude": {}
 }

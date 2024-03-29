@@ -14,6 +14,8 @@ import { apiUrl } from '@shared';
 import { UserContext } from './ui/context/user/UserContext';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
 const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
 const authLink = setContext(async (_, { headers }) => {
@@ -38,14 +40,16 @@ export const client = new ApolloClient({
 export default function App() {
   return (
     <div className="App">
-      <ApolloProvider client={client}>
-        <ToastContainer theme="dark" />
-        <DndProvider backend={HTML5Backend}>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </DndProvider>
-      </ApolloProvider>
+      <Provider store={store}>
+        <ApolloProvider client={client}>
+          <ToastContainer theme="dark" />
+          <DndProvider backend={HTML5Backend}>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </DndProvider>
+        </ApolloProvider>
+      </Provider>
     </div>
   );
 }

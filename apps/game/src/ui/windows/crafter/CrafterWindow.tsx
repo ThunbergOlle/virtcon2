@@ -2,22 +2,17 @@ import { useMutation, useQuery } from '@apollo/client';
 import { ServerInventoryItem } from '@shared';
 import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
-import { WindowStackContext } from '../../context/window/WindowContext';
-import { WindowType } from '../../lib/WindowManager';
+import { close, isWindowOpen, select, toggle, WindowType } from '../../lib/WindowSlice';
 import { CRAFT_MUTATION, ITEMS_QUERY } from './CrafterWindowGraphQL';
-import { useForceUpdate } from '../../hooks/useForceUpdate';
 
 export default function CrafterWindow() {
-  const windowManagerContext = useContext(WindowStackContext);
-  const forceUpdate = useForceUpdate();
-
-  const isOpen = useRef(false);
   const itemsQuery = useQuery(ITEMS_QUERY);
   const [mutateCraftItem, craftItemMutation] = useMutation(CRAFT_MUTATION);
 
@@ -26,32 +21,33 @@ export default function CrafterWindow() {
   const [selectedItem, setSelectedItem] = useState<DBItem | null>(null);
   const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
 
+  const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_CRAFTER));
+  const dispatch = useAppDispatch();
+
   useEffect(() => {
-    events.subscribe('onCrafterButtonPressed', () => {
-      if (!isOpen.current) {
-        /* Send request inventory packet */
-        const packet: NetworkPacketData<RequestPlayerInventoryPacket> = {
-          data: {},
-          packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
-        };
-        Game.network.sendPacket(packet);
-        isOpen.current = true;
-      } else {
-        isOpen.current = false;
-      }
-      windowManagerContext.setWindowStack({ type: 'toggle', windowType: WindowType.VIEW_CRAFTER });
-      forceUpdate();
-    });
-    events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
-      setInventory(inventory);
-    });
+    if (isOpen)
+      Game.network.sendPacket({
+        data: {},
+        packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
+      });
+  }, [isOpen]);
+
+  const onCrafterButtonPressed = useCallback(() => dispatch(toggle(WindowType.VIEW_CRAFTER)), [dispatch]);
+
+  const onNetWorkPlayerInventoryPacket = ({ inventory }: { inventory: Array<ServerInventoryItem> }) => {
+    setInventory(inventory);
+  };
+
+  useEffect(() => {
+    events.subscribe('onCrafterButtonPressed', onCrafterButtonPressed);
+    events.subscribe('networkPlayerInventoryPacket', onNetWorkPlayerInventoryPacket);
 
     return () => {
-      events.unsubscribe('onCrafterButtonPressed', () => {});
-      events.unsubscribe('networkPlayerInventoryPacket', () => {});
+      events.unsubscribe('onCrafterButtonPressed', () => onCrafterButtonPressed);
+      events.unsubscribe('networkPlayerInventoryPacket', onNetWorkPlayerInventoryPacket);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onCrafterButtonPressed]);
+
   const craftItem = () => {
     mutateCraftItem({
       variables: {
