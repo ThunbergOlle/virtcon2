@@ -1,4 +1,4 @@
-import { InventoryType, RedisWorldBuilding, ServerInventoryItem, TPS } from '@shared';
+import { InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
 import {
   NetworkPacketData,
   PacketType,
@@ -7,24 +7,24 @@ import {
   RequestWorldBuildingPacket,
 } from '@virtcon2/network-packet';
 import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProgressBar } from 'react-bootstrap';
 import { events } from '../../../events/Events';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
-import { WindowStackContext } from '../../context/window/WindowContext';
-import { useForceUpdate } from '../../hooks/useForceUpdate';
-import { WindowType } from '../../lib/WindowManager';
+import { isWindowOpen, select, WindowType } from '../../lib/WindowSlice';
 import WorldBuildingOutput from './WorldBuildingOutput';
+import useTickProgress from './useTickProgress';
 
 export default function WorldBuildingWindow() {
-  const windowManagerContext = useContext(WindowStackContext);
-  const expectedWorldBuildingId = useRef<number | null>(null);
-  const [tickProgress, setTickProgress] = useState(0);
   const [activeWorldBuilding, setActiveWorldBuilding] = useState<RedisWorldBuilding | null>(null);
+  const tickProgress = useTickProgress(activeWorldBuilding);
   const [activeBuilding, setActiveBuilding] = useState<DBBuilding | null>(null);
-  const forceUpdate = useForceUpdate();
+
+  const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_BUILDING));
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (activeWorldBuilding) {
@@ -32,10 +32,7 @@ export default function WorldBuildingWindow() {
     }
   }, [activeWorldBuilding]);
 
-  function toggleWorldBuildingWindow(buildingId: number) {
-    console.log('opening', buildingId, 'in world building window');
-    windowManagerContext.setWindowStack({ type: 'open', windowType: WindowType.VIEW_BUILDING });
-    expectedWorldBuildingId.current = buildingId;
+  function onBuildingPressed(buildingId: number) {
     /* Send request view building packet */
     const packet: NetworkPacketData<RequestWorldBuildingPacket> = {
       data: {
@@ -44,43 +41,21 @@ export default function WorldBuildingWindow() {
       packet_type: PacketType.REQUEST_WORLD_BUILDING,
     };
     Game.network.sendPacket(packet);
+
+    dispatch(select(WindowType.VIEW_BUILDING));
   }
 
-  /* This is for calculating the progress of a building. */
   useEffect(() => {
-    const tps = TPS;
-    const current = activeWorldBuilding?.current_processing_ticks || 0;
-
-    setTickProgress(current);
-
-    const total = activeBuilding?.processing_ticks || 0;
-
-    const interval = setInterval(() => {
-      setTickProgress((prev) => {
-        if (prev >= total) {
-          return 0;
-        }
-        return prev + tps;
-      });
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [activeWorldBuilding, activeBuilding]);
-
-  useEffect(() => {
-    events.subscribe('onBuildingPressed', toggleWorldBuildingWindow);
-    events.subscribe('networkWorldBuilding', (data) => {
-      if (expectedWorldBuildingId.current !== data.building?.id) return;
+    events.subscribe('onBuildingPressed', onBuildingPressed);
+    events.subscribe('networkWorldBuildingView', (data) => {
       setActiveWorldBuilding(data.building || null);
-      forceUpdate();
     });
     return () => {
-      events.unsubscribe('onBuildingPressed', () => {});
+      events.unsubscribe('onBuildingPressed', onBuildingPressed);
       events.unsubscribe('networkWorldBuilding', () => {});
     };
   }, []);
+
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
     const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
