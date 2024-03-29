@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client';
 import { ServerInventoryItem } from '@shared';
-import { NetworkPacketData, PacketType, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import { PacketType } from '@virtcon2/network-packet';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
@@ -9,7 +9,7 @@ import { events } from '../../../events/Events';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
-import { close, isWindowOpen, select, toggle, WindowType } from '../../lib/WindowSlice';
+import { isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 import { CRAFT_MUTATION, ITEMS_QUERY } from './CrafterWindowGraphQL';
 
 export default function CrafterWindow() {

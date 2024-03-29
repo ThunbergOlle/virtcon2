@@ -8,7 +8,7 @@ import {
 } from '@virtcon2/network-packet';
 import { get_building_by_id } from '@virtcon2/static-game-data';
 import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Collider } from '../../../components/Collider';
 import { GhostBuilding } from '../../../components/GhostBuilding';
@@ -19,16 +19,14 @@ import { events } from '../../../events/Events';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
-import { WindowStackContext } from '../../context/window/WindowContext';
-import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
+import { close, isWindowOpen, toggle } from '../../lib/WindowSlice';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 
 export default function PlayerInventoryWindow() {
-  const windowManagerContext = useContext(WindowStackContext);
-  const forceUpdate = useForceUpdate();
-
-  const isOpen = useRef(false);
+  const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_PLAYER_INVENTORY));
+  const dispatch = useAppDispatch();
 
   const buildingBeingPlaced = useRef<ServerInventoryItem | null>(null);
   const buildingBeingPlacedEntity = useRef<number | null>(null);
@@ -44,11 +42,13 @@ export default function PlayerInventoryWindow() {
     if (!game.world || !buildingBeingPlacedEntity.current) return;
     removeEntity(game.world, buildingBeingPlacedEntity.current);
   };
+
   function rotatePlaceBuildingIntent() {
     const game = Game.getInstance();
     if (!game.world || !buildingBeingPlacedEntity.current) return;
     Sprite.rotation[buildingBeingPlacedEntity.current] += (Math.PI / 2) % (Math.PI * 2);
   }
+
   function placeBuilding(e: Phaser.Input.Pointer) {
     if (!buildingBeingPlaced.current || buildingBeingPlaced.current.quantity <= 0) {
       toast('You do not have any more of this building in your inventory', { type: 'error' });
@@ -73,36 +73,35 @@ export default function PlayerInventoryWindow() {
 
     Game.network.sendPacket(packet);
   }
-  function toggleInventory() {
-    if (!isOpen.current) {
-      const packet: NetworkPacketData<RequestPlayerInventoryPacket> = {
+
+  useEffect(() => {
+    if (isOpen)
+      Game.network.sendPacket({
         data: {},
         packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
-      };
-      Game.network.sendPacket(packet);
-      isOpen.current = true;
-    } else {
-      isOpen.current = false;
-    }
-    windowManagerContext.setWindowStack({ type: 'toggle', windowType: WindowType.VIEW_PLAYER_INVENTORY });
-    forceUpdate();
-  }
+      });
+  }, [isOpen]);
+
+  const onInventoryButtonPressed = useCallback(() => dispatch(toggle(WindowType.VIEW_PLAYER_INVENTORY)), [dispatch]);
+
   useEffect(() => {
-    events.subscribe('onInventoryButtonPressed', toggleInventory);
+    events.subscribe('onInventoryButtonPressed', onInventoryButtonPressed);
     events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
       setInventory(inventory);
     });
     return () => {
       events.unsubscribe('networkPlayerInventoryPacket', () => {});
-      events.unsubscribe('onInventoryButtonPressed', () => {});
+      events.unsubscribe('onInventoryButtonPressed', () => onInventoryButtonPressed);
     };
-  }, []);
+  }, [onInventoryButtonPressed]);
 
   const onItemWasClicked = (item: ServerInventoryItem) => {
     if (item.item?.is_building) {
-      toggleInventory();
+      dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
+
       const game = Game.getInstance();
       if (!game.world) return;
+
       /* Create ghost building entity */
       const ghostBuilding = addEntity(game.world);
       addComponent(game.world, GhostBuilding, ghostBuilding);
@@ -147,6 +146,7 @@ export default function PlayerInventoryWindow() {
     };
     Game.network.sendPacket(packet);
   };
+
   return (
     <Window
       title="Inventory"
