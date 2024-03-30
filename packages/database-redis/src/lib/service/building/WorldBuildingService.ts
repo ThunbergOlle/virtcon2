@@ -68,14 +68,14 @@ const doneInspectingBuilding = async (buildingId: number, inspectorSocketId: str
   await redisClient.json.set('worlds', `$.${worldId || '*'}.buildings[?(@.id==${buildingId})].inspectors`, building.inspectors);
 };
 
-const refreshBuildingCache = async (worldBuildingId: number, redisClient: RedisClientType) => {
+const refreshBuildingCache = async (worldBuildingId: number, redisClient: RedisClientType, newBuilding = false) => {
   const building = await WorldBuilding.findOne({
     where: { id: worldBuildingId },
     relations: ['building', 'world_building_inventory', 'output_world_building', 'world_building_inventory.item', 'world'],
   });
   if (!building) throw new Error(`Building with id ${worldBuildingId} not found`);
 
-  const worldBuilding: Partial<RedisWorldBuilding> = {
+  const worldBuilding = {
     active: building.active,
     building: building.building,
     id: building.id,
@@ -87,6 +87,16 @@ const refreshBuildingCache = async (worldBuildingId: number, redisClient: RedisC
     output_pos_x: building.output_pos_x,
     output_pos_y: building.output_pos_y,
   };
+
+  if (newBuilding) {
+    const newBuilding: RedisWorldBuilding = {
+      ...worldBuilding,
+      id: worldBuilding.id,
+      inspectors: [],
+    };
+    await addBuilding(newBuilding, building.world.id, redisClient);
+    return newBuilding;
+  }
 
   return updateBuilding(worldBuilding, building.world.id, redisClient);
 };

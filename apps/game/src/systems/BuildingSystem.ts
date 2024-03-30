@@ -60,11 +60,11 @@ export const handleBuildingPackets = (world: IWorld, state: GameState, packets: 
     if (!packet.data.building) return;
     const eid = state.buildingEntityIdById[packet.data.building.id];
     if (eid) {
-      Sprite.rotation[eid] = packet.data.building.rotation;
-      const { x, y } = toPhaserPos(packet.data.building);
-      Position.x[eid] = x + (((packet.data.building.building.width + 1) % 2) / 2) * tileSize;
-      Position.y[eid] = y + (((packet.data.building.building.height + 1) % 2) / 2) * tileSize;
-      state.buildingById[eid] = packet.data.building;
+      Sprite.rotation[eid] = packet.data.rotation;
+      const { x, y } = toPhaserPos(packet.data);
+      Position.x[eid] = x + (((packet.data.building.width + 1) % 2) / 2) * tileSize;
+      Position.y[eid] = y + (((packet.data.building.height + 1) % 2) / 2) * tileSize;
+      state.buildingById[eid] = packet.data;
     }
   });
   return state;
