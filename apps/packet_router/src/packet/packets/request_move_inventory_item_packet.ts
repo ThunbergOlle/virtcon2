@@ -1,5 +1,5 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
-import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safe_move_items_between_inventories } from '@virtcon2/database-postgres';
+import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safelyMoveItemsBetweenInventories } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
@@ -31,7 +31,7 @@ async function request_move_inventory_item_inside_building_inventory(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
-  await safe_move_items_between_inventories({
+  await safelyMoveItemsBetweenInventories({
     fromId: packet.data.fromInventoryId,
     toId: packet.data.toInventoryId,
     itemId: packet.data.item.item.id,
@@ -56,7 +56,7 @@ async function request_move_inventory_item_inside_player_inventory(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
-  await safe_move_items_between_inventories({
+  await safelyMoveItemsBetweenInventories({
     fromId: packet.sender.id,
     toId: packet.sender.id,
     itemId: packet.data.item.item.id,
@@ -97,7 +97,7 @@ async function request_move_inventory_item_to_player_inventory(
   }
 
   // remove / add to inventories
-  await safe_move_items_between_inventories({
+  await safelyMoveItemsBetweenInventories({
     fromId: building_to_drop_in.id,
     toId: packet.sender.id,
     itemId: packet.data.item.item.id,

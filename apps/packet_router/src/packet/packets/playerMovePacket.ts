@@ -1,10 +1,8 @@
-import { log, LogApp, LogLevel } from '@shared';
 import Redis from '@virtcon2/database-redis';
 import { ClientPacketWithSender, enqueuePacket, PacketType, PlayerSetPositionServerPaacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 
 export default async function playerMovePacket(packet: ClientPacketWithSender<PlayerSetPositionServerPaacket>, client: RedisClientType) {
-  log(`Player ${packet.sender?.id} moved to ${packet.data.position}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
   await Redis.updatePlayer({
     worldId: packet.world_id,
     playerId: packet.sender.id,

@@ -126,7 +126,7 @@ async function handleNegativeQuantities(
   return -quantity_left_to_remove;
 }
 
-export async function safe_move_items_between_inventories(transaction: {
+export async function safelyMoveItemsBetweenInventories(transaction: {
   fromId: number | string;
   fromType: 'user' | 'building';
   toId: number | string;
@@ -176,5 +176,5 @@ export async function safe_move_items_between_inventories(transaction: {
     } else if (to_quantity_left < 0) {
       log(`Tried to move items to inventory ${toId} that we did not have.`, LogLevel.ERROR);
     }
-  }
+  } else log(`Moved ${quantity} of item ${itemId} from inventory ${fromId} to inventory ${toId}`, LogLevel.INFO);
 }

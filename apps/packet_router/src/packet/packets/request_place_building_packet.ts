@@ -73,7 +73,7 @@ export default async function request_place_building_packet(packet: ClientPacket
   enqueuePacket(client, packet.world_id, {
     packet_type: PacketType.PLACE_BUILDING,
     sender: packet.sender,
-    data: { ...building, current_processing_ticks: 0 },
+    data: building,
     target: packet.world_id,
   });
 

@@ -9,12 +9,15 @@ import * as http from 'http';
 import { cwd } from 'process';
 import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import * as socketio from 'socket.io';
-import handlePacket from './packet/packet_handler';
+import { handleClientPacket } from './packet/packet_handler';
 import Redis from '@virtcon2/database-redis';
+import { all_db_buildings, get_building_by_id } from '@virtcon2/static-game-data';
+import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize();
 
+let tick = 0;
 const worlds: string[] = [];
 
 const redisClient = createRedisClient() as RedisClientType;
@@ -36,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.get('/', (_req, res) => {
-  res.send({ uptime: process.uptime() });
+  res.send({ uptime: process.uptime(), tick });
 });
 
 const server = http.createServer(app);
@@ -61,8 +64,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('packet', async (packet: string) => {
-    log(`Received packet: ${packet}`, LogLevel.INFO, LogApp.SERVER);
-
     const packetJson = JSON.parse(packet) as ClientPacket<unknown>;
     packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
 
@@ -80,7 +81,7 @@ io.on('connection', (socket) => {
 
     const sender = await Redis.getPlayerBySocketId(socket.id, redisClient);
 
-    return handlePacket({ ...packetJson, sender }, redisClient);
+    return handleClientPacket({ ...packetJson, sender }, redisClient);
   });
 });
 
@@ -104,13 +105,14 @@ process.on('SIGINT', async () => {
 });
 
 setInterval(async () => {
+  tick++;
   for (const world of worlds) {
+    checkFinishedBuildings(world, tick, redisClient);
     const packets = await getAllPackets(redisClient, world);
-
     if (!packets.length) continue;
 
+    log(`Sending ${packets.length} packets to world ${world}`, LogLevel.INFO, LogApp.SERVER);
     for (const packet of packets) {
-      log(`Sending packet ${packet.packet_type} to ${packet.target}`, LogLevel.INFO, LogApp.SERVER);
       io.sockets.to(packet.target).emit('packet', {
         data: packet.data,
         packet_type: packet.packet_type,

@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { WorldBuilding, WorldBuildingInventory, safe_move_items_between_inventories } from '@virtcon2/database-postgres';
+import { WorldBuilding, WorldBuildingInventory, safelyMoveItemsBetweenInventories } from '@virtcon2/database-postgres';
 import {
   ClientPacket,
   ClientPacketWithSender,
@@ -87,7 +87,7 @@ async function handle_move_inventory_to_output(world_building_id: number) {
 
     capacity_left -= quantity_to_be_moved;
 
-    await safe_move_items_between_inventories({
+    await safelyMoveItemsBetweenInventories({
       fromId: world_building.id,
       fromType: 'building',
       toId: world_building.output_world_building.id,
@@ -102,6 +102,7 @@ async function handle_move_inventory_to_output(world_building_id: number) {
   }
   await move_items(world_building.building.inventory_transfer_quantity_per_cycle, world_building.world_building_inventory);
 }
+
 async function handle_resulting_items(resulting_items: InventoryItemModifiers[], world_building: WorldBuilding) {
   for (let i = 0; i < resulting_items.length; i++) {
     const resulting_item = resulting_items[i];
@@ -112,6 +113,7 @@ interface InventoryItemModifiers {
   item_id: number;
   quantity: number;
 }
+
 async function handle_building_with_no_processing_requirements(world_building: WorldBuilding): Promise<InventoryItemModifiers[]> {
   if (world_building.building.output_item) {
     // this is a building that can "create" an item, for example, a mining building

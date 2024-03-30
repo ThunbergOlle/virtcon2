@@ -69,6 +69,7 @@ export default function WorldBuildingWindow() {
     };
     Game.network.sendPacket(packet);
   };
+
   const onNewOutputPositionSelected = (pos: { x: number; y: number }) => {
     if (!activeWorldBuilding) return;
     const packet: ClientPacket<RequestWorldBuildingChangeOutput> = {
