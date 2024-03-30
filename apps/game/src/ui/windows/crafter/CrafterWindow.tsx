@@ -25,11 +25,13 @@ export default function CrafterWindow() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (isOpen)
+    if (isOpen) {
       Game.network.sendPacket({
         data: {},
         packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
       });
+      craftItemMutation.reset();
+    }
   }, [isOpen]);
 
   const onCrafterButtonPressed = useCallback(() => dispatch(toggle(WindowType.VIEW_CRAFTER)), [dispatch]);
