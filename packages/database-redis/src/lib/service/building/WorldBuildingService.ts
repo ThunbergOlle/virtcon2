@@ -71,7 +71,15 @@ const doneInspectingBuilding = async (buildingId: number, inspectorSocketId: str
 const refreshBuildingCache = async (worldBuildingId: number, redisClient: RedisClientType, newBuilding = false) => {
   const building = await WorldBuilding.findOne({
     where: { id: worldBuildingId },
-    relations: ['building', 'world_building_inventory', 'output_world_building', 'world_building_inventory.item', 'world'],
+    relations: [
+      'building',
+      'building.items_to_be_placed_on',
+      'building.item',
+      'world_building_inventory',
+      'output_world_building',
+      'world_building_inventory.item',
+      'world',
+    ],
   });
   if (!building) throw new Error(`Building with id ${worldBuildingId} not found`);
 
