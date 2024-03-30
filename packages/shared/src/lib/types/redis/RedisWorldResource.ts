@@ -1,5 +1,5 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { DBItemName } from "@virtcon2/static-game-data";
+import { DBItemName } from '@virtcon2/static-game-data';
 
 export interface RedisWorldResource {
   id: string;
@@ -9,5 +9,4 @@ export interface RedisWorldResource {
     id: number;
     name: DBItemName;
   };
-  world_building: null;
 }

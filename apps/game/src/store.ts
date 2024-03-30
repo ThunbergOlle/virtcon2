@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { windowSlice } from './ui/lib/WindowSlice';
+import { inspectedBuildingSlice } from './ui/windows/building/inspectedBuildingSlice';
 
 export const store = configureStore({
   reducer: {
     window: windowSlice.reducer,
+    inspectedBuilding: inspectedBuildingSlice.reducer,
   },
 });
 

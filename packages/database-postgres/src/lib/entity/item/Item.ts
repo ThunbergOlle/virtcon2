@@ -1,4 +1,4 @@
-import { DBItemName } from '@virtcon2/static-game-data';
+import { DBItemName, DBItemRarity } from '@virtcon2/static-game-data';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 import { Building } from '../building/Building';
@@ -14,7 +14,7 @@ export class Item extends BaseEntity {
 
   @Field(() => String)
   @Column({ type: 'text' })
-  name: string;
+  name: DBItemName;
 
   @Field(() => String)
   @Column({ type: 'text' })
@@ -30,7 +30,7 @@ export class Item extends BaseEntity {
 
   @Field(() => String)
   @Column({ type: 'text' })
-  rarity: string;
+  rarity: DBItemRarity;
 
   @Field(() => Int)
   @Column({ type: 'int', default: 64 })

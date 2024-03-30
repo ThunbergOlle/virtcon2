@@ -24,7 +24,7 @@ export * from './lib/service/packets/RequestPlaceBuilding';
 
 export * from './lib/service/packets/PlaceBuildingPacket';
 
-export * from './lib/service/packets/RequestWorldBuildingPacket';
+export * from './lib/service/packets/InspectBuildingClientPacket';
 
 export * from './lib/service/packets/RequestMoveInventoryItemPacket';
 

@@ -14,6 +14,7 @@ export enum LogApp {
   PACKET_TICK_SERVER = 'PACKET_TICK_SERVER',
   PACKET_DATA_SERVER = 'PACKET_DATA_SERVER',
   DATABASE_POSTGRES = 'DATABASE_POSTGRES',
+  DATABASE_REDIS = 'DATABASE_REDIS',
   SHARED = 'SHARED',
   API = 'API',
   NETWORK = 'NETWORK',
@@ -30,6 +31,7 @@ function getAppPrefix(app: LogApp) {
     [LogApp.NETWORK]: chalk.red,
     [LogApp.PACKET_DATA_SERVER]: chalk.magenta,
     [LogApp.DATABASE_POSTGRES]: chalk.magenta,
+    [LogApp.DATABASE_REDIS]: chalk.magenta,
   };
 
   return colors[app](app);

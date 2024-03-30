@@ -1,9 +1,9 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
 import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safelyMoveItemsBetweenInventories } from '@virtcon2/database-postgres';
-import { ClientPacketWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
-import request_world_building_packet from './request_world_building_packet';
+import { refreshBuildingCacheAndSendUpdate } from './server/worldBuildingUpdateToInspectorsServerPacket';
 
 export default async function request_move_inventory_item_packet(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
@@ -29,7 +29,7 @@ export default async function request_move_inventory_item_packet(
 }
 async function request_move_inventory_item_inside_building_inventory(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
-  redisPubClient: RedisClientType,
+  redis: RedisClientType,
 ) {
   await safelyMoveItemsBetweenInventories({
     fromId: packet.data.fromInventoryId,
@@ -41,16 +41,8 @@ async function request_move_inventory_item_inside_building_inventory(
     fromSlot: packet.data.fromInventorySlot,
     toSlot: packet.data.toInventorySlot,
   });
-  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
-    sender: packet.sender,
-    packet_type: packet.packet_type,
-    data: {
-      building_id: packet.data.toInventoryId,
-    },
-    world_id: packet.world_id,
-  };
 
-  request_world_building_packet(request_world_building_packet_data, redisPubClient);
+  refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
 async function request_move_inventory_item_inside_player_inventory(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
@@ -68,10 +60,7 @@ async function request_move_inventory_item_inside_player_inventory(
   });
   request_player_inventory_packet(packet, redisPubClient);
 }
-async function request_move_inventory_item_to_player_inventory(
-  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
-  redisPubClient: RedisClientType,
-) {
+async function request_move_inventory_item_to_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redis: RedisClientType) {
   const building_inventory_item = await WorldBuildingInventory.findOne({
     where: { item: { id: packet.data.item.item.id }, world_building: { id: packet.data.fromInventoryId } },
     relations: ['item', 'world_building'],
@@ -109,20 +98,12 @@ async function request_move_inventory_item_to_player_inventory(
   });
 
   // send the updated inventory to the player and to the building
-  request_player_inventory_packet(packet, redisPubClient);
-  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
-    sender: packet.sender,
-    packet_type: packet.packet_type,
-    data: {
-      building_id: building_to_drop_in.id,
-    },
-    world_id: packet.world_id,
-  };
+  request_player_inventory_packet(packet, redis);
 
-  request_world_building_packet(request_world_building_packet_data, redisPubClient);
+  refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
 
-async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redisPubClient: RedisClientType) {
+async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redis: RedisClientType) {
   /* Player wants to put in items into a building */
   // check if the player has the item
 
@@ -163,15 +144,7 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
   );
 
   // send the updated inventory to the player and to the building
-  request_player_inventory_packet(packet, redisPubClient);
-  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
-    sender: packet.sender,
-    packet_type: packet.packet_type,
-    data: {
-      building_id: building_to_drop_in.id,
-    },
-    world_id: packet.world_id,
-  };
+  request_player_inventory_packet(packet, redis);
 
-  request_world_building_packet(request_world_building_packet_data, redisPubClient);
+  refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }

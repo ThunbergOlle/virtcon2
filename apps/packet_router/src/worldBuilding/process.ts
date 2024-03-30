@@ -1,9 +1,7 @@
 import { log, LogApp, LogLevel } from '@shared';
 import { safelyMoveItemsBetweenInventories, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
-import { ClientPacketWithSender, PacketType, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
-import request_world_building_packet from '../packet/packets/request_world_building_packet';
-import { SERVER_SENDER } from '../packet/utils';
+import { refreshBuildingCacheAndSendUpdate } from '../packet/packets/server/worldBuildingUpdateToInspectorsServerPacket';
 
 interface InventoryItemModifiers {
   item_id: number;
@@ -40,17 +38,8 @@ export default async function finishProcessing(worldBuildingId: number, redis: R
 
   await _addItemsToBuilding(resultingItems, worldBuilding);
   if (worldBuilding.output_world_building) await moveInventoryToOutput(worldBuilding.id);
-  // send a packet to the world server to update the world building inventory
-  const world_building_packet: ClientPacketWithSender<RequestWorldBuildingPacket> = {
-    data: {
-      building_id: worldBuilding.id,
-    },
-    packet_type: PacketType.REQUEST_WORLD_BUILDING,
-    sender: SERVER_SENDER,
-    packet_target: worldBuilding.world.id,
-    world_id: worldBuilding.world.id,
-  };
-  request_world_building_packet(world_building_packet, redis);
+
+  refreshBuildingCacheAndSendUpdate(worldBuilding.id, worldBuilding.world.id, redis);
 }
 
 async function _addItemsToBuilding(resultingItems: InventoryItemModifiers[], worldBuilding: WorldBuilding) {

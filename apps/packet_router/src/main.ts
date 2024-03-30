@@ -1,17 +1,16 @@
-import 'reflect-metadata';
-import cors from 'cors';
 import { LogApp, LogLevel, TPS, log } from '@shared';
 import { AppDataSource } from '@virtcon2/database-postgres';
+import Redis from '@virtcon2/database-redis';
 import { ClientPacket, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
 import { cwd } from 'process';
 import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
+import 'reflect-metadata';
 import * as socketio from 'socket.io';
 import { handleClientPacket } from './packet/packet_handler';
-import Redis from '@virtcon2/database-redis';
-import { all_db_buildings, get_building_by_id } from '@virtcon2/static-game-data';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
 
 dotenv.config({ path: `${cwd()}/.env` });

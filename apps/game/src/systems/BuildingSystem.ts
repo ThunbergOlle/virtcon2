@@ -1,16 +1,18 @@
 import { RedisWorldBuilding } from '@shared';
-import { ClientPacket, PacketType, PlaceBuildingPacket, WorldBuildingPacketData } from '@virtcon2/network-packet';
-import { IWorld, addComponent, addEntity, defineSystem, defineQuery, enterQuery } from '@virtcon2/virt-bit-ecs';
+import { ClientPacket, PacketType, PlaceBuildingPacket, WorldBuildingServerPacket } from '@virtcon2/network-packet';
+import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, IWorld } from '@virtcon2/virt-bit-ecs';
+import { Types } from 'phaser';
+import { Building } from '../components/Building';
 import { Collider } from '../components/Collider';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { ItemTextureMap } from '../config/SpriteMap';
 import { filterPacket } from '../networking/Filters';
 import { GameObjectGroups, GameState } from '../scenes/Game';
+import { store } from '../store';
 import { tileSize, toPhaserPos } from '../ui/lib/coordinates';
-import { Building } from '../components/Building';
-import { Types } from 'phaser';
-import { events } from '../events/Events';
+import { select, WindowType } from '../ui/lib/WindowSlice';
+import { inspectBuilding } from '../ui/windows/building/inspectedBuildingSlice';
 
 const buildingQuery = defineQuery([Building, Position, Collider]);
 const buildingQueryEnter = enterQuery(buildingQuery);
@@ -39,7 +41,8 @@ const setupBuildingEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
     /* Send on building pressed */
     const buildingId = state.buildingById[eid].id;
-    events.notify('onBuildingPressed', buildingId);
+    store.dispatch(inspectBuilding(buildingId));
+    store.dispatch(select(WindowType.VIEW_BUILDING));
   });
 };
 export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]): GameState => {
@@ -51,7 +54,7 @@ export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, pack
   return state;
 };
 export const handleBuildingPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]): GameState => {
-  const worldBuildingPackets = filterPacket<WorldBuildingPacketData>(packets, PacketType.WORLD_BUILDING);
+  const worldBuildingPackets = filterPacket<WorldBuildingServerPacket>(packets, PacketType.WORLD_BUILDING);
   // get building by id
   worldBuildingPackets.forEach((packet) => {
     if (!packet.data.building) return;

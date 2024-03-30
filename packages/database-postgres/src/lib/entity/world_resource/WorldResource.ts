@@ -12,11 +12,11 @@ export class WorldResource extends BaseEntity {
   id: string;
 
   @Field(() => Number)
-  @Column({type: 'int'})
+  @Column({ type: 'int' })
   x: number;
 
   @Field(() => Number)
-  @Column({type: 'int'})
+  @Column({ type: 'int' })
   y: number;
 
   @ManyToOne(() => Item, (item) => item.id)
@@ -27,8 +27,7 @@ export class WorldResource extends BaseEntity {
   @ManyToOne(() => World, (world) => world.id)
   world: World;
 
-  @OneToOne(() => WorldBuilding, {nullable: true})
+  @OneToOne(() => WorldBuilding, { nullable: true })
   @JoinColumn()
-  world_building: WorldBuilding;
-
+  world_building: WorldBuilding | null;
 }

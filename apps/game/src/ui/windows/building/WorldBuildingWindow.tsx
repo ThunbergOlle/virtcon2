@@ -1,11 +1,5 @@
 import { InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
-import {
-  ClientPacket,
-  PacketType,
-  RequestMoveInventoryItemPacketData,
-  RequestWorldBuildingChangeOutput,
-  RequestWorldBuildingPacket,
-} from '@virtcon2/network-packet';
+import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
 import { DBBuilding, get_building_by_id } from '@virtcon2/static-game-data';
 import { useEffect, useState } from 'react';
 import { ProgressBar } from 'react-bootstrap';
@@ -14,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
-import { isWindowOpen, select, WindowType } from '../../lib/WindowSlice';
+import { isWindowOpen, WindowType } from '../../lib/WindowSlice';
 import WorldBuildingOutput from './WorldBuildingOutput';
 import useTickProgress from './useTickProgress';
 
@@ -32,26 +26,13 @@ export default function WorldBuildingWindow() {
     }
   }, [activeWorldBuilding]);
 
-  function onBuildingPressed(buildingId: number) {
-    /* Send request view building packet */
-    const packet: ClientPacket<RequestWorldBuildingPacket> = {
-      data: {
-        building_id: buildingId,
-      },
-      packet_type: PacketType.REQUEST_WORLD_BUILDING,
-    };
-    Game.network.sendPacket(packet);
-
-    dispatch(select(WindowType.VIEW_BUILDING));
-  }
+  // useEffect(() => {
+  //   if (!isOpen) dispatch(doneInspectingBuilding());
+  // }, [dispatch, isOpen]);
 
   useEffect(() => {
-    events.subscribe('onBuildingPressed', onBuildingPressed);
-    events.subscribe('networkWorldBuildingView', (data) => {
-      setActiveWorldBuilding(data.building || null);
-    });
+    events.subscribe('networkWorldBuilding', (data) => setActiveWorldBuilding(data || null));
     return () => {
-      events.unsubscribe('onBuildingPressed', onBuildingPressed);
       events.unsubscribe('networkWorldBuilding', () => {});
     };
   }, []);

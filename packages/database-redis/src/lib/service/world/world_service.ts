@@ -17,15 +17,43 @@ const loadWorld = async (world_id: string): Promise<RedisWorld> => {
   // await PostgresWorldEntity.RegenerateWorld(world.id)
   const buildings = await WorldBuilding.find({
     where: { world: { id: world.id } },
-    relations: ['building', 'building.items_to_be_placed_on', 'building.item'],
+    relations: [
+      'building',
+      'building.items_to_be_placed_on',
+      'building.item',
+      'world_building_inventory',
+      'world_building_inventory.item',
+      'world_resource',
+      'output_world_building',
+    ],
   });
-  return {
+
+  const redisWorldBuildings = buildings.map(
+    (building): RedisWorldBuilding => ({
+      active: building.active,
+      building: building.building,
+      id: building.id,
+      x: building.x,
+      y: building.y,
+      output_pos_x: building.output_pos_x,
+      output_pos_y: building.output_pos_y,
+      world_building_inventory: building.world_building_inventory,
+      output_world_building: building.output_world_building,
+      world_resource: building.world_resource,
+      rotation: building.rotation,
+      inspectors: [],
+    }),
+  );
+
+  const redisWorld: RedisWorld = {
     id: world.id,
     players: [],
-    buildings: buildings as unknown as Array<RedisWorldBuilding>,
+    buildings: redisWorldBuildings,
     resources: world.resources as unknown as Array<RedisWorldResource>,
     height_map: PostgresWorldEntity.Get2DWorldMap(world.seed),
-  } as RedisWorld;
+  };
+
+  return redisWorld;
 };
 
 const clearWorlds = (redis: RedisClientType) => redis.json.set('worlds', '$', {});

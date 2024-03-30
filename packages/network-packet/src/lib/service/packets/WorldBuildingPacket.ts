@@ -1,6 +1,3 @@
-import { RedisWorldBuilding } from "@shared";
+import { RedisWorldBuilding } from '@shared';
 
-export interface WorldBuildingPacketData {
-  building?: RedisWorldBuilding
-}
-
+export type WorldBuildingServerPacket = RedisWorldBuilding;

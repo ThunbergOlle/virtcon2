@@ -1,10 +1,10 @@
 import World from './lib/service/world/world_service';
 import Player from './lib/service/player/PlayerService';
-import Building from './lib/service/building/BuildingService';
+import WorldBuilding from './lib/service/building/WorldBuildingService';
 
 const Redis = {
   ...Player,
   ...World,
-  ...Building,
+  ...WorldBuilding,
 };
 export default Redis;
