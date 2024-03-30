@@ -10,6 +10,7 @@ import {
   RequestPlayerInventoryPacket,
   RequestWorldBuildingChangeOutput,
   RequestWorldBuildingPacket,
+  PlayerSetPositionServerPaacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_destroy_resource_packet from './packets/request_destroy_resource_packet';
@@ -20,14 +21,17 @@ import request_world_building_change_output from './packets/request_world_buildi
 import request_world_building_packet from './packets/request_world_building_packet';
 import internal_world_building_finished_processing_packet from './packets/internal_world_building_finished_processing_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
-import { log, LogLevel, ServerPlayer } from '@shared';
+import { log, LogLevel, RedisPlayer } from '@shared';
+import playerMovePacket from './packets/playerMovePacket';
 
 interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
-  sender?: ServerPlayer;
+  sender?: RedisPlayer;
 }
 
 export default function handlePacket(packet: ClientPacketWithPotentialSender<unknown>, client: RedisClientType) {
   switch (packet.packet_type) {
+    case PacketType.PLAYER_SET_POSITION:
+      return playerMovePacket(packet as ClientPacketWithSender<PlayerSetPositionServerPaacket>, client);
     case PacketType.REQUEST_PLAYER_INVENTORY:
       return request_player_inventory_packet(packet as ClientPacketWithSender<RequestPlayerInventoryPacket>, client);
     case PacketType.REQUEST_JOIN:

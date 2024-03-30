@@ -1,6 +1,6 @@
-import { ServerPlayer } from '@shared';
+import { RedisPlayer } from '@shared';
 
-export const SERVER_SENDER: ServerPlayer = {
+export const SERVER_SENDER: RedisPlayer = {
   id: 'server',
   name: '',
   position: [0, 0],

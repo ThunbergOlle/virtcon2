@@ -1,4 +1,4 @@
-import { ServerPlayer } from '@shared';
+import { RedisPlayer } from '@shared';
 
 import { RedisClientType } from 'redis';
 
@@ -7,11 +7,11 @@ type WorldID = string;
 export interface ServerPacket<T> {
   packet_type: string;
   target: SocketID | WorldID;
-  sender: ServerPlayer;
+  sender: RedisPlayer;
   data: T;
 }
 
-export const enqueuePacket = async (client: RedisClientType, worldId: string, packet: ServerPacket<unknown>) => {
+export const enqueuePacket = async <T>(client: RedisClientType, worldId: string, packet: ServerPacket<T>) => {
   const packetJson = JSON.stringify(packet);
   await client.rPush(`queue_${worldId}`, packetJson);
 };

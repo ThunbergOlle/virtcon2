@@ -1,6 +1,5 @@
-import { ServerPlayer } from '@shared';
+import { RedisPlayer } from '@shared';
 
 export interface NewPlayerPacketData {
-  player: ServerPlayer;
+  player: RedisPlayer;
 }
-

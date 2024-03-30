@@ -1,11 +1,11 @@
-import { ServerPlayer, asRedisItem } from '@shared';
+import { RedisPlayer, asRedisItem } from '@shared';
 import { RedisClientType } from 'redis';
 import * as socketio from 'socket.io';
 
-const addPlayer = (player: ServerPlayer, worldId: string, redisClient: RedisClientType) =>
+const addPlayer = (player: RedisPlayer, worldId: string, redisClient: RedisClientType) =>
   redisClient.json.arrAppend('worlds', `$.${worldId}.players`, player as never);
 
-const removePlayer = async (player: ServerPlayer, worldId: string, socket: socketio.Socket, redisClient: RedisClientType) => {
+const removePlayer = async (player: RedisPlayer, worldId: string, socket: socketio.Socket, redisClient: RedisClientType) => {
   console.log(`Removing player ${player.id} from world ${worldId}`);
   // Remove player from redis world
   await redisClient.json.del('worlds', `$.${worldId}.players[?(@.id=='${player.id}')]`);
@@ -14,22 +14,41 @@ const removePlayer = async (player: ServerPlayer, worldId: string, socket: socke
   socket.leave(worldId);
 };
 
-const getPlayer = async (playerId: string, redisClient: RedisClientType): Promise<ServerPlayer | null> => {
+const getPlayer = async (playerId: string, redisClient: RedisClientType, worldId?: string): Promise<RedisPlayer | null> => {
   const player = (await redisClient.json.get('worlds', {
-    path: `$.*.players[?(@.id=='${playerId}')]`,
-  })) as unknown as ServerPlayer[];
+    path: `$.${worldId || '*'}.players[?(@.id=='${playerId}')]`,
+  })) as unknown as RedisPlayer[];
   if (!player || !player[0]) return null;
   return player[0];
 };
-const getPlayerBySocketId = async (socketId: string, redisClient: RedisClientType): Promise<ServerPlayer | null> => {
+
+const getPlayerBySocketId = async (socketId: string, redisClient: RedisClientType): Promise<RedisPlayer | null> => {
   const player = (await redisClient.json.get('worlds', {
     path: `$.*.players[?(@.socket_id=='${socketId}')]`,
-  })) as unknown as ServerPlayer[];
+  })) as unknown as RedisPlayer[];
   if (!player || !player.length) return null;
   return player[0];
 };
-const savePlayer = async (player: ServerPlayer, redisClient: RedisClientType) => {
+const savePlayer = async (player: RedisPlayer, redisClient: RedisClientType) => {
   await redisClient.json.set('worlds', `$.${player.world_id}.players[?(@.id=='${player.id}')]`, asRedisItem(player));
+};
+
+const updatePlayer = async ({
+  worldId,
+  playerId,
+  attributes,
+  redisClient,
+}: {
+  worldId: string;
+  playerId: string;
+  attributes: Partial<RedisPlayer>;
+  redisClient: RedisClientType;
+}) => {
+  const player = await getPlayer(playerId, redisClient, worldId);
+  if (!player) return null;
+  const updatedPlayer = { ...player, ...attributes };
+  await savePlayer(updatedPlayer, redisClient);
+  return updatedPlayer;
 };
 
 export default {
@@ -38,4 +57,5 @@ export default {
   getPlayer,
   getPlayerBySocketId,
   savePlayer,
+  updatePlayer,
 };

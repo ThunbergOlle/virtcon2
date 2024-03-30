@@ -1,7 +1,6 @@
-import { RedisWorld, ServerPlayer } from '@shared';
+import { RedisWorld, RedisPlayer } from '@shared';
 
 export interface LoadWorldPacketData {
-  player: ServerPlayer;
-  world: RedisWorld
+  player: RedisPlayer;
+  world: RedisWorld;
 }
-

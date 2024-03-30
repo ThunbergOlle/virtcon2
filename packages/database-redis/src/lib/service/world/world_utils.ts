@@ -1,4 +1,4 @@
-import { RedisWorld, ServerPlayer, asRedisItem } from '@shared';
+import { RedisWorld, RedisPlayer, asRedisItem } from '@shared';
 import { RedisClientType } from 'redis';
 import * as socketio from 'socket.io';
 

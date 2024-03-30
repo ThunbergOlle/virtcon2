@@ -1,5 +1,4 @@
-
-export interface PlayerMovePacketData {
+export interface PlayerSetPositionServerPaacket {
   player_id: string;
-  position: number[];
+  position: [number, number];
 }

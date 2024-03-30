@@ -2,7 +2,7 @@ import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, remove
 import { MainPlayer } from '../components/MainPlayer';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 
-import { DisconnectPacketData, JoinPacketData, ClientPacket, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
+import { DisconnectPacketData, JoinPacketData, ClientPacket, PacketType, PlayerSetPositionServerPaacket } from '@virtcon2/network-packet';
 import { Collider } from '../components/Collider';
 import { Player } from '../components/Player';
 import { Position } from '../components/Position';
@@ -21,14 +21,16 @@ export const createPlayerReceiveNetworkSystem = () => {
     handleJoinPackets(world, state, packets);
     handleDisconnectPackets(world, state, packets, entities);
 
-    const movementPackets = filterPacket<PlayerMovePacketData>(packets, PacketType.PLAYER_SET_POSITION);
+    const movementPackets = filterPacket<PlayerSetPositionServerPaacket>(packets, PacketType.PLAYER_SET_POSITION);
     for (let i = 0; i < entities.length; i++) {
       const id = entities[i];
       /* Handle movement packet */
       const player_id = state.playerById[id];
       if (movementPackets.length > 0) {
+        console.log(`Checking for movement packet for player ${player_id}`, movementPackets);
         const packet = movementPackets.filter((packet) => packet.data.player_id === player_id)[movementPackets.length - 1];
         if (!packet) continue;
+        console.log(packet.data.position);
         Position.x[id] = packet.data.position[0];
         Position.y[id] = packet.data.position[1];
       }
@@ -50,6 +52,8 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   addComponent(world, Collider, player);
   Collider.static[player] = 1;
   Collider.group[player] = GameObjectGroups.PLAYER;
+
+  console.log(`Player ${joinPacket.id} joined the game. Entity: ${player} at position: ${joinPacket.position}`);
 };
 
 export const handleJoinPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]) => {
@@ -57,17 +61,20 @@ export const handleJoinPackets = (world: IWorld, state: GameState, packets: Clie
   const joinPackets = filterPacket<JoinPacketData>(packets, PacketType.JOIN);
   /* Handle join packets. */
   for (let i = 0; i < joinPackets.length; i++) {
+    if (joinPackets[i].data.id === state.playerById[mainPlayerEntities[0]]) return console.warn(`Player ${joinPackets[i].data.id} is already in the game.`);
     if (state.playerById[mainPlayerEntities[0]] !== joinPackets[i].data.id) {
       createNewPlayerEntity(joinPackets[i].data, world, state);
     }
   }
 };
+
 export const handleDisconnectPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[], entities: number[]) => {
   const disconnectPackets = filterPacket<DisconnectPacketData>(packets, PacketType.DISCONNECT);
   /* Handle disconnect packets. */
   for (let i = 0; i < disconnectPackets.length; i++) {
     const entity = entities.filter((entity) => state.playerById[entity] === disconnectPackets[i].data.id)[0];
     if (entity) {
+      console.log(`Player ${disconnectPackets[i].data.id} disconnected. Entity: ${entity}`);
       delete state.playerById[entity];
       removeEntity(world, entity);
     }

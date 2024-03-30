@@ -53,10 +53,11 @@ io.on('connection', (socket) => {
     if (!player) return;
     enqueuePacket(redisClient, player.world_id, {
       packet_type: PacketType.DISCONNECT,
-      target: 'all',
+      target: player.world_id,
       sender: player,
       data: { id: player.id },
     });
+    Redis.removePlayer(player, player.world_id, socket, redisClient);
   });
 
   socket.on('packet', async (packet: string) => {
@@ -109,7 +110,7 @@ setInterval(async () => {
     if (!packets.length) continue;
 
     for (const packet of packets) {
-      log(`Sending packet to ${packet.target}`, LogLevel.INFO, LogApp.SERVER);
+      log(`Sending packet ${packet.packet_type} to ${packet.target}`, LogLevel.INFO, LogApp.SERVER);
       io.sockets.to(packet.target).emit('packet', {
         data: packet.data,
         packet_type: packet.packet_type,

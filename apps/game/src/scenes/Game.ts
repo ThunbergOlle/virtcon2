@@ -2,7 +2,7 @@ import { Scene, Tilemaps } from 'phaser';
 
 import { SceneStates } from './interfaces';
 
-import { RedisWorld, RedisWorldBuilding, RedisWorldResource, ServerPlayer, worldMapParser } from '@shared';
+import { RedisWorld, RedisWorldBuilding, RedisWorldResource, RedisPlayer, worldMapParser } from '@shared';
 import { DBBuilding, get_resource_by_item_name } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
@@ -150,7 +150,7 @@ export default class Game extends Scene implements SceneStates {
       this.setupWorld(ecsWorld, world, player);
     });
   }
-  setupWorld(ecsWorld: IWorld, world: RedisWorld, player: ServerPlayer) {
+  setupWorld(ecsWorld: IWorld, world: RedisWorld, player: RedisPlayer) {
     world.resources.forEach((resource) => {
       const resourceName = get_resource_by_item_name(resource.item.name);
       if (!resourceName) {

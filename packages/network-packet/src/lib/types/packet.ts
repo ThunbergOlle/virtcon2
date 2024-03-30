@@ -1,4 +1,4 @@
-import { ServerPlayer } from '@shared';
+import { RedisPlayer } from '@shared';
 
 export enum PacketType {
   JOIN = 'join',
@@ -26,6 +26,6 @@ export interface ClientPacket<T> {
   data: T;
 }
 export interface ClientPacketWithSender<T> extends ClientPacket<T> {
-  sender: ServerPlayer;
+  sender: RedisPlayer;
   world_id: string;
 }

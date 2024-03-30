@@ -8,7 +8,7 @@ import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
-import { ServerPlayer } from '@shared';
+import { RedisPlayer } from '@shared';
 import { AllTextureMaps, MiscTextureMap } from '../config/SpriteMap';
 
 const speed = 750;
@@ -64,7 +64,7 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
   });
 };
 
-export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, serverPlayer: ServerPlayer) => {
+export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, serverPlayer: RedisPlayer) => {
   const mainPlayer = addEntity(ecsWorld);
   addComponent(ecsWorld, Position, mainPlayer);
   Position.x[mainPlayer] = 200;
