@@ -107,10 +107,10 @@ export default function CrafterWindow() {
                 {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => {
                   // optimize this later
                   const quantity_in_inventory = inventory.filter((i) => i.item?.id === recipeItem.requiredItem.id).reduce((a, b) => a + b.quantity, 0);
-
+                  console.log(recipeItem);
                   return (
                     <div
-                      key={'recipe_item_' + recipeItem.id}
+                      key={`recipe-${recipeItem.requiredItem.id}-${selectedItem.id}`}
                       className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
                     >
                       <img
