@@ -1,4 +1,4 @@
-import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from '@virtcon2/virt-bit-ecs';
+import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from 'bitecs';
 import { Sprite } from '../components/Sprite';
 
 import { Collider } from '../components/Collider';

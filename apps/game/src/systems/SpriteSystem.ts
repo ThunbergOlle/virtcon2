@@ -1,4 +1,4 @@
-import { IWorld, Not, defineQuery, defineSystem, enterQuery, exitQuery } from '@virtcon2/virt-bit-ecs';
+import { IWorld, Not, defineQuery, defineSystem, enterQuery, exitQuery } from 'bitecs';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { Velocity } from '../components/Velocity';

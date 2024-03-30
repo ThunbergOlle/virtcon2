@@ -1,5 +1,5 @@
 import { ClientPacket, PacketType, PlayerSetPositionServerPaacket } from '@virtcon2/network-packet';
-import { IWorld, defineQuery, defineSystem } from '@virtcon2/virt-bit-ecs';
+import { IWorld, defineQuery, defineSystem } from 'bitecs';
 import { MainPlayer } from '../components/MainPlayer';
 import { Velocity } from '../components/Velocity';
 import Game, { GameState } from '../scenes/Game';

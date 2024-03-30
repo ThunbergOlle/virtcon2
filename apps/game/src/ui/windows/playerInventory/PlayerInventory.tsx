@@ -1,7 +1,7 @@
 import { InventoryType, ServerInventoryItem } from '@shared';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { get_building_by_id } from '@virtcon2/static-game-data';
-import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
+import { addComponent, addEntity, removeEntity } from 'bitecs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Collider } from '../../../components/Collider';

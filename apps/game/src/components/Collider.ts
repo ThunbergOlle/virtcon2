@@ -1,4 +1,4 @@
-import { Types, defineComponent } from "@virtcon2/virt-bit-ecs";
+import { Types, defineComponent } from 'bitecs';
 
 export const Collider = defineComponent({
   sizeWidth: Types.i32,
@@ -8,5 +8,5 @@ export const Collider = defineComponent({
   scale: Types.f32,
   static: Types.ui8, // 0 = false, 1 = true
   group: Types.ui8,
-  interactable: Types.ui8 // 0 = false, 1 = true
+  interactable: Types.ui8, // 0 = false, 1 = true
 });

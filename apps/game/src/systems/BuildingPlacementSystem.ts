@@ -1,4 +1,4 @@
-import { IWorld, defineQuery, defineSystem, enterQuery, exitQuery } from '@virtcon2/virt-bit-ecs';
+import { IWorld, defineQuery, defineSystem, enterQuery, exitQuery } from 'bitecs';
 
 import { Collider } from '../components/Collider';
 import { GhostBuilding } from '../components/GhostBuilding';

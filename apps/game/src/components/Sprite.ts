@@ -1,5 +1,4 @@
-import { Types, defineComponent } from '@virtcon2/virt-bit-ecs';
-
+import { Types, defineComponent } from 'bitecs';
 
 export const Sprite = defineComponent({
   texture: Types.ui16,

@@ -1,4 +1,4 @@
-import { defineComponent, Types } from '@virtcon2/virt-bit-ecs';
+import { defineComponent, Types } from 'bitecs';
 
 export const Position = defineComponent({
   x: Types.f32,

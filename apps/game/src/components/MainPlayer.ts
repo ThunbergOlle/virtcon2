@@ -1,3 +1,3 @@
-import { defineComponent } from '@virtcon2/virt-bit-ecs';
+import { defineComponent } from 'bitecs';
 
 export const MainPlayer = defineComponent({});

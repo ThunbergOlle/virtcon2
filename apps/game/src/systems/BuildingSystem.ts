@@ -1,6 +1,6 @@
 import { RedisWorldBuilding } from '@shared';
 import { ClientPacket, PacketType, PlaceBuildingPacket, WorldBuildingServerPacket } from '@virtcon2/network-packet';
-import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, IWorld } from '@virtcon2/virt-bit-ecs';
+import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, IWorld } from 'bitecs';
 import { Types } from 'phaser';
 import { Building } from '../components/Building';
 import { Collider } from '../components/Collider';

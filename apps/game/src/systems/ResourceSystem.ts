@@ -1,5 +1,5 @@
 import { ResourceNames, Resources, get_item_by_id } from '@virtcon2/static-game-data';
-import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from '@virtcon2/virt-bit-ecs';
+import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from 'bitecs';
 import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { TileCoordinates, toPhaserPos } from '../ui/lib/coordinates';

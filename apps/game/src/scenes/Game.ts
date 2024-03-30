@@ -7,7 +7,7 @@ import { DBBuilding, get_resource_by_item_name } from '@virtcon2/static-game-dat
 import { events } from '../events/Events';
 
 import { JoinPacketData } from '@virtcon2/network-packet';
-import { IWorld, System, createWorld } from '@virtcon2/virt-bit-ecs';
+import { IWorld, System, createWorld } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem, createNewBuildingEntity, handleBuildingPackets, handlePlaceBuildingPackets } from '../systems/BuildingSystem';

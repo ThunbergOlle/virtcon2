@@ -1,4 +1,4 @@
-import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, removeEntity } from '@virtcon2/virt-bit-ecs';
+import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, removeEntity } from 'bitecs';
 import { MainPlayer } from '../components/MainPlayer';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 

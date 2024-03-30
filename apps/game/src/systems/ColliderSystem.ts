@@ -1,4 +1,4 @@
-import { IWorld, defineQuery, defineSystem, enterQuery } from '@virtcon2/virt-bit-ecs';
+import { IWorld, defineQuery, defineSystem, enterQuery } from 'bitecs';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 
 import { Collider } from '../components/Collider';
