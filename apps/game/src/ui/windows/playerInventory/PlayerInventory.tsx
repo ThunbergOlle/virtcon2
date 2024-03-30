@@ -15,8 +15,7 @@ import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { fromPhaserPos } from '../../lib/coordinates';
-import { WindowType } from '../../lib/WindowManager';
-import { close, isWindowOpen, toggle } from '../../lib/WindowSlice';
+import { close, isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 
 export default function PlayerInventoryWindow() {
   const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_PLAYER_INVENTORY));

@@ -70,7 +70,7 @@ io.on('connection', (socket) => {
     if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
       packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
       socket.join(packetJson.world_id);
-      worlds.push(packetJson.world_id);
+      if (!worlds.includes(packetJson.world_id)) worlds.push(packetJson.world_id);
     }
 
     if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.REQUEST_JOIN) {
@@ -97,14 +97,7 @@ server.listen(4000, () => {
   log('Server started on port 4000', LogLevel.INFO, LogApp.SERVER);
 });
 
-/* Implement SIGKILL logic */
-process.on('SIGINT', async () => {
-  await redisClient.disconnect();
-
-  process.exit();
-});
-
-setInterval(async () => {
+const tickInterval = setInterval(async () => {
   tick++;
   for (const world of worlds) {
     checkFinishedBuildings(world, tick, redisClient);
@@ -120,3 +113,10 @@ setInterval(async () => {
     }
   }
 }, 1000 / TPS);
+
+/* Implement SIGKILL logic */
+process.on('SIGINT', async () => {
+  clearInterval(tickInterval);
+  await redisClient.disconnect();
+  process.exit();
+});

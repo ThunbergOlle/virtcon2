@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { events } from '../../../events/Events';
 import Window from '../../components/window/Window';
-import { WindowManager, WindowType } from '../../lib/WindowManager';
+import { WindowType } from '../../lib/WindowSlice';
 
-export default function MenuWindow(props: { windowManager: WindowManager }) {
+export default function MenuWindow() {
   const navigate = useNavigate();
 
   const leaveWorld = () => {
