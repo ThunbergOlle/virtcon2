@@ -1,11 +1,5 @@
 import { InventoryType, ServerInventoryItem } from '@shared';
-import {
-  NetworkPacketData,
-  PacketType,
-  RequestMoveInventoryItemPacketData,
-  RequestPlaceBuildingPacketData,
-  RequestPlayerInventoryPacket,
-} from '@virtcon2/network-packet';
+import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { get_building_by_id } from '@virtcon2/static-game-data';
 import { addComponent, addEntity, removeEntity } from '@virtcon2/virt-bit-ecs';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,13 +10,13 @@ import { Position } from '../../../components/Position';
 import { Sprite } from '../../../components/Sprite';
 import { ItemTextureMap } from '../../../config/SpriteMap';
 import { events } from '../../../events/Events';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
-import { WindowType } from '../../lib/WindowManager';
 import { fromPhaserPos } from '../../lib/coordinates';
+import { WindowType } from '../../lib/WindowManager';
 import { close, isWindowOpen, toggle } from '../../lib/WindowSlice';
-import { useAppDispatch, useAppSelector } from '../../../hooks';
 
 export default function PlayerInventoryWindow() {
   const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_PLAYER_INVENTORY));
@@ -61,7 +55,7 @@ export default function PlayerInventoryWindow() {
     /* Convert phaser coordinates to the tilemap coordinates*/
     const { x, y } = fromPhaserPos({ x: e.worldX, y: e.worldY });
 
-    const packet: NetworkPacketData<RequestPlaceBuildingPacketData> = {
+    const packet: ClientPacket<RequestPlaceBuildingPacketData> = {
       data: {
         buildingItemId: buildingBeingPlaced.current.item.id,
         x,
@@ -86,11 +80,11 @@ export default function PlayerInventoryWindow() {
 
   useEffect(() => {
     events.subscribe('onInventoryButtonPressed', onInventoryButtonPressed);
-    events.subscribe('networkPlayerInventoryPacket', ({ inventory }) => {
+    events.subscribe('networkPlayerInventory', ({ inventory }) => {
       setInventory(inventory);
     });
     return () => {
-      events.unsubscribe('networkPlayerInventoryPacket', () => {});
+      events.unsubscribe('networkPlayerInventory', () => {});
       events.unsubscribe('onInventoryButtonPressed', () => onInventoryButtonPressed);
     };
   }, [onInventoryButtonPressed]);
@@ -135,7 +129,7 @@ export default function PlayerInventoryWindow() {
   };
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
-    const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
+    const packet: ClientPacket<RequestMoveInventoryItemPacketData> = {
       data: {
         ...item,
         toInventoryId: inventoryId,

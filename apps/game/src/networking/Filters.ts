@@ -1,5 +1,5 @@
-import { NetworkPacketData, PacketType } from '@virtcon2/network-packet';
+import { ClientPacket, PacketType } from '@virtcon2/network-packet';
 
-export function filterPacket<T>(packets: NetworkPacketData<unknown>[], packetType: PacketType): NetworkPacketData<T>[] {
-  return packets.filter((packet) => packet.packet_type === packetType) as NetworkPacketData<T>[];
+export function filterPacket<T>(packets: ClientPacket<unknown>[], packetType: PacketType): ClientPacket<T>[] {
+  return packets.filter((packet) => packet.packet_type === packetType) as ClientPacket<T>[];
 }

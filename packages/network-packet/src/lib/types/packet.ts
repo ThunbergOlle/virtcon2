@@ -1,4 +1,4 @@
-import { ServerPlayer } from "@shared";
+import { ServerPlayer } from '@shared';
 
 export enum PacketType {
   JOIN = 'join',
@@ -19,14 +19,13 @@ export enum PacketType {
   PLACE_BUILDING = 'placeBuilding',
 }
 
-export interface NetworkPacketData<T> {
+export interface ClientPacket<T> {
   world_id?: string;
   packet_type: PacketType;
   packet_target?: string;
   data: T;
 }
-export interface NetworkPacketDataWithSender<T> extends NetworkPacketData<T> {
-  packet_sender: ServerPlayer;
+export interface ClientPacketWithSender<T> extends ClientPacket<T> {
+  sender: ServerPlayer;
   world_id: string;
 }
-

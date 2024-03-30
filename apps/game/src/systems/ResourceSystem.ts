@@ -7,7 +7,7 @@ import { Collider } from '../components/Collider';
 import Game, { GameObjectGroups, GameState } from '../scenes/Game';
 import { Resource } from '../components/Resource';
 import { Types } from 'phaser';
-import { RequestDestroyResourcePacket, NetworkPacketData, PacketType } from '@virtcon2/network-packet';
+import { RequestDestroyResourcePacket, ClientPacket, PacketType } from '@virtcon2/network-packet';
 import { toast } from 'react-toastify';
 import { AllTextureMaps } from '../config/SpriteMap';
 
@@ -46,7 +46,7 @@ const setupResourceEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
     if (Resource.health[eid] <= 0) {
       // send resource destroy packet
       toast(`+1 ${get_item_by_id(state.resourcesById[eid].item.id)?.display_name} added to inventory`, { type: 'success', autoClose: 1000 });
-      const destroyResourcePacket: NetworkPacketData<RequestDestroyResourcePacket> = {
+      const destroyResourcePacket: ClientPacket<RequestDestroyResourcePacket> = {
         data: {
           resourceId: state.resourcesById[eid].id,
         },

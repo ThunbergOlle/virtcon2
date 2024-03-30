@@ -1,5 +1,5 @@
 import { RedisWorldBuilding } from '@shared';
-import { NetworkPacketData, PacketType, PlaceBuildingPacket, WorldBuildingPacketData } from '@virtcon2/network-packet';
+import { ClientPacket, PacketType, PlaceBuildingPacket, WorldBuildingPacketData } from '@virtcon2/network-packet';
 import { IWorld, addComponent, addEntity, defineSystem, defineQuery, enterQuery } from '@virtcon2/virt-bit-ecs';
 import { Collider } from '../components/Collider';
 import { Position } from '../components/Position';
@@ -42,7 +42,7 @@ const setupBuildingEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
     events.notify('onBuildingPressed', buildingId);
   });
 };
-export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]): GameState => {
+export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]): GameState => {
   const placeBuildingPackets = filterPacket<PlaceBuildingPacket>(packets, PacketType.PLACE_BUILDING);
   /* Handle place building packets. */
   for (let i = 0; i < placeBuildingPackets.length; i++) {
@@ -50,7 +50,7 @@ export const handlePlaceBuildingPackets = (world: IWorld, state: GameState, pack
   }
   return state;
 };
-export const handleBuildingPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]): GameState => {
+export const handleBuildingPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]): GameState => {
   const worldBuildingPackets = filterPacket<WorldBuildingPacketData>(packets, PacketType.WORLD_BUILDING);
   // get building by id
   worldBuildingPackets.forEach((packet) => {

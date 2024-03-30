@@ -1,12 +1,12 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
 import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safe_move_items_between_inventories } from '@virtcon2/database-postgres';
-import { NetworkPacketDataWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, RequestMoveInventoryItemPacketData, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
 import request_world_building_packet from './request_world_building_packet';
 
 export default async function request_move_inventory_item_packet(
-  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
+  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
   /* Handle differently depending on if items moves between player inventory or building inventory */
@@ -28,7 +28,7 @@ export default async function request_move_inventory_item_packet(
   );
 }
 async function request_move_inventory_item_inside_building_inventory(
-  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
+  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
   await safe_move_items_between_inventories({
@@ -41,8 +41,8 @@ async function request_move_inventory_item_inside_building_inventory(
     fromSlot: packet.data.fromInventorySlot,
     toSlot: packet.data.toInventorySlot,
   });
-  const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
-    packet_sender: packet.packet_sender,
+  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
+    sender: packet.sender,
     packet_type: packet.packet_type,
     data: {
       building_id: packet.data.toInventoryId,
@@ -53,12 +53,12 @@ async function request_move_inventory_item_inside_building_inventory(
   request_world_building_packet(request_world_building_packet_data, redisPubClient);
 }
 async function request_move_inventory_item_inside_player_inventory(
-  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
+  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
   await safe_move_items_between_inventories({
-    fromId: packet.packet_sender.id,
-    toId: packet.packet_sender.id,
+    fromId: packet.sender.id,
+    toId: packet.sender.id,
     itemId: packet.data.item.item.id,
     quantity: packet.data.item.quantity,
     fromType: 'user',
@@ -69,7 +69,7 @@ async function request_move_inventory_item_inside_player_inventory(
   request_player_inventory_packet(packet, redisPubClient);
 }
 async function request_move_inventory_item_to_player_inventory(
-  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
+  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
   redisPubClient: RedisClientType,
 ) {
   const building_inventory_item = await WorldBuildingInventory.findOne({
@@ -99,7 +99,7 @@ async function request_move_inventory_item_to_player_inventory(
   // remove / add to inventories
   await safe_move_items_between_inventories({
     fromId: building_to_drop_in.id,
-    toId: packet.packet_sender.id,
+    toId: packet.sender.id,
     itemId: packet.data.item.item.id,
     quantity: packet.data.item.quantity,
     fromType: 'building',
@@ -110,8 +110,8 @@ async function request_move_inventory_item_to_player_inventory(
 
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);
-  const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
-    packet_sender: packet.packet_sender,
+  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
+    sender: packet.sender,
     packet_type: packet.packet_type,
     data: {
       building_id: building_to_drop_in.id,
@@ -122,20 +122,17 @@ async function request_move_inventory_item_to_player_inventory(
   request_world_building_packet(request_world_building_packet_data, redisPubClient);
 }
 
-async function request_move_inventory_item_to_building(
-  packet: NetworkPacketDataWithSender<RequestMoveInventoryItemPacketData>,
-  redisPubClient: RedisClientType,
-) {
+async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redisPubClient: RedisClientType) {
   /* Player wants to put in items into a building */
   // check if the player has the item
 
   const player_inventory_item = await UserInventoryItem.findOne({
-    where: { slot: packet.data.item.slot, user: { id: packet.packet_sender.id } },
+    where: { slot: packet.data.item.slot, user: { id: packet.sender.id } },
     relations: ['item'],
   });
   if (!player_inventory_item) {
     log(
-      `Player ${packet.packet_sender.id} does not have item ${packet.data.item} but tried to move it from their inventory! Sus 📮`,
+      `Player ${packet.sender.id} does not have item ${packet.data.item} but tried to move it from their inventory! Sus 📮`,
       LogLevel.ERROR,
       LogApp.PACKET_DATA_SERVER,
     );
@@ -159,7 +156,7 @@ async function request_move_inventory_item_to_building(
     packet.data.toInventorySlot,
   );
   await UserInventoryItem.addToInventory(
-    packet.packet_sender.id,
+    packet.sender.id,
     packet.data.item.item.id,
     -(packet.data.item.quantity - quantity_remainder),
     packet.data.fromInventorySlot,
@@ -167,8 +164,8 @@ async function request_move_inventory_item_to_building(
 
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redisPubClient);
-  const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
-    packet_sender: packet.packet_sender,
+  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
+    sender: packet.sender,
     packet_type: packet.packet_type,
     data: {
       building_id: building_to_drop_in.id,

@@ -1,14 +1,11 @@
 import { LogApp, LogLevel } from '@shared';
 import { AppDataSource, WorldBuilding } from '@virtcon2/database-postgres';
-import { NetworkPacketDataWithSender, RequestWorldBuildingChangeOutput, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, RequestWorldBuildingChangeOutput, RequestWorldBuildingPacket } from '@virtcon2/network-packet';
 import { log } from 'console';
 import { RedisClientType } from 'redis';
 import request_world_building_packet from './request_world_building_packet';
 
-export default async function request_world_building_change_output(
-  packet: NetworkPacketDataWithSender<RequestWorldBuildingChangeOutput>,
-  redisPubClient: RedisClientType,
-) {
+export default async function request_world_building_change_output(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client: RedisClientType) {
   const world_building = await WorldBuilding.findOne({ where: { id: packet.data.building_id }, relations: ['building'] });
   if (!world_building) {
     log(
@@ -45,8 +42,8 @@ export default async function request_world_building_change_output(
 
   await world_building.save();
 
-  const request_world_building_packet_data: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
-    packet_sender: packet.packet_sender,
+  const request_world_building_packet_data: ClientPacketWithSender<RequestWorldBuildingPacket> = {
+    sender: packet.sender,
     packet_type: packet.packet_type,
     data: {
       building_id: packet.data.building_id,
@@ -54,7 +51,7 @@ export default async function request_world_building_change_output(
     world_id: packet.world_id,
   };
 
-  request_world_building_packet(request_world_building_packet_data, redisPubClient);
+  request_world_building_packet(request_world_building_packet_data, client);
 }
 
 // return radians

@@ -1,22 +1,13 @@
 import { LogApp, LogLevel, log } from '@shared';
 import { Item, UserInventoryItem, WorldBuilding, WorldBuildingInventory, WorldResource } from '@virtcon2/database-postgres';
-import {
-  NetworkPacketDataWithSender,
-  PacketType,
-  RedisPacketPublisher,
-  RequestPlaceBuildingPacketData,
-  RequestPlayerInventoryPacket,
-} from '@virtcon2/network-packet';
+import { ClientPacketWithSender, enqueuePacket, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import request_player_inventory_packet from './request_player_inventory_packet';
 import { RedisClientType } from 'redis';
 import request_world_building_change_output from './request_world_building_change_output';
 
-export default async function request_place_building_packet(
-  packet: NetworkPacketDataWithSender<RequestPlaceBuildingPacketData>,
-  redisPubClient: RedisClientType,
-) {
+export default async function request_place_building_packet(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
   // get the sender
-  const player_id = packet.packet_sender.id;
+  const player_id = packet.sender.id;
   // check if player has the item
   const inventoryItem = await UserInventoryItem.findOne({ where: { user: { id: player_id }, item: { id: packet.data.buildingItemId } } });
   if (!inventoryItem) {
@@ -75,16 +66,16 @@ export default async function request_place_building_packet(
     {
       ...packet,
       data: {},
-    } as NetworkPacketDataWithSender<RequestPlayerInventoryPacket>,
-    redisPubClient,
+    } as ClientPacketWithSender<RequestPlayerInventoryPacket>,
+    client,
   );
 
-  const placeBuildingPacket = new RedisPacketPublisher(redisPubClient)
-    .packet_type(PacketType.PLACE_BUILDING)
-    .data({ ...building, current_processing_ticks: 0 })
-    .channel(packet.world_id)
-    .build();
-  placeBuildingPacket.publish();
+  enqueuePacket(client, packet.world_id, {
+    packet_type: PacketType.PLACE_BUILDING,
+    sender: packet.sender,
+    data: { ...building, current_processing_ticks: 0 },
+    target: packet.world_id,
+  });
 
   // Update the output of the buildings that are next to the new building
   const positionsThatBuildingOccupies: [number, number][] = [];
@@ -98,7 +89,7 @@ export default async function request_place_building_packet(
     const [x, y] = position;
     const wb = await WorldBuilding.findOne({ where: { output_pos_x: x, output_pos_y: y, world: { id: packet.world_id } } });
     if (wb) {
-      request_world_building_change_output({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } }, redisPubClient);
+      request_world_building_change_output({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } }, client);
     }
   });
 
@@ -108,25 +99,25 @@ export default async function request_place_building_packet(
     case 0:
       request_world_building_change_output(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y } },
-        redisPubClient,
+        client,
       );
       break;
     case 90:
       request_world_building_change_output(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height } },
-        redisPubClient,
+        client,
       );
       break;
     case 180:
       request_world_building_change_output(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y } },
-        redisPubClient,
+        client,
       );
       break;
     case 270:
       request_world_building_change_output(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height } },
-        redisPubClient,
+        client,
       );
       break;
   }

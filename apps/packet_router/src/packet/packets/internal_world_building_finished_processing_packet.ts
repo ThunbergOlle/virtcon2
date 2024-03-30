@@ -1,17 +1,18 @@
 import { LogApp, LogLevel, log } from '@shared';
 import { WorldBuilding, WorldBuildingInventory, safe_move_items_between_inventories } from '@virtcon2/database-postgres';
 import {
+  ClientPacket,
+  ClientPacketWithSender,
   InternalWorldBuildingFinishedProcessing,
-  NetworkPacketData,
-  NetworkPacketDataWithSender,
   PacketType,
   RequestWorldBuildingPacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
+import { SERVER_SENDER } from '../utils';
 import request_world_building_packet from './request_world_building_packet';
 
 export default async function internal_world_building_finished_processing_packet(
-  packet: NetworkPacketData<InternalWorldBuildingFinishedProcessing>,
+  packet: ClientPacket<InternalWorldBuildingFinishedProcessing>,
   redisPubClient: RedisClientType,
 ) {
   // this packet is trusted and sent by the tick server.
@@ -49,19 +50,13 @@ export default async function internal_world_building_finished_processing_packet
   await handle_resulting_items(resulting_items, world_building);
   if (world_building.output_world_building) await handle_move_inventory_to_output(world_building.id);
   // send a packet to the world server to update the world building inventory
-  const world_building_packet: NetworkPacketDataWithSender<RequestWorldBuildingPacket> = {
+  const world_building_packet: ClientPacketWithSender<RequestWorldBuildingPacket> = {
     data: {
       building_id: world_building.id,
     },
     packet_type: PacketType.REQUEST_WORLD_BUILDING,
-    packet_sender: {
-      id: 'server',
-      name: '',
-      position: [0, 0],
-      inventory: [],
-      socket_id: '',
-      world_id: '',
-    },
+    sender: SERVER_SENDER,
+    packet_target: world_building.world.id,
     world_id: world_building.world.id,
   };
   request_world_building_packet(world_building_packet, redisPubClient);

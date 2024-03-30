@@ -1,6 +1,6 @@
-import { ServerInventoryItem } from "@shared";
+import { ServerInventoryItem } from '@shared';
 
-export interface PlayerInventoryPacketData {
+export interface PlayerInventoryServerPacket {
   player_id: string;
   inventory: Array<ServerInventoryItem>;
 }

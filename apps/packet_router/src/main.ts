@@ -1,16 +1,21 @@
+import 'reflect-metadata';
 import cors from 'cors';
-
-import { LogApp, LogLevel, log } from '@shared';
-import { World } from '@virtcon2/database-redis';
-import { NetworkPacketData, PacketType, RedisPacketPublisher, RequestJoinPacketData } from '@virtcon2/network-packet';
+import { LogApp, LogLevel, TPS, log } from '@shared';
+import { AppDataSource } from '@virtcon2/database-postgres';
+import { ClientPacket, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
 import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
 import { cwd } from 'process';
 import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import * as socketio from 'socket.io';
+import handlePacket from './packet/packet_handler';
+import Redis from '@virtcon2/database-redis';
 
 dotenv.config({ path: `${cwd()}/.env` });
+AppDataSource.initialize();
+
+const worlds: string[] = [];
 
 const redisClient = createRedisClient() as RedisClientType;
 
@@ -44,19 +49,26 @@ const io = new socketio.Server(server, {
 
 io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
-    const player = await World.getPlayerBySocketId(socket.id, redisClient);
+    const player = await Redis.getPlayerBySocketId(socket.id, redisClient);
     if (!player) return;
-    await new RedisPacketPublisher(redisPubSub).channel(player.world_id).sender(player).packet_type(PacketType.DISCONNECT).data({ id: player.id }).build().publish();
+    enqueuePacket(redisClient, player.world_id, {
+      packet_type: PacketType.DISCONNECT,
+      target: 'all',
+      sender: player,
+      data: { id: player.id },
+    });
   });
 
   socket.on('packet', async (packet: string) => {
-    const sender = await World.getPlayerBySocketId(socket.id, redisClient);
-    const packetJson = JSON.parse(packet) as NetworkPacketData<unknown>;
+    log(`Received packet: ${packet}`, LogLevel.INFO, LogApp.SERVER);
+
+    const packetJson = JSON.parse(packet) as ClientPacket<unknown>;
     packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
 
     if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
       packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
       socket.join(packetJson.world_id);
+      worlds.push(packetJson.world_id);
     }
 
     if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.REQUEST_JOIN) {
@@ -65,13 +77,9 @@ io.on('connection', (socket) => {
       return;
     }
 
-    let packetBuilder = new RedisPacketPublisher(redisPubSub).channel(packetJson.world_id).packet_type(packetJson.packet_type);
+    const sender = await Redis.getPlayerBySocketId(socket.id, redisClient);
 
-    packetBuilder = packetJson.packet_type === PacketType.REQUEST_JOIN ? packetBuilder.target(socket.id).sender(null) : packetBuilder.target(packetJson.packet_target).sender(sender);
-
-    packetBuilder = packetBuilder.data(packetJson.data);
-
-    await packetBuilder.build().publish();
+    return handlePacket({ ...packetJson, sender }, redisClient);
   });
 });
 
@@ -94,30 +102,18 @@ process.on('SIGINT', async () => {
   process.exit();
 });
 
-/* Subscribe to packet messages from the world */
-(async () => {
-  const client = createClient();
-  await client.connect();
+setInterval(async () => {
+  for (const world of worlds) {
+    const packets = await getAllPackets(redisClient, world);
 
-  client.pSubscribe('tick_*', (message, channel) => {
-    const packets = message.split(';;').filter((packet) => packet.length);
+    if (!packets.length) continue;
 
-    if (!packets.length) return;
-    for (let i = 0; i < packets.length; i++) {
-      const [packetTarget, packetData] = packets[i].split('#');
-
-      const packetWithStringData = JSON.parse(packetData) as NetworkPacketData<string>;
-      const packetDataJson = JSON.parse(packetWithStringData.data);
-
-      const packet = { ...packetWithStringData, data: packetDataJson } as NetworkPacketData<unknown>;
-
-      const target = packetTarget.split(':')[1];
-
-      if (packetTarget.startsWith('socket:') || packetTarget.startsWith('world:')) {
-        io.sockets.to(target).emit('packet', packet);
-      } else {
-        log(`Unknown packet target: ${packetTarget}`, LogLevel.WARN, LogApp.SERVER);
-      }
+    for (const packet of packets) {
+      log(`Sending packet to ${packet.target}`, LogLevel.INFO, LogApp.SERVER);
+      io.sockets.to(packet.target).emit('packet', {
+        data: packet.data,
+        packet_type: packet.packet_type,
+      });
     }
-  });
-})();
+  }
+}, 1000 / TPS);

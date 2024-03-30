@@ -1,4 +1,4 @@
-import { NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
+import { ClientPacket, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
 import { IWorld, defineQuery, defineSystem } from '@virtcon2/virt-bit-ecs';
 import { MainPlayer } from '../components/MainPlayer';
 import { Velocity } from '../components/Velocity';
@@ -13,10 +13,10 @@ export const createPlayerSendNetworkSystem = () => {
     if (Velocity.x[mainPlayerEntity] !== 0 || Velocity.y[mainPlayerEntity] !== 0) {
       const sprite = state.spritesById[mainPlayerEntity];
       if (!sprite) return { world, state };
-      const packet: NetworkPacketData<PlayerMovePacketData> = {
+      const packet: ClientPacket<PlayerMovePacketData> = {
         data: {
           player_id: state.playerById[mainPlayerEntity],
-          position: [sprite.body.position.x + 8, sprite.body.position.y + 8], /* Offset to make sure we render at the correct place */
+          position: [sprite.body.position.x + 8, sprite.body.position.y + 8] /* Offset to make sure we render at the correct place */,
         },
         packet_type: PacketType.PLAYER_SET_POSITION,
         world_id: state.world_id,

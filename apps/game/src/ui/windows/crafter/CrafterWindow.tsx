@@ -40,11 +40,11 @@ export default function CrafterWindow() {
 
   useEffect(() => {
     events.subscribe('onCrafterButtonPressed', onCrafterButtonPressed);
-    events.subscribe('networkPlayerInventoryPacket', onNetWorkPlayerInventoryPacket);
+    events.subscribe('networkPlayerInventory', onNetWorkPlayerInventoryPacket);
 
     return () => {
       events.unsubscribe('onCrafterButtonPressed', () => onCrafterButtonPressed);
-      events.unsubscribe('networkPlayerInventoryPacket', onNetWorkPlayerInventoryPacket);
+      events.unsubscribe('networkPlayerInventory', onNetWorkPlayerInventoryPacket);
     };
   }, [onCrafterButtonPressed]);
 

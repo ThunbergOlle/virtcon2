@@ -2,7 +2,7 @@ import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, remove
 import { MainPlayer } from '../components/MainPlayer';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 
-import { DisconnectPacketData, JoinPacketData, NetworkPacketData, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
+import { DisconnectPacketData, JoinPacketData, ClientPacket, PacketType, PlayerMovePacketData } from '@virtcon2/network-packet';
 import { Collider } from '../components/Collider';
 import { Player } from '../components/Player';
 import { Position } from '../components/Position';
@@ -52,7 +52,7 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   Collider.group[player] = GameObjectGroups.PLAYER;
 };
 
-export const handleJoinPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[]) => {
+export const handleJoinPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]) => {
   const mainPlayerEntities = mainPlayerQuery(world);
   const joinPackets = filterPacket<JoinPacketData>(packets, PacketType.JOIN);
   /* Handle join packets. */
@@ -62,7 +62,7 @@ export const handleJoinPackets = (world: IWorld, state: GameState, packets: Netw
     }
   }
 };
-export const handleDisconnectPackets = (world: IWorld, state: GameState, packets: NetworkPacketData<unknown>[], entities: number[]) => {
+export const handleDisconnectPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[], entities: number[]) => {
   const disconnectPackets = filterPacket<DisconnectPacketData>(packets, PacketType.DISCONNECT);
   /* Handle disconnect packets. */
   for (let i = 0; i < disconnectPackets.length; i++) {

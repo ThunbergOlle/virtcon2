@@ -1,6 +1,6 @@
 import { InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
 import {
-  NetworkPacketData,
+  ClientPacket,
   PacketType,
   RequestMoveInventoryItemPacketData,
   RequestWorldBuildingChangeOutput,
@@ -34,7 +34,7 @@ export default function WorldBuildingWindow() {
 
   function onBuildingPressed(buildingId: number) {
     /* Send request view building packet */
-    const packet: NetworkPacketData<RequestWorldBuildingPacket> = {
+    const packet: ClientPacket<RequestWorldBuildingPacket> = {
       data: {
         building_id: buildingId,
       },
@@ -58,7 +58,7 @@ export default function WorldBuildingWindow() {
 
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
-    const packet: NetworkPacketData<RequestMoveInventoryItemPacketData> = {
+    const packet: ClientPacket<RequestMoveInventoryItemPacketData> = {
       data: {
         ...item,
         toInventoryId: inventoryId,
@@ -71,7 +71,7 @@ export default function WorldBuildingWindow() {
   };
   const onNewOutputPositionSelected = (pos: { x: number; y: number }) => {
     if (!activeWorldBuilding) return;
-    const packet: NetworkPacketData<RequestWorldBuildingChangeOutput> = {
+    const packet: ClientPacket<RequestWorldBuildingChangeOutput> = {
       data: {
         building_id: activeWorldBuilding.id,
         output_pos_x: pos.x,
