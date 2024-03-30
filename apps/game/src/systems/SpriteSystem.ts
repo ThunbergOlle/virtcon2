@@ -4,9 +4,11 @@ import { Sprite } from '../components/Sprite';
 import { Velocity } from '../components/Velocity';
 import { getTextureFromTextureId } from '../config/SpriteMap';
 import { GameState } from '../scenes/Game';
+
 const spriteQuery = defineQuery([Sprite, Position]);
 const spriteQueryEnter = enterQuery(spriteQuery);
 const spriteQueryExit = exitQuery(spriteQuery);
+
 export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
   return defineSystem((world: IWorld, state: GameState) => {
     const enterEntities = spriteQueryEnter(world);
@@ -55,6 +57,7 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
     return { world, state };
   });
 };
+
 const spritePosQuery = defineQuery([Sprite, Position, Not(Velocity)]);
 const spriteVelocityQuery = defineQuery([Sprite, Position, Velocity]);
 

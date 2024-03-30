@@ -9,6 +9,7 @@ import { Position } from '../components/Position';
 import { Sprite } from '../components/Sprite';
 import { filterPacket } from '../networking/Filters';
 import { MiscTextureMap } from '../config/SpriteMap';
+import { Tag } from '../components/Tag';
 
 const playerNetworkQuery = defineQuery([Not(MainPlayer), Position, Player]);
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Player]);
@@ -27,10 +28,8 @@ export const createPlayerReceiveNetworkSystem = () => {
       /* Handle movement packet */
       const player_id = state.playerById[id];
       if (movementPackets.length > 0) {
-        console.log(`Checking for movement packet for player ${player_id}`, movementPackets);
         const packet = movementPackets.filter((packet) => packet.data.player_id === player_id)[movementPackets.length - 1];
         if (!packet) continue;
-        console.log(packet.data.position);
         Position.x[id] = packet.data.position[0];
         Position.y[id] = packet.data.position[1];
       }
@@ -52,6 +51,9 @@ export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld,
   addComponent(world, Collider, player);
   Collider.static[player] = 1;
   Collider.group[player] = GameObjectGroups.PLAYER;
+
+  addComponent(world, Tag, player);
+  state.tagById[player] = joinPacket.name;
 
   console.log(`Player ${joinPacket.id} joined the game. Entity: ${player} at position: ${joinPacket.position}`);
 };

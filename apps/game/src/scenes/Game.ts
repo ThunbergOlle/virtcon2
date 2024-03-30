@@ -17,6 +17,7 @@ import { createNewPlayerEntity, createPlayerReceiveNetworkSystem } from '../syst
 import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
 import { createNewResourceEntity, createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
+import { createTagSystem } from '../systems/TagSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -32,6 +33,8 @@ export interface GameState {
   playerById: { [key: number]: string };
   buildingById: { [key: number]: RedisWorldBuilding };
   buildingEntityIdById: { [key: number]: number };
+  tagGameObjectById: { [key: number]: Phaser.GameObjects.Text };
+  tagById: { [key: number]: string };
   resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
   ghostBuildingById: { [key: number]: DBBuilding };
   gameObjectGroups: {
@@ -51,6 +54,8 @@ export default class Game extends Scene implements SceneStates {
     buildingById: {},
     buildingEntityIdById: {},
     ghostBuildingById: {},
+    tagGameObjectById: {},
+    tagById: {},
     gameObjectGroups: {
       [GameObjectGroups.PLAYER]: null,
       [GameObjectGroups.BUILDING]: null,
@@ -68,6 +73,7 @@ export default class Game extends Scene implements SceneStates {
   public resourceSystem?: System<GameState>;
   public buildingPlacementSystem?: System<GameState>;
   public buildingSystem?: System<GameState>;
+  public tagSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -132,6 +138,7 @@ export default class Game extends Scene implements SceneStates {
       this.resourceSystem = createResourceSystem();
       this.buildingPlacementSystem = createBuildingPlacementSystem(this);
       this.buildingSystem = createBuildingSystem();
+      this.tagSystem = createTagSystem(this);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -181,7 +188,7 @@ export default class Game extends Scene implements SceneStates {
       const join_packet: JoinPacketData = {
         id: worldPlayer.id,
         position: worldPlayer.position,
-        name: 'todo',
+        name: worldPlayer.name,
         socket_id: '',
       };
       createNewPlayerEntity(join_packet, ecsWorld, this.state);
@@ -199,7 +206,8 @@ export default class Game extends Scene implements SceneStates {
       !this.playerSendNetworkSystem ||
       !this.resourceSystem ||
       !this.buildingPlacementSystem ||
-      !this.buildingSystem
+      !this.buildingSystem ||
+      !this.tagSystem
     )
       return;
 
@@ -221,6 +229,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.buildingSystem(this.world, newState, packets).state;
     newState = this.buildingPlacementSystem(this.world, newState, packets).state;
     newState = this.playerSendNetworkSystem(this.world, newState, packets).state;
+    newState = this.tagSystem(this.world, newState, packets).state;
 
     // Update state
     this.state = newState;
