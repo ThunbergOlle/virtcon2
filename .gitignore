@@ -47,3 +47,5 @@ yarn.lock
 .env
 
 .VSCodeCounter
+
+.nx

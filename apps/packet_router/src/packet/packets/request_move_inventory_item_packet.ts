@@ -3,7 +3,6 @@ import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safelyMoveIte
 import { ClientPacketWithSender, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
-import { refreshBuildingCacheAndSendUpdate } from './server/worldBuildingUpdateToInspectorsServerPacket';
 
 export default async function request_move_inventory_item_packet(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
@@ -42,7 +41,7 @@ async function request_move_inventory_item_inside_building_inventory(
     toSlot: packet.data.toInventorySlot,
   });
 
-  refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
+  // refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
 async function request_move_inventory_item_inside_player_inventory(
   packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
@@ -100,7 +99,7 @@ async function request_move_inventory_item_to_player_inventory(packet: ClientPac
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redis);
 
-  refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
+  // refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
 
 async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redis: RedisClientType) {
@@ -146,5 +145,5 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
   // send the updated inventory to the player and to the building
   request_player_inventory_packet(packet, redis);
 
-  refreshBuildingCacheAndSendUpdate(packet.data.toInventoryId, packet.world_id, redis);
+  // refreshBuildingCacheAndSendUpdate(packet.data.toInventoryId, packet.world_id, redis);
 }

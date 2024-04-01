@@ -53,3 +53,7 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
     full_health: 5,
   },
 };
+
+export const getResourceNameFromItemName = (item: DBItemName): ResourceNames =>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  Object.entries(Resources).find(([_, resource]) => resource.item === item)?.[0] as ResourceNames;

@@ -1,28 +1,29 @@
-import { ClientPacket, PacketType, PlayerSetPositionServerPaacket } from '@virtcon2/network-packet';
-import { IWorld, defineQuery, defineSystem } from 'bitecs';
-import { MainPlayer } from '../components/MainPlayer';
-import { Velocity } from '../components/Velocity';
+import { ClientPacket, PacketType, SyncClientEntityPacket } from '@virtcon2/network-packet';
+
+import { MainPlayer, Position, Velocity } from '@virtcon2/network-world-entities';
+import { Changed, defineQuery, defineSerializer, defineSystem, IWorld, pipe } from 'bitecs';
 import Game, { GameState } from '../scenes/Game';
 
-const mainPlayerVelocityQuery = defineQuery([MainPlayer, Velocity]);
+const mainPlayerVelocityQuery = defineQuery([MainPlayer, Velocity, Position]);
+const config = [Position, Changed(Velocity)];
+const serializeMovement = defineSerializer(config);
+
+const serializeMovementQueryPositions = pipe(mainPlayerVelocityQuery, serializeMovement);
+// const deserializeMovement = defineDeserializer(config)
+
 export const createPlayerSendNetworkSystem = () => {
-  return defineSystem((world: IWorld, state: GameState, packets) => {
+  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
     const mainPlayerEntity = mainPlayerVelocityQuery(world)[0];
-    if (!mainPlayerEntity) return { world, state };
+    if (!mainPlayerEntity) return [world, state];
 
     if (Velocity.x[mainPlayerEntity] !== 0 || Velocity.y[mainPlayerEntity] !== 0) {
-      const sprite = state.spritesById[mainPlayerEntity];
-      if (!sprite) return { world, state };
-      const packet: ClientPacket<PlayerSetPositionServerPaacket> = {
-        data: {
-          player_id: state.playerById[mainPlayerEntity],
-          position: [sprite.body.position.x + 8, sprite.body.position.y + 8] /* Offset to make sure we render at the correct place */,
-        },
-        packet_type: PacketType.PLAYER_SET_POSITION,
-        world_id: state.world_id,
+      const packetData = serializeMovementQueryPositions(mainPlayerEntity);
+      const packet: ClientPacket<SyncClientEntityPacket> = {
+        packet_type: PacketType.SYNC_CLIENT_ENTITY,
+        data: packetData,
       };
       Game.network.sendPacket(packet);
     }
-    return { world, state };
+    return [world, state];
   });
 };

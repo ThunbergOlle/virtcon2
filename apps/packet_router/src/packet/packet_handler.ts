@@ -1,6 +1,6 @@
 import { log, LogLevel, RedisPlayer } from '@shared';
 import {
-  ClientPacket,
+  ServerPacket,
   ClientPacketWithSender,
   InspectBuildingClientPacket,
   PacketType,
@@ -11,6 +11,7 @@ import {
   RequestPlaceBuildingPacketData,
   RequestPlayerInventoryPacket,
   RequestWorldBuildingChangeOutput,
+  ClientPacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import inspectBuildingClientPacket from './packets/inspectBuildingClientPacket';

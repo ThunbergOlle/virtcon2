@@ -18,6 +18,19 @@ export enum PacketType {
   INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING = 'internalWorldBuildingFinishedProcessing',
   WORLD_BUILDING = 'worldBuilding',
   PLACE_BUILDING = 'placeBuilding',
+
+  /* BitECS entities */
+  SYNC_CLIENT_ENTITY = 'syncClientEntity',
+  SYNC_SERVER_ENTITY = 'syncServerEntity',
+}
+
+type SocketID = string;
+type WorldID = string;
+export interface ServerPacket<T> {
+  packet_type: string;
+  target: SocketID | WorldID;
+  sender: RedisPlayer;
+  data: T;
 }
 
 export interface ClientPacket<T> {
@@ -26,7 +39,7 @@ export interface ClientPacket<T> {
   packet_target?: string;
   data: T;
 }
-export interface ClientPacketWithSender<T> extends ClientPacket<T> {
+export interface ClientPacketWithSender<T> extends ServerPacket<T> {
   sender: RedisPlayer;
   world_id: string;
 }

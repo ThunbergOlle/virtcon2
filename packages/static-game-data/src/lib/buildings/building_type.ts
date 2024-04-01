@@ -1,7 +1,7 @@
-import { DBItem } from '../items/item_type';
+import { DBItem, DBItemName } from '../items/item_type';
 
 export interface DBBuilding {
-  name: string;
+  name: DBItemName;
   id: number;
   item: DBItem;
   is_rotatable?: boolean;

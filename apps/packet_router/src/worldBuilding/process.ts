@@ -1,7 +1,6 @@
 import { log, LogApp, LogLevel } from '@shared';
 import { safelyMoveItemsBetweenInventories, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
 import { RedisClientType } from 'redis';
-import { refreshBuildingCacheAndSendUpdate } from '../packet/packets/server/worldBuildingUpdateToInspectorsServerPacket';
 
 interface InventoryItemModifiers {
   item_id: number;
@@ -39,7 +38,7 @@ export default async function finishProcessing(worldBuildingId: number, redis: R
   await _addItemsToBuilding(resultingItems, worldBuilding);
   if (worldBuilding.output_world_building) await moveInventoryToOutput(worldBuilding.id);
 
-  refreshBuildingCacheAndSendUpdate(worldBuilding.id, worldBuilding.world.id, redis);
+  // refreshBuildingCacheAndSendUpdate(worldBuilding.id, worldBuilding.world.id, redis);
 }
 
 async function _addItemsToBuilding(resultingItems: InventoryItemModifiers[], worldBuilding: WorldBuilding) {

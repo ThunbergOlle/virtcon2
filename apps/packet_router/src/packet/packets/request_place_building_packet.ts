@@ -1,10 +1,9 @@
-import { LogApp, LogLevel, log } from '@shared';
+import { log, LogApp, LogLevel } from '@shared';
 import { Item, UserInventoryItem, WorldBuilding, WorldBuildingInventory, WorldResource } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, enqueuePacket, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
-import request_player_inventory_packet from './request_player_inventory_packet';
 import { RedisClientType } from 'redis';
+import request_player_inventory_packet from './request_player_inventory_packet';
 import request_world_building_change_output from './request_world_building_change_output';
-import Redis from '@virtcon2/database-redis';
 
 export default async function request_place_building_packet(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
   // get the sender
@@ -78,7 +77,7 @@ export default async function request_place_building_packet(packet: ClientPacket
     target: packet.world_id,
   });
 
-  Redis.refreshBuildingCache(building.id, client, true);
+  // Redis.refreshBuildingCache(building.id, client, true);
 
   // Update the output of the buildings that are next to the new building
   const positionsThatBuildingOccupies: [number, number][] = [];

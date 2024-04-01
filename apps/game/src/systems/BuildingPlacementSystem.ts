@@ -1,17 +1,13 @@
-import { IWorld, defineQuery, defineSystem, enterQuery, exitQuery } from 'bitecs';
+import { IWorld, defineQuery, defineSystem, exitQuery } from 'bitecs';
 
-import { Collider } from '../components/Collider';
-import { GhostBuilding } from '../components/GhostBuilding';
-import { Position } from '../components/Position';
-import { Sprite } from '../components/Sprite';
+import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
-import { DBBuilding } from '@virtcon2/static-game-data';
 
 const ghostBuildingQuery = defineQuery([GhostBuilding, Position, Collider, Sprite]);
 const ghostBuildingExitQuery = exitQuery(ghostBuildingQuery);
 export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
-  return defineSystem((world: IWorld, state: GameState, _) => {
+  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
     const ghostBuildings = ghostBuildingQuery(world);
 
     for (let i = 0; i < ghostBuildings.length; i++) {
@@ -47,7 +43,7 @@ export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
         delete state.ghostBuildingById[id];
       }
     }
-    return { world, state };
+    return [world, state];
   });
 };
 const checkGhostBuildingCollisions = (entity: number, state: GameState, scene: Phaser.Scene) => {

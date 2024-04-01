@@ -4,10 +4,6 @@ import { get_building_by_id } from '@virtcon2/static-game-data';
 import { addComponent, addEntity, removeEntity } from 'bitecs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Collider } from '../../../components/Collider';
-import { GhostBuilding } from '../../../components/GhostBuilding';
-import { Position } from '../../../components/Position';
-import { Sprite } from '../../../components/Sprite';
 import { ItemTextureMap } from '../../../config/SpriteMap';
 import { events } from '../../../events/Events';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
@@ -16,6 +12,7 @@ import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../.
 import Window from '../../components/window/Window';
 import { fromPhaserPos } from '../../lib/coordinates';
 import { close, isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
+import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
 
 export default function PlayerInventoryWindow() {
   const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_PLAYER_INVENTORY));

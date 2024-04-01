@@ -1,15 +1,8 @@
-import { IWorld, addComponent, addEntity, defineQuery, defineSystem, enterQuery } from 'bitecs';
-import { Sprite } from '../components/Sprite';
+import { IWorld, addComponent, defineQuery, defineSystem, enterQuery } from 'bitecs';
 
-import { Collider } from '../components/Collider';
-import { MainPlayer } from '../components/MainPlayer';
-import { Player } from '../components/Player';
-import { Position } from '../components/Position';
-import { Velocity } from '../components/Velocity';
+import { Collider, MainPlayer, Player, Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
-import { RedisPlayer } from '@shared';
-import { AllTextureMaps, MiscTextureMap } from '../config/SpriteMap';
 
 const speed = 750;
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player, Collider]);
@@ -22,7 +15,7 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
   ];
 
-  return defineSystem((world: IWorld, state: GameState, _) => {
+  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
     const enterEntities = mainPlayerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
@@ -60,30 +53,18 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
       Velocity.x[entities[i]] = xVel * speed;
       Velocity.y[entities[i]] = yVel * speed;
     }
-    return { world, state };
+    return [world, state];
   });
 };
 
-export const createNewMainPlayerEntity = (state: GameState, ecsWorld: IWorld, serverPlayer: RedisPlayer) => {
-  const mainPlayer = addEntity(ecsWorld);
-  addComponent(ecsWorld, Position, mainPlayer);
-  Position.x[mainPlayer] = 200;
-  Position.y[mainPlayer] = 200;
-  addComponent(ecsWorld, Velocity, mainPlayer);
-  Velocity.x[mainPlayer] = 0;
-  Velocity.y[mainPlayer] = 0;
-  addComponent(ecsWorld, Sprite, mainPlayer);
-  Sprite.texture[mainPlayer] = MiscTextureMap['player_character']?.textureId ?? 0;
-  addComponent(ecsWorld, MainPlayer, mainPlayer);
-  addComponent(ecsWorld, Player, mainPlayer);
-  state.playerById[mainPlayer] = serverPlayer.id;
-  Player.player[mainPlayer] = mainPlayer;
+export const setMainPlayerEntity = (world: IWorld, eid: number) => {
+  addComponent(world, MainPlayer, eid);
   /* Add collider to entity */
-  addComponent(ecsWorld, Collider, mainPlayer);
-  Collider.offsetX[mainPlayer] = 0;
-  Collider.offsetY[mainPlayer] = 0;
-  Collider.sizeWidth[mainPlayer] = 16;
-  Collider.sizeHeight[mainPlayer] = 16;
-  Collider.scale[mainPlayer] = 1;
-  Collider.group[mainPlayer] = GameObjectGroups.PLAYER;
+  addComponent(world, Collider, eid);
+  Collider.offsetX[eid] = 0;
+  Collider.offsetY[eid] = 0;
+  Collider.sizeWidth[eid] = 16;
+  Collider.sizeHeight[eid] = 16;
+  Collider.scale[eid] = 1;
+  Collider.group[eid] = GameObjectGroups.PLAYER;
 };

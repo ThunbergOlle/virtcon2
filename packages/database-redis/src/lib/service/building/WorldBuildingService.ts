@@ -68,46 +68,46 @@ const doneInspectingBuilding = async (buildingId: number, inspectorSocketId: str
   await redisClient.json.set('worlds', `$.${worldId || '*'}.buildings[?(@.id==${buildingId})].inspectors`, building.inspectors);
 };
 
-const refreshBuildingCache = async (worldBuildingId: number, redisClient: RedisClientType, newBuilding = false) => {
-  const building = await WorldBuilding.findOne({
-    where: { id: worldBuildingId },
-    relations: [
-      'building',
-      'building.items_to_be_placed_on',
-      'building.item',
-      'world_building_inventory',
-      'output_world_building',
-      'world_building_inventory.item',
-      'world',
-    ],
-  });
-  if (!building) throw new Error(`Building with id ${worldBuildingId} not found`);
+// const refreshBuildingCache = async (worldBuildingId: number, redisClient: RedisClientType, newBuilding = false) => {
+//   const building = await WorldBuilding.findOne({
+//     where: { id: worldBuildingId },
+//     relations: [
+//       'building',
+//       'building.items_to_be_placed_on',
+//       'building.item',
+//       'world_building_inventory',
+//       'output_world_building',
+//       'world_building_inventory.item',
+//       'world',
+//     ],
+//   });
+//   if (!building) throw new Error(`Building with id ${worldBuildingId} not found`);
 
-  const worldBuilding = {
-    active: building.active,
-    building: building.building,
-    id: building.id,
-    x: building.x,
-    y: building.y,
-    rotation: building.rotation,
-    world_resource: building.world_resource,
-    world_building_inventory: building.world_building_inventory,
-    output_pos_x: building.output_pos_x,
-    output_pos_y: building.output_pos_y,
-  };
+//   const worldBuilding = {
+//     active: building.active,
+//     building: building.building,
+//     id: building.id,
+//     x: building.x,
+//     y: building.y,
+//     rotation: building.rotation,
+//     world_resource: building.world_resource,
+//     world_building_inventory: building.world_building_inventory,
+//     output_pos_x: building.output_pos_x,
+//     output_pos_y: building.output_pos_y,
+//   };
 
-  if (newBuilding) {
-    const newBuilding: RedisWorldBuilding = {
-      ...worldBuilding,
-      id: worldBuilding.id,
-      inspectors: [],
-    };
-    await addBuilding(newBuilding, building.world.id, redisClient);
-    return newBuilding;
-  }
+//   if (newBuilding) {
+//     const newBuilding: RedisWorldBuilding = {
+//       ...worldBuilding,
+//       id: worldBuilding.id,
+//       inspectors: [],
+//     };
+//     await addBuilding(newBuilding, building.world.id, redisClient);
+//     return newBuilding;
+//   }
 
-  return updateBuilding(worldBuilding, building.world.id, redisClient);
-};
+//   return updateBuilding(worldBuilding, building.world.id, redisClient);
+// };
 
 export default {
   addBuilding,
@@ -117,5 +117,5 @@ export default {
   inspectBuilding,
   doneInspectingBuilding,
   updateBuilding,
-  refreshBuildingCache,
+  // refreshBuildingCache,
 };

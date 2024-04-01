@@ -1,8 +1,9 @@
 import item_conveyor from '../../items/db/item_conveyor';
+import { DBItemName } from '../../items/item_type';
 import { DBBuilding } from '../building_type';
 
 const building_conveyor: DBBuilding = {
-  name: 'Conveyor',
+  name: DBItemName.BUILDING_CONVEYOR,
   id: 7,
   height: 1,
   width: 1,

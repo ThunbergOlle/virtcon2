@@ -2,13 +2,13 @@ import { Socket, io } from 'socket.io-client';
 import { events } from '../events/Events';
 import Game from '../scenes/Game';
 
-import { ClientPacket, PacketType, RequestJoinPacketData } from '@virtcon2/network-packet';
+import { ServerPacket, PacketType, RequestJoinPacketData, ClientPacket } from '@virtcon2/network-packet';
 
 export class Network {
   socket: Socket;
   isConnected: boolean = false;
 
-  private received_packets: ClientPacket<unknown>[] = [];
+  private received_packets: ServerPacket<unknown>[] = [];
 
   constructor() {
     const socket = io('ws://localhost:4000');
@@ -19,21 +19,24 @@ export class Network {
       this.isConnected = true;
     });
 
-    socket.on('packet', (packetJSON: ClientPacket<unknown>) => {
-      const event = packetJSON.packet_type.charAt(0).toUpperCase() + packetJSON.packet_type.slice(1);
+    socket.on('packet', (packet: ServerPacket<unknown>) => {
+      const event = packet.packet_type.charAt(0).toUpperCase() + packet.packet_type.slice(1);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      events.notify(('network' + event) as any, packetJSON.data);
-      console.log(`Received packet: ${packetJSON.packet_type}`);
-      this.received_packets.push(packetJSON);
+      events.notify(('network' + event) as any, packet.data);
+      console.log(`Received packet: ${packet.packet_type} ${JSON.stringify(packet.data).length}`);
+      this.received_packets.push(packet);
       //events.notify(('network' + event) as any, packetJSON.data);
     });
   }
+
   public get_received_packets() {
     return this.received_packets;
   }
+
   public clear_received_packets() {
     this.received_packets = [];
   }
+
   join(worldId: string) {
     Game.worldId = worldId;
     const token = localStorage.getItem('token');

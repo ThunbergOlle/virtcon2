@@ -5,8 +5,8 @@ import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
-  @Field(() => String)
-  @PrimaryGeneratedColumn("uuid")
+  @Field(() => Int)
+  @PrimaryGeneratedColumn('increment')
   id: string;
 
   @Field(() => String)
@@ -39,7 +39,6 @@ export class User extends BaseEntity {
   isConfirmed: boolean;
 
   @Field(() => [UserInventoryItem])
-  @OneToMany(() => UserInventoryItem, userInventoryItem => userInventoryItem.user)
+  @OneToMany(() => UserInventoryItem, (userInventoryItem) => userInventoryItem.user)
   inventory: UserInventoryItem[];
-
 }

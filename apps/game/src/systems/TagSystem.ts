@@ -1,20 +1,21 @@
 import { defineQuery, defineSystem, enterQuery, exitQuery, IWorld, Not } from 'bitecs';
-import { Position } from '../components/Position';
-import { Tag } from '../components/Tag';
 import { GameState } from '../scenes/Game';
-import { MainPlayer } from '../components/MainPlayer';
+import { MainPlayer, Position, Tag } from '@virtcon2/network-world-entities';
 
 const tagQuery = defineQuery([Position, Tag, Not(MainPlayer)]);
 const tagQueryEnter = enterQuery(tagQuery);
 const tagQueryExit = exitQuery(tagQuery);
 
 export const createTagSystem = (scene: Phaser.Scene) => {
-  return defineSystem((world: IWorld, state: GameState) => {
+  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
     const enterEntities = tagQueryEnter(world);
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
-      const tag = state.tagById[id];
+
+      const encodedTag = Tag.value[id];
+      const tag = new TextDecoder().decode(encodedTag);
+
       const gameObject = scene.add.text(Position.x[id], Position.y[id], tag, {
         fontSize: '8px',
         stroke: '#000',
@@ -41,6 +42,6 @@ export const createTagSystem = (scene: Phaser.Scene) => {
       }
     }
 
-    return { world, state };
+    return [world, state];
   });
 };

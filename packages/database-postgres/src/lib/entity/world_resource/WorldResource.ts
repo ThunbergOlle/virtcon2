@@ -1,4 +1,4 @@
-import { Field, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Item } from '../item/Item';
 import { World } from '../world/World';
@@ -7,9 +7,9 @@ import { WorldBuilding } from '../world_building/WorldBuilding';
 @ObjectType()
 @Entity()
 export class WorldResource extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  @Field(() => String)
-  id: string;
+  @Field(() => Int)
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   @Field(() => Number)
   @Column({ type: 'int' })

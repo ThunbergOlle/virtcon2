@@ -36,7 +36,7 @@ export const get_item_by_id = (id: number) => {
 export * from './lib/resources/resources_type';
 
 export const get_resource_by_item_name = (itemName: DBItemName): ResourceNames | null => {
-  return Object.keys(Resources).find((resourceName) => Resources[resourceName].item === itemName) as ResourceNames;
+  return Object.keys(Resources).find((resourceName) => Resources[resourceName as ResourceNames].item === itemName) as ResourceNames;
 };
 
 /* Item Recipes */

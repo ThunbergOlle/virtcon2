@@ -42,10 +42,10 @@ export default async function request_world_building_change_output(packet: Clien
   }
 
   await world_building.save();
-  await Redis.refreshBuildingCache(world_building.id, redis).then((worldBuilding) => {
-    if (!worldBuilding) return;
-    worldBuildingUpdateToInspectorsServerPacket({ worldBuilding, redis, worldId: packet.world_id });
-  });
+  // await Redis.refreshBuildingCache(world_building.id, redis).then((worldBuilding) => {
+  //   if (!worldBuilding) return;
+  //   worldBuildingUpdateToInspectorsServerPacket({ worldBuilding, redis, worldId: packet.world_id });
+  // });
 }
 
 // return radians

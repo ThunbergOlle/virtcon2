@@ -1,8 +1,9 @@
 import item_pipe from '../../items/db/item_pipe';
+import { DBItemName } from '../../items/item_type';
 import { DBBuilding } from '../building_type';
 
 const building_pipe: DBBuilding = {
-  name: 'Pipe',
+  name: DBItemName.BUILDING_PIPE,
   id: 4,
   height: 1,
   width: 1,

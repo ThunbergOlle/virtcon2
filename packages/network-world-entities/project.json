@@ -1,0 +1,16 @@
+{
+  "name": "network-world-entities",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/network-world-entities/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/network-world-entities/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

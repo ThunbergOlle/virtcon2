@@ -1,76 +1,10 @@
-import { IWorld, Not, addComponent, addEntity, defineQuery, defineSystem, removeEntity } from 'bitecs';
-import { MainPlayer } from '../components/MainPlayer';
-import { GameObjectGroups, GameState } from '../scenes/Game';
+import { IWorld, removeEntity } from 'bitecs';
+import { GameState } from '../scenes/Game';
 
-import { DisconnectPacketData, JoinPacketData, ClientPacket, PacketType, PlayerSetPositionServerPaacket } from '@virtcon2/network-packet';
-import { Collider } from '../components/Collider';
-import { Player } from '../components/Player';
-import { Position } from '../components/Position';
-import { Sprite } from '../components/Sprite';
+import { DisconnectPacketData, PacketType, ServerPacket } from '@virtcon2/network-packet';
 import { filterPacket } from '../networking/Filters';
-import { MiscTextureMap } from '../config/SpriteMap';
-import { Tag } from '../components/Tag';
 
-const playerNetworkQuery = defineQuery([Not(MainPlayer), Position, Player]);
-const mainPlayerQuery = defineQuery([MainPlayer, Position, Player]);
-
-export const createPlayerReceiveNetworkSystem = () => {
-  return defineSystem((world: IWorld, state: GameState, packets) => {
-    const entities = playerNetworkQuery(world);
-
-    /* Handle join / leave packets in seperate functions */
-    handleJoinPackets(world, state, packets);
-    handleDisconnectPackets(world, state, packets, entities);
-
-    const movementPackets = filterPacket<PlayerSetPositionServerPaacket>(packets, PacketType.PLAYER_SET_POSITION);
-    for (let i = 0; i < entities.length; i++) {
-      const id = entities[i];
-      /* Handle movement packet */
-      const player_id = state.playerById[id];
-      if (movementPackets.length > 0) {
-        const packet = movementPackets.filter((packet) => packet.data.player_id === player_id)[movementPackets.length - 1];
-        if (!packet) continue;
-        Position.x[id] = packet.data.position[0];
-        Position.y[id] = packet.data.position[1];
-      }
-    }
-    return { world, state };
-  });
-};
-
-export const createNewPlayerEntity = (joinPacket: JoinPacketData, world: IWorld, state: GameState) => {
-  const player = addEntity(world);
-  addComponent(world, Position, player);
-  Position.x[player] = joinPacket.position[0];
-  Position.y[player] = joinPacket.position[1];
-  addComponent(world, Sprite, player);
-  Sprite.texture[player] = MiscTextureMap['player_character']?.textureId ?? 0;
-  addComponent(world, Player, player);
-  state.playerById[player] = joinPacket.id;
-  Player.player[player] = player;
-  addComponent(world, Collider, player);
-  Collider.static[player] = 1;
-  Collider.group[player] = GameObjectGroups.PLAYER;
-
-  addComponent(world, Tag, player);
-  state.tagById[player] = joinPacket.name;
-
-  console.log(`Player ${joinPacket.id} joined the game. Entity: ${player} at position: ${joinPacket.position}`);
-};
-
-export const handleJoinPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[]) => {
-  const mainPlayerEntities = mainPlayerQuery(world);
-  const joinPackets = filterPacket<JoinPacketData>(packets, PacketType.JOIN);
-  /* Handle join packets. */
-  for (let i = 0; i < joinPackets.length; i++) {
-    if (joinPackets[i].data.id === state.playerById[mainPlayerEntities[0]]) return console.warn(`Player ${joinPackets[i].data.id} is already in the game.`);
-    if (state.playerById[mainPlayerEntities[0]] !== joinPackets[i].data.id) {
-      createNewPlayerEntity(joinPackets[i].data, world, state);
-    }
-  }
-};
-
-export const handleDisconnectPackets = (world: IWorld, state: GameState, packets: ClientPacket<unknown>[], entities: number[]) => {
+export const handleDisconnectPackets = (world: IWorld, state: GameState, packets: ServerPacket<unknown>[], entities: number[]) => {
   const disconnectPackets = filterPacket<DisconnectPacketData>(packets, PacketType.DISCONNECT);
   /* Handle disconnect packets. */
   for (let i = 0; i < disconnectPackets.length; i++) {

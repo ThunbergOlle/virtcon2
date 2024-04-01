@@ -23,9 +23,3 @@ export default async function worldBuildingUpdateToInspectorsServerPacket(obj: F
     });
   }
 }
-
-export async function refreshBuildingCacheAndSendUpdate(worldBuildingId: number, worldId: string, redis) {
-  const worldBuilding = await Redis.refreshBuildingCache(worldBuildingId, redis);
-  if (!worldBuilding) return;
-  worldBuildingUpdateToInspectorsServerPacket({ worldBuilding, redis, worldId });
-}

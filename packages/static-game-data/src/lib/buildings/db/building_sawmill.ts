@@ -1,9 +1,10 @@
 import item_sawmill from '../../items/db/item_sawmill';
 import item_wood from '../../items/db/item_wood';
+import { DBItemName } from '../../items/item_type';
 import { DBBuilding } from '../building_type';
 
 const building_sawmill: DBBuilding = {
-  name: 'Sawmill',
+  name: DBItemName.BUILDING_SAWMILL,
   id: 3,
   height: 2,
   width: 2,
