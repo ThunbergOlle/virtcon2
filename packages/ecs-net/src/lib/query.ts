@@ -1,12 +1,13 @@
-import { EntityId, getEntityCount } from './entity';
+import { EntityId, MAX_ENTITY_AMOUNT } from './entity';
 import { $entityStore, ComponentStore, STORE } from './store';
 
 export const defineQuery = <K>(...components: ComponentStore<K>[]): { (): number[]; $latestEntities: number[] } => {
   const query = function () {
     const entityResponse: EntityId[] = [];
-    for (let eid = 0; eid < getEntityCount(); eid++) {
+    for (let eid = 0; eid < MAX_ENTITY_AMOUNT; eid++) {
       let include = true;
       const componentsOnEntity = STORE[$entityStore][eid];
+      if (!componentsOnEntity) continue;
       for (let i = 0; i < components.length; i++) {
         if (!componentsOnEntity.includes(components[i].identifier)) {
           include = false;
