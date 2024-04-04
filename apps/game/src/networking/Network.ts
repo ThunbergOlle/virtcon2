@@ -11,7 +11,11 @@ export class Network {
   private received_packets: ServerPacket<unknown>[] = [];
 
   constructor() {
-    const socket = io('ws://localhost:4000');
+    const socket = io('ws://localhost:4000', {
+      extraHeaders: {
+        Authorization: localStorage.getItem('token') || '',
+      },
+    });
     this.socket = socket;
 
     socket.on('connect', () => {

@@ -1,6 +1,6 @@
 import { LogApp, LogLevel, log } from '@shared';
 import { User, UserInventoryItem, World } from '@virtcon2/database-postgres';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
 import { EmailService } from '../../service/EmailService';
 import { GenerateToken } from '../../utils/GenerateToken';
@@ -81,8 +81,8 @@ export class UserResolver {
   }
   @Query(() => [UserInventoryItem], { nullable: false })
   async UserInventory(
-    @Arg('userId', () => String, { nullable: false })
-    userId: string,
+    @Arg('userId', () => Int, { nullable: false })
+    userId: number,
   ) {
     const user = await User.findOne({
       where: { id: userId },

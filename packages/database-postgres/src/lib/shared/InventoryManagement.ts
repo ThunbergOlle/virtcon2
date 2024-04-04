@@ -127,9 +127,9 @@ async function handleNegativeQuantities(
 }
 
 export async function safelyMoveItemsBetweenInventories(transaction: {
-  fromId: number | string;
+  fromId: number;
   fromType: 'user' | 'building';
-  toId: number | string;
+  toId: number;
   toType: 'user' | 'building';
   toSlot?: number;
   fromSlot?: number;
@@ -140,12 +140,12 @@ export async function safelyMoveItemsBetweenInventories(transaction: {
 
   const fromInventory =
     fromType === 'user'
-      ? UserInventoryItem.addToInventory(fromId as string, itemId, -quantity, fromSlot)
-      : WorldBuildingInventory.addToInventory(fromId as number, itemId, -quantity, fromSlot);
+      ? UserInventoryItem.addToInventory(fromId, itemId, -quantity, fromSlot)
+      : WorldBuildingInventory.addToInventory(fromId, itemId, -quantity, fromSlot);
   const toInventory =
     toType === 'user'
-      ? UserInventoryItem.addToInventory(toId as string, itemId, quantity, toSlot)
-      : WorldBuildingInventory.addToInventory(toId as number, itemId, quantity, toSlot);
+      ? UserInventoryItem.addToInventory(toId, itemId, quantity, toSlot)
+      : WorldBuildingInventory.addToInventory(toId, itemId, quantity, toSlot);
 
   const [from_quantity_left, to_quantity_left] = await Promise.all([fromInventory, toInventory]);
 
@@ -160,8 +160,8 @@ export async function safelyMoveItemsBetweenInventories(transaction: {
       // we need to remove the items from the toInventory
       const refundFromInventory =
         toType === 'user'
-          ? UserInventoryItem.addToInventory(toId as string, itemId, from_quantity_left, toSlot)
-          : WorldBuildingInventory.addToInventory(toId as number, itemId, from_quantity_left, toSlot);
+          ? UserInventoryItem.addToInventory(toId, itemId, from_quantity_left, toSlot)
+          : WorldBuildingInventory.addToInventory(toId, itemId, from_quantity_left, toSlot);
       log(`Refunding ${from_quantity_left} of item ${itemId} from inventory ${toId} to inventory ${fromId}`, LogLevel.INFO);
       await refundFromInventory;
     }
@@ -170,8 +170,8 @@ export async function safelyMoveItemsBetweenInventories(transaction: {
       // we need to remove the items from the fromInventory
       const refundToInventory =
         fromType === 'user'
-          ? UserInventoryItem.addToInventory(fromId as string, itemId, to_quantity_left, fromSlot)
-          : WorldBuildingInventory.addToInventory(fromId as number, itemId, to_quantity_left, fromSlot);
+          ? UserInventoryItem.addToInventory(fromId, itemId, to_quantity_left, fromSlot)
+          : WorldBuildingInventory.addToInventory(fromId, itemId, to_quantity_left, fromSlot);
       await refundToInventory;
     } else if (to_quantity_left < 0) {
       log(`Tried to move items to inventory ${toId} that we did not have.`, LogLevel.ERROR);

@@ -19,6 +19,7 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
     const enterEntities = mainPlayerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
+
       const texture = state.spritesById[id];
       if (texture && texture.body) {
         /* Follow the main character */
@@ -59,6 +60,7 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
 
 export const setMainPlayerEntity = (world: IWorld, eid: number) => {
   addComponent(world, MainPlayer, eid);
+
   /* Add collider to entity */
   addComponent(world, Collider, eid);
   Collider.offsetX[eid] = 0;
@@ -67,4 +69,8 @@ export const setMainPlayerEntity = (world: IWorld, eid: number) => {
   Collider.sizeHeight[eid] = 16;
   Collider.scale[eid] = 1;
   Collider.group[eid] = GameObjectGroups.PLAYER;
+
+  addComponent(world, Velocity, eid);
+  Velocity.x[eid] = 0;
+  Velocity.y[eid] = 0;
 };

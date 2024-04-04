@@ -18,6 +18,7 @@ import { createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
 import { allComponents, Player } from '@virtcon2/network-world-entities';
+import { createPlayerSystem } from '../systems/PlayerSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -67,6 +68,7 @@ export default class Game extends Scene implements SceneStates {
   public buildingPlacementSystem?: System<[], [IWorld, GameState]>;
   public buildingSystem?: System<[], [IWorld, GameState]>;
   public tagSystem?: System<[], [IWorld, GameState]>;
+  public playerSystem?: System<[], [IWorld, GameState]>;
 
   public static network: Network;
 
@@ -117,7 +119,7 @@ export default class Game extends Scene implements SceneStates {
       Game.network.join(worldId);
     });
 
-    events.subscribe('networkLoadWorld', ({ heightMap, id }) => {
+    events.subscribe('networkLoadWorld', ({ heightMap, id, mainPlayerId }) => {
       this.state.world_id = id;
       console.log('Loading world data...');
 
@@ -135,6 +137,7 @@ export default class Game extends Scene implements SceneStates {
       this.buildingPlacementSystem = createBuildingPlacementSystem(this);
       this.buildingSystem = createBuildingSystem();
       this.tagSystem = createTagSystem(this);
+      this.playerSystem = createPlayerSystem(mainPlayerId);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -166,6 +169,7 @@ export default class Game extends Scene implements SceneStates {
       !this.resourceSystem ||
       !this.buildingPlacementSystem ||
       !this.buildingSystem ||
+      !this.playerSystem ||
       !this.tagSystem
     )
       return;
@@ -182,6 +186,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.buildingSystem([this.world, newState])[1];
     newState = this.buildingPlacementSystem([this.world, newState])[1];
     newState = this.buildingPlacementSystem([this.world, newState])[1];
+    newState = this.playerSystem([this.world, newState])[1];
     newState = this.tagSystem([this.world, newState])[1];
 
     // Update state
@@ -207,6 +212,7 @@ const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) 
       const buffer = Buffer.from(dataBufferJSON);
       const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
       const deserializedEnts = deserialize(world, arrayBuffer);
+
       console.log(`Received ${deserializedEnts.length} entities from server`);
     }
   }

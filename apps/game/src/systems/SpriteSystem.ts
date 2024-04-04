@@ -18,7 +18,10 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
         console.error('Texture not found for id: ' + texId);
         continue;
       }
-      const sprite = scene.add.sprite(Position.x[id], Position.y[id], texture.textureName);
+      const sprite = Sprite.dynamicBody[id]
+        ? scene.physics.add.sprite(Position.x[id], Position.y[id], texture.textureName)
+        : scene.add.sprite(Position.x[id], Position.y[id], texture.textureName);
+
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {
           const animation = texture.animations[i];

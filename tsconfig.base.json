@@ -18,10 +18,11 @@
     "baseUrl": ".",
     "paths": {
       "@shared": ["packages/shared/src/index.ts"],
-      "@virtcon2/network-world-entities": ["packages/network-world-entities/src/index.ts"],
       "@virtcon2/database-postgres": ["packages/database-postgres/src/index.ts"],
       "@virtcon2/database-redis": ["packages/database-redis/src/index.ts"],
+      "@virtcon2/ecs-net": ["packages/ecs-net/src/index.ts"],
       "@virtcon2/network-packet": ["packages/network-packet/src/index.ts"],
+      "@virtcon2/network-world-entities": ["packages/network-world-entities/src/index.ts"],
       "@virtcon2/static-game-data": ["packages/static-game-data/src/index.ts"]
     }
   },

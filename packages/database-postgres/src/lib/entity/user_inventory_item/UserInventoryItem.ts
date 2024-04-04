@@ -8,7 +8,7 @@ import { addToInventory } from '../../shared/InventoryManagement';
 @Entity()
 export class UserInventoryItem extends BaseEntity {
   @PrimaryColumn({ type: 'int' })
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User, (user) => user.id)
   user: User;
@@ -25,7 +25,7 @@ export class UserInventoryItem extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   quantity: number;
 
-  static async addToInventory(userId: string, itemId: number, quantity: number, slot?: number): Promise<number> {
+  static async addToInventory(userId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
     if (quantity === 0) {
       return;
     }

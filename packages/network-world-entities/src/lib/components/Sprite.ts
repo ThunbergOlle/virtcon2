@@ -6,4 +6,5 @@ export const Sprite = defineComponent({
   width: Types.ui8,
   height: Types.ui8,
   rotation: Types.f32, // radians
+  dynamicBody: Types.ui8, // boolean
 });

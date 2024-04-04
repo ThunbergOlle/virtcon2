@@ -1,14 +1,16 @@
 import { createWorld, defineSerializer, IWorld, registerComponents } from 'bitecs';
 import { loadWorldFromDb } from './loaders';
 
-import { getResourceNameFromItemName } from '@virtcon2/static-game-data';
+import { log } from '@shared';
 import { allComponents, createNewBuildingEntity, createNewResourceEntity } from '@virtcon2/network-world-entities';
+import { getResourceNameFromItemName } from '@virtcon2/static-game-data';
 
-const worlds: { [key: string]: IWorld } = {};
+export const worlds: { [key: string]: IWorld } = {};
 
 export const newEntityWorld = (id: string) => {
   if (worlds[id]) throw new Error(`World with id ${id} already exists`);
   worlds[id] = createWorld();
+  log(`Created new world with id ${id}, registering ${allComponents.length} components`);
   registerComponents(worlds[id], allComponents);
   return worlds[id];
 };

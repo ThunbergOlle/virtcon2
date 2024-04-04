@@ -1,5 +1,3 @@
-import { RedisPlayer } from '@shared';
-
 export enum PacketType {
   JOIN = 'join',
   DISCONNECT = 'disconnect',
@@ -24,12 +22,19 @@ export enum PacketType {
   SYNC_SERVER_ENTITY = 'syncServerEntity',
 }
 
+export interface PacketSender {
+  id: number;
+  name: string;
+  socket_id: string;
+  world_id: string;
+}
+
 type SocketID = string;
 type WorldID = string;
 export interface ServerPacket<T> {
   packet_type: string;
   target: SocketID | WorldID;
-  sender: RedisPlayer;
+  sender: PacketSender;
   data: T;
 }
 
@@ -40,6 +45,6 @@ export interface ClientPacket<T> {
   data: T;
 }
 export interface ClientPacketWithSender<T> extends ServerPacket<T> {
-  sender: RedisPlayer;
+  sender: PacketSender;
   world_id: string;
 }

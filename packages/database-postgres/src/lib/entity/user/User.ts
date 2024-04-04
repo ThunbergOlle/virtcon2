@@ -7,7 +7,7 @@ import { UserInventoryItem } from '../user_inventory_item/UserInventoryItem';
 export class User extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
   @Field(() => String)
   @Column({ type: 'text', unique: true })

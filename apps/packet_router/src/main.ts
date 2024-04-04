@@ -1,7 +1,6 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
-import { AppDataSource } from '@virtcon2/database-postgres';
-import Redis from '@virtcon2/database-redis';
-import { ClientPacket, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
+import { AppDataSource, User } from '@virtcon2/database-postgres';
+import { ClientPacket, PacketType, RequestJoinPacketData, getAllPackets } from '@virtcon2/network-packet';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
@@ -50,21 +49,29 @@ const io = new socketio.Server(server, {
 });
 
 io.on('connection', (socket) => {
+  const auth = socket.handshake.headers.authorization;
+
   socket.on('disconnect', async () => {
-    const player = await Redis.getPlayerBySocketId(socket.id, redisClient);
-    if (!player) return;
-    enqueuePacket(redisClient, player.world_id, {
-      packet_type: PacketType.DISCONNECT,
-      target: player.world_id,
-      sender: player,
-      data: { id: player.id },
-    });
-    Redis.removePlayer(player, player.world_id, socket, redisClient);
+    const user = await User.findOne({ where: { token: auth } });
+    console.log('User disconnected:', user.display_name);
+    // enqueuePacket(redisClient, player.world_id, {
+    //   packet_type: PacketType.DISCONNECT,
+    //   target: player.world_id,
+    //   sender: {
+    //     id: 1,
+    //     name: 'tmp',
+    //     socket_id: socket.id,
+    //     world_id: player.world_id,
+    //   },
+    //   data: { id: player.id },
+    // });
   });
 
   socket.on('packet', async (packet: string) => {
     const packetJson = JSON.parse(packet) as ClientPacket<unknown>;
     packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
+
+    const user = await User.findOne({ where: { token: auth } });
 
     if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
       packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
@@ -78,9 +85,18 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const sender = await Redis.getPlayerBySocketId(socket.id, redisClient);
-
-    return handleClientPacket({ ...packetJson, sender }, redisClient);
+    return handleClientPacket(
+      {
+        ...packetJson,
+        sender: {
+          id: user.id,
+          name: user.display_name,
+          socket_id: socket.id,
+          world_id: packetJson.world_id,
+        },
+      },
+      redisClient,
+    );
   });
 });
 

@@ -1,8 +1,11 @@
 import { log, LogApp, LogLevel } from '@shared';
 import { User, World } from '@virtcon2/database-postgres';
-import { ClientPacket, enqueuePacket, LoadWorldPacketData, PacketType, RequestJoinPacketData } from '@virtcon2/network-packet';
+import { ClientPacket, enqueuePacket, LoadWorldPacketData, PacketType, RequestJoinPacketData, syncServerEntities } from '@virtcon2/network-packet';
+
+import { createNewPlayerEntity } from '@virtcon2/network-world-entities';
+import { defineSerializer } from 'bitecs';
 import { RedisClientType } from 'redis';
-import { getEntityWorld, loadEntitiesIntoMemory, serializeEntityWorld } from '../../ecs/entityWorld';
+import { getEntityWorld, loadEntitiesIntoMemory, serializeEntityWorld, worlds } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
 
 export default async function request_join_packet(packet: ClientPacket<RequestJoinPacketData>, client: RedisClientType) {
@@ -20,6 +23,8 @@ export default async function request_join_packet(packet: ClientPacket<RequestJo
     }
   } else log(`World ${packet.world_id} is already running.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 
+  const user = await User.findOne({ where: { token: packet.data.token } });
+
   const serializeWorld = serializeEntityWorld(packet.world_id);
 
   await enqueuePacket(client, packet.world_id, {
@@ -29,18 +34,28 @@ export default async function request_join_packet(packet: ClientPacket<RequestJo
     sender: SERVER_SENDER,
   });
 
+  const playerEntityId = createNewPlayerEntity(worlds[packet.world_id], {
+    userId: user.id,
+    name: user.display_name,
+    position: [0, 0],
+  });
+
   await enqueuePacket<LoadWorldPacketData>(client, packet.world_id, {
     packet_type: PacketType.LOAD_WORLD,
     target: packet.data.socket_id,
     data: {
       id: world.id,
       heightMap: World.Get2DWorldMap(world.seed),
+      mainPlayerId: user.id,
     },
     sender: SERVER_SENDER,
   });
 
-  // get player inventory from database.
-  const player = await User.findOne({ where: { token: packet.data.token } });
+  const serialize = defineSerializer(worlds[packet.world_id]);
 
-  log(`Player ${player.id} joined world ${packet.world_id}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+  const serializedPlayer = serialize([playerEntityId]);
+
+  syncServerEntities(client, packet.world_id, packet.data.socket_id, serializedPlayer);
+
+  log(`Player ${user.display_name} joined world ${world.id}.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 }

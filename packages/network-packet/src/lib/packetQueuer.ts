@@ -1,6 +1,6 @@
-import { RedisClientType } from 'redis';
-import { ServerPacket } from './types/packet';
 import { log } from '@shared';
+import { RedisClientType } from 'redis';
+import { PacketType, ServerPacket } from './types/packet';
 
 export const enqueuePacket = async <T>(client: RedisClientType, worldId: string, packet: ServerPacket<T>) => {
   if (packet.data instanceof ArrayBuffer) {
@@ -33,4 +33,18 @@ export const getAllPackets = async (client: RedisClientType, worldId: string): P
 
 const parsePacket = (packet: string): ServerPacket<unknown> => {
   return JSON.parse(packet);
+};
+
+export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, data: ArrayBuffer) => {
+  await enqueuePacket(client, queue, {
+    packet_type: PacketType.SYNC_SERVER_ENTITY,
+    target: target,
+    data,
+    sender: {
+      id: -1,
+      name: 'server_syncer',
+      socket_id: '',
+      world_id: '',
+    },
+  });
 };
