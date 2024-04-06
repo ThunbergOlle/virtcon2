@@ -1,10 +1,8 @@
 import { LogApp, LogLevel } from '@shared';
 import { AppDataSource, WorldBuilding } from '@virtcon2/database-postgres';
-import Redis from '@virtcon2/database-redis';
 import { ClientPacketWithSender, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
 import { log } from 'console';
 import { RedisClientType } from 'redis';
-import worldBuildingUpdateToInspectorsServerPacket from './server/worldBuildingUpdateToInspectorsServerPacket';
 
 export default async function request_world_building_change_output(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>, redis: RedisClientType) {
   const world_building = await WorldBuilding.findOne({ where: { id: packet.data.building_id }, relations: ['building'] });

@@ -7,6 +7,7 @@ import { GameObjectGroups, GameState } from '../scenes/Game';
 const speed = 750;
 const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player, Collider]);
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
+
 export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
   const [keyW, keyA, keyS, keyD] = [
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),

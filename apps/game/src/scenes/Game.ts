@@ -1,5 +1,5 @@
-import { Scene, Tilemaps } from 'phaser';
 import { Buffer } from 'buffer';
+import { Scene, Tilemaps } from 'phaser';
 import { SceneStates } from './interfaces';
 
 import { RedisWorldResource, worldMapParser } from '@shared';
@@ -7,18 +7,18 @@ import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
 import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { DESERIALIZE_MODE, IWorld, System, createWorld, defineDeserializer, defineSerializer, registerComponents } from 'bitecs';
+import { allComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { createWorld, defineDeserializer, IWorld, registerComponents, System } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
+import { createMainPlayerSyncSystem } from '../systems/MainPlayerSyncSystem';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
-import { createPlayerSendNetworkSystem } from '../systems/PlayerSendNetworkSystem';
+import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
-import { allComponents, Player } from '@virtcon2/network-world-entities';
-import { createPlayerSystem } from '../systems/PlayerSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -62,7 +62,7 @@ export default class Game extends Scene implements SceneStates {
   public spriteSystem?: System<[], [IWorld, GameState]>;
   public spriteRegisterySystem?: System<[], [IWorld, GameState]>;
   public mainPlayerSystem?: System<[], [IWorld, GameState]>;
-  public playerSendNetworkSystem?: System<[], [IWorld, GameState]>;
+  public mainPlayerSyncSystem?: System<[], [IWorld, GameState]>;
   public colliderSystem?: System<[], [IWorld, GameState]>;
   public resourceSystem?: System<[], [IWorld, GameState]>;
   public buildingPlacementSystem?: System<[], [IWorld, GameState]>;
@@ -131,7 +131,7 @@ export default class Game extends Scene implements SceneStates {
       this.spriteRegisterySystem = createSpriteRegisterySystem(this);
       this.mainPlayerSystem = createMainPlayerSystem(this, this.input.keyboard.createCursorKeys());
       // this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem(); - replaced by networked entities
-      this.playerSendNetworkSystem = createPlayerSendNetworkSystem();
+      this.mainPlayerSyncSystem = createMainPlayerSyncSystem();
       this.colliderSystem = createColliderSystem(this);
       this.resourceSystem = createResourceSystem();
       this.buildingPlacementSystem = createBuildingPlacementSystem(this);
@@ -165,7 +165,7 @@ export default class Game extends Scene implements SceneStates {
       !this.mainPlayerSystem ||
       !this.colliderSystem ||
       !this.spriteRegisterySystem ||
-      !this.playerSendNetworkSystem ||
+      !this.mainPlayerSyncSystem ||
       !this.resourceSystem ||
       !this.buildingPlacementSystem ||
       !this.buildingSystem ||
@@ -181,6 +181,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.spriteRegisterySystem([this.world, newState])[1];
     newState = this.colliderSystem([this.world, newState])[1];
     newState = this.mainPlayerSystem([this.world, newState])[1];
+    newState = this.mainPlayerSyncSystem([this.world, newState])[1];
     newState = this.spriteSystem([this.world, newState])[1];
     newState = this.resourceSystem([this.world, newState])[1];
     newState = this.buildingSystem([this.world, newState])[1];
@@ -203,17 +204,29 @@ export default class Game extends Scene implements SceneStates {
 }
 
 const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) => {
-  const deserialize = defineDeserializer(world); // TODO: move this to a more global scope
+  const worldDeserializer = defineDeserializer(world); // TODO: move this to a more global scope
 
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
     if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
-      const dataBufferJSON = packet.data as SyncServerEntityPacket;
-      const buffer = Buffer.from(dataBufferJSON);
+      const { buffer: jsonBuffer, serializationId } = packet.data as SyncServerEntityPacket;
+      console.log(jsonBuffer, serializationId);
+      const buffer = Buffer.from(jsonBuffer);
       const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+
+      if (serializationId === SerializationID.WORLD) {
+        const ents = worldDeserializer(world, arrayBuffer);
+        console.log(`Received ${ents.length} entities from server when syncing world.`);
+        return;
+      }
+
+      const deserialize = defineDeserializer(serializeConfig[serializationId]);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - BITECS type definitions are not up to date
       const deserializedEnts = deserialize(world, arrayBuffer);
 
-      console.log(`Received ${deserializedEnts.length} entities from server`);
+      console.log(`Deserialized entities: ${deserializedEnts}`);
     }
   }
 };

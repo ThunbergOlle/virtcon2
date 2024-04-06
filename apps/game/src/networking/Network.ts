@@ -61,6 +61,6 @@ export class Network {
       console.log('Invalid packet');
       return;
     }
-    this.socket.emit('packet', JSON.stringify(packet));
+    this.socket.emit('packet', packet);
   }
 }

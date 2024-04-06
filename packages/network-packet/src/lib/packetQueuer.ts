@@ -1,11 +1,14 @@
 import { log } from '@shared';
 import { RedisClientType } from 'redis';
 import { PacketType, ServerPacket } from './types/packet';
+import { SerializationID } from '@virtcon2/network-world-entities';
+import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
 
 export const enqueuePacket = async <T>(client: RedisClientType, worldId: string, packet: ServerPacket<T>) => {
-  if (packet.data instanceof ArrayBuffer) {
-    log(`Buffer length: ${packet.data.byteLength}`);
-    const dataView = new DataView(packet.data);
+  if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
+    const data = packet.data as SyncServerEntityPacket;
+    log(`Buffer length: ${data.buffer.byteLength}`);
+    const dataView = new DataView(data.buffer);
     const buffer = Buffer.from(dataView.buffer, dataView.byteOffset, dataView.byteLength);
 
     console.log(buffer.toJSON());
@@ -13,7 +16,10 @@ export const enqueuePacket = async <T>(client: RedisClientType, worldId: string,
       `queue_${worldId}`,
       JSON.stringify({
         ...packet,
-        data: buffer.toJSON(),
+        data: {
+          serializationId: data.serializationId,
+          buffer: buffer.toJSON(),
+        },
       }),
     );
   } else if (typeof packet === 'object') await client.rPush(`queue_${worldId}`, JSON.stringify(packet));
@@ -35,11 +41,14 @@ const parsePacket = (packet: string): ServerPacket<unknown> => {
   return JSON.parse(packet);
 };
 
-export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, data: ArrayBuffer) => {
-  await enqueuePacket(client, queue, {
+export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, buffer: ArrayBuffer, serializationId: SerializationID) => {
+  await enqueuePacket<SyncServerEntityPacket>(client, queue, {
     packet_type: PacketType.SYNC_SERVER_ENTITY,
     target: target,
-    data,
+    data: {
+      serializationId,
+      buffer,
+    },
     sender: {
       id: -1,
       name: 'server_syncer',

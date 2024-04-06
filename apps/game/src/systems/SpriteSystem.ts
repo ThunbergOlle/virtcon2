@@ -59,23 +59,22 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
   });
 };
 
-const spritePosQuery = defineQuery([Sprite, Position, Not(Velocity)]);
-const spriteVelocityQuery = defineQuery([Sprite, Position, Velocity]);
+const spritePosQuery = defineQuery([Sprite, Position, Velocity]);
 
 export const createSpriteSystem = () => {
   return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const posEntities = spritePosQuery(world);
-    for (let i = 0; i < posEntities.length; i++) {
-      const id = posEntities[i];
+    const spriteEntities = spritePosQuery(world);
+    for (let i = 0; i < spriteEntities.length; i++) {
+      const id = spriteEntities[i];
       const sprite = state.spritesById[id];
-      if (sprite) {
+      if (sprite && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
         sprite.setPosition(Position.x[id], Position.y[id]);
         sprite.setRotation(Sprite.rotation[id] || 0);
       }
     }
-    const velocityEntities = spriteVelocityQuery(world);
-    for (let i = 0; i < velocityEntities.length; i++) {
-      const id = velocityEntities[i];
+
+    for (let i = 0; i < spriteEntities.length; i++) {
+      const id = spriteEntities[i];
       const sprite = state.spritesById[id] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       if (sprite && sprite.body) {
         sprite.body.setVelocity(Velocity.x[id], Velocity.y[id]);

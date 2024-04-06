@@ -1,12 +1,22 @@
 import { log, LogApp, LogLevel } from '@shared';
 import { User, World } from '@virtcon2/database-postgres';
-import { ClientPacket, enqueuePacket, LoadWorldPacketData, PacketType, RequestJoinPacketData, syncServerEntities } from '@virtcon2/network-packet';
+import {
+  ClientPacket,
+  enqueuePacket,
+  LoadWorldPacketData,
+  PacketType,
+  RequestJoinPacketData,
+  syncServerEntities,
+  SyncServerEntityPacket,
+} from '@virtcon2/network-packet';
 
-import { createNewPlayerEntity } from '@virtcon2/network-world-entities';
-import { defineSerializer } from 'bitecs';
+import { createNewPlayerEntity, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSerializer } from 'bitecs';
 import { RedisClientType } from 'redis';
 import { getEntityWorld, loadEntitiesIntoMemory, serializeEntityWorld, worlds } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
+
+const playersInWorld = defineQuery([Player]);
 
 export default async function request_join_packet(packet: ClientPacket<RequestJoinPacketData>, client: RedisClientType) {
   /* Check if world is currently running in Redis */
@@ -23,22 +33,31 @@ export default async function request_join_packet(packet: ClientPacket<RequestJo
     }
   } else log(`World ${packet.world_id} is already running.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 
-  const user = await User.findOne({ where: { token: packet.data.token } });
-
   const serializeWorld = serializeEntityWorld(packet.world_id);
 
-  await enqueuePacket(client, packet.world_id, {
+  await enqueuePacket<SyncServerEntityPacket>(client, packet.world_id, {
     packet_type: PacketType.SYNC_SERVER_ENTITY,
     target: packet.data.socket_id,
-    data: serializeWorld,
+    data: {
+      serializationId: SerializationID.WORLD,
+      buffer: serializeWorld,
+    },
     sender: SERVER_SENDER,
   });
 
-  const playerEntityId = createNewPlayerEntity(worlds[packet.world_id], {
-    userId: user.id,
-    name: user.display_name,
-    position: [0, 0],
-  });
+  const user = await User.findOne({ where: { token: packet.data.token } });
+  // check if user is already in the world
+  const playerEid = playersInWorld(getEntityWorld(packet.world_id));
+
+  const existingPlayer = playerEid.find((eid) => Player.userId[eid] === user.id);
+
+  const playerEntityId =
+    existingPlayer ||
+    createNewPlayerEntity(worlds[packet.world_id], {
+      userId: user.id,
+      name: user.display_name,
+      position: [0, 0],
+    });
 
   await enqueuePacket<LoadWorldPacketData>(client, packet.world_id, {
     packet_type: PacketType.LOAD_WORLD,
@@ -51,11 +70,11 @@ export default async function request_join_packet(packet: ClientPacket<RequestJo
     sender: SERVER_SENDER,
   });
 
-  const serialize = defineSerializer(worlds[packet.world_id]);
+  const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
 
   const serializedPlayer = serialize([playerEntityId]);
 
-  syncServerEntities(client, packet.world_id, packet.data.socket_id, serializedPlayer);
+  syncServerEntities(client, packet.world_id, packet.data.socket_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
 
   log(`Player ${user.display_name} joined world ${world.id}.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 }

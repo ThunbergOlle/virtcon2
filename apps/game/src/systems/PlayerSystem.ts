@@ -1,8 +1,9 @@
-import { IWorld, Not, defineQuery, defineSystem, enterQuery } from 'bitecs';
+import { Changed, IWorld, Not, defineQuery, defineSystem, enterQuery } from 'bitecs';
 
-import { MainPlayer, Player } from '@virtcon2/network-world-entities';
+import { MainPlayer, Player, Position } from '@virtcon2/network-world-entities';
 import { GameState } from '../scenes/Game';
 import { setMainPlayerEntity } from './MainPlayerSystem';
+import { TPS } from '@shared';
 
 const playerQuery = defineQuery([Player, Not(MainPlayer)]);
 const playerQueryEnter = enterQuery(playerQuery);
@@ -16,6 +17,7 @@ export const createPlayerSystem = (mainPlayerId: number) => {
         setMainPlayerEntity(world, eid);
       }
     }
+
     return [world, state];
   });
 };

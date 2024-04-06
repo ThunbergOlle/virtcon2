@@ -67,12 +67,12 @@ io.on('connection', (socket) => {
     // });
   });
 
-  socket.on('packet', async (packet: string) => {
-    const packetJson = JSON.parse(packet) as ClientPacket<unknown>;
+  socket.on('packet', async (packetJson: ClientPacket<unknown>) => {
     packetJson.world_id = packetJson.world_id.replace(/\s/g, '_'); // replace all spaces in world_id with underscores
 
     const user = await User.findOne({ where: { token: auth } });
 
+    if (!user) return;
     if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
       packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
       socket.join(packetJson.world_id);

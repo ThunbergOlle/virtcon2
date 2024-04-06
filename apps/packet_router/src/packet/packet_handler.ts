@@ -12,6 +12,7 @@ import {
   RequestPlaceBuildingPacketData,
   RequestPlayerInventoryPacket,
   RequestWorldBuildingChangeOutput,
+  SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import inspectBuildingClientPacket from './packets/inspectBuildingClientPacket';
@@ -21,6 +22,7 @@ import request_move_inventory_item_packet from './packets/request_move_inventory
 import request_place_building_packet from './packets/request_place_building_packet';
 import request_player_inventory_packet from './packets/request_player_inventory_packet';
 import request_world_building_change_output from './packets/request_world_building_change_output';
+import syncClientEntity from './packets/syncClientEntity';
 
 interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
   sender?: PacketSender;
@@ -44,6 +46,9 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return request_world_building_change_output(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client);
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM:
       return request_move_inventory_item_packet(packet as ClientPacketWithSender<RequestMoveInventoryItemPacketData>, client);
+    case PacketType.SYNC_CLIENT_ENTITY:
+      return syncClientEntity(packet as ClientPacketWithSender<SyncClientEntityPacket>, client);
+
     default: {
       log(`Unknown packet type: ${packet.packet_type}`, LogLevel.ERROR);
       break;
