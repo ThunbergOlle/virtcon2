@@ -19,7 +19,6 @@ export default async function syncClientEntityPacket(packet: ClientPacketWithSen
 
   const deserialize = defineDeserializer(serializeConfig[packet.data.serializationId]);
 
-  // @ts-ignore - Changed is a bitecs function
   const deserializedEnts = deserialize(entityWorld, arrayBuffer);
 
   log(`Deserialized entities: ${deserializedEnts}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);

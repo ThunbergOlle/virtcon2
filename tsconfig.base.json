@@ -24,7 +24,8 @@
       "@virtcon2/network-packet": ["packages/network-packet/src/index.ts"],
       "@virtcon2/network-world-entities": ["packages/network-world-entities/src/index.ts"],
       "@virtcon2/static-game-data": ["packages/static-game-data/src/index.ts"]
-    }
+    },
+    "typeRoots": ["node_modules/@types", "types"]
   },
   "exclude": ["node_modules", "tmp"]
 }
