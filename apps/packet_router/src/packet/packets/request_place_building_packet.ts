@@ -3,7 +3,7 @@ import { Item, UserInventoryItem, WorldBuilding, WorldBuildingInventory, WorldRe
 import { ClientPacketWithSender, enqueuePacket, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import request_player_inventory_packet from './request_player_inventory_packet';
-import request_world_building_change_output from './request_world_building_change_output';
+import requestWorldBuldingChangeOutput from './request_world_building_change_output';
 
 export default async function request_place_building_packet(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
   // get the sender
@@ -91,7 +91,7 @@ export default async function request_place_building_packet(packet: ClientPacket
     const [x, y] = position;
     const wb = await WorldBuilding.findOne({ where: { output_pos_x: x, output_pos_y: y, world: { id: packet.world_id } } });
     if (wb) {
-      request_world_building_change_output({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } }, client);
+      requestWorldBuldingChangeOutput({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } }, client);
     }
   });
 
@@ -99,25 +99,25 @@ export default async function request_place_building_packet(packet: ClientPacket
 
   switch (rotation) {
     case 0:
-      request_world_building_change_output(
+      requestWorldBuldingChangeOutput(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y } },
         client,
       );
       break;
     case 90:
-      request_world_building_change_output(
+      requestWorldBuldingChangeOutput(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height } },
         client,
       );
       break;
     case 180:
-      request_world_building_change_output(
+      requestWorldBuldingChangeOutput(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y } },
         client,
       );
       break;
     case 270:
-      request_world_building_change_output(
+      requestWorldBuldingChangeOutput(
         { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height } },
         client,
       );
