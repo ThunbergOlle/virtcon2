@@ -1,4 +1,3 @@
-
 export interface DisconnectPacketData {
-  id: string
+  eid: number;
 }

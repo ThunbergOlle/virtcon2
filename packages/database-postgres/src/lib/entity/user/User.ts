@@ -41,4 +41,8 @@ export class User extends BaseEntity {
   @Field(() => [UserInventoryItem])
   @OneToMany(() => UserInventoryItem, (userInventoryItem) => userInventoryItem.user)
   inventory: UserInventoryItem[];
+
+  @Field(() => String)
+  @Column('text', { nullable: true })
+  currentlyInWorld?: string;
 }

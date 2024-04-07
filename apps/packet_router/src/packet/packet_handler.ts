@@ -17,7 +17,7 @@ import {
 import { RedisClientType } from 'redis';
 import inspectBuildingClientPacket from './packets/inspectBuildingClientPacket';
 import request_destroy_resource_packet from './packets/request_destroy_resource_packet';
-import request_join_packet from './packets/request_join_packet';
+import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
 import request_place_building_packet from './packets/request_place_building_packet';
 import request_player_inventory_packet from './packets/request_player_inventory_packet';
@@ -33,7 +33,7 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
     case PacketType.REQUEST_PLAYER_INVENTORY:
       return request_player_inventory_packet(packet as ClientPacketWithSender<RequestPlayerInventoryPacket>, client);
     case PacketType.REQUEST_JOIN:
-      return request_join_packet(packet as ClientPacket<RequestJoinPacketData>, client);
+      return requestJoinPacket(packet as ClientPacket<RequestJoinPacketData>, client);
     case PacketType.REQUEST_DESTROY_RESOURCE:
       return request_destroy_resource_packet(packet as ClientPacketWithSender<RequestDestroyResourcePacket>);
     case PacketType.REQUEST_PLACE_BUILDING:

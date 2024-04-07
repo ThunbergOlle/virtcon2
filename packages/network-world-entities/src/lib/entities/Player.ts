@@ -1,4 +1,4 @@
-import { addComponent, addEntity, IWorld } from 'bitecs';
+import { addComponent, addEntity, IWorld, removeComponent, removeEntity } from 'bitecs';
 import { Collider, Player, Position, Sprite, Tag } from '../network-world-entities';
 import { MiscTextureMap } from '../SpriteMap';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -33,4 +33,14 @@ export const createNewPlayerEntity = (world: IWorld, newPlayer: CreateNewPlayerE
   Tag.value[player].set(encoder.encode(newPlayer.name));
 
   return player;
+};
+
+export const removePlayerEntity = (world: IWorld, player: number) => {
+  if (!Player.userId[player]) return;
+
+  for (const component of playerEntityComponents) {
+    removeComponent(world, component, player);
+  }
+
+  return removeEntity(world, player);
 };

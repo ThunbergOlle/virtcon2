@@ -1,6 +1,6 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
-import { ClientPacket, PacketType, RequestJoinPacketData, getAllPackets } from '@virtcon2/network-packet';
+import { ClientPacket, DisconnectPacketData, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
@@ -11,6 +11,10 @@ import 'reflect-metadata';
 import * as socketio from 'socket.io';
 import { handleClientPacket } from './packet/packet_handler';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
+import { SERVER_SENDER } from './packet/utils';
+import { getEntityWorld } from './ecs/entityWorld';
+import { defineQuery, removeComponent, removeEntity } from 'bitecs';
+import { Player, removePlayerEntity } from '@virtcon2/network-world-entities';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize();
@@ -54,17 +58,22 @@ io.on('connection', (socket) => {
   socket.on('disconnect', async () => {
     const user = await User.findOne({ where: { token: auth } });
     console.log('User disconnected:', user.display_name);
-    // enqueuePacket(redisClient, player.world_id, {
-    //   packet_type: PacketType.DISCONNECT,
-    //   target: player.world_id,
-    //   sender: {
-    //     id: 1,
-    //     name: 'tmp',
-    //     socket_id: socket.id,
-    //     world_id: player.world_id,
-    //   },
-    //   data: { id: player.id },
-    // });
+
+    const entityWorld = getEntityWorld(user.currentlyInWorld);
+    if (!entityWorld) return log(`World ${user.currentlyInWorld} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+    const query = defineQuery([Player]);
+    const playersEid = query(entityWorld);
+    const eid = playersEid.find((eid) => Player.userId[eid] === user.id);
+    if (!eid) return;
+
+    removePlayerEntity(entityWorld, eid);
+
+    enqueuePacket<DisconnectPacketData>(redisClient, user.currentlyInWorld, {
+      packet_type: PacketType.DISCONNECT,
+      target: user.currentlyInWorld,
+      sender: SERVER_SENDER,
+      data: { eid },
+    });
   });
 
   socket.on('packet', async (packetJson: ClientPacket<unknown>) => {
@@ -76,6 +85,7 @@ io.on('connection', (socket) => {
     if (packetJson.packet_type === PacketType.REQUEST_JOIN) {
       packetJson.data = { ...(packetJson.data as RequestJoinPacketData), socket_id: socket.id };
       socket.join(packetJson.world_id);
+
       if (!worlds.includes(packetJson.world_id)) worlds.push(packetJson.world_id);
     }
 

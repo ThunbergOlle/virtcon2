@@ -6,9 +6,9 @@ import { RedisWorldResource, worldMapParser } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
-import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { createWorld, defineDeserializer, IWorld, registerComponents, System } from 'bitecs';
+import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
+import { allComponents, removePlayerEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { createWorld, defineDeserializer, IWorld, registerComponents, removeEntity, System } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -223,8 +223,12 @@ const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) 
       const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
       const deserializedEnts = deserialize(world, arrayBuffer);
-
-      console.log(`Deserialized entities: ${deserializedEnts}`);
+      console.log(`Received ${deserializedEnts.length} entities from server.`);
+    }
+    if (packet.packet_type === PacketType.DISCONNECT) {
+      const data = packet.data as DisconnectPacketData;
+      console.log(`Received disconnect packet for entity ${data.eid}`);
+      removePlayerEntity(world, data.eid);
     }
   }
 };

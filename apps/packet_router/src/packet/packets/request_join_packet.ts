@@ -18,7 +18,7 @@ import { SERVER_SENDER } from '../utils';
 
 const playersInWorld = defineQuery([Player]);
 
-export default async function request_join_packet(packet: ClientPacket<RequestJoinPacketData>, client: RedisClientType) {
+export default async function requestJoinPacket(packet: ClientPacket<RequestJoinPacketData>, client: RedisClientType) {
   /* Check if world is currently running in Redis */
   const world = await World.findOne({ where: { id: packet.world_id } });
   if (!world) return log(`World ${packet.world_id} does not exist.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
@@ -46,10 +46,13 @@ export default async function request_join_packet(packet: ClientPacket<RequestJo
   });
 
   const user = await User.findOne({ where: { token: packet.data.token } });
-  // check if user is already in the world
-  const playerEid = playersInWorld(getEntityWorld(packet.world_id));
+  user.currentlyInWorld = packet.world_id;
+  await user.save();
 
-  const existingPlayer = playerEid.find((eid) => Player.userId[eid] === user.id);
+  // check if user is already in the world
+  const allPlayerEid = playersInWorld(getEntityWorld(packet.world_id));
+
+  const existingPlayer = allPlayerEid.find((eid) => Player.userId[eid] === user.id);
 
   const playerEntityId =
     existingPlayer ||
@@ -72,9 +75,9 @@ export default async function request_join_packet(packet: ClientPacket<RequestJo
 
   const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
 
-  const serializedPlayer = serialize([playerEntityId]);
+  const serializedPlayer = serialize(allPlayerEid);
 
-  syncServerEntities(client, packet.world_id, packet.data.socket_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
+  syncServerEntities(client, packet.world_id, packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
 
   log(`Player ${user.display_name} joined world ${world.id}.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 }
