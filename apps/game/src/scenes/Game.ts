@@ -222,8 +222,6 @@ const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) 
 
       const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - BITECS type definitions are not up to date
       const deserializedEnts = deserialize(world, arrayBuffer);
 
       console.log(`Deserialized entities: ${deserializedEnts}`);

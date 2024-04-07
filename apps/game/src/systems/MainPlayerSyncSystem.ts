@@ -19,7 +19,6 @@ export const createMainPlayerSyncSystem = () => {
     Position.x[mainPlayerEntity] = sprite.x;
     Position.y[mainPlayerEntity] = sprite.y;
 
-    // @ts-ignore - Changed is a bitecs function
     const packetData = serializeMovement(world, mainPlayerEntity);
     if (!packetData) return [world, state];
 
