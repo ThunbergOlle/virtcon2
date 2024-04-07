@@ -15,3 +15,22 @@ export interface DBBuilding {
   height: number;
   can_collide: boolean;
 }
+
+export interface DBWorldBuilding {
+  id: number;
+  x: number;
+  y: number;
+  rotation: number;
+  output_pos_x: number;
+  output_pos_y: number;
+  building: DBBuilding;
+  output_world_building: DBWorldBuilding | null;
+  world_building_inventory: DBWorldBuildingInventory[];
+  active: boolean;
+}
+
+export interface DBWorldBuildingInventory {
+  slot: number;
+  item: DBItem;
+  quantity: number;
+}
