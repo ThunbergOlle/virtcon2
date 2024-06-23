@@ -1,6 +1,8 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
 import { ClientPacket, DisconnectPacketData, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
+import { Player, removePlayerEntity } from '@virtcon2/network-world-entities';
+import { defineQuery } from 'bitecs';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
@@ -9,15 +11,16 @@ import { cwd } from 'process';
 import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import 'reflect-metadata';
 import * as socketio from 'socket.io';
-import { handleClientPacket } from './packet/packet_handler';
-import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
-import { SERVER_SENDER } from './packet/utils';
+import { IsNull, Not } from 'typeorm';
 import { getEntityWorld } from './ecs/entityWorld';
-import { defineQuery, removeComponent, removeEntity } from 'bitecs';
-import { Player, removePlayerEntity } from '@virtcon2/network-world-entities';
+import { handleClientPacket } from './packet/packet_handler';
+import { SERVER_SENDER } from './packet/utils';
+import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
 
 dotenv.config({ path: `${cwd()}/.env` });
-AppDataSource.initialize();
+AppDataSource.initialize().then(() => {
+  clearAllInWords();
+});
 
 let tick = 0;
 const worlds: string[] = [];
@@ -61,16 +64,24 @@ io.on('connection', (socket) => {
 
     const entityWorld = getEntityWorld(user.currentlyInWorld);
     if (!entityWorld) return log(`World ${user.currentlyInWorld} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
-    const query = defineQuery([Player]);
-    const playersEid = query(entityWorld);
+
+    const wasInWorld = user.currentlyInWorld;
+
+    user.currentlyInWorld = null;
+    await user.save();
+
+    const playerQuery = defineQuery([Player]);
+    const playersEid = playerQuery(entityWorld);
+
     const eid = playersEid.find((eid) => Player.userId[eid] === user.id);
-    if (!eid) return;
+
+    if (eid === undefined) return log(`Player entity not found for user ${user.id}`, LogLevel.WARN, LogApp.SERVER);
 
     removePlayerEntity(entityWorld, eid);
 
-    enqueuePacket<DisconnectPacketData>(redisClient, user.currentlyInWorld, {
+    enqueuePacket<DisconnectPacketData>(redisClient, wasInWorld, {
       packet_type: PacketType.DISCONNECT,
-      target: user.currentlyInWorld,
+      target: wasInWorld,
       sender: SERVER_SENDER,
       data: { eid },
     });
@@ -126,6 +137,9 @@ const tickInterval = setInterval(async () => {
   tick++;
   for (const world of worlds) {
     checkFinishedBuildings(world, tick, redisClient);
+    const entityWorld = getEntityWorld(world);
+    if (!entityWorld) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+
     const packets = await getAllPackets(redisClient, world);
     if (!packets.length) continue;
 
@@ -141,7 +155,29 @@ const tickInterval = setInterval(async () => {
 
 /* Implement SIGKILL logic */
 process.on('SIGINT', async () => {
+  console.log('Caught interrupt signal');
   clearInterval(tickInterval);
   await redisClient.disconnect();
+
+  for (const world of worlds) {
+    const users = await User.find({ where: { currentlyInWorld: world } });
+    for (const user of users) {
+      user.currentlyInWorld = null;
+      await user.save();
+    }
+  }
+
   process.exit();
 });
+
+async function clearAllInWords() {
+  log('Clearing all users from worlds', LogLevel.INFO, LogApp.SERVER);
+  const users = await User.find({
+    where: { currentlyInWorld: Not(IsNull()) },
+  });
+
+  for (const user of users) {
+    user.currentlyInWorld = null;
+    await user.save();
+  }
+}

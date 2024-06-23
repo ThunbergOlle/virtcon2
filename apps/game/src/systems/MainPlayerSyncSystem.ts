@@ -8,10 +8,12 @@ const mainPlayerVelocityQuery = defineQuery([MainPlayer, Changed(Velocity), Posi
 const serializeMovement = defineSerializer(serializeConfig[SerializationID.PLAYER_MOVEMENT]);
 
 export const createMainPlayerSyncSystem = () => {
-  const game = Game.getInstance();
   return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const mainPlayerEntity = mainPlayerVelocityQuery(world)[0];
-    if (!mainPlayerEntity) return [world, state];
+    const mainPlayerEntities = mainPlayerVelocityQuery(world);
+    if (!mainPlayerEntities.length) return [world, state];
+    const mainPlayerEntity = mainPlayerEntities[0];
+
+    console.log(`Main player entity: ${mainPlayerEntity}`);
 
     const sprite = state.spritesById[mainPlayerEntity];
     if (!sprite) throw new Error(`No sprite for main player entity ${mainPlayerEntity}`);
@@ -19,7 +21,7 @@ export const createMainPlayerSyncSystem = () => {
     Position.x[mainPlayerEntity] = sprite.x;
     Position.y[mainPlayerEntity] = sprite.y;
 
-    const packetData = serializeMovement(world, mainPlayerEntity);
+    const packetData = serializeMovement([mainPlayerEntity]);
     if (!packetData) return [world, state];
 
     const dataView = new DataView(packetData);

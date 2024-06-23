@@ -9,6 +9,7 @@ export const loadWorldFromDb = async (worldId: string): Promise<{ resources: Wor
   // await PostgresWorldEntity.RegenerateWorld(world.id)
   const worldBuildings = await WorldBuilding.find({
     where: { world: { id: world.id } },
+    relations: ['building'],
   });
   const resources = await WorldResource.find({
     where: { world: { id: world.id } },

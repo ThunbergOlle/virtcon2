@@ -1,4 +1,4 @@
-import { addComponent, addEntity, IWorld, removeComponent, removeEntity } from 'bitecs';
+import { addComponent, addEntity, entityExists, getAllEntities, getEntityComponents, IWorld, removeComponent, removeEntity } from 'bitecs';
 import { Collider, Player, Position, Sprite, Tag } from '../network-world-entities';
 import { MiscTextureMap } from '../SpriteMap';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -16,7 +16,7 @@ export const createNewPlayerEntity = (world: IWorld, newPlayer: CreateNewPlayerE
   const player = addEntity(world);
 
   for (const component of playerEntityComponents) {
-    addComponent(world, component, player);
+    addComponent(world, component, player, true);
   }
 
   Player.userId[player] = newPlayer.userId;
@@ -36,11 +36,17 @@ export const createNewPlayerEntity = (world: IWorld, newPlayer: CreateNewPlayerE
 };
 
 export const removePlayerEntity = (world: IWorld, player: number) => {
-  if (!Player.userId[player]) return;
+  console.log(`Removing player with entity id${player}`);
+  const isEntityInWorld = entityExists(world, player);
+  if (!isEntityInWorld) return console.log(`📮 Entity is not in word ${player}`);
 
-  for (const component of playerEntityComponents) {
-    removeComponent(world, component, player);
+  const components = getEntityComponents(world, player);
+
+  if (!components.length) removeEntity(world, player);
+
+  for (const component of components) {
+    removeComponent(world, component, player, true);
   }
 
-  return removeEntity(world, player);
+  removeEntity(world, player);
 };

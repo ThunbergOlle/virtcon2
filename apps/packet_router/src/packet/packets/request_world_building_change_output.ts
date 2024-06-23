@@ -4,7 +4,7 @@ import { ClientPacketWithSender, RequestWorldBuildingChangeOutput } from '@virtc
 import { log } from 'console';
 import { RedisClientType } from 'redis';
 
-export default async function request_world_building_change_output(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>, redis: RedisClientType) {
+export default async function requestWorldBuldingChangeOutput(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>, redis: RedisClientType) {
   const world_building = await WorldBuilding.findOne({ where: { id: packet.data.building_id }, relations: ['building'] });
   if (!world_building) {
     log(
@@ -36,7 +36,7 @@ export default async function request_world_building_change_output(packet: Clien
     world_building.output_world_building = null;
   }
   if (world_building.building.is_rotatable) {
-    world_building.rotation = get_rotation_from_output_pos(world_building);
+    world_building.rotation = getRotationFromOutputPosition(world_building);
   }
 
   await world_building.save();
@@ -47,25 +47,25 @@ export default async function request_world_building_change_output(packet: Clien
 }
 
 // return radians
-function get_rotation_from_output_pos(world_building: WorldBuilding): number {
-  const is_output_left = world_building.output_pos_x < world_building.x;
-  const is_output_right = world_building.output_pos_x > world_building.x + world_building.building.width - 1;
-  const is_output_top = world_building.output_pos_y < world_building.y;
-  const is_output_bottom = world_building.output_pos_y > world_building.y + world_building.building.height - 1;
+function getRotationFromOutputPosition(worldBuilding: WorldBuilding): number {
+  const isOutputLeft = worldBuilding.output_pos_x < worldBuilding.x;
+  const isOutputRight = worldBuilding.output_pos_x > worldBuilding.x + worldBuilding.building.width - 1;
+  const isOutputTop = worldBuilding.output_pos_y < worldBuilding.y;
+  const isOutputBottom = worldBuilding.output_pos_y > worldBuilding.y + worldBuilding.building.height - 1;
 
-  if (is_output_left) {
+  if (isOutputLeft) {
     return Math.PI;
   }
 
-  if (is_output_right) {
+  if (isOutputRight) {
     return 0;
   }
 
-  if (is_output_top) {
+  if (isOutputTop) {
     return (3 * Math.PI) / 2;
   }
 
-  if (is_output_bottom) {
+  if (isOutputBottom) {
     return Math.PI / 2;
   }
 }

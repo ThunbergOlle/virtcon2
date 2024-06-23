@@ -27,18 +27,19 @@ export class Network {
       const event = packet.packet_type.charAt(0).toUpperCase() + packet.packet_type.slice(1);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       events.notify(('network' + event) as any, packet.data);
-      console.log(`Received packet: ${packet.packet_type} ${JSON.stringify(packet.data).length}`);
+
       this.received_packets.push(packet);
       //events.notify(('network' + event) as any, packetJSON.data);
     });
   }
 
-  public get_received_packets() {
-    return this.received_packets;
+  public getReceivedPackets() {
+    return [this.received_packets, this.received_packets.length] as const;
   }
 
-  public clear_received_packets() {
-    this.received_packets = [];
+  public readReceivedPackets(length: number) {
+    console.log(`Reading ${length} packets`);
+    return this.received_packets.splice(0, length);
   }
 
   join(worldId: string) {
@@ -61,6 +62,7 @@ export class Network {
       console.log('Invalid packet');
       return;
     }
+
     this.socket.emit('packet', packet);
   }
 }

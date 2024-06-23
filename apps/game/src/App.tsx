@@ -8,7 +8,7 @@ import WorldPage from './ui/pages/world/WorldPage';
 import networkError from './ui/errors/network/networkError';
 import { useNavigate } from 'react-router-dom';
 import LoginPage from './ui/pages/login/LoginPage';
-import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache, gql, useQuery } from '@apollo/client';
+import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache, gql, split, useQuery } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { apiUrl } from '@shared';
 import { UserContext } from './ui/context/user/UserContext';
@@ -16,8 +16,28 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Provider } from 'react-redux';
 import { store } from './store';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+
+import { createClient } from 'graphql-ws';
+import { getMainDefinition } from '@apollo/client/utilities';
+
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: apiUrl + '/graphql',
+  }),
+);
 
 const httpLink = new HttpLink({ uri: apiUrl + '/graphql' });
+
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+  },
+  wsLink,
+  httpLink,
+);
+
 const authLink = setContext(async (_, { headers }) => {
   // get the authentication token from local storage if it exists
   const token = localStorage.getItem('token');
@@ -32,7 +52,7 @@ const authLink = setContext(async (_, { headers }) => {
 
 // Initialize Apollo Client
 export const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: authLink.concat(splitLink),
   cache: new InMemoryCache(),
   defaultOptions: {},
 });

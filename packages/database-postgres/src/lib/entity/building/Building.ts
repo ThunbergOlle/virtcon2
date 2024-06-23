@@ -4,11 +4,11 @@ import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { TPS } from '@shared';
 import { BuildingProcessingRequirement } from '../building_processing_requirement/BuildingProcessingRequirement';
-import { DBItemName } from '@virtcon2/static-game-data';
+import { DBBuilding, DBItemName } from '@virtcon2/static-game-data';
 
 @ObjectType()
 @Entity()
-export class Building extends BaseEntity {
+export class Building extends BaseEntity implements DBBuilding {
   @PrimaryColumn({ type: 'int', unique: true })
   @Field(() => Int)
   id: number;

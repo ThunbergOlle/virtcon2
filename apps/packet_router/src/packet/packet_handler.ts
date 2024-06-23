@@ -1,9 +1,7 @@
 import { log, LogLevel } from '@shared';
-import Redis from '@virtcon2/database-redis';
 import {
   ClientPacket,
   ClientPacketWithSender,
-  InspectBuildingClientPacket,
   PacketSender,
   PacketType,
   RequestDestroyResourcePacket,
@@ -15,13 +13,12 @@ import {
   SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
-import inspectBuildingClientPacket from './packets/inspectBuildingClientPacket';
 import request_destroy_resource_packet from './packets/request_destroy_resource_packet';
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
 import request_place_building_packet from './packets/request_place_building_packet';
 import request_player_inventory_packet from './packets/request_player_inventory_packet';
-import request_world_building_change_output from './packets/request_world_building_change_output';
+import requestWorldBuldingChangeOutput from './packets/request_world_building_change_output';
 import syncClientEntity from './packets/syncClientEntity';
 
 interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
@@ -38,12 +35,8 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return request_destroy_resource_packet(packet as ClientPacketWithSender<RequestDestroyResourcePacket>);
     case PacketType.REQUEST_PLACE_BUILDING:
       return request_place_building_packet(packet as ClientPacketWithSender<RequestPlaceBuildingPacketData>, client);
-    case PacketType.INSPECT_WORLD_BUILDING:
-      return inspectBuildingClientPacket(packet as ClientPacketWithSender<InspectBuildingClientPacket>, client);
-    case PacketType.DONE_INSPECTING_WORLD_BUILDING:
-      return Redis.doneInspectingBuilding((packet as ClientPacketWithSender<number>).data, packet.sender.socket_id, client, packet.sender.world_id);
     case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT:
-      return request_world_building_change_output(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client);
+      return requestWorldBuldingChangeOutput(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client);
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM:
       return request_move_inventory_item_packet(packet as ClientPacketWithSender<RequestMoveInventoryItemPacketData>, client);
     case PacketType.SYNC_CLIENT_ENTITY:

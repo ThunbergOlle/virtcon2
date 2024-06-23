@@ -10,18 +10,18 @@ import {
   SyncServerEntityPacket,
 } from '@virtcon2/network-packet';
 
-import { createNewPlayerEntity, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { createNewPlayerEntity, Player, playerEntityComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { defineQuery, defineSerializer } from 'bitecs';
 import { RedisClientType } from 'redis';
-import { getEntityWorld, loadEntitiesIntoMemory, serializeEntityWorld, worlds } from '../../ecs/entityWorld';
+import { getEntityWorld, loadEntitiesIntoMemory, serializeEntityWorld } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
 
-const playersInWorld = defineQuery([Player]);
+const playerQuery = defineQuery(playerEntityComponents);
 
 export default async function requestJoinPacket(packet: ClientPacket<RequestJoinPacketData>, client: RedisClientType) {
   /* Check if world is currently running in Redis */
-  const world = await World.findOne({ where: { id: packet.world_id } });
-  if (!world) return log(`World ${packet.world_id} does not exist.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
+  const dbWorld = await World.findOne({ where: { id: packet.world_id } });
+  if (!dbWorld) return log(`World ${packet.world_id} does not exist.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
 
   if (!getEntityWorld(packet.world_id)) {
     log(`World ${packet.world_id} is not running. Starting up world...`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
@@ -45,18 +45,25 @@ export default async function requestJoinPacket(packet: ClientPacket<RequestJoin
     sender: SERVER_SENDER,
   });
 
+  const world = getEntityWorld(packet.world_id);
+
   const user = await User.findOne({ where: { token: packet.data.token } });
+  if (!user) return log(`User with token ${packet.data.token} does not exist.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
   user.currentlyInWorld = packet.world_id;
   await user.save();
 
   // check if user is already in the world
-  const allPlayerEid = playersInWorld(getEntityWorld(packet.world_id));
+
+  const allPlayerEid = playerQuery(world, true);
+
+  console.log(allPlayerEid);
 
   const existingPlayer = allPlayerEid.find((eid) => Player.userId[eid] === user.id);
+  if (existingPlayer !== undefined) log(`Player entity already exists for user ${user.id}`, LogLevel.WARN, LogApp.PACKET_DATA_SERVER);
 
-  const playerEntityId =
+  const newPlayerEntity =
     existingPlayer ||
-    createNewPlayerEntity(worlds[packet.world_id], {
+    createNewPlayerEntity(world, {
       userId: user.id,
       name: user.display_name,
       position: [0, 0],
@@ -66,8 +73,8 @@ export default async function requestJoinPacket(packet: ClientPacket<RequestJoin
     packet_type: PacketType.LOAD_WORLD,
     target: packet.data.socket_id,
     data: {
-      id: world.id,
-      heightMap: World.Get2DWorldMap(world.seed),
+      id: dbWorld.id,
+      heightMap: World.Get2DWorldMap(dbWorld.seed),
       mainPlayerId: user.id,
     },
     sender: SERVER_SENDER,
@@ -77,7 +84,11 @@ export default async function requestJoinPacket(packet: ClientPacket<RequestJoin
 
   const serializedPlayer = serialize(allPlayerEid);
 
-  syncServerEntities(client, packet.world_id, packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
+  log(
+    `Player ${user.display_name} joined world ${dbWorld.id} It has player entities ${allPlayerEid} and new player entity ${newPlayerEntity}`,
+    LogLevel.INFO,
+    LogApp.PACKET_DATA_SERVER,
+  );
 
-  log(`Player ${user.display_name} joined world ${world.id}.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+  return syncServerEntities(client, packet.world_id, packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
 }

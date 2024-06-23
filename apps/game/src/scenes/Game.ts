@@ -7,8 +7,8 @@ import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
 import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, removePlayerEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { createWorld, defineDeserializer, IWorld, registerComponents, removeEntity, System } from 'bitecs';
+import { allComponents, Player, removePlayerEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { createWorld, defineDeserializer, DESERIALIZE_MODE, IWorld, registerComponents, removeEntity, System } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -127,8 +127,8 @@ export default class Game extends Scene implements SceneStates {
       this.world = ecsWorld;
       registerComponents(ecsWorld, allComponents);
 
-      this.spriteSystem = createSpriteSystem();
       this.spriteRegisterySystem = createSpriteRegisterySystem(this);
+      this.spriteSystem = createSpriteSystem();
       this.mainPlayerSystem = createMainPlayerSystem(this, this.input.keyboard.createCursorKeys());
       // this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem(); - replaced by networked entities
       this.mainPlayerSyncSystem = createMainPlayerSyncSystem();
@@ -175,25 +175,27 @@ export default class Game extends Scene implements SceneStates {
       return;
 
     let newState = { ...this.state, dt: dt };
-    const packets = Game.network.get_received_packets();
+    const [packets, length] = Game.network.getReceivedPackets();
     receiveServerEntities(this.world, packets);
 
     newState = this.spriteRegisterySystem([this.world, newState])[1];
     newState = this.colliderSystem([this.world, newState])[1];
+    newState = this.spriteSystem([this.world, newState])[1];
+
+    newState = this.playerSystem([this.world, newState])[1];
     newState = this.mainPlayerSystem([this.world, newState])[1];
     newState = this.mainPlayerSyncSystem([this.world, newState])[1];
-    newState = this.spriteSystem([this.world, newState])[1];
+
     newState = this.resourceSystem([this.world, newState])[1];
     newState = this.buildingSystem([this.world, newState])[1];
+
     newState = this.buildingPlacementSystem([this.world, newState])[1];
-    newState = this.buildingPlacementSystem([this.world, newState])[1];
-    newState = this.playerSystem([this.world, newState])[1];
     newState = this.tagSystem([this.world, newState])[1];
 
     // Update state
     this.state = newState;
 
-    Game.network.clear_received_packets();
+    Game.network.readReceivedPackets(length);
   }
 
   static destroy() {
@@ -210,7 +212,6 @@ const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) 
     const packet = packets[i];
     if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
       const { buffer: jsonBuffer, serializationId } = packet.data as SyncServerEntityPacket;
-      console.log(jsonBuffer, serializationId);
       const buffer = Buffer.from(jsonBuffer);
       const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
 
@@ -223,12 +224,17 @@ const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) 
       const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
       const deserializedEnts = deserialize(world, arrayBuffer);
-      console.log(`Received ${deserializedEnts.length} entities from server.`);
+      console.log(`Received ${deserializedEnts} entities from server. (${serializationId})`);
+      if (serializationId === SerializationID.PLAYER_FULL_SERVER) {
+        deserializedEnts.forEach((ent) => {
+          console.log(`Player entity ${Player.userId[ent]} received from server`);
+        });
+      }
     }
-    if (packet.packet_type === PacketType.DISCONNECT) {
-      const data = packet.data as DisconnectPacketData;
-      console.log(`Received disconnect packet for entity ${data.eid}`);
-      removePlayerEntity(world, data.eid);
-    }
+    // if (packet.packet_type === PacketType.DISCONNECT) {
+    //   const data = packet.data as DisconnectPacketData;
+    //   console.log(`Received disconnect packet for entity ${data.eid}`);
+    //   removePlayerEntity(world, data.eid);
+    // }
   }
 };

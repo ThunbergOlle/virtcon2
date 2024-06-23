@@ -55,7 +55,6 @@ export const windowSlice = createSlice({
       state.windows = [...stack.slice(0, oldStackIndex), ...stack.slice(oldStackIndex + 1), item];
     },
     close: (state, action: PayloadAction<WindowType>) => {
-      console.log('close');
       const stack = state.windows;
       const selectedWindow = action.payload;
       const item = stack.find((i) => i.type === selectedWindow);

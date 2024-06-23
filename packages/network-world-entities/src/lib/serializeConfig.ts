@@ -1,7 +1,7 @@
 import { Changed, Component } from 'bitecs';
 import { Position } from './components/Position';
 import { Velocity } from './components/Velocity';
-import { playerEntityComponents } from './network-world-entities';
+import { Player, playerEntityComponents } from './network-world-entities';
 
 export enum SerializationID {
   WORLD = 'world',
@@ -10,7 +10,7 @@ export enum SerializationID {
 }
 
 export const serializeConfig: { [key in SerializationID]: Component[] } = {
-  [SerializationID.PLAYER_MOVEMENT]: [Position, Changed(Velocity), Position],
+  [SerializationID.PLAYER_MOVEMENT]: [Player, Velocity, Position],
   [SerializationID.PLAYER_FULL_SERVER]: playerEntityComponents,
   [SerializationID.WORLD]: [],
 };

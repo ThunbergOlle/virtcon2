@@ -11,7 +11,6 @@ export const enqueuePacket = async <T>(client: RedisClientType, worldId: string,
     const dataView = new DataView(data.buffer);
     const buffer = Buffer.from(dataView.buffer, dataView.byteOffset, dataView.byteLength);
 
-    console.log(buffer.toJSON());
     await client.rPush(
       `queue_${worldId}`,
       JSON.stringify({
