@@ -204,3 +204,7 @@ export const deserializeEntity = (data: SerializedData) => {
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
   $entityStore[eid] = uniqueComponents;
 };
+
+export type System = () => void;
+
+export const defineSystem = (fn: System) => fn;
