@@ -1,4 +1,4 @@
-import { addComponent, addEntity, entityExists, getAllEntities, getEntityComponents, IWorld, removeComponent, removeEntity } from 'bitecs';
+import { addComponent, addEntity } from '@virtcon2/bytenetc';
 import { Collider, Player, Position, Sprite, Tag } from '../network-world-entities';
 import { MiscTextureMap } from '../SpriteMap';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -12,11 +12,11 @@ export interface CreateNewPlayerEntity {
 const encoder = new TextEncoder();
 
 export const playerEntityComponents = [Position, Sprite, Player, Collider, Tag];
-export const createNewPlayerEntity = (world: IWorld, newPlayer: CreateNewPlayerEntity) => {
-  const player = addEntity(world);
+export const createNewPlayerEntity = (newPlayer: CreateNewPlayerEntity) => {
+  const player = addEntity();
 
   for (const component of playerEntityComponents) {
-    addComponent(world, component, player, true);
+    addComponent(component, player);
   }
 
   Player.userId[player] = newPlayer.userId;
@@ -33,20 +33,4 @@ export const createNewPlayerEntity = (world: IWorld, newPlayer: CreateNewPlayerE
   Tag.value[player].set(encoder.encode(newPlayer.name));
 
   return player;
-};
-
-export const removePlayerEntity = (world: IWorld, player: number) => {
-  console.log(`Removing player with entity id${player}`);
-  const isEntityInWorld = entityExists(world, player);
-  if (!isEntityInWorld) return console.log(`📮 Entity is not in word ${player}`);
-
-  const components = getEntityComponents(world, player);
-
-  if (!components.length) removeEntity(world, player);
-
-  for (const component of components) {
-    removeComponent(world, component, player, true);
-  }
-
-  removeEntity(world, player);
 };

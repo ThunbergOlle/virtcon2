@@ -6,9 +6,9 @@ import { RedisWorldResource, worldMapParser } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
-import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, Player, removePlayerEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { createWorld, defineDeserializer, DESERIALIZE_MODE, IWorld, registerComponents, removeEntity, System } from 'bitecs';
+import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
+import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { createWorld, defineDeserializer, IWorld, registerComponents, System } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
