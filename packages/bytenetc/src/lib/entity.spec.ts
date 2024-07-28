@@ -58,6 +58,7 @@ describe('addComponent', () => {
     const Position = defineComponent('position', {
       x: Types.i32,
       y: Types.i32,
+      arrayTest: [Types.ui8, 10],
     });
 
     const eid = addEntity();
@@ -67,6 +68,8 @@ describe('addComponent', () => {
     Position.x[eid] = 10;
     Position.y[eid] = 20;
     Position.x[eid] += 10;
+
+    Position.arrayTest[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
     expect(Position.x[eid]).toEqual(20);
   });
@@ -251,5 +254,30 @@ describe('serializeEntity', () => {
     deserializeEntity(serialized);
 
     expect(Velocity.x[eid]).toEqual(2);
+  });
+
+  it('should serialize an entity with an array successfully', () => {
+    const Tag = defineComponent('tag', {
+      value: [Types.ui8, 10],
+    });
+
+    const eid = addEntity();
+
+    addComponent(eid, Tag);
+
+    Tag.value[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+    const serialized = serializeEntity(eid);
+
+    expect(serialized).toEqual([
+      ['_entity', '_entity', 0],
+      ['tag', 'value', new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])],
+    ]);
+
+    Tag.value[eid] = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
+
+    deserializeEntity(serialized);
+
+    expect(Tag.value[eid]).toEqual(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
   });
 });

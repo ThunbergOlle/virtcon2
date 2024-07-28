@@ -13,70 +13,94 @@ export const Types = {
 
 const MAX_ENTITIES = 1000;
 
-type Type = (typeof Types)[keyof typeof Types] | [Type, number];
+type Type = (typeof Types)[keyof typeof Types];
+type ArrayType = [Type, number];
+type Schema = Record<string, Type | ArrayType>;
+
 type AllArrayTypes = Int8Array | Int16Array | Int32Array | Float32Array | Float64Array | Uint8Array | Uint16Array | Uint32Array;
-type TypeArray = AllArrayTypes | AllArrayTypes[];
 
-export interface Component {
-  [key: string]: TypeArray;
-}
+type TypeToTypedArray<T extends Type> = T extends 'i8'
+  ? Int8Array
+  : T extends 'i16'
+  ? Int16Array
+  : T extends 'i32'
+  ? Int32Array
+  : T extends 'f32'
+  ? Float32Array
+  : T extends 'f64'
+  ? Float64Array
+  : T extends 'ui8'
+  ? Uint8Array
+  : T extends 'ui16'
+  ? Uint16Array
+  : T extends 'ui32'
+  ? Uint32Array
+  : never;
 
-type EntityStore = Record<string, Component>;
+export type Component<S extends Schema> = SchemaToComponent<S> & { _name: Uint8Array };
 
-const $componentStore: EntityStore = {
-  /* 'position': [new Int16Array] */
+type SchemaToComponent<S extends Schema> = {
+  [K in keyof S]: S[K] extends Type ? TypeToTypedArray<S[K]> : S[K] extends ArrayType ? Array<TypeToTypedArray<S[K][0]>> : never;
 };
+
+type EntityStore = Record<string, Component<any>>;
+
+const $componentStore: EntityStore = {};
 
 const $entityStore = new Array(MAX_ENTITIES).fill(null);
 const $queryCache = new Map();
 
-const decodeName = (c: Component) => new TextDecoder().decode(c._name as Uint8Array);
+const decodeName = (c: Component<any>) => new TextDecoder().decode(c._name as Uint8Array);
 
-const chooseArray = (type: Type, length: number): AllArrayTypes => {
+const chooseArray = <T extends Type>(type: T, length: number): TypeToTypedArray<T> => {
   switch (type) {
     case Types.i8:
-      return new Int8Array(length);
+      return new Int8Array(length) as TypeToTypedArray<T>;
     case Types.i16:
-      return new Int16Array(length);
+      return new Int16Array(length) as TypeToTypedArray<T>;
     case Types.i32:
-      return new Int32Array(length);
+      return new Int32Array(length) as TypeToTypedArray<T>;
     case Types.f32:
-      return new Float32Array(length);
+      return new Float32Array(length) as TypeToTypedArray<T>;
     case Types.f64:
-      return new Float64Array(length);
+      return new Float64Array(length) as TypeToTypedArray<T>;
     case Types.ui8:
-      return new Uint8Array(length);
+      return new Uint8Array(length) as TypeToTypedArray<T>;
     case Types.ui16:
-      return new Uint16Array(length);
+      return new Uint16Array(length) as TypeToTypedArray<T>;
     case Types.ui32:
-      return new Uint32Array(length);
+      return new Uint32Array(length) as TypeToTypedArray<T>;
     default:
       throw new Error(`Invalid type ${type}`);
   }
 };
 
-export const defineComponent = (name: string, schema: Record<string, Type>): Component => {
+export const defineComponent = <S extends Schema>(name: string, schema: S): Component<S> => {
   const nameUint8 = new TextEncoder().encode(name);
-  $componentStore[name] = {
+
+  const component: any = {
     _name: nameUint8,
   };
 
   for (const key in schema) {
     if (schema[key] instanceof Array) {
-      const [type, length] = schema[key] as unknown as [Type, number];
+      const [type, length] = schema[key] as ArrayType;
 
       const array = chooseArray(type, length);
-      $componentStore[name][key] = new Array(MAX_ENTITIES).fill(array);
+      component[key] = new Array(MAX_ENTITIES).fill(array);
+      continue;
     }
 
-    const array = chooseArray(schema[key], MAX_ENTITIES);
-    $componentStore[name][key] = array;
+    const array = chooseArray(schema[key] as Type, MAX_ENTITIES);
+    component[key] = array;
   }
+
+  $componentStore[name] = component;
 
   return $componentStore[name];
 };
 
-export const addComponent = (entity: Entity, component: Component) => {
+export const addComponent = (entity: Entity, component: Component<any>) => {
   if (!$componentStore[decodeName(component)]) {
     throw new Error(`Component ${component} does not exist`);
   }
@@ -86,7 +110,7 @@ export const addComponent = (entity: Entity, component: Component) => {
   $queryCache.clear();
 };
 
-export const removeComponent = (entity: Entity, component: Component) => {
+export const removeComponent = (entity: Entity, component: Component<any>) => {
   if (!$componentStore[decodeName(component)]) {
     throw new Error(`Component ${component} does not exist`);
   }
@@ -108,11 +132,11 @@ export const removeComponent = (entity: Entity, component: Component) => {
 export type QueryModifier = (entity: Entity) => boolean;
 
 export const Not =
-  (component: Component): QueryModifier =>
+  (component: Component<any>): QueryModifier =>
   (entityId: Entity) =>
     !$entityStore[entityId].includes(component);
 
-export const defineQuery = (...components: (Component | QueryModifier)[]) => {
+export const defineQuery = (...components: (Component<any> | QueryModifier)[]) => {
   const $cacheEntry = Symbol('queryCache');
   return () => {
     if ($queryCache.has($cacheEntry)) return $queryCache.get($cacheEntry);
@@ -175,10 +199,7 @@ export const deserializeEntity = (data: SerializedData) => {
   const eid = data[0][2] as number;
 
   for (const [name, key, value] of data.slice(1)) {
-    if (value instanceof Array) {
-      $componentStore[name][key][eid] = value[0];
-    }
-    $componentStore[name][key][eid] = value;
+    $componentStore[name][key][eid] = value as number;
   }
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
   $entityStore[eid] = uniqueComponents;
