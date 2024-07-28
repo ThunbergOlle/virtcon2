@@ -1,5 +1,5 @@
-import { Types, defineComponent } from 'bitecs';
+import { defineComponent, Types } from '@virtcon2/bytenetc';
 
-export const Building = defineComponent({
+export const Building = defineComponent('building', {
   worldBuildingId: Types.ui32,
 });

@@ -1,3 +1,3 @@
-import { defineComponent } from 'bitecs';
+import { defineComponent } from '@virtcon2/bytenetc';
 
-export const MainPlayer = defineComponent({});
+export const MainPlayer = defineComponent('MainPlayer', {});

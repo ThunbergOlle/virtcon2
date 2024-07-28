@@ -1,9 +1,6 @@
-import { defineComponent, Types } from 'bitecs';
-// import { createSerializer } from '../utils/serialize';
+import { defineComponent, Types } from '@virtcon2/bytenetc';
 
-export const Position = defineComponent({
+export const Position = defineComponent('position', {
   x: Types.f32,
   y: Types.f32,
 });
-
-// export const PositionSerializer = createSerializer<typeof Position>('position', Position);

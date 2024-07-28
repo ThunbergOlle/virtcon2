@@ -1,4 +1,4 @@
-import { Changed, Component } from 'bitecs';
+import { Component } from 'bitecs';
 import { Position } from './components/Position';
 import { Velocity } from './components/Velocity';
 import { Player, playerEntityComponents } from './network-world-entities';
