@@ -100,7 +100,7 @@ export const defineComponent = <S extends Schema>(name: string, schema: S): Comp
   return $componentStore[name];
 };
 
-export const addComponent = (entity: Entity, component: Component<any>) => {
+export const addComponent = (component: Component<any>, entity: Entity) => {
   if (!$componentStore[decodeName(component)]) {
     throw new Error(`Component ${component} does not exist`);
   }

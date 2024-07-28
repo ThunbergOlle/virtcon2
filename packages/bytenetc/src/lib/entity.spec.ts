@@ -63,7 +63,7 @@ describe('addComponent', () => {
 
     const eid = addEntity();
 
-    addComponent(eid, Position);
+    addComponent(Position, eid);
 
     Position.x[eid] = 10;
     Position.y[eid] = 20;
@@ -88,7 +88,7 @@ describe('removeComponent', () => {
 
     const eid = addEntity();
 
-    addComponent(eid, Position);
+    addComponent(Position, eid);
 
     Position.x[eid] = 10;
     Position.y[eid] = 20;
@@ -122,10 +122,10 @@ describe('query', () => {
     const eid1 = addEntity();
     const eid2 = addEntity();
 
-    addComponent(eid1, Position);
-    addComponent(eid1, Velocity);
+    addComponent(Position, eid1);
+    addComponent(Velocity, eid1);
 
-    addComponent(eid2, Position);
+    addComponent(Position, eid2);
 
     const query = defineQuery(Position, Velocity);
 
@@ -148,10 +148,10 @@ describe('query', () => {
     const eid1 = addEntity();
     const eid2 = addEntity();
 
-    addComponent(eid1, Position);
-    addComponent(eid1, Velocity);
+    addComponent(Position, eid1);
+    addComponent(Velocity, eid1);
 
-    addComponent(eid2, Position);
+    addComponent(Position, eid2);
 
     const query = defineQuery(Position);
 
@@ -173,10 +173,10 @@ describe('query', () => {
     const eid1 = addEntity();
     const eid2 = addEntity();
 
-    addComponent(eid1, Position);
-    addComponent(eid1, Velocity);
+    addComponent(Position, eid1);
+    addComponent(Velocity, eid1);
 
-    addComponent(eid2, Position);
+    addComponent(Position, eid2);
 
     const query = defineQuery(Not(Velocity));
 
@@ -199,10 +199,10 @@ describe('query', () => {
     const eid1 = addEntity();
     const eid2 = addEntity();
 
-    addComponent(eid1, Position);
-    addComponent(eid1, Velocity);
+    addComponent(Position, eid1);
+    addComponent(Velocity, eid1);
 
-    addComponent(eid2, Position);
+    addComponent(Position, eid2);
 
     const query = defineQuery(Position, Not(Velocity));
 
@@ -230,8 +230,8 @@ describe('serializeEntity', () => {
 
     const eid = addEntity();
 
-    addComponent(eid, Position);
-    addComponent(eid, Velocity);
+    addComponent(Position, eid);
+    addComponent(Velocity, eid);
 
     Position.x[eid] = 10;
     Position.y[eid] = 20;
@@ -263,7 +263,7 @@ describe('serializeEntity', () => {
 
     const eid = addEntity();
 
-    addComponent(eid, Tag);
+    addComponent(Tag, eid);
 
     Tag.value[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
