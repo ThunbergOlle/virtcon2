@@ -2,9 +2,12 @@ import {
   addComponent,
   addEntity,
   clearEntities,
+  debugEntity,
   defineComponent,
   defineQuery,
   deserializeEntity,
+  enterQuery,
+  exitQuery,
   Not,
   removeComponent,
   serializeEntity,
@@ -96,7 +99,7 @@ describe('removeComponent', () => {
     expect(Position.x[eid]).toEqual(10);
     expect(Position.y[eid]).toEqual(20);
 
-    removeComponent(eid, Position);
+    removeComponent(Position, eid);
 
     expect(Position.x[eid]).toEqual(0);
     expect(Position.y[eid]).toEqual(0);
@@ -279,5 +282,62 @@ describe('serializeEntity', () => {
     deserializeEntity(serialized);
 
     expect(Tag.value[eid]).toEqual(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+  });
+});
+
+describe('enter and exit queries', () => {
+  beforeEach(() => {
+    clearEntities();
+  });
+
+  it('should return entities that enter a query', () => {
+    const Position = defineComponent('position', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    const Velocity = defineComponent('velocity', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    const query = defineQuery(Position, Velocity);
+    const newPlayersEnterQuery = enterQuery(query);
+    const newPlayersExitQuery = exitQuery(query);
+    const gameLoop = () => ({
+      enter: newPlayersEnterQuery(),
+      exit: newPlayersExitQuery(),
+      query: query(),
+    });
+
+    let state = gameLoop();
+    expect(state.enter).toEqual([]);
+    expect(state.exit).toEqual([]);
+    expect(state.query).toEqual([]);
+
+    const eid1 = addEntity();
+    const eid2 = addEntity();
+
+    addComponent(Position, eid1);
+    addComponent(Velocity, eid1);
+
+    addComponent(Position, eid2);
+
+    state = gameLoop();
+    expect(state.enter).toEqual([eid1]);
+    expect(state.exit).toEqual([]);
+    expect(state.query).toEqual([eid1]);
+
+    state = gameLoop();
+    expect(state.enter).toEqual([]);
+    expect(state.exit).toEqual([]);
+    expect(state.query).toEqual([eid1]);
+
+    removeComponent(Velocity, eid1);
+
+    state = gameLoop();
+    expect(state.enter).toEqual([]);
+    expect(state.exit).toEqual([eid1]);
+    expect(state.query).toEqual([]);
   });
 });

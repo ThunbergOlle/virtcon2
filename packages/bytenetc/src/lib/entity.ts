@@ -47,7 +47,7 @@ type EntityStore = Record<string, Component<any>>;
 
 const $componentStore: EntityStore = {};
 
-const $entityStore = new Array(MAX_ENTITIES).fill(null);
+const $entityStore = new Array<string[]>(MAX_ENTITIES).fill(null);
 const $queryCache = new Map();
 
 const decodeName = (c: Component<any>) => new TextDecoder().decode(c._name as Uint8Array);
@@ -105,25 +105,21 @@ export const addComponent = (component: Component<any>, entity: Entity) => {
     throw new Error(`Component ${component} does not exist`);
   }
 
-  $entityStore[entity].push(component);
+  $entityStore[entity].push(decodeName(component));
 
   $queryCache.clear();
 };
 
-export const removeComponent = (entity: Entity, component: Component<any>) => {
-  if (!$componentStore[decodeName(component)]) {
+export const removeComponent = (component: Component<any>, entity: Entity) => {
+  const name = decodeName(component);
+  if (!$componentStore[name]) {
     throw new Error(`Component ${component} does not exist`);
   }
 
-  $entityStore[entity] = $entityStore[entity].filter((c) => c !== component);
-  const name = decodeName(component);
+  $entityStore[entity] = $entityStore[entity].filter((c) => c !== name);
 
-  for (const componentName in $componentStore) {
-    if (componentName !== name) continue;
-
-    for (const keyName in $componentStore[componentName]) {
-      $componentStore[componentName][keyName][entity] = 0;
-    }
+  for (const keyName in $componentStore[name]) {
+    $componentStore[name][keyName][entity] = 0;
   }
 
   $queryCache.clear();
@@ -134,22 +130,49 @@ export type QueryModifier = (entity: Entity) => boolean;
 export const Not =
   (component: Component<any>): QueryModifier =>
   (entityId: Entity) =>
-    !$entityStore[entityId].includes(component);
+    !$entityStore[entityId].includes(decodeName(component));
 
 export const defineQuery = (...components: (Component<any> | QueryModifier)[]) => {
   const $cacheEntry = Symbol('queryCache');
+
   return () => {
     if ($queryCache.has($cacheEntry)) return $queryCache.get($cacheEntry);
 
     const entities: Entity[] = [];
     for (let i = 0; i < MAX_ENTITIES; i++) {
       if (!$entityStore[i]) continue;
-      if (components.every((c) => (typeof c === 'function' ? c(i) : $entityStore[i].includes(c)))) entities.push(i);
+      if (components.every((c) => (typeof c === 'function' ? c(i) : $entityStore[i].includes(decodeName(c))))) entities.push(i);
     }
 
     $queryCache.set($cacheEntry, entities);
 
     return entities;
+  };
+};
+
+export const enterQuery = (query: ReturnType<ReturnType<typeof defineQuery>>) => {
+  let prevResult = [];
+  return () => {
+    const entities = query();
+
+    const newEntities = entities.filter((e) => !prevResult.includes(e));
+
+    prevResult = entities;
+
+    return newEntities;
+  };
+};
+
+export const exitQuery = (query: ReturnType<ReturnType<typeof defineQuery>>) => {
+  let prevResult = [];
+  return () => {
+    const entities = query();
+
+    const removedEntities = prevResult.filter((e) => !entities.includes(e));
+
+    prevResult = entities;
+
+    return removedEntities;
   };
 };
 
@@ -184,9 +207,8 @@ export const serializeEntity = (entity: Entity): SerializedData => {
 
   const data: SerializedData = [['_entity', '_entity', entity]];
 
-  for (const component of components) {
-    const name = decodeName(component);
-    for (const key in component) {
+  for (const name of components) {
+    for (const key in $componentStore[name]) {
       if (key === '_name') continue;
       data.push([name, key, $componentStore[name][key][entity]]);
     }
@@ -205,6 +227,20 @@ export const deserializeEntity = (data: SerializedData) => {
   $entityStore[eid] = uniqueComponents;
 };
 
-export type System = () => void;
+export type System<State> = (state: State) => State;
 
-export const defineSystem = (fn: System) => fn;
+export const defineSystem = <State>(system: System<State>) => system;
+
+export const debugEntity = (entity: Entity) => ({
+  components: $entityStore[entity],
+  componentData: $entityStore[entity].map((name) => {
+    const c = $componentStore[name];
+    const data = {};
+    for (const key in c) {
+      if (key === '_name') continue;
+      data[key] = c[key][entity];
+    }
+
+    return { [name]: data };
+  }),
+});
