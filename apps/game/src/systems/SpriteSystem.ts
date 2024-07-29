@@ -1,15 +1,15 @@
-import { IWorld, Not, defineQuery, defineSystem, enterQuery, exitQuery } from 'bitecs';
+import { Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { getTextureFromTextureId } from '../config/SpriteMap';
 import { GameState } from '../scenes/Game';
-import { Sprite, Position, Velocity } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSystem, enterQuery, exitQuery } from '@virtcon2/bytenetc';
 
-const spriteQuery = defineQuery([Sprite, Position]);
+const spriteQuery = defineQuery(Sprite, Position);
 const spriteQueryEnter = enterQuery(spriteQuery);
 const spriteQueryExit = exitQuery(spriteQuery);
 
 export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const enterEntities = spriteQueryEnter(world);
+  return defineSystem<GameState>((state) => {
+    const enterEntities = spriteQueryEnter();
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       const texId = Sprite.texture[id];
@@ -46,7 +46,7 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
         sprite.setAlpha(Sprite.opacity[id]);
       }
     }
-    const exitEntities = spriteQueryExit(world);
+    const exitEntities = spriteQueryExit();
     for (let i = 0; i < exitEntities.length; i++) {
       const id = exitEntities[i];
       const sprite = state.spritesById[id];
@@ -55,15 +55,15 @@ export const createSpriteRegisterySystem = (scene: Phaser.Scene) => {
         delete state.spritesById[id];
       }
     }
-    return [world, state];
+    return state;
   });
 };
 
-const spritePosQuery = defineQuery([Sprite, Position, Velocity]);
+const spritePosQuery = defineQuery(Sprite, Position, Velocity);
 
 export const createSpriteSystem = () => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const spriteEntities = spritePosQuery(world);
+  return defineSystem<GameState>((state) => {
+    const spriteEntities = spritePosQuery();
     for (let i = 0; i < spriteEntities.length; i++) {
       const id = spriteEntities[i];
       const sprite = state.spritesById[id];
@@ -80,6 +80,6 @@ export const createSpriteSystem = () => {
         sprite.body.setVelocity(Velocity.x[id], Velocity.y[id]);
       }
     }
-    return [world, state];
+    return state;
   });
 };

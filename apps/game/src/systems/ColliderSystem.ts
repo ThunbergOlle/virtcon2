@@ -1,13 +1,13 @@
-import { IWorld, defineQuery, defineSystem, enterQuery } from 'bitecs';
+import { defineQuery, defineSystem, enterQuery } from '@virtcon2/bytenetc';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { Sprite, Collider } from '@virtcon2/network-world-entities';
 
-const colliderQuery = defineQuery([Sprite, Collider]);
+const colliderQuery = defineQuery(Sprite, Collider);
 const colliderQueryEnter = enterQuery(colliderQuery);
 
 export const createColliderSystem = (scene: Phaser.Scene) => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const enterEntities = colliderQueryEnter(world);
+  return defineSystem<GameState>((state) => {
+    const enterEntities = colliderQueryEnter();
 
     for (let i = 0; i < enterEntities.length; i++) {
       const eid = enterEntities[i];
@@ -29,6 +29,6 @@ export const createColliderSystem = (scene: Phaser.Scene) => {
       }
     }
 
-    return [world, state];
+    return state;
   });
 };

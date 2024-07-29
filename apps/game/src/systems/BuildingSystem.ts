@@ -1,17 +1,17 @@
 import { Building, Collider, Position } from '@virtcon2/network-world-entities';
-import { defineQuery, defineSystem, enterQuery, IWorld } from 'bitecs';
 import { Types } from 'phaser';
 import { GameState } from '../scenes/Game';
 import { store } from '../store';
 import { select, WindowType } from '../ui/lib/WindowSlice';
 import { inspectBuilding } from '../ui/windows/building/inspectedBuildingSlice';
+import { defineQuery, defineSystem, enterQuery } from '@virtcon2/bytenetc';
 
-const buildingQuery = defineQuery([Building, Position, Collider]);
+const buildingQuery = defineQuery(Building, Position, Collider);
 const buildingQueryEnter = enterQuery(buildingQuery);
 
 export const createBuildingSystem = () => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const enterEntities = buildingQueryEnter(world);
+  return defineSystem<GameState>((state) => {
+    const enterEntities = buildingQueryEnter();
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
@@ -21,7 +21,7 @@ export const createBuildingSystem = () => {
       }
     }
 
-    return [world, state];
+    return state;
   });
 };
 

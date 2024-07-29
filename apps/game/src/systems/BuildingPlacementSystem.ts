@@ -1,14 +1,13 @@
-import { IWorld, defineQuery, defineSystem, exitQuery } from 'bitecs';
-
 import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
+import { defineQuery, defineSystem, Entity, exitQuery } from '@virtcon2/bytenetc';
 
-const ghostBuildingQuery = defineQuery([GhostBuilding, Position, Collider, Sprite]);
+const ghostBuildingQuery = defineQuery(GhostBuilding, Position, Collider, Sprite);
 const ghostBuildingExitQuery = exitQuery(ghostBuildingQuery);
 export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const ghostBuildings = ghostBuildingQuery(world);
+  return defineSystem<GameState>((state) => {
+    const ghostBuildings = ghostBuildingQuery();
 
     for (let i = 0; i < ghostBuildings.length; i++) {
       // check collisions
@@ -35,7 +34,7 @@ export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
       Position.y[ghostBuilding] = y + offsetY * tileSize;
     }
 
-    const exitEntities = ghostBuildingExitQuery(world);
+    const exitEntities = ghostBuildingExitQuery();
     for (let i = 0; i < exitEntities.length; i++) {
       const id = exitEntities[i];
       const ghostBuildingById = state.ghostBuildingById[id];
@@ -43,10 +42,11 @@ export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
         delete state.ghostBuildingById[id];
       }
     }
-    return [world, state];
+    return state;
   });
 };
-const checkGhostBuildingCollisions = (entity: number, state: GameState, scene: Phaser.Scene) => {
+
+const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: Phaser.Scene) => {
   const sprite = state.spritesById[entity];
   GhostBuilding.placementIsValid[entity] = 1;
   if (!sprite) {

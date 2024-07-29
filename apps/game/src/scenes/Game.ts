@@ -8,7 +8,7 @@ import { events } from '../events/Events';
 
 import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
 import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { createWorld, defineDeserializer, IWorld, registerComponents, System } from 'bitecs';
+import { createWorld, defineDeserializer, IWorld, registerComponents, System as DEPRECATED_SYSTEM } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -19,6 +19,7 @@ import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
+import { System } from '@virtcon2/bytenetc';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -59,16 +60,16 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.BUILDING_NO_COLLIDE]: null,
     },
   };
-  public spriteSystem?: System<[], [IWorld, GameState]>;
-  public spriteRegisterySystem?: System<[], [IWorld, GameState]>;
-  public mainPlayerSystem?: System<[], [IWorld, GameState]>;
-  public mainPlayerSyncSystem?: System<[], [IWorld, GameState]>;
-  public colliderSystem?: System<[], [IWorld, GameState]>;
-  public resourceSystem?: System<[], [IWorld, GameState]>;
-  public buildingPlacementSystem?: System<[], [IWorld, GameState]>;
-  public buildingSystem?: System<[], [IWorld, GameState]>;
-  public tagSystem?: System<[], [IWorld, GameState]>;
-  public playerSystem?: System<[], [IWorld, GameState]>;
+  public spriteSystem?: System<GameState>;
+  public spriteRegisterySystem?: System<GameState>;
+  public mainPlayerSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public mainPlayerSyncSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public colliderSystem?: System<GameState>;
+  public resourceSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public buildingPlacementSystem?: System<GameState>;
+  public buildingSystem?: System<GameState>;
+  public tagSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public playerSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
 
   public static network: Network;
 
@@ -178,18 +179,18 @@ export default class Game extends Scene implements SceneStates {
     const [packets, length] = Game.network.getReceivedPackets();
     receiveServerEntities(this.world, packets);
 
-    newState = this.spriteRegisterySystem([this.world, newState])[1];
-    newState = this.colliderSystem([this.world, newState])[1];
-    newState = this.spriteSystem([this.world, newState])[1];
+    newState = this.spriteRegisterySystem(newState);
+    newState = this.colliderSystem(newState);
+    newState = this.spriteSystem(newState);
 
     newState = this.playerSystem([this.world, newState])[1];
     newState = this.mainPlayerSystem([this.world, newState])[1];
     newState = this.mainPlayerSyncSystem([this.world, newState])[1];
 
     newState = this.resourceSystem([this.world, newState])[1];
-    newState = this.buildingSystem([this.world, newState])[1];
+    newState = this.buildingSystem(newState);
 
-    newState = this.buildingPlacementSystem([this.world, newState])[1];
+    newState = this.buildingPlacementSystem(newState);
     newState = this.tagSystem([this.world, newState])[1];
 
     // Update state
