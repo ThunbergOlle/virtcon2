@@ -287,3 +287,13 @@ export const debugEntity = (entity: Entity) => ({
     return { [name]: data };
   }),
 });
+
+export const serializeAllEntities = () => {
+  const data: SerializedData[] = [];
+  for (let i = 0; i < MAX_ENTITIES; i++) {
+    if (!$entityStore[i]) continue;
+    data.push(serializeEntity(i));
+  }
+
+  return data;
+};

@@ -24,12 +24,10 @@ export const deleteEntityWorld = (id: string) => {
 };
 
 export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
-  const entityWorld = getEntityWorld(dbWorldId) || newEntityWorld(dbWorldId);
-
   const { resources, worldBuildings } = await loadWorldFromDb(dbWorldId);
 
   for (const worldBuilding of worldBuildings) {
-    createNewBuildingEntity(entityWorld, {
+    createNewBuildingEntity({
       buildingId: worldBuilding.building.id,
       worldBuildingId: worldBuilding.id,
       x: worldBuilding.x,
@@ -42,7 +40,7 @@ export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
     const resourceName = getResourceNameFromItemName(resource.item.name);
     if (!resourceName) throw new Error(`Resource ${resource.item.name} does not exist`);
 
-    createNewResourceEntity(entityWorld, {
+    createNewResourceEntity({
       resourceName,
       pos: {
         x: resource.x,

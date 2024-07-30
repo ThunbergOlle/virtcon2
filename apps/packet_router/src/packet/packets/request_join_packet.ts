@@ -11,12 +11,13 @@ import {
 } from '@virtcon2/network-packet';
 
 import { createNewPlayerEntity, Player, playerEntityComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { defineQuery, defineSerializer } from 'bitecs';
+
 import { RedisClientType } from 'redis';
 import { getEntityWorld, loadEntitiesIntoMemory, serializeEntityWorld } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
+import { defineQuery, defineSerializer, serializeAllEntities } from '@virtcon2/bytenetc';
 
-const playerQuery = defineQuery(playerEntityComponents);
+const playerQuery = defineQuery(...playerEntityComponents);
 
 export default async function requestJoinPacket(packet: ClientPacket<RequestJoinPacketData>, client: RedisClientType) {
   /* Check if world is currently running in Redis */
@@ -33,19 +34,17 @@ export default async function requestJoinPacket(packet: ClientPacket<RequestJoin
     }
   } else log(`World ${packet.world_id} is already running.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 
-  const serializeWorld = serializeEntityWorld(packet.world_id);
+  const serializeWorld = serializeAllEntities();
 
   await enqueuePacket<SyncServerEntityPacket>(client, packet.world_id, {
     packet_type: PacketType.SYNC_SERVER_ENTITY,
     target: packet.data.socket_id,
     data: {
       serializationId: SerializationID.WORLD,
-      buffer: serializeWorld,
+      data: serializeWorld,
     },
     sender: SERVER_SENDER,
   });
-
-  const world = getEntityWorld(packet.world_id);
 
   const user = await User.findOne({ where: { token: packet.data.token } });
   if (!user) return log(`User with token ${packet.data.token} does not exist.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
@@ -54,7 +53,7 @@ export default async function requestJoinPacket(packet: ClientPacket<RequestJoin
 
   // check if user is already in the world
 
-  const allPlayerEid = playerQuery(world, true);
+  const allPlayerEid = playerQuery();
 
   console.log(allPlayerEid);
 
@@ -63,7 +62,7 @@ export default async function requestJoinPacket(packet: ClientPacket<RequestJoin
 
   const newPlayerEntity =
     existingPlayer ||
-    createNewPlayerEntity(world, {
+    createNewPlayerEntity({
       userId: user.id,
       name: user.display_name,
       position: [0, 0],
