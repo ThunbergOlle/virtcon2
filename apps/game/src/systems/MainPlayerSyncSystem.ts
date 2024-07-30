@@ -1,16 +1,16 @@
 import { ClientPacket, PacketType, SyncClientEntityPacket } from '@virtcon2/network-packet';
 import { Buffer } from 'buffer';
 import { MainPlayer, Position, SerializationID, serializeConfig, Velocity } from '@virtcon2/network-world-entities';
-import { Changed, defineQuery, defineSerializer, defineSystem, IWorld } from 'bitecs';
 import Game, { GameState } from '../scenes/Game';
+import { defineQuery, defineSerializer, defineSystem } from '@virtcon2/bytenetc';
 
-const mainPlayerVelocityQuery = defineQuery([MainPlayer, Changed(Velocity), Position]);
+const mainPlayerVelocityQuery = defineQuery(MainPlayer, Velocity, Position);
 const serializeMovement = defineSerializer(serializeConfig[SerializationID.PLAYER_MOVEMENT]);
 
 export const createMainPlayerSyncSystem = () => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const mainPlayerEntities = mainPlayerVelocityQuery(world);
-    if (!mainPlayerEntities.length) return [world, state];
+  return defineSystem<GameState>((state) => {
+    const mainPlayerEntities = mainPlayerVelocityQuery();
+    if (!mainPlayerEntities.length) return state;
     const mainPlayerEntity = mainPlayerEntities[0];
 
     console.log(`Main player entity: ${mainPlayerEntity}`);
@@ -21,21 +21,18 @@ export const createMainPlayerSyncSystem = () => {
     Position.x[mainPlayerEntity] = sprite.x;
     Position.y[mainPlayerEntity] = sprite.y;
 
-    const packetData = serializeMovement([mainPlayerEntity]);
-    if (!packetData) return [world, state];
-
-    const dataView = new DataView(packetData);
-    const buffer = Buffer.from(dataView.buffer, dataView.byteOffset, dataView.byteLength);
+    const [packetData] = serializeMovement([mainPlayerEntity]);
+    if (!packetData) return state;
 
     const packet: ClientPacket<SyncClientEntityPacket> = {
       packet_type: PacketType.SYNC_CLIENT_ENTITY,
       data: {
         serializationId: SerializationID.PLAYER_MOVEMENT,
-        buffer: buffer,
+        data: packetData,
       },
     };
     Game.network.sendPacket(packet);
 
-    return [world, state];
+    return state;
   });
 };

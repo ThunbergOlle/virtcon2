@@ -1,14 +1,14 @@
-import { defineQuery, defineSystem, enterQuery, exitQuery, IWorld, Not } from 'bitecs';
+import { defineQuery, defineSystem, enterQuery, exitQuery, Not } from '@virtcon2/bytenetc';
 import { GameState } from '../scenes/Game';
 import { MainPlayer, Position, Tag } from '@virtcon2/network-world-entities';
 
-const tagQuery = defineQuery([Position, Tag, Not(MainPlayer)]);
+const tagQuery = defineQuery(Position, Tag, Not(MainPlayer));
 const tagQueryEnter = enterQuery(tagQuery);
 const tagQueryExit = exitQuery(tagQuery);
 
 export const createTagSystem = (scene: Phaser.Scene) => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const enterEntities = tagQueryEnter(world);
+  return defineSystem<GameState>((state) => {
+    const enterEntities = tagQueryEnter();
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
@@ -25,14 +25,14 @@ export const createTagSystem = (scene: Phaser.Scene) => {
       state.tagGameObjectById[id] = gameObject;
     }
 
-    const entities = tagQuery(world);
+    const entities = tagQuery();
     for (let i = 0; i < entities.length; i++) {
       const id = entities[i];
       const gameObject = state.tagGameObjectById[id];
       gameObject.setPosition(Position.x[id] - 8, Position.y[id] - 16);
     }
 
-    const exitEntities = tagQueryExit(world);
+    const exitEntities = tagQueryExit();
     for (let i = 0; i < exitEntities.length; i++) {
       const id = exitEntities[i];
       const gameObject = state.tagGameObjectById[id];
@@ -42,6 +42,6 @@ export const createTagSystem = (scene: Phaser.Scene) => {
       }
     }
 
-    return [world, state];
+    return state;
   });
 };

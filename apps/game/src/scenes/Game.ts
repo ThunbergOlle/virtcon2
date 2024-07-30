@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { Scene, Tilemaps } from 'phaser';
 import { SceneStates } from './interfaces';
 
@@ -6,9 +5,9 @@ import { RedisWorldResource, worldMapParser } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
+import { defineDeserializer, deserializeEntity, System } from '@virtcon2/bytenetc';
 import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
 import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { createWorld, defineDeserializer, IWorld, registerComponents, System as DEPRECATED_SYSTEM } from 'bitecs';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -19,7 +18,6 @@ import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
-import { System } from '@virtcon2/bytenetc';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -41,7 +39,6 @@ export interface GameState {
   };
 }
 export default class Game extends Scene implements SceneStates {
-  public world?: IWorld;
   private map!: Tilemaps.Tilemap;
 
   public state: GameState = {
@@ -62,14 +59,14 @@ export default class Game extends Scene implements SceneStates {
   };
   public spriteSystem?: System<GameState>;
   public spriteRegisterySystem?: System<GameState>;
-  public mainPlayerSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
-  public mainPlayerSyncSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public mainPlayerSystem?: System<GameState>;
+  public mainPlayerSyncSystem?: System<GameState>;
   public colliderSystem?: System<GameState>;
-  public resourceSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public resourceSystem?: System<GameState>;
   public buildingPlacementSystem?: System<GameState>;
   public buildingSystem?: System<GameState>;
-  public tagSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
-  public playerSystem?: DEPRECATED_SYSTEM<[], [IWorld, GameState]>;
+  public tagSystem?: System<GameState>;
+  public playerSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -124,10 +121,6 @@ export default class Game extends Scene implements SceneStates {
       this.state.world_id = id;
       console.log('Loading world data...');
 
-      const ecsWorld = createWorld();
-      this.world = ecsWorld;
-      registerComponents(ecsWorld, allComponents);
-
       this.spriteRegisterySystem = createSpriteRegisterySystem(this);
       this.spriteSystem = createSpriteSystem();
       this.mainPlayerSystem = createMainPlayerSystem(this, this.input.keyboard.createCursorKeys());
@@ -162,7 +155,6 @@ export default class Game extends Scene implements SceneStates {
   update(t: number, dt: number) {
     if (
       !this.spriteSystem ||
-      !this.world ||
       !this.mainPlayerSystem ||
       !this.colliderSystem ||
       !this.spriteRegisterySystem ||
@@ -177,21 +169,21 @@ export default class Game extends Scene implements SceneStates {
 
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
-    receiveServerEntities(this.world, packets);
+    receiveServerEntities(packets);
 
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
     newState = this.spriteSystem(newState);
 
-    newState = this.playerSystem([this.world, newState])[1];
-    newState = this.mainPlayerSystem([this.world, newState])[1];
-    newState = this.mainPlayerSyncSystem([this.world, newState])[1];
+    newState = this.playerSystem(newState);
+    newState = this.mainPlayerSystem(newState);
+    newState = this.mainPlayerSyncSystem(newState);
 
-    newState = this.resourceSystem([this.world, newState])[1];
+    newState = this.resourceSystem(newState);
     newState = this.buildingSystem(newState);
 
     newState = this.buildingPlacementSystem(newState);
-    newState = this.tagSystem([this.world, newState])[1];
+    newState = this.tagSystem(newState);
 
     // Update state
     this.state = newState;
@@ -206,25 +198,23 @@ export default class Game extends Scene implements SceneStates {
   }
 }
 
-const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) => {
-  const worldDeserializer = defineDeserializer(world); // TODO: move this to a more global scope
-
+const receiveServerEntities = (packets: ServerPacket<unknown>[]) => {
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
     if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
-      const { buffer: jsonBuffer, serializationId } = packet.data as SyncServerEntityPacket;
-      const buffer = Buffer.from(jsonBuffer);
-      const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+      const { data, serializationId } = packet.data as SyncServerEntityPacket;
 
       if (serializationId === SerializationID.WORLD) {
-        const ents = worldDeserializer(world, arrayBuffer);
-        console.log(`Received ${ents.length} entities from server when syncing world.`);
+        for (let i = 0; i < data.length; i++) {
+          deserializeEntity(data[i]);
+        }
+        console.log(`Received ${data.length} entities from server when syncing world.`);
         return;
       }
 
       const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
-      const deserializedEnts = deserialize(world, arrayBuffer);
+      const deserializedEnts = deserialize(data);
       console.log(`Received ${deserializedEnts} entities from server. (${serializationId})`);
       if (serializationId === SerializationID.PLAYER_FULL_SERVER) {
         deserializedEnts.forEach((ent) => {
@@ -232,10 +222,5 @@ const receiveServerEntities = (world: IWorld, packets: ServerPacket<unknown>[]) 
         });
       }
     }
-    // if (packet.packet_type === PacketType.DISCONNECT) {
-    //   const data = packet.data as DisconnectPacketData;
-    //   console.log(`Received disconnect packet for entity ${data.eid}`);
-    //   removePlayerEntity(world, data.eid);
-    // }
   }
 };

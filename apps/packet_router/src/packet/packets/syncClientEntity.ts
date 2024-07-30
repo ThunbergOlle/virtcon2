@@ -2,26 +2,15 @@ import { ClientPacketWithSender, SyncClientEntityPacket, syncServerEntities } fr
 
 import { log, LogApp, LogLevel } from '@shared';
 import { serializeConfig } from '@virtcon2/network-world-entities';
-import { defineDeserializer } from 'bitecs';
 import { RedisClientType } from 'redis';
-import { getEntityWorld } from '../../ecs/entityWorld';
+import { defineDeserializer } from '@virtcon2/bytenetc';
 
 export default async function syncClientEntityPacket(packet: ClientPacketWithSender<SyncClientEntityPacket>, client: RedisClientType) {
-  const buffer = packet.data.buffer;
-  const arrayBuffer = new ArrayBuffer(buffer.length);
-  const view = new Uint8Array(arrayBuffer);
-  view.set(buffer);
-
-  const entityWorld = getEntityWorld(packet.world_id);
-
-  console.log(`Deserializing entities: ${packet.data.serializationId}`);
-  console.log(packet.data.buffer);
-
   const deserialize = defineDeserializer(serializeConfig[packet.data.serializationId]);
 
-  const deserializedEnts = deserialize(entityWorld, arrayBuffer);
+  const deserializedEnts = deserialize([packet.data.data]);
 
   log(`Deserialized entities: ${deserializedEnts}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 
-  syncServerEntities(client, packet.world_id, packet.world_id, arrayBuffer, packet.data.serializationId);
+  syncServerEntities(client, packet.world_id, packet.world_id, [packet.data.data], packet.data.serializationId);
 }

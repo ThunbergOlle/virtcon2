@@ -1,8 +1,7 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
 import { ClientPacket, DisconnectPacketData, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
-import { Player, removePlayerEntity } from '@virtcon2/network-world-entities';
-import { defineQuery } from 'bitecs';
+import { Player } from '@virtcon2/network-world-entities';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
@@ -16,6 +15,7 @@ import { getEntityWorld } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
+import { defineQuery } from '@virtcon2/bytenetc';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -70,14 +70,14 @@ io.on('connection', (socket) => {
     user.currentlyInWorld = null;
     await user.save();
 
-    const playerQuery = defineQuery([Player]);
-    const playersEid = playerQuery(entityWorld);
+    const playerQuery = defineQuery(Player);
+    const playersEid = playerQuery();
 
     const eid = playersEid.find((eid) => Player.userId[eid] === user.id);
 
     if (eid === undefined) return log(`Player entity not found for user ${user.id}`, LogLevel.WARN, LogApp.SERVER);
 
-    removePlayerEntity(entityWorld, eid);
+    // removePlayerEntity(entityWorld, eid);
 
     enqueuePacket<DisconnectPacketData>(redisClient, wasInWorld, {
       packet_type: PacketType.DISCONNECT,

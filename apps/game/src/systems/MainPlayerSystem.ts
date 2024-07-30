@@ -1,11 +1,10 @@
-import { IWorld, addComponent, defineQuery, defineSystem, enterQuery } from 'bitecs';
-
 import { Collider, MainPlayer, Player, Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
+import { addComponent, defineQuery, defineSystem, enterQuery } from '@virtcon2/bytenetc';
 
 const speed = 750;
-const mainPlayerQuery = defineQuery([MainPlayer, Position, Sprite, Player, Collider]);
+const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider);
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
 export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
@@ -16,8 +15,8 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
   ];
 
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const enterEntities = mainPlayerQueryEnter(world);
+  return defineSystem<GameState>((state) => {
+    const enterEntities = mainPlayerQueryEnter();
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
 
@@ -39,7 +38,7 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
 
       // Add keys
     }
-    const entities = mainPlayerQuery(world);
+    const entities = mainPlayerQuery();
     for (let i = 0; i < entities.length; i++) {
       let xVel: number =
         (Number(cursors.right.isDown || scene.input.keyboard.checkDown(keyD)) - Number(cursors.left.isDown || scene.input.keyboard.checkDown(keyA))) / 10;
@@ -55,15 +54,15 @@ export const createMainPlayerSystem = (scene: Phaser.Scene, cursors: Phaser.Type
       Velocity.x[entities[i]] = xVel * speed;
       Velocity.y[entities[i]] = yVel * speed;
     }
-    return [world, state];
+    return state;
   });
 };
 
-export const setMainPlayerEntity = (world: IWorld, eid: number) => {
-  addComponent(world, MainPlayer, eid);
+export const setMainPlayerEntity = (eid: number) => {
+  addComponent(MainPlayer, eid);
 
   /* Add collider to entity */
-  addComponent(world, Collider, eid);
+  addComponent(Collider, eid);
   Collider.offsetX[eid] = 0;
   Collider.offsetY[eid] = 0;
   Collider.sizeWidth[eid] = 16;
@@ -71,7 +70,7 @@ export const setMainPlayerEntity = (world: IWorld, eid: number) => {
   Collider.scale[eid] = 1;
   Collider.group[eid] = GameObjectGroups.PLAYER;
 
-  addComponent(world, Velocity, eid);
+  addComponent(Velocity, eid);
   Velocity.x[eid] = 0;
   Velocity.y[eid] = 0;
 };

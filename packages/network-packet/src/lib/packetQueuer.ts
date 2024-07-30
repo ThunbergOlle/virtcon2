@@ -3,13 +3,11 @@ import { RedisClientType } from 'redis';
 import { PacketType, ServerPacket } from './types/packet';
 import { SerializationID } from '@virtcon2/network-world-entities';
 import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
+import { SerializedData } from '@virtcon2/bytenetc';
 
 export const enqueuePacket = async <T>(client: RedisClientType, worldId: string, packet: ServerPacket<T>) => {
   if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
     const data = packet.data as SyncServerEntityPacket;
-    log(`Buffer length: ${data.buffer.byteLength}`);
-    const dataView = new DataView(data.buffer);
-    const buffer = Buffer.from(dataView.buffer, dataView.byteOffset, dataView.byteLength);
 
     await client.rPush(
       `queue_${worldId}`,
@@ -17,7 +15,7 @@ export const enqueuePacket = async <T>(client: RedisClientType, worldId: string,
         ...packet,
         data: {
           serializationId: data.serializationId,
-          buffer: buffer.toJSON(),
+          data: data,
         },
       }),
     );
@@ -40,13 +38,13 @@ const parsePacket = (packet: string): ServerPacket<unknown> => {
   return JSON.parse(packet);
 };
 
-export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, buffer: ArrayBuffer, serializationId: SerializationID) => {
+export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, data: SerializedData[], serializationId: SerializationID) => {
   await enqueuePacket<SyncServerEntityPacket>(client, queue, {
     packet_type: PacketType.SYNC_SERVER_ENTITY,
     target: target,
     data: {
       serializationId,
-      buffer,
+      data,
     },
     sender: {
       id: -1,

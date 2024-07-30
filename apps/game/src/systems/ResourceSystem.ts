@@ -1,16 +1,16 @@
 import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 import { get_item_by_id } from '@virtcon2/static-game-data';
-import { IWorld, defineQuery, defineSystem, enterQuery } from 'bitecs';
 import { Types } from 'phaser';
 import { toast } from 'react-toastify';
 import Game, { GameState } from '../scenes/Game';
 import { Resource, Sprite, Collider } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSystem, enterQuery } from '@virtcon2/bytenetc';
 
-const resourceQuery = defineQuery([Resource, Sprite, Collider]);
+const resourceQuery = defineQuery(Resource, Sprite, Collider);
 const resourceEnterQuery = enterQuery(resourceQuery);
 export const createResourceSystem = () => {
-  return defineSystem<[], [IWorld, GameState]>(([world, state]) => {
-    const enterEntities = resourceEnterQuery(world);
+  return defineSystem<GameState>((state) => {
+    const enterEntities = resourceEnterQuery();
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
@@ -21,7 +21,7 @@ export const createResourceSystem = () => {
         setupResourceEventListeners(sprite, id, state);
       }
     }
-    return [world, state];
+    return state;
   });
 };
 
