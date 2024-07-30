@@ -227,7 +227,7 @@ export const deserializeEntity = (data: SerializedData) => {
   $entityStore[eid] = uniqueComponents;
 };
 
-export const defineSerializer = (...components: Component<any>[]) => {
+export const defineSerializer = (components: Component<any>[]) => {
   return (entities: Entity[]) => {
     const data: SerializedData[] = [];
     for (const entity of entities) {
@@ -250,8 +250,9 @@ export const defineSerializer = (...components: Component<any>[]) => {
   };
 };
 
-export const defineDeserializer = (...components: Component<any>[]) => {
+export const defineDeserializer = (components: Component<any>[]) => {
   return (data: SerializedData[]) => {
+    const deserializedEnts = [];
     for (const entity of data) {
       const eid = entity[0][2] as number;
 
@@ -262,7 +263,10 @@ export const defineDeserializer = (...components: Component<any>[]) => {
           $entityStore[eid].push(name);
         }
       }
+
+      deserializedEnts.push(eid);
     }
+    return deserializedEnts;
   };
 };
 

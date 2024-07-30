@@ -2,7 +2,6 @@ import {
   addComponent,
   addEntity,
   clearEntities,
-  debugEntity,
   defineComponent,
   defineDeserializer,
   defineQuery,
@@ -371,7 +370,7 @@ describe('defineSerializer', () => {
     Velocity.x[eid] = 2;
     Velocity.y[eid] = 255;
 
-    const serializePosition = defineSerializer(Position);
+    const serializePosition = defineSerializer([Position]);
 
     const serialized = serializePosition([eid]);
 
@@ -381,7 +380,7 @@ describe('defineSerializer', () => {
       ['position', 'y', 20],
     ]);
 
-    const deserializePosition = defineDeserializer(Position);
+    const deserializePosition = defineDeserializer([Position]);
 
     Position.x[eid] = 20;
     Position.y[eid] = 30;
