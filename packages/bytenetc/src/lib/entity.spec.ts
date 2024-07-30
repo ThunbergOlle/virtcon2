@@ -4,7 +4,9 @@ import {
   clearEntities,
   debugEntity,
   defineComponent,
+  defineDeserializer,
   defineQuery,
+  defineSerializer,
   deserializeEntity,
   enterQuery,
   exitQuery,
@@ -339,5 +341,56 @@ describe('enter and exit queries', () => {
     expect(state.enter).toEqual([]);
     expect(state.exit).toEqual([eid1]);
     expect(state.query).toEqual([]);
+  });
+});
+
+describe('defineSerializer', () => {
+  beforeEach(() => {
+    clearEntities();
+  });
+
+  it('should serialize only the component supplied to the function', () => {
+    const Position = defineComponent('position', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    const Velocity = defineComponent('velocity', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    const eid = addEntity();
+
+    addComponent(Position, eid);
+    addComponent(Velocity, eid);
+
+    Position.x[eid] = 10;
+    Position.y[eid] = 20;
+
+    Velocity.x[eid] = 2;
+    Velocity.y[eid] = 255;
+
+    const serializePosition = defineSerializer(Position);
+
+    const serialized = serializePosition([eid]);
+
+    expect(serialized[0]).toEqual([
+      ['_entity', '_entity', 0],
+      ['position', 'x', 10],
+      ['position', 'y', 20],
+    ]);
+
+    const deserializePosition = defineDeserializer(Position);
+
+    Position.x[eid] = 20;
+    Position.y[eid] = 30;
+    Velocity.x[eid] = 10;
+
+    deserializePosition(serialized);
+
+    expect(Position.x[eid]).toEqual(10);
+    expect(Position.y[eid]).toEqual(20);
+    expect(Velocity.x[eid]).toEqual(10);
   });
 });

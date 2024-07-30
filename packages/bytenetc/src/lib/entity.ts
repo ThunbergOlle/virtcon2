@@ -227,6 +227,45 @@ export const deserializeEntity = (data: SerializedData) => {
   $entityStore[eid] = uniqueComponents;
 };
 
+export const defineSerializer = (...components: Component<any>[]) => {
+  return (entities: Entity[]) => {
+    const data: SerializedData[] = [];
+    for (const entity of entities) {
+      const serializedData: SerializedData = [['_entity', '_entity', entity]];
+
+      for (const component of components) {
+        const componentName = decodeName(component);
+        if (!$entityStore[entity].includes(componentName)) continue;
+
+        for (const key in $componentStore[componentName]) {
+          if (key === '_name') continue;
+          serializedData.push([componentName, key, $componentStore[componentName][key][entity]]);
+        }
+      }
+
+      data.push(serializedData);
+    }
+
+    return data;
+  };
+};
+
+export const defineDeserializer = (...components: Component<any>[]) => {
+  return (data: SerializedData[]) => {
+    for (const entity of data) {
+      const eid = entity[0][2] as number;
+
+      for (const [name, key, value] of entity.slice(1)) {
+        if (!components.some((c) => decodeName(c) === name)) continue;
+        $componentStore[name][key][eid] = value as number;
+        if (!$entityStore[eid].includes(name)) {
+          $entityStore[eid].push(name);
+        }
+      }
+    }
+  };
+};
+
 export type System<State> = (state: State) => State;
 
 export const defineSystem = <State>(system: System<State>) => system;
