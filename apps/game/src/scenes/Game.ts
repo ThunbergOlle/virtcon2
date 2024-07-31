@@ -5,7 +5,7 @@ import { RedisWorldResource, worldMapParser } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
-import { defineDeserializer, deserializeEntity, System } from '@virtcon2/bytenetc';
+import { createWorld, defineDeserializer, deserializeEntity, registerComponents, System, World } from '@virtcon2/bytenetc';
 import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
 import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
@@ -28,7 +28,7 @@ export enum GameObjectGroups {
 }
 export interface GameState {
   dt: number;
-  world_id: string;
+  world: World;
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
   tagGameObjectById: { [key: number]: Phaser.GameObjects.Text };
@@ -43,7 +43,7 @@ export default class Game extends Scene implements SceneStates {
 
   public state: GameState = {
     dt: 0,
-    world_id: '',
+    world: '',
     spritesById: {},
     playerById: {},
     resourcesById: {},
@@ -118,20 +118,22 @@ export default class Game extends Scene implements SceneStates {
     });
 
     events.subscribe('networkLoadWorld', ({ heightMap, id, mainPlayerId }) => {
-      this.state.world_id = id;
+      this.state.world = createWorld(id);
+
+      registerComponents(this.state.world, allComponents);
       console.log('Loading world data...');
 
-      this.spriteRegisterySystem = createSpriteRegisterySystem(this);
-      this.spriteSystem = createSpriteSystem();
-      this.mainPlayerSystem = createMainPlayerSystem(this, this.input.keyboard.createCursorKeys());
+      this.spriteRegisterySystem = createSpriteRegisterySystem(this.state.world, this);
+      this.spriteSystem = createSpriteSystem(this.state.world);
+      this.mainPlayerSystem = createMainPlayerSystem(this.state.world, this, this.input.keyboard.createCursorKeys());
       // this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem(); - replaced by networked entities
-      this.mainPlayerSyncSystem = createMainPlayerSyncSystem();
-      this.colliderSystem = createColliderSystem(this);
-      this.resourceSystem = createResourceSystem();
-      this.buildingPlacementSystem = createBuildingPlacementSystem(this);
-      this.buildingSystem = createBuildingSystem();
-      this.tagSystem = createTagSystem(this);
-      this.playerSystem = createPlayerSystem(mainPlayerId);
+      this.mainPlayerSyncSystem = createMainPlayerSyncSystem(this.state.world);
+      this.colliderSystem = createColliderSystem(this.state.world, this);
+      this.resourceSystem = createResourceSystem(this.state.world);
+      this.buildingPlacementSystem = createBuildingPlacementSystem(this.state.world, this);
+      this.buildingSystem = createBuildingSystem(this.state.world);
+      this.tagSystem = createTagSystem(this.state.world, this);
+      this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -169,7 +171,7 @@ export default class Game extends Scene implements SceneStates {
 
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
-    receiveServerEntities(packets);
+    receiveServerEntities(this.state.world, packets);
 
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
@@ -198,7 +200,7 @@ export default class Game extends Scene implements SceneStates {
   }
 }
 
-const receiveServerEntities = (packets: ServerPacket<unknown>[]) => {
+const receiveServerEntities = (world: World, packets: ServerPacket<unknown>[]) => {
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
     if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
@@ -206,7 +208,7 @@ const receiveServerEntities = (packets: ServerPacket<unknown>[]) => {
 
       if (serializationId === SerializationID.WORLD) {
         for (let i = 0; i < data.length; i++) {
-          deserializeEntity(data[i]);
+          deserializeEntity(world, data[i]);
         }
         console.log(`Received ${data.length} entities from server when syncing world.`);
         return;
@@ -214,7 +216,7 @@ const receiveServerEntities = (packets: ServerPacket<unknown>[]) => {
 
       const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
-      const deserializedEnts = deserialize(data);
+      const deserializedEnts = deserialize(world, data);
       console.log(`Received ${deserializedEnts} entities from server. (${serializationId})`);
       if (serializationId === SerializationID.PLAYER_FULL_SERVER) {
         deserializedEnts.forEach((ent) => {

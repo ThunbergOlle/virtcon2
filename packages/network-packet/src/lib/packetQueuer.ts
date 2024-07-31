@@ -1,9 +1,8 @@
-import { log } from '@shared';
-import { RedisClientType } from 'redis';
-import { PacketType, ServerPacket } from './types/packet';
-import { SerializationID } from '@virtcon2/network-world-entities';
-import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
 import { SerializedData } from '@virtcon2/bytenetc';
+import { SerializationID } from '@virtcon2/network-world-entities';
+import { RedisClientType } from 'redis';
+import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
+import { PacketType, ServerPacket } from './types/packet';
 
 export const enqueuePacket = async <T>(client: RedisClientType, worldId: string, packet: ServerPacket<T>) => {
   if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
@@ -13,10 +12,8 @@ export const enqueuePacket = async <T>(client: RedisClientType, worldId: string,
       `queue_${worldId}`,
       JSON.stringify({
         ...packet,
-        data: {
-          serializationId: data.serializationId,
-          data: data,
-        },
+        // TODO: figure out a way to deal with Uint8Array
+        data,
       }),
     );
   } else if (typeof packet === 'object') await client.rPush(`queue_${worldId}`, JSON.stringify(packet));
@@ -34,9 +31,7 @@ export const getAllPackets = async (client: RedisClientType, worldId: string): P
   return packets.map(parsePacket);
 };
 
-const parsePacket = (packet: string): ServerPacket<unknown> => {
-  return JSON.parse(packet);
-};
+const parsePacket = (packet: string): ServerPacket<unknown> => JSON.parse(packet);
 
 export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, data: SerializedData[], serializationId: SerializationID) => {
   await enqueuePacket<SyncServerEntityPacket>(client, queue, {

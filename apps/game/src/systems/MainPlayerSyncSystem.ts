@@ -1,15 +1,14 @@
 import { ClientPacket, PacketType, SyncClientEntityPacket } from '@virtcon2/network-packet';
-import { Buffer } from 'buffer';
 import { MainPlayer, Position, SerializationID, serializeConfig, Velocity } from '@virtcon2/network-world-entities';
 import Game, { GameState } from '../scenes/Game';
-import { defineQuery, defineSerializer, defineSystem } from '@virtcon2/bytenetc';
+import { Changed, defineQuery, defineSerializer, defineSystem, World } from '@virtcon2/bytenetc';
 
-const mainPlayerVelocityQuery = defineQuery(MainPlayer, Velocity, Position);
+const mainPlayerVelocityQuery = defineQuery(MainPlayer, Changed(Velocity), Position);
 const serializeMovement = defineSerializer(serializeConfig[SerializationID.PLAYER_MOVEMENT]);
 
-export const createMainPlayerSyncSystem = () => {
+export const createMainPlayerSyncSystem = (world: World) => {
   return defineSystem<GameState>((state) => {
-    const mainPlayerEntities = mainPlayerVelocityQuery();
+    const mainPlayerEntities = mainPlayerVelocityQuery(world);
     if (!mainPlayerEntities.length) return state;
     const mainPlayerEntity = mainPlayerEntities[0];
 
@@ -21,7 +20,7 @@ export const createMainPlayerSyncSystem = () => {
     Position.x[mainPlayerEntity] = sprite.x;
     Position.y[mainPlayerEntity] = sprite.y;
 
-    const [packetData] = serializeMovement([mainPlayerEntity]);
+    const [packetData] = serializeMovement(world, [mainPlayerEntity]);
     if (!packetData) return state;
 
     const packet: ClientPacket<SyncClientEntityPacket> = {

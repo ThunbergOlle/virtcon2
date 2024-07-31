@@ -1,4 +1,4 @@
-import { addComponent, addEntity } from '@virtcon2/bytenetc';
+import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
 import { Collider, Player, Position, Sprite, Tag } from '../network-world-entities';
 import { MiscTextureMap } from '../SpriteMap';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -12,11 +12,11 @@ export interface CreateNewPlayerEntity {
 const encoder = new TextEncoder();
 
 export const playerEntityComponents = [Position, Sprite, Player, Collider, Tag];
-export const createNewPlayerEntity = (newPlayer: CreateNewPlayerEntity) => {
-  const player = addEntity();
+export const createNewPlayerEntity = (world: World, newPlayer: CreateNewPlayerEntity) => {
+  const player = addEntity(world);
 
   for (const component of playerEntityComponents) {
-    addComponent(component, player);
+    addComponent(world, component, player);
   }
 
   Player.userId[player] = newPlayer.userId;
@@ -30,7 +30,9 @@ export const createNewPlayerEntity = (newPlayer: CreateNewPlayerEntity) => {
   Collider.static[player] = 1;
   Collider.group[player] = GameObjectGroups.PLAYER;
 
-  Tag.value[player].set(encoder.encode(newPlayer.name));
+  Tag.value[player] = encoder.encode(newPlayer.name);
+
+  console.log(`Tag.value[player]: ${Tag.value[player]}`);
 
   return player;
 };

@@ -1,3 +1,5 @@
+import { World } from '@virtcon2/bytenetc';
+
 export enum PacketType {
   JOIN = 'join',
   DISCONNECT = 'disconnect',
@@ -46,5 +48,5 @@ export interface ClientPacket<T> {
 }
 export interface ClientPacketWithSender<T> extends ServerPacket<T> {
   sender: PacketSender;
-  world_id: string;
+  world_id: World;
 }

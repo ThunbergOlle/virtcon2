@@ -11,7 +11,6 @@ import { RedisClientType, createClient, createClient as createRedisClient } from
 import 'reflect-metadata';
 import * as socketio from 'socket.io';
 import { IsNull, Not } from 'typeorm';
-import { getEntityWorld } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
@@ -62,7 +61,7 @@ io.on('connection', (socket) => {
     const user = await User.findOne({ where: { token: auth } });
     console.log('User disconnected:', user.display_name);
 
-    const entityWorld = getEntityWorld(user.currentlyInWorld);
+    const entityWorld = user.currentlyInWorld;
     if (!entityWorld) return log(`World ${user.currentlyInWorld} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     const wasInWorld = user.currentlyInWorld;
@@ -71,7 +70,7 @@ io.on('connection', (socket) => {
     await user.save();
 
     const playerQuery = defineQuery(Player);
-    const playersEid = playerQuery();
+    const playersEid = playerQuery(entityWorld);
 
     const eid = playersEid.find((eid) => Player.userId[eid] === user.id);
 
@@ -137,8 +136,7 @@ const tickInterval = setInterval(async () => {
   tick++;
   for (const world of worlds) {
     checkFinishedBuildings(world, tick, redisClient);
-    const entityWorld = getEntityWorld(world);
-    if (!entityWorld) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+    if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     const packets = await getAllPackets(redisClient, world);
     if (!packets.length) continue;

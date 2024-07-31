@@ -4,13 +4,13 @@ import { Types } from 'phaser';
 import { toast } from 'react-toastify';
 import Game, { GameState } from '../scenes/Game';
 import { Resource, Sprite, Collider } from '@virtcon2/network-world-entities';
-import { defineQuery, defineSystem, enterQuery } from '@virtcon2/bytenetc';
+import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
 
 const resourceQuery = defineQuery(Resource, Sprite, Collider);
 const resourceEnterQuery = enterQuery(resourceQuery);
-export const createResourceSystem = () => {
+export const createResourceSystem = (world: World) => {
   return defineSystem<GameState>((state) => {
-    const enterEntities = resourceEnterQuery();
+    const enterEntities = resourceEnterQuery(world);
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
@@ -48,7 +48,7 @@ const setupResourceEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDyna
           resourceId: Resource.id[eid],
         },
         packet_type: PacketType.REQUEST_DESTROY_RESOURCE,
-        world_id: state.world_id,
+        world_id: state.world,
       };
       Game.network.sendPacket(destroyResourcePacket);
       Resource.health[eid] = 5;

@@ -38,7 +38,6 @@ export class Network {
   }
 
   public readReceivedPackets(length: number) {
-    console.log(`Reading ${length} packets`);
     return this.received_packets.splice(0, length);
   }
 

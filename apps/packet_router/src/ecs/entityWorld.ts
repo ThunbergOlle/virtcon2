@@ -1,33 +1,30 @@
-import { createWorld, defineSerializer, IWorld, registerComponents } from 'bitecs';
 import { loadWorldFromDb } from './loaders';
-
 import { log } from '@shared';
+import { createWorld, registerComponents, World } from '@virtcon2/bytenetc';
 import { allComponents, createNewBuildingEntity, createNewResourceEntity } from '@virtcon2/network-world-entities';
 import { getResourceNameFromItemName } from '@virtcon2/static-game-data';
 
-export const worlds: { [key: string]: IWorld } = {};
+const worlds = [];
 
-export const newEntityWorld = (id: string) => {
-  if (worlds[id]) throw new Error(`World with id ${id} already exists`);
-  worlds[id] = createWorld();
-  log(`Created new world with id ${id}, registering ${allComponents.length} components`);
-  registerComponents(worlds[id], allComponents);
-  return worlds[id];
+export const newEntityWorld = (world: World) => {
+  if (worlds.includes(world)) throw new Error(`World with id ${world} already exists`);
+
+  worlds.push(createWorld(world));
+
+  log(`Created new world with id ${world}, registering ${allComponents.length} components`);
+  registerComponents(world, allComponents);
+
+  return world;
 };
 
-export const getEntityWorld = (id: string) => {
-  return worlds[id];
-};
-
-export const deleteEntityWorld = (id: string) => {
-  delete worlds[id];
-};
+export const doesWorldExist = (world: World) => worlds.includes(world);
 
 export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
   const { resources, worldBuildings } = await loadWorldFromDb(dbWorldId);
+  const world = newEntityWorld(dbWorldId);
 
   for (const worldBuilding of worldBuildings) {
-    createNewBuildingEntity({
+    createNewBuildingEntity(world, {
       buildingId: worldBuilding.building.id,
       worldBuildingId: worldBuilding.id,
       x: worldBuilding.x,
@@ -40,7 +37,7 @@ export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
     const resourceName = getResourceNameFromItemName(resource.item.name);
     if (!resourceName) throw new Error(`Resource ${resource.item.name} does not exist`);
 
-    createNewResourceEntity({
+    createNewResourceEntity(world, {
       resourceName,
       pos: {
         x: resource.x,
@@ -50,10 +47,4 @@ export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
       itemId: resource.item.id,
     });
   }
-};
-
-export const serializeEntityWorld = (worldId: string) => {
-  const entityWorld = getEntityWorld(worldId);
-  const serialize = defineSerializer(entityWorld);
-  return serialize(entityWorld);
 };

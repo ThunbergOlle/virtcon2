@@ -1,13 +1,13 @@
 import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
-import { defineQuery, defineSystem, Entity, exitQuery } from '@virtcon2/bytenetc';
+import { defineQuery, defineSystem, Entity, exitQuery, World } from '@virtcon2/bytenetc';
 
 const ghostBuildingQuery = defineQuery(GhostBuilding, Position, Collider, Sprite);
 const ghostBuildingExitQuery = exitQuery(ghostBuildingQuery);
-export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
+export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene) => {
   return defineSystem<GameState>((state) => {
-    const ghostBuildings = ghostBuildingQuery();
+    const ghostBuildings = ghostBuildingQuery(world);
 
     for (let i = 0; i < ghostBuildings.length; i++) {
       // check collisions
@@ -34,7 +34,7 @@ export const createBuildingPlacementSystem = (scene: Phaser.Scene) => {
       Position.y[ghostBuilding] = y + offsetY * tileSize;
     }
 
-    const exitEntities = ghostBuildingExitQuery();
+    const exitEntities = ghostBuildingExitQuery(world);
     for (let i = 0; i < exitEntities.length; i++) {
       const id = exitEntities[i];
       const ghostBuildingById = state.ghostBuildingById[id];
