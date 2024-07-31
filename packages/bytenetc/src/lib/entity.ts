@@ -45,7 +45,8 @@ type SchemaToComponent<S extends Schema> = {
 
 type ComponentStore = Record<string, Component<any>>;
 
-type World = string;
+export type World = string;
+
 type WorldStore = {
   $entityStore: Array<string[]>;
   $componentStore: ComponentStore;
@@ -60,6 +61,11 @@ export const createWorld = (id: World) => {
     $componentStore: {},
     $queryCache: new Map(),
   };
+  return id;
+};
+
+export const deleteWorld = (id: World) => {
+  delete $store[id];
 };
 
 const decodeName = (c: Component<any>) => new TextDecoder().decode(c._name as Uint8Array);
@@ -120,7 +126,7 @@ export const registerComponents = (world: World, components: Component<any>[]) =
 export const addComponent = (world: World, component: Component<any>, entity: Entity) => {
   const name = decodeName(component);
   if (!$store[world].$componentStore[name]) {
-    throw new Error(`Component ${component} does not exist`);
+    throw new Error(`Component ${name} does not exist`);
   }
 
   $store[world].$entityStore[entity].push(decodeName(component));
@@ -131,7 +137,7 @@ export const addComponent = (world: World, component: Component<any>, entity: En
 export const removeComponent = (world: World, component: Component<any>, entity: Entity) => {
   const name = decodeName(component);
   if (!$store[world].$componentStore[name]) {
-    throw new Error(`Component ${component} does not exist`);
+    throw new Error(`Component ${name} does not exist`);
   }
 
   $store[world].$entityStore[entity] = $store[world].$entityStore[entity].filter((c) => c !== name);
@@ -143,23 +149,68 @@ export const removeComponent = (world: World, component: Component<any>, entity:
   $store[world].$queryCache.clear();
 };
 
-export type QueryModifier = (entity: Entity, world: World) => boolean;
+export type QueryModifier = { (entity: Entity, world: World): boolean; noCache?: boolean };
 
 export const Not =
   (component: Component<any>): QueryModifier =>
   (entityId: Entity, world: World) =>
     !$store[world].$entityStore[entityId].includes(decodeName(component));
 
-export const defineQuery = (...components: (Component<any> | QueryModifier)[]) => {
+export const Has =
+  (component: Component<any>): QueryModifier =>
+  (entityId: Entity, world: World) =>
+    $store[world].$entityStore[entityId].includes(decodeName(component));
+
+export const Changed = (component: Component<any>): QueryModifier => {
+  const $changedCache = new Map<Entity, unknown[]>();
+
+  const modifier: QueryModifier = (entityId: Entity, world: World) => {
+    if (!Has(component)(entityId, world)) return false;
+
+    const name = decodeName(component);
+    const components = $store[world].$componentStore[name];
+    const values = [];
+    for (const key in components) {
+      if (key === '_name') continue;
+      values.push(components[key][entityId]);
+    }
+
+    if (!$changedCache.has(entityId)) {
+      $changedCache.set(entityId, values);
+      return true;
+    }
+
+    const prevValues = $changedCache.get(entityId);
+    const changed = !values.every((v, i) => v === prevValues[i]);
+
+    if (changed) $changedCache.set(entityId, values);
+
+    return changed;
+  };
+
+  modifier.noCache = true;
+
+  return modifier;
+};
+
+type QueryReturn = (world: World) => Entity[];
+export const defineQuery = (...components: (Component<any> | QueryModifier)[]): QueryReturn => {
   const $cacheEntry = Symbol('queryCache');
 
-  return (world: World) => {
-    if ($store[world].$queryCache.has($cacheEntry)) return $store[world].$queryCache.get($cacheEntry);
+  const useCache = components.every((c) => typeof c !== 'function' && !c.noCache);
+
+  return (world: World): Entity[] => {
+    if (useCache && $store[world].$queryCache.has($cacheEntry)) return $store[world].$queryCache.get($cacheEntry);
 
     const entities: Entity[] = [];
     for (let i = 0; i < MAX_ENTITIES; i++) {
       if (!$store[world].$entityStore[i]) continue;
-      if (components.every((c) => (typeof c === 'function' ? c(i, world) : $store[world].$entityStore[i].includes(decodeName(c))))) entities.push(i);
+      if (
+        components.every((componentOrModifier) =>
+          typeof componentOrModifier === 'function' ? componentOrModifier(i, world) : Has(componentOrModifier)(i, world),
+        )
+      )
+        entities.push(i);
     }
 
     $store[world].$queryCache.set($cacheEntry, entities);
@@ -168,7 +219,7 @@ export const defineQuery = (...components: (Component<any> | QueryModifier)[]) =
   };
 };
 
-export const enterQuery = (query: ReturnType<ReturnType<typeof defineQuery>>) => {
+export const enterQuery = (query: QueryReturn) => {
   let prevResult = [];
   return (world: World) => {
     const entities = query(world);
@@ -181,10 +232,10 @@ export const enterQuery = (query: ReturnType<ReturnType<typeof defineQuery>>) =>
   };
 };
 
-export const exitQuery = (query: ReturnType<ReturnType<typeof defineQuery>>) => {
+export const exitQuery = (query: QueryReturn) => {
   let prevResult = [];
-  return () => {
-    const entities = query();
+  return (world: World) => {
+    const entities = query(world);
 
     const removedEntities = prevResult.filter((e) => !entities.includes(e));
 
@@ -204,6 +255,11 @@ export const addEntity = (world: World) => {
   }
 
   throw new Error('No more entities');
+};
+
+export const dangerouslyAddEntity = (world: World, entity: Entity) => {
+  $store[world].$queryCache.clear();
+  $store[world].$entityStore[entity] = [];
 };
 
 export const removeEntity = (world: World, entity: Entity) => {
@@ -239,7 +295,7 @@ export const deserializeEntity = (world: World, data: SerializedData) => {
   const eid = data[0][2] as number;
 
   for (const [name, key, value] of data.slice(1)) {
-    $store[world].$componentStore[name][key][eid] = value as number;
+    $store[world].$componentStore[name][key][eid] = value;
   }
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
   $store[world].$entityStore[eid] = uniqueComponents;
@@ -257,7 +313,8 @@ export const defineSerializer = (components: Component<any>[]) => {
 
         for (const key in $store[world].$componentStore[componentName]) {
           if (key === '_name') continue;
-          serializedData.push([componentName, key, $store[world].$componentStore[componentName][key][entity]]);
+          const value = $store[world].$componentStore[componentName][key][entity];
+          serializedData.push([componentName, key, value]);
         }
       }
 
@@ -273,10 +330,11 @@ export const defineDeserializer = (components: Component<any>[]) => {
     const deserializedEnts = [];
     for (const entity of data) {
       const eid = entity[0][2] as number;
+      if (!$store[world].$entityStore[eid]) dangerouslyAddEntity(world, eid);
 
       for (const [name, key, value] of entity.slice(1)) {
         if (!components.some((c) => decodeName(c) === name)) continue;
-        $store[world].$componentStore[name][key][eid] = value as number;
+        $store[world].$componentStore[name][key][eid] = value;
         if (!$store[world].$entityStore[eid].includes(name)) {
           $store[world].$entityStore[eid].push(name);
         }
