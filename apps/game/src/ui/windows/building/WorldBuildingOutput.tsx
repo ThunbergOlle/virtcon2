@@ -1,6 +1,20 @@
+import { gql } from '@apollo/client';
 import React from 'react';
 import { useMemo } from 'react';
 
+export const WORLD_BUILDING_OUTPUT_FRAGMENT = gql`
+  fragment WorldBuildingOutputFragment on WorldBuilding {
+    id
+    x
+    y
+    output_pos_x
+    output_pos_y
+    building {
+      id
+      name
+    }
+  }
+`;
 export default function WorldBuildingOutput(props: {
   currentOutputPosition: { x: number; y: number };
   width: number;
@@ -18,7 +32,11 @@ export default function WorldBuildingOutput(props: {
     for (let y = 0; y < gridHeight; y++) {
       for (let x = 0; x < gridWidth; x++) {
         if (x + props.relativePosition.x - 1 === props.currentOutputPosition.x && y + props.relativePosition.y - 1 === props.currentOutputPosition.y) {
-          new_grid.push(<div className={`border-2  border-gray-400 w-8 h-8 bg-${props.outputBuildingId ? 'green':'yellow'}-500 cursor-pointer text-center text-[10px]`}>OUT</div>);
+          new_grid.push(
+            <div className={`border-2  border-gray-400 w-8 h-8 bg-${props.outputBuildingId ? 'green' : 'yellow'}-500 cursor-pointer text-center text-[10px]`}>
+              OUT
+            </div>,
+          );
         } else if (x === 0 || x === gridWidth - 1 || y === 0 || y === gridHeight - 1) {
           new_grid.push(
             <div

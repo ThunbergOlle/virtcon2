@@ -1,4 +1,4 @@
-import { Field, Float, Int, ObjectType } from 'type-graphql';
+import { Field, FieldResolver, Float, Int, ObjectType, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { AfterInsert, AfterUpdate, BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Building } from '../building/Building';
 import { WorldResource } from '../world_resource/WorldResource';
@@ -25,11 +25,13 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @ManyToOne(() => Building, (building) => building.id)
   @Field(() => Building)
   building: Building;
+  buildingId: number;
 
   @OneToOne(() => WorldResource, { nullable: true })
   @Field(() => WorldResource, { nullable: true })
   @JoinColumn()
   world_resource: WorldResource;
+  worldResourceId: number;
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })

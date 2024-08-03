@@ -174,7 +174,6 @@ export default class Game extends Scene implements SceneStates {
 
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
-    if (length) console.log(packets.map((p) => p.packet_type));
     receiveServerPackets(this.state.world, packets);
 
     newState = this.spriteRegisterySystem(newState);
@@ -207,7 +206,6 @@ export default class Game extends Scene implements SceneStates {
 const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) => {
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
-    console.log(`Received packet ${packet.packet_type}`);
     switch (packet.packet_type) {
       case PacketType.SYNC_SERVER_ENTITY:
         handleSyncServerEntityPacket(world, packet as ServerPacket<SyncServerEntityPacket>);
@@ -221,7 +219,6 @@ const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) =>
 
 const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncServerEntityPacket>) => {
   const { data, serializationId } = packet.data;
-  console.log(`Deserializing ${data.length} entities with serialization id ${serializationId}`);
 
   if (serializationId === SerializationID.WORLD) {
     for (let i = 0; i < data.length; i++) {
@@ -231,11 +228,6 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
     const deserializedEnts = deserialize(world, data);
-    if (serializationId === SerializationID.PLAYER_FULL_SERVER) {
-      deserializedEnts.forEach((ent) => {
-        console.log(`Player entity ${Player.userId[ent]} received from server`);
-      });
-    }
   }
 };
 

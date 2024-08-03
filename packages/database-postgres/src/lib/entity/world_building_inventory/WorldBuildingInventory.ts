@@ -23,6 +23,7 @@ export class WorldBuildingInventory extends BaseEntity {
   @ManyToOne(() => Item, { nullable: true })
   @Field(() => Item, { nullable: true })
   item: Item;
+  itemId: number;
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })

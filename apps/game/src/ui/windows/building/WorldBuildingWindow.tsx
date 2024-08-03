@@ -1,44 +1,51 @@
-import { InventoryType, RedisWorldBuilding, ServerInventoryItem } from '@shared';
+import { gql, useQuery } from '@apollo/client';
+import { InventoryType, ServerInventoryItem } from '@shared';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
-import { DBBuilding, DBWorldBuilding, get_building_by_id } from '@virtcon2/static-game-data';
-import { useEffect, useState } from 'react';
-import { ProgressBar } from 'react-bootstrap';
-import { events } from '../../../events/Events';
+import { DBWorldBuilding } from '@virtcon2/static-game-data';
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { isWindowOpen, WindowType } from '../../lib/WindowSlice';
 import WorldBuildingOutput from './WorldBuildingOutput';
-import useTickProgress from './useTickProgress';
-import { gql, useQuery } from '@apollo/client';
 
-const WORLD_BUILDING_QUERY = gql`
-  query WorldBuildingWindow($id: ID!) {
-    worldBuilding(id: $id) {
-      x
-      y
-      output_pos_x
-      output_pos_y
-      building {
+const WORLD_BUILDING_FRAGMENT = gql`
+  fragment WorldBuildingFragment on WorldBuilding {
+    id
+    x
+    y
+    output_pos_x
+    output_pos_y
+    building {
+      id
+      name
+    }
+    world_building_inventory {
+      slot
+      quantity
+      item {
         id
-        name
+        display_name
       }
     }
   }
 `;
 
+const WORLD_BUILDING_QUERY = gql`
+  ${WORLD_BUILDING_FRAGMENT}
+  query WorldBuildingWindow($id: ID!) {
+    worldBuilding(id: $id) {
+      ...WorldBuildingFragment
+    }
+  }
+`;
+
 const WORLD_BUILDING_SUBSCRIPTION = gql`
+  ${WORLD_BUILDING_FRAGMENT}
   subscription WorldBuildingWindow($id: ID!) {
     inspectWorldBuilding(id: $id) {
-      x
-      y
-      output_pos_x
-      output_pos_y
-      building {
-        id
-        name
-      }
+      ...WorldBuildingFragment
     }
   }
 `;
