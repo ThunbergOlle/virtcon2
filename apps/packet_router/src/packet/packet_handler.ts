@@ -8,7 +8,6 @@ import {
   RequestJoinPacketData,
   RequestMoveInventoryItemPacketData,
   RequestPlaceBuildingPacketData,
-  RequestPlayerInventoryPacket,
   RequestWorldBuildingChangeOutput,
   SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
@@ -17,7 +16,6 @@ import request_destroy_resource_packet from './packets/request_destroy_resource_
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
 import request_place_building_packet from './packets/request_place_building_packet';
-import request_player_inventory_packet from './packets/request_player_inventory_packet';
 import requestWorldBuldingChangeOutput from './packets/request_world_building_change_output';
 import syncClientEntity from './packets/syncClientEntity';
 
@@ -27,8 +25,6 @@ interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
 
 export function handleClientPacket(packet: ClientPacketWithPotentialSender<unknown>, client: RedisClientType) {
   switch (packet.packet_type) {
-    case PacketType.REQUEST_PLAYER_INVENTORY:
-      return request_player_inventory_packet(packet as ClientPacketWithSender<RequestPlayerInventoryPacket>, client);
     case PacketType.REQUEST_JOIN:
       return requestJoinPacket(packet as ClientPacketWithSender<RequestJoinPacketData>, client);
     case PacketType.REQUEST_DESTROY_RESOURCE:
@@ -36,9 +32,9 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
     case PacketType.REQUEST_PLACE_BUILDING:
       return request_place_building_packet(packet as ClientPacketWithSender<RequestPlaceBuildingPacketData>, client);
     case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT:
-      return requestWorldBuldingChangeOutput(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client);
+      return requestWorldBuldingChangeOutput(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>);
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM:
-      return request_move_inventory_item_packet(packet as ClientPacketWithSender<RequestMoveInventoryItemPacketData>, client);
+      return request_move_inventory_item_packet(packet as ClientPacketWithSender<RequestMoveInventoryItemPacketData>);
     case PacketType.SYNC_CLIENT_ENTITY:
       return syncClientEntity(packet as ClientPacketWithSender<SyncClientEntityPacket>, client);
 

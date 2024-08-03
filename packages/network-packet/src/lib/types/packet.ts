@@ -11,13 +11,10 @@ export enum PacketType {
   REQUEST_JOIN = 'requestJoin',
   REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
   REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
-  INSPECT_WORLD_BUILDING = 'inspectWorldBuilding',
-  DONE_INSPECTING_WORLD_BUILDING = 'doneInspectingWorldBuilding',
   REQUEST_MOVE_INVENTORY_ITEM = 'requestMoveInventoryItem',
   REQUEST_WORLD_BUILDING_CHANGE_OUTPUT = 'requestWorldBuildingChangeOutput',
   INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING = 'internalWorldBuildingFinishedProcessing',
   WORLD_BUILDING = 'worldBuilding',
-  PLACE_BUILDING = 'placeBuilding',
 
   /* BitECS entities */
   SYNC_CLIENT_ENTITY = 'syncClientEntity',

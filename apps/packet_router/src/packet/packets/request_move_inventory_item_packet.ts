@@ -1,23 +1,18 @@
 import { InventoryType, LogApp, LogLevel, log } from '@shared';
 import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safelyMoveItemsBetweenInventories } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
-import { RedisClientType } from 'redis';
-import request_player_inventory_packet from './request_player_inventory_packet';
 
-export default async function request_move_inventory_item_packet(
-  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
-  redisPubClient: RedisClientType,
-) {
+export default async function request_move_inventory_item_packet(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   /* Handle differently depending on if items moves between player inventory or building inventory */
 
   if (packet.data.fromInventoryType === InventoryType.PLAYER && packet.data.toInventoryType === InventoryType.BUILDING) {
-    return request_move_inventory_item_to_building(packet, redisPubClient);
+    return request_move_inventory_item_to_building(packet);
   } else if (packet.data.fromInventoryType === InventoryType.BUILDING && packet.data.toInventoryType === InventoryType.PLAYER) {
-    return request_move_inventory_item_to_player_inventory(packet, redisPubClient);
+    return request_move_inventory_item_to_player_inventory(packet);
   } else if (packet.data.fromInventoryType === InventoryType.PLAYER && packet.data.toInventoryType === InventoryType.PLAYER) {
-    return request_move_inventory_item_inside_player_inventory(packet, redisPubClient);
+    return request_move_inventory_item_inside_player_inventory(packet);
   } else if (packet.data.fromInventoryType === InventoryType.BUILDING && packet.data.toInventoryType === InventoryType.BUILDING) {
-    return request_move_inventory_item_inside_building_inventory(packet, redisPubClient);
+    return request_move_inventory_item_inside_building_inventory(packet);
   }
 
   log(
@@ -26,10 +21,7 @@ export default async function request_move_inventory_item_packet(
     LogApp.PACKET_DATA_SERVER,
   );
 }
-async function request_move_inventory_item_inside_building_inventory(
-  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
-  redis: RedisClientType,
-) {
+async function request_move_inventory_item_inside_building_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   await safelyMoveItemsBetweenInventories({
     fromId: packet.data.fromInventoryId,
     toId: packet.data.toInventoryId,
@@ -43,10 +35,7 @@ async function request_move_inventory_item_inside_building_inventory(
 
   // refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
-async function request_move_inventory_item_inside_player_inventory(
-  packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>,
-  redisPubClient: RedisClientType,
-) {
+async function request_move_inventory_item_inside_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   await safelyMoveItemsBetweenInventories({
     fromId: packet.sender.id,
     toId: packet.sender.id,
@@ -57,9 +46,8 @@ async function request_move_inventory_item_inside_player_inventory(
     fromSlot: packet.data.fromInventorySlot,
     toSlot: packet.data.toInventorySlot,
   });
-  request_player_inventory_packet(packet, redisPubClient);
 }
-async function request_move_inventory_item_to_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redis: RedisClientType) {
+async function request_move_inventory_item_to_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   const building_inventory_item = await WorldBuildingInventory.findOne({
     where: { item: { id: packet.data.item.item.id }, world_building: { id: packet.data.fromInventoryId } },
     relations: ['item', 'world_building'],
@@ -95,17 +83,9 @@ async function request_move_inventory_item_to_player_inventory(packet: ClientPac
     fromSlot: packet.data.fromInventorySlot,
     toSlot: packet.data.toInventorySlot,
   });
-
-  // send the updated inventory to the player and to the building
-  request_player_inventory_packet(packet, redis);
-
-  // refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
 
-async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>, redis: RedisClientType) {
-  /* Player wants to put in items into a building */
-  // check if the player has the item
-
+async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   const player_inventory_item = await UserInventoryItem.findOne({
     where: { slot: packet.data.item.slot, user: { id: packet.sender.id } },
     relations: ['item'],
@@ -141,9 +121,4 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
     -(packet.data.item.quantity - quantity_remainder),
     packet.data.fromInventorySlot,
   );
-
-  // send the updated inventory to the player and to the building
-  request_player_inventory_packet(packet, redis);
-
-  // refreshBuildingCacheAndSendUpdate(packet.data.toInventoryId, packet.world_id, redis);
 }

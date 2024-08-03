@@ -1,7 +1,7 @@
 import { Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { getTextureFromTextureId } from '../config/SpriteMap';
 import { GameState } from '../scenes/Game';
-import { defineQuery, defineSystem, enterQuery, exitQuery, World } from '@virtcon2/bytenetc';
+import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 
 const spriteQuery = defineQuery(Sprite, Position);
 const spriteQueryEnter = enterQuery(spriteQuery);
@@ -59,11 +59,15 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
   });
 };
 
-const spritePosQuery = defineQuery(Sprite, Position, Velocity);
+const movingSpriteQuery = defineQuery(Sprite, Position, Velocity);
+const nonMovingSpriteQuery = defineQuery(Sprite, Position, Not(Velocity));
 
-export const createSpriteSystem = (world: World) => {
+export const createMovingSpriteSystem = (world: World) => {
   return defineSystem<GameState>((state) => {
-    const spriteEntities = spritePosQuery(world);
+    const movingSpriteEntities = movingSpriteQuery(world);
+    const nonMovingSpriteEntities = nonMovingSpriteQuery(world);
+
+    const spriteEntities = [...movingSpriteEntities, ...nonMovingSpriteEntities];
     for (let i = 0; i < spriteEntities.length; i++) {
       const id = spriteEntities[i];
       const sprite = state.spritesById[id];
@@ -73,8 +77,8 @@ export const createSpriteSystem = (world: World) => {
       }
     }
 
-    for (let i = 0; i < spriteEntities.length; i++) {
-      const id = spriteEntities[i];
+    for (let i = 0; i < movingSpriteEntities.length; i++) {
+      const id = movingSpriteEntities[i];
       const sprite = state.spritesById[id] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       if (sprite && sprite.body) {
         sprite.body.setVelocity(Velocity.x[id], Velocity.y[id]);

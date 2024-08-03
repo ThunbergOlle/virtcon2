@@ -16,7 +16,7 @@ import { createMainPlayerSyncSystem } from '../systems/MainPlayerSyncSystem';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
 import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
-import { createSpriteRegisterySystem, createSpriteSystem } from '../systems/SpriteSystem';
+import { createSpriteRegisterySystem, createMovingSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
 
 export enum GameObjectGroups {
@@ -124,7 +124,7 @@ export default class Game extends Scene implements SceneStates {
       console.log('Loading world data...');
 
       this.spriteRegisterySystem = createSpriteRegisterySystem(this.state.world, this);
-      this.spriteSystem = createSpriteSystem(this.state.world);
+      this.spriteSystem = createMovingSpriteSystem(this.state.world);
       this.mainPlayerSystem = createMainPlayerSystem(this.state.world, this, this.input.keyboard.createCursorKeys());
       // this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem(); - replaced by networked entities
       this.mainPlayerSyncSystem = createMainPlayerSyncSystem(this.state.world);
@@ -227,7 +227,7 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
 
-    const deserializedEnts = deserialize(world, data);
+    deserialize(world, data);
   }
 };
 

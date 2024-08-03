@@ -1,9 +1,11 @@
 import { log, LogApp, LogLevel } from '@shared';
 import { Item, UserInventoryItem, WorldBuilding, WorldBuildingInventory, WorldResource } from '@virtcon2/database-postgres';
-import { ClientPacketWithSender, enqueuePacket, PacketType, RequestPlaceBuildingPacketData, RequestPlayerInventoryPacket } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
-import request_player_inventory_packet from './request_player_inventory_packet';
+
 import requestWorldBuldingChangeOutput from './request_world_building_change_output';
+import { createNewBuildingEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { defineSerializer } from '@virtcon2/bytenetc';
 
 export default async function request_place_building_packet(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
   // get the sender
@@ -41,17 +43,17 @@ export default async function request_place_building_packet(packet: ClientPacket
   };
 
   /* Add the building to the database */
-  const building = WorldBuilding.create({ ...newWorldBuilding });
-  await building.save();
+  const worldBuilding = WorldBuilding.create({ ...newWorldBuilding });
+  await worldBuilding.save();
 
   if (resource !== null) {
-    resource.world_building = building;
+    resource.world_building = worldBuilding;
     await resource.save();
   }
   // Create all the slots
   for (let i = 0; i < item.building.inventory_slots; i++) {
     const inventoryItem = WorldBuildingInventory.create();
-    inventoryItem.world_building = building;
+    inventoryItem.world_building = worldBuilding;
     inventoryItem.quantity = 0;
     inventoryItem.slot = i;
     inventoryItem.item = null;
@@ -60,24 +62,6 @@ export default async function request_place_building_packet(packet: ClientPacket
 
   /* Remove the item from players inventory */
   await UserInventoryItem.addToInventory(player_id, packet.data.buildingItemId, -1);
-
-  /* Send the new inventory to the player */
-  request_player_inventory_packet(
-    {
-      ...packet,
-      data: {},
-    } as ClientPacketWithSender<RequestPlayerInventoryPacket>,
-    client,
-  );
-
-  enqueuePacket(client, packet.world_id, {
-    packet_type: PacketType.PLACE_BUILDING,
-    sender: packet.sender,
-    data: building,
-    target: packet.world_id,
-  });
-
-  // Redis.refreshBuildingCache(building.id, client, true);
 
   // Update the output of the buildings that are next to the new building
   const positionsThatBuildingOccupies: [number, number][] = [];
@@ -91,7 +75,7 @@ export default async function request_place_building_packet(packet: ClientPacket
     const [x, y] = position;
     const wb = await WorldBuilding.findOne({ where: { output_pos_x: x, output_pos_y: y, world: { id: packet.world_id } } });
     if (wb) {
-      requestWorldBuldingChangeOutput({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } }, client);
+      requestWorldBuldingChangeOutput({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } });
     }
   });
 
@@ -99,28 +83,42 @@ export default async function request_place_building_packet(packet: ClientPacket
 
   switch (rotation) {
     case 0:
-      requestWorldBuldingChangeOutput(
-        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y } },
-        client,
-      );
+      requestWorldBuldingChangeOutput({
+        ...packet,
+        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y },
+      });
       break;
     case 90:
-      requestWorldBuldingChangeOutput(
-        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height } },
-        client,
-      );
+      requestWorldBuldingChangeOutput({
+        ...packet,
+        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height },
+      });
       break;
     case 180:
-      requestWorldBuldingChangeOutput(
-        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y } },
-        client,
-      );
+      requestWorldBuldingChangeOutput({
+        ...packet,
+        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y },
+      });
       break;
     case 270:
-      requestWorldBuldingChangeOutput(
-        { ...packet, data: { building_id: building.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height } },
-        client,
-      );
+      requestWorldBuldingChangeOutput({
+        ...packet,
+        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height },
+      });
       break;
   }
+
+  const buildingEntityId = createNewBuildingEntity(packet.world_id, {
+    buildingId: worldBuilding.building.id,
+    worldBuildingId: worldBuilding.id,
+    x: worldBuilding.x,
+    y: worldBuilding.y,
+    rotation: worldBuilding.rotation,
+  });
+
+  const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);
+
+  const serializedBuilding = serialize(packet.world_id, [buildingEntityId]);
+
+  return syncServerEntities(client, packet.world_id, packet.world_id, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
 }

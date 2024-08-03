@@ -1,7 +1,6 @@
 import { InventoryType, ServerInventoryItem } from '@shared';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { get_building_by_id } from '@virtcon2/static-game-data';
-import { addComponent, addEntity, removeEntity } from 'bitecs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ItemTextureMap } from '../../../config/SpriteMap';
@@ -13,6 +12,7 @@ import Window from '../../components/window/Window';
 import { fromPhaserPos } from '../../lib/coordinates';
 import { close, isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
+import { addComponent, addEntity, removeEntity } from '@virtcon2/bytenetc';
 
 export default function PlayerInventoryWindow() {
   const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_PLAYER_INVENTORY));
@@ -29,13 +29,13 @@ export default function PlayerInventoryWindow() {
     game.input.off('keydown-R', rotatePlaceBuildingIntent);
 
     buildingBeingPlaced.current = null;
-    if (!game.world || !buildingBeingPlacedEntity.current) return;
-    removeEntity(game.world, buildingBeingPlacedEntity.current);
+    if (!game.state.world || !buildingBeingPlacedEntity.current) return;
+    removeEntity(game.state.world, buildingBeingPlacedEntity.current);
   };
 
   function rotatePlaceBuildingIntent() {
     const game = Game.getInstance();
-    if (!game.world || !buildingBeingPlacedEntity.current) return;
+    if (!game.state.world || !buildingBeingPlacedEntity.current) return;
     Sprite.rotation[buildingBeingPlacedEntity.current] += (Math.PI / 2) % (Math.PI * 2);
   }
 
@@ -90,14 +90,14 @@ export default function PlayerInventoryWindow() {
       dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
 
       const game = Game.getInstance();
-      if (!game.world) return;
+      if (!game.state.world) return;
 
       /* Create ghost building entity */
-      const ghostBuilding = addEntity(game.world);
-      addComponent(game.world, GhostBuilding, ghostBuilding);
-      addComponent(game.world, Sprite, ghostBuilding);
-      addComponent(game.world, Position, ghostBuilding);
-      addComponent(game.world, Collider, ghostBuilding);
+      const ghostBuilding = addEntity(game.state.world);
+      addComponent(game.state.world, GhostBuilding, ghostBuilding);
+      addComponent(game.state.world, Sprite, ghostBuilding);
+      addComponent(game.state.world, Position, ghostBuilding);
+      addComponent(game.state.world, Collider, ghostBuilding);
 
       const buildingSettings = get_building_by_id(item.item.building?.id ?? 0);
       if (!buildingSettings) return;

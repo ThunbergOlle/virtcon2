@@ -15,30 +15,10 @@ export const inspectedBuildingSlice = createSlice({
   initialState,
   reducers: {
     inspectBuilding: (state, action: PayloadAction<number>) => {
-      if (state.inspectedWorldBuildingId !== null) {
-        Game.network.sendPacket({
-          data: state.inspectedWorldBuildingId,
-          packet_type: PacketType.DONE_INSPECTING_WORLD_BUILDING,
-        });
-      }
-      const packet: ClientPacket<InspectBuildingClientPacket> = {
-        data: {
-          worldBuildingId: action.payload,
-        },
-        packet_type: PacketType.INSPECT_WORLD_BUILDING,
-      };
-      Game.network.sendPacket(packet);
-
       state.inspectedWorldBuildingId = action.payload;
     },
     doneInspectingBuilding: (state) => {
       state.inspectedWorldBuildingId = null;
-
-      const packet: ClientPacket<null> = {
-        data: null,
-        packet_type: PacketType.INSPECT_WORLD_BUILDING,
-      };
-      Game.network.sendPacket(packet);
     },
   },
 });

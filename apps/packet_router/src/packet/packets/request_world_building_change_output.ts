@@ -2,9 +2,8 @@ import { LogApp, LogLevel } from '@shared';
 import { AppDataSource, WorldBuilding } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
 import { log } from 'console';
-import { RedisClientType } from 'redis';
 
-export default async function requestWorldBuldingChangeOutput(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>, redis: RedisClientType) {
+export default async function requestWorldBuldingChangeOutput(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>) {
   const world_building = await WorldBuilding.findOne({ where: { id: packet.data.building_id }, relations: ['building'] });
   if (!world_building) {
     log(
@@ -40,10 +39,6 @@ export default async function requestWorldBuldingChangeOutput(packet: ClientPack
   }
 
   await world_building.save();
-  // await Redis.refreshBuildingCache(world_building.id, redis).then((worldBuilding) => {
-  //   if (!worldBuilding) return;
-  //   worldBuildingUpdateToInspectorsServerPacket({ worldBuilding, redis, worldId: packet.world_id });
-  // });
 }
 
 // return radians

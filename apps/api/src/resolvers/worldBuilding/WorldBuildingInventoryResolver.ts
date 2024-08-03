@@ -10,6 +10,7 @@ export class WorldBuildingInventoryResolver implements ResolverInterface<WorldBu
 
   @FieldResolver(() => Item)
   async item(@Root() worldBuildingInventory: WorldBuildingInventory): Promise<Item | undefined> {
+    if (!worldBuildingInventory.itemId) return null;
     return Item.findOne({ where: { id: worldBuildingInventory.itemId } });
   }
 }

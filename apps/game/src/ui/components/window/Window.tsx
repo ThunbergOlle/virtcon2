@@ -14,6 +14,7 @@ export default function Window(props: {
   height: number;
   children: React.ReactNode;
   errors?: Array<Error | undefined>;
+  fullWindowLoading?: boolean;
   loading?: Array<boolean>;
 }) {
   const nodeRef = useRef(null);
@@ -55,7 +56,7 @@ export default function Window(props: {
             </div>
           </div>
         )}
-        {!filteredErrors?.length && <div className="content h-full text-white">{props.children}</div>}
+        {!filteredErrors?.length && !props.fullWindowLoading && <div className="content h-full text-white">{props.children}</div>}
       </Card>
     </Draggable>
   );

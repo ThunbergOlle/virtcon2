@@ -49,17 +49,12 @@ const WORLD_BUILDING_SUBSCRIPTION = gql`
 `;
 
 export default function WorldBuildingWindow() {
-  const dispatch = useAppDispatch();
-
-  const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_BUILDING));
   const inspectedWorldBuilding = useAppSelector((state) => state.inspectedBuilding.inspectedWorldBuildingId);
 
   const { subscribeToMore, data, loading } = useQuery<{ worldBuilding: DBWorldBuilding }>(WORLD_BUILDING_QUERY, {
     variables: { id: inspectedWorldBuilding },
     skip: !inspectedWorldBuilding,
   });
-
-  console.log(data);
 
   const worldBuilding = data?.worldBuilding;
 
@@ -76,13 +71,7 @@ export default function WorldBuildingWindow() {
       });
       return unsubscribe;
     }
-  }, [data]);
-
-  // const tickProgress = useTickProgress(inspectedWorldBuilding);
-
-  // useEffect(() => {
-  //   if (!isOpen) dispatch(doneInspectingBuilding());
-  // }, [dispatch, isOpen]);
+  }, [data, inspectedWorldBuilding, subscribeToMore, worldBuilding]);
 
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
@@ -112,7 +101,14 @@ export default function WorldBuildingWindow() {
   };
 
   return (
-    <Window title="Building Viewer" loading={[loading]} width={500} height={500} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
+    <Window
+      title="Building Viewer"
+      fullWindowLoading={loading}
+      width={500}
+      height={500}
+      defaultPosition={{ x: 40, y: 40 }}
+      windowType={WindowType.VIEW_BUILDING}
+    >
       <div className="flex flex-col h-full">
         <div className="flex-1 flex flex-row">
           <div className="flex-1">
@@ -131,26 +127,25 @@ export default function WorldBuildingWindow() {
         <div>
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap w-full ">
-            {worldBuilding?.world_building_inventory
-              ?.sort((a, b) => a.slot - b.slot)
-              .map((item) => {
-                return item && item.item ? (
-                  <InventoryItem
-                    item={item}
-                    fromInventoryType={InventoryType.BUILDING}
-                    fromInventorySlot={item.slot}
-                    fromInventoryId={worldBuilding.id}
-                    onClick={function (item: ServerInventoryItem): void {
-                      throw new Error('Function not implemented.');
-                    }}
-                    slot={item.slot}
-                    onDrop={onInventoryDropItem}
-                    key={item.slot}
-                  />
-                ) : (
-                  <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
-                );
-              })}
+            {worldBuilding?.world_building_inventory.map((item) => {
+              console.log('item', item);
+              return item && item.item ? (
+                <InventoryItem
+                  item={item}
+                  fromInventoryType={InventoryType.BUILDING}
+                  fromInventorySlot={item.slot}
+                  fromInventoryId={worldBuilding.id}
+                  onClick={function (item: ServerInventoryItem): void {
+                    throw new Error('Function not implemented.');
+                  }}
+                  slot={item.slot}
+                  onDrop={onInventoryDropItem}
+                  key={item.slot}
+                />
+              ) : (
+                <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
+              );
+            })}
           </div>
         </div>
         <div className="justify-self-end place-items-end flex-1 flex">

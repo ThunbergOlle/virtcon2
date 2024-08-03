@@ -12,10 +12,6 @@ export * from './lib/service/packets/SyncServerEntity';
 
 export * from './lib/service/packets/NewPlayerPacket';
 
-export * from './lib/service/packets/PlayerInventoryPacket';
-
-export * from './lib/service/packets/RequestPlayerInventoryPacket';
-
 export * from './lib/service/packets/RequestJoinPacket';
 
 export * from './lib/service/packets/RequestDestroyResourcePacket';

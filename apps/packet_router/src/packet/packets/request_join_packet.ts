@@ -1,7 +1,6 @@
 import { log, LogApp, LogLevel } from '@shared';
 import { User, World } from '@virtcon2/database-postgres';
 import {
-  ClientPacket,
   ClientPacketWithSender,
   enqueuePacket,
   LoadWorldPacketData,
