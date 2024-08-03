@@ -53,6 +53,7 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @Field(() => WorldBuilding, { nullable: true })
   @ManyToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
   output_world_building: WorldBuilding;
+  outputWorldBuildingId: number;
 
   @Field(() => Int, { nullable: true })
   @Column({ type: 'int', nullable: true })

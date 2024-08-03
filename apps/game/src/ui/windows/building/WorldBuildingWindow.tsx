@@ -8,19 +8,13 @@ import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { isWindowOpen, WindowType } from '../../lib/WindowSlice';
-import WorldBuildingOutput from './WorldBuildingOutput';
+import WorldBuildingOutput, { WORLD_BUILDING_OUTPUT_FRAGMENT } from './WorldBuildingOutput';
 
 const WORLD_BUILDING_FRAGMENT = gql`
   fragment WorldBuildingFragment on WorldBuilding {
     id
     x
     y
-    output_pos_x
-    output_pos_y
-    building {
-      id
-      name
-    }
     world_building_inventory {
       slot
       quantity
@@ -34,18 +28,22 @@ const WORLD_BUILDING_FRAGMENT = gql`
 
 const WORLD_BUILDING_QUERY = gql`
   ${WORLD_BUILDING_FRAGMENT}
+  ${WORLD_BUILDING_OUTPUT_FRAGMENT}
   query WorldBuildingWindow($id: ID!) {
     worldBuilding(id: $id) {
       ...WorldBuildingFragment
+      ...WorldBuildingOutputFragment
     }
   }
 `;
 
 const WORLD_BUILDING_SUBSCRIPTION = gql`
   ${WORLD_BUILDING_FRAGMENT}
+  ${WORLD_BUILDING_OUTPUT_FRAGMENT}
   subscription WorldBuildingWindow($id: ID!) {
-    inspectWorldBuilding(id: $id) {
+    worldBuilding(id: $id) {
       ...WorldBuildingFragment
+      ...WorldBuildingOutputFragment
     }
   }
 `;
@@ -56,10 +54,12 @@ export default function WorldBuildingWindow() {
   const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_BUILDING));
   const inspectedWorldBuilding = useAppSelector((state) => state.inspectedBuilding.inspectedWorldBuildingId);
 
-  const { subscribeToMore, data } = useQuery<{ worldBuilding: DBWorldBuilding }>(WORLD_BUILDING_QUERY, {
+  const { subscribeToMore, data, loading } = useQuery<{ worldBuilding: DBWorldBuilding }>(WORLD_BUILDING_QUERY, {
     variables: { id: inspectedWorldBuilding },
     skip: !inspectedWorldBuilding,
   });
+
+  console.log(data);
 
   const worldBuilding = data?.worldBuilding;
 
@@ -112,7 +112,7 @@ export default function WorldBuildingWindow() {
   };
 
   return (
-    <Window title="Building Viewer" width={500} height={500} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
+    <Window title="Building Viewer" loading={[loading]} width={500} height={500} defaultPosition={{ x: 40, y: 40 }} windowType={WindowType.VIEW_BUILDING}>
       <div className="flex flex-col h-full">
         <div className="flex-1 flex flex-row">
           <div className="flex-1">
@@ -125,20 +125,7 @@ export default function WorldBuildingWindow() {
           </div>
           <div className="flex-1">
             <h2 className="text-2xl">Top view I/O</h2>
-            <WorldBuildingOutput
-              width={worldBuilding?.building?.width || 0}
-              height={worldBuilding?.building?.height || 0}
-              relativePosition={{
-                x: worldBuilding?.x || 0,
-                y: worldBuilding?.y || 0,
-              }}
-              onNewPositionSelected={onNewOutputPositionSelected}
-              currentOutputPosition={{
-                x: worldBuilding?.output_pos_x || 0,
-                y: worldBuilding?.output_pos_y || 0,
-              }}
-              outputBuildingId={worldBuilding?.output_world_building?.id || null}
-            />
+            <WorldBuildingOutput onNewPositionSelected={onNewOutputPositionSelected} worldBuildingId={worldBuilding?.id} />
           </div>
         </div>
         <div>

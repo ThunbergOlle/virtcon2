@@ -5,24 +5,16 @@ import { subscribe } from '../../service/RedisService';
 
 @Resolver((of) => WorldBuilding)
 export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
+  @Query(() => WorldBuilding)
   @Subscription(() => WorldBuilding, {
     subscribe: withFilter(
       (_, args) => subscribe.asyncIterator(`${TOPIC_BUILDING_UPDATE}.${args.id}`),
       (payload, variables) => {
-        console.log(payload, variables);
-        return payload.world_building.id === variables.id;
+        return payload.id === parseInt(variables.id);
       },
     ),
   })
-  inspectWorldBuilding(
-    @Arg('id', () => ID, { nullable: false })
-    id: number,
-  ): Promise<WorldBuilding> {
-    return WorldBuilding.findOne({ where: { id } });
-  }
-
-  @Query(() => WorldBuilding)
-  async worldBuilding(
+  worldBuilding(
     @Arg('id', () => ID, { nullable: false })
     id: number,
   ): Promise<WorldBuilding | undefined> {
@@ -42,5 +34,10 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   @FieldResolver(() => [WorldBuildingInventory], { nullable: true })
   async world_building_inventory(@Root() worldBuilding: WorldBuilding): Promise<WorldBuildingInventory[] | undefined> {
     return WorldBuildingInventory.find({ where: { worldBuildingId: worldBuilding.id } });
+  }
+
+  @FieldResolver(() => WorldBuilding, { nullable: true })
+  async output_world_building(@Root() worldBuilding: WorldBuilding): Promise<WorldBuilding | undefined> {
+    return WorldBuilding.findOne({ where: { id: worldBuilding.outputWorldBuildingId } });
   }
 }
