@@ -18,8 +18,6 @@ export class WorldBuildingResolver {
     @Arg('id', () => ID, { nullable: false })
     id: number,
   ): Promise<WorldBuilding> {
-    console.log('inspectWorldBuilding', id);
-
     return WorldBuilding.findOne({ where: { id } });
   }
 

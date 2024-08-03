@@ -12,8 +12,6 @@ export const createMainPlayerSyncSystem = (world: World) => {
     if (!mainPlayerEntities.length) return state;
     const mainPlayerEntity = mainPlayerEntities[0];
 
-    console.log(`Main player entity: ${mainPlayerEntity}`);
-
     const sprite = state.spritesById[mainPlayerEntity];
     if (!sprite) throw new Error(`No sprite for main player entity ${mainPlayerEntity}`);
 

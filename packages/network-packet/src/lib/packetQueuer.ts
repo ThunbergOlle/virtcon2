@@ -4,17 +4,26 @@ import { RedisClientType } from 'redis';
 import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
 import { PacketType, ServerPacket } from './types/packet';
 
+function replacer(key, value) {
+  if (value instanceof Uint8Array) {
+    return Array.from(value);
+  } else return value;
+}
+
 export const enqueuePacket = async <T>(client: RedisClientType, worldId: string, packet: ServerPacket<T>) => {
   if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
     const data = packet.data as SyncServerEntityPacket;
 
     await client.rPush(
       `queue_${worldId}`,
-      JSON.stringify({
-        ...packet,
-        // TODO: figure out a way to deal with Uint8Array
-        data,
-      }),
+      JSON.stringify(
+        {
+          ...packet,
+          // TODO: figure out a way to deal with Uint8Array
+          data,
+        },
+        replacer,
+      ),
     );
   } else if (typeof packet === 'object') await client.rPush(`queue_${worldId}`, JSON.stringify(packet));
   else await client.rPush(`queue_${worldId}`, packet);

@@ -14,7 +14,7 @@ import { IsNull, Not } from 'typeorm';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
-import { defineQuery } from '@virtcon2/bytenetc';
+import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -76,7 +76,7 @@ io.on('connection', (socket) => {
 
     if (eid === undefined) return log(`Player entity not found for user ${user.id}`, LogLevel.WARN, LogApp.SERVER);
 
-    // removePlayerEntity(entityWorld, eid);
+    removeEntity(entityWorld, eid);
 
     enqueuePacket<DisconnectPacketData>(redisClient, wasInWorld, {
       packet_type: PacketType.DISCONNECT,

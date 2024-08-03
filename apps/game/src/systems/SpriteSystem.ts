@@ -39,6 +39,7 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 
       sprite.setDataEnabled();
       state.spritesById[id] = sprite;
+      console.log('sprite', sprite);
       if (Sprite.height[id] && Sprite.width[id]) {
         sprite.setDisplaySize(Sprite.width[id], Sprite.height[id]);
       }

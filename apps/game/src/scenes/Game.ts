@@ -5,8 +5,8 @@ import { RedisWorldResource, worldMapParser } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
-import { createWorld, defineDeserializer, deserializeEntity, registerComponents, System, World } from '@virtcon2/bytenetc';
-import { PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
+import { createWorld, defineDeserializer, deserializeEntity, registerComponents, removeEntity, System, World } from '@virtcon2/bytenetc';
+import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
 import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
@@ -40,6 +40,7 @@ export interface GameState {
 }
 export default class Game extends Scene implements SceneStates {
   private map!: Tilemaps.Tilemap;
+  private isInitialized = false;
 
   public state: GameState = {
     dt: 0,
@@ -105,19 +106,18 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.BUILDING_NO_COLLIDE]: this.physics.add.staticGroup(),
     };
 
-    // Add colliders between players and other objects
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? []);
     // this is commented out since we don't want to collide with resources. This may change in the future.
     // this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? []);
 
     events.subscribe('joinWorld', (worldId) => {
-      console.log('creating scene');
       this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 
     events.subscribe('networkLoadWorld', ({ heightMap, id, mainPlayerId }) => {
+      Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
 
       registerComponents(this.state.world, allComponents);
@@ -150,6 +150,8 @@ export default class Game extends Scene implements SceneStates {
       });
 
       this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+
+      this.isInitialized = true;
     });
   }
 
@@ -165,13 +167,15 @@ export default class Game extends Scene implements SceneStates {
       !this.buildingPlacementSystem ||
       !this.buildingSystem ||
       !this.playerSystem ||
-      !this.tagSystem
+      !this.tagSystem ||
+      !this.isInitialized
     )
       return;
 
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
-    receiveServerEntities(this.state.world, packets);
+    if (length) console.log(packets.map((p) => p.packet_type));
+    receiveServerPackets(this.state.world, packets);
 
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
@@ -200,29 +204,41 @@ export default class Game extends Scene implements SceneStates {
   }
 }
 
-const receiveServerEntities = (world: World, packets: ServerPacket<unknown>[]) => {
+const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) => {
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
-    if (packet.packet_type === PacketType.SYNC_SERVER_ENTITY) {
-      const { data, serializationId } = packet.data as SyncServerEntityPacket;
-
-      if (serializationId === SerializationID.WORLD) {
-        for (let i = 0; i < data.length; i++) {
-          deserializeEntity(world, data[i]);
-        }
-        console.log(`Received ${data.length} entities from server when syncing world.`);
-        return;
-      }
-
-      const deserialize = defineDeserializer(serializeConfig[serializationId]);
-
-      const deserializedEnts = deserialize(world, data);
-      console.log(`Received ${deserializedEnts} entities from server. (${serializationId})`);
-      if (serializationId === SerializationID.PLAYER_FULL_SERVER) {
-        deserializedEnts.forEach((ent) => {
-          console.log(`Player entity ${Player.userId[ent]} received from server`);
-        });
-      }
+    console.log(`Received packet ${packet.packet_type}`);
+    switch (packet.packet_type) {
+      case PacketType.SYNC_SERVER_ENTITY:
+        handleSyncServerEntityPacket(world, packet as ServerPacket<SyncServerEntityPacket>);
+        break;
+      case PacketType.DISCONNECT:
+        handleDisconnectPacket(world, packet as ServerPacket<DisconnectPacketData>);
+        break;
     }
   }
+};
+
+const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncServerEntityPacket>) => {
+  const { data, serializationId } = packet.data;
+  console.log(`Deserializing ${data.length} entities with serialization id ${serializationId}`);
+
+  if (serializationId === SerializationID.WORLD) {
+    for (let i = 0; i < data.length; i++) {
+      deserializeEntity(world, data[i]);
+    }
+  } else {
+    const deserialize = defineDeserializer(serializeConfig[serializationId]);
+
+    const deserializedEnts = deserialize(world, data);
+    if (serializationId === SerializationID.PLAYER_FULL_SERVER) {
+      deserializedEnts.forEach((ent) => {
+        console.log(`Player entity ${Player.userId[ent]} received from server`);
+      });
+    }
+  }
+};
+
+const handleDisconnectPacket = (world: World, packet: ServerPacket<DisconnectPacketData>) => {
+  removeEntity(world, packet.data.eid);
 };

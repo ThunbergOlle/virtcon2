@@ -1,4 +1,4 @@
-import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
+import { debugEntity, defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 import { GameState } from '../scenes/Game';
 import { MainPlayer, Position, Tag } from '@virtcon2/network-world-entities';
 
@@ -12,6 +12,7 @@ export const createTagSystem = (world: World, scene: Phaser.Scene) => {
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
+      console.log(debugEntity(world, id));
 
       const encodedTag = Tag.value[id];
       const tag = new TextDecoder().decode(encodedTag);

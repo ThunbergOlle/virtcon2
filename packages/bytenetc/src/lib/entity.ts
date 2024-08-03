@@ -291,11 +291,27 @@ export const serializeEntity = (world: World, entity: Entity): SerializedData =>
   return data;
 };
 
+const deserializeArray = (world: World, name: string, key: string, value: AllArrayTypes, eid: Entity) => {
+  const deserializeInto = $store[world].$componentStore[name][key][eid];
+  if (deserializeInto instanceof Uint8Array) $store[world].$componentStore[name][key][eid] = new Uint8Array(value as Uint8Array);
+  else if (deserializeInto instanceof Uint16Array) $store[world].$componentStore[name][key][eid] = new Uint16Array(value as Uint16Array);
+  else if (deserializeInto instanceof Uint32Array) $store[world].$componentStore[name][key][eid] = new Uint32Array(value as Uint32Array);
+  else if (deserializeInto instanceof Int8Array) $store[world].$componentStore[name][key][eid] = new Int8Array(value as Int8Array);
+  else if (deserializeInto instanceof Int16Array) $store[world].$componentStore[name][key][eid] = new Int16Array(value as Int16Array);
+  else if (deserializeInto instanceof Int32Array) $store[world].$componentStore[name][key][eid] = new Int32Array(value as Int32Array);
+  else if (deserializeInto instanceof Float32Array) $store[world].$componentStore[name][key][eid] = new Float32Array(value as Float32Array);
+  else if (deserializeInto instanceof Float64Array) $store[world].$componentStore[name][key][eid] = new Float64Array(value as Float64Array);
+  else throw new Error(`Invalid array type for ${name}.${key}, type: ${deserializeInto.constructor.name}`);
+
+  console.log(`Deserialized array ${name}.${key} for entity ${eid}`);
+};
+
 export const deserializeEntity = (world: World, data: SerializedData) => {
   const eid = data[0][2] as number;
 
   for (const [name, key, value] of data.slice(1)) {
-    $store[world].$componentStore[name][key][eid] = value;
+    if (value instanceof Array) deserializeArray(world, name, key, value as AllArrayTypes, eid);
+    else $store[world].$componentStore[name][key][eid] = value;
   }
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
   $store[world].$entityStore[eid] = uniqueComponents;
@@ -334,7 +350,8 @@ export const defineDeserializer = (components: Component<any>[]) => {
 
       for (const [name, key, value] of entity.slice(1)) {
         if (!components.some((c) => decodeName(c) === name)) continue;
-        $store[world].$componentStore[name][key][eid] = value;
+        if (value instanceof Array) deserializeArray(world, name, key, value as AllArrayTypes, eid);
+        else $store[world].$componentStore[name][key][eid] = value;
         if (!$store[world].$entityStore[eid].includes(name)) {
           $store[world].$entityStore[eid].push(name);
         }

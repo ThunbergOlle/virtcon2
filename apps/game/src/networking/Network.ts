@@ -24,17 +24,24 @@ export class Network {
     });
 
     socket.on('packet', (packet: ServerPacket<unknown>) => {
+      this.received_packets.push(packet);
       const event = packet.packet_type.charAt(0).toUpperCase() + packet.packet_type.slice(1);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       events.notify(('network' + event) as any, packet.data);
 
-      this.received_packets.push(packet);
       //events.notify(('network' + event) as any, packetJSON.data);
     });
   }
 
   public getReceivedPackets() {
     return [this.received_packets, this.received_packets.length] as const;
+  }
+
+  public readReceivedPacketType(packetType: PacketType) {
+    const packets = this.received_packets.filter((packet) => packet.packet_type === packetType);
+    console.log('Packets:', packets);
+    this.received_packets = this.received_packets.filter((packet) => packet.packet_type !== packetType);
+    return packets;
   }
 
   public readReceivedPackets(length: number) {

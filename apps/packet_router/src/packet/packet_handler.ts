@@ -30,7 +30,7 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
     case PacketType.REQUEST_PLAYER_INVENTORY:
       return request_player_inventory_packet(packet as ClientPacketWithSender<RequestPlayerInventoryPacket>, client);
     case PacketType.REQUEST_JOIN:
-      return requestJoinPacket(packet as ClientPacket<RequestJoinPacketData>, client);
+      return requestJoinPacket(packet as ClientPacketWithSender<RequestJoinPacketData>, client);
     case PacketType.REQUEST_DESTROY_RESOURCE:
       return request_destroy_resource_packet(packet as ClientPacketWithSender<RequestDestroyResourcePacket>);
     case PacketType.REQUEST_PLACE_BUILDING:
