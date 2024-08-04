@@ -1,11 +1,22 @@
-import { Item, UserInventoryItem } from '@virtcon2/database-postgres';
-import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
+import { Building, Item, ItemRecipe, UserInventoryItem } from '@virtcon2/database-postgres';
+import { Arg, Ctx, FieldResolver, Int, Mutation, Query, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
-@Resolver()
-export class ItemResolver {
+
+@Resolver((of) => Item)
+export class ItemResolver implements ResolverInterface<Item> {
   @Query(() => [Item], { nullable: true })
-  async Items() {
+  async items() {
     return await Item.find({ relations: ['recipe', 'recipe.requiredItem', 'building', 'building.items_to_be_placed_on'] });
+  }
+
+  @FieldResolver(() => [ItemRecipe])
+  async recipe(@Root() item: Item): Promise<ItemRecipe[]> {
+    return await ItemRecipe.find({ where: { resultingItemId: item.id }, relations: ['requiredItem'] });
+  }
+
+  @FieldResolver(() => Building)
+  async building(@Root() item: Item): Promise<Building> {
+    return await Building.findOne({ where: { id: item.buildingId } });
   }
 
   @Mutation(() => UserInventoryItem, { nullable: true })

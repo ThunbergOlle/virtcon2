@@ -55,3 +55,6 @@ export const all_db_buildings = [building_sawmill, building_pipe, building_drill
 export const get_building_by_id = (id: number) => {
   return all_db_buildings.find((building) => building.id === id);
 };
+
+/* Player */
+export * from './lib/player/player_type';

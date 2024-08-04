@@ -1,12 +1,12 @@
-import { Field, FieldResolver, Float, Int, ObjectType, Resolver, ResolverInterface, Root } from 'type-graphql';
+import { Field, Float, Int, ObjectType } from 'type-graphql';
 import { AfterInsert, AfterUpdate, BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Building } from '../building/Building';
-import { WorldResource } from '../world_resource/WorldResource';
-import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
 import { World } from '../world/World';
+import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
+import { WorldResource } from '../world_resource/WorldResource';
 
-import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 export const pubsub = new RedisPubSub();
 
 export const TOPIC_BUILDING_UPDATE = 'BUILDING_UPDATE';

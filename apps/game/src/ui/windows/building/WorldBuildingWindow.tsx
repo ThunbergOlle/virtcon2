@@ -1,7 +1,8 @@
 import { gql, useQuery } from '@apollo/client';
-import { InventoryType, ServerInventoryItem } from '@shared';
+import { InventoryType } from '@shared';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
+import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';
 import { useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
@@ -75,6 +76,7 @@ export default function WorldBuildingWindow() {
 
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
     // Construct network packet to move the item to the new invenory.
+
     const packet: ClientPacket<RequestMoveInventoryItemPacketData> = {
       data: {
         ...item,
@@ -99,6 +101,8 @@ export default function WorldBuildingWindow() {
     };
     Game.network.sendPacket(packet);
   };
+
+  const inventorySorted = sortBy(prop('slot'))(worldBuilding?.world_building_inventory ?? []);
 
   return (
     <Window
@@ -127,25 +131,26 @@ export default function WorldBuildingWindow() {
         <div>
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap w-full ">
-            {worldBuilding?.world_building_inventory.map((item) => {
-              console.log('item', item);
-              return item && item.item ? (
-                <InventoryItem
-                  item={item}
-                  fromInventoryType={InventoryType.BUILDING}
-                  fromInventorySlot={item.slot}
-                  fromInventoryId={worldBuilding.id}
-                  onClick={function (item: ServerInventoryItem): void {
-                    throw new Error('Function not implemented.');
-                  }}
-                  slot={item.slot}
-                  onDrop={onInventoryDropItem}
-                  key={item.slot}
-                />
-              ) : (
-                <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
-              );
-            })}
+            {worldBuilding &&
+              inventorySorted.map((item) => {
+                console.log('item', item);
+                return item && item.item ? (
+                  <InventoryItem
+                    inventoryItem={item}
+                    fromInventoryType={InventoryType.BUILDING}
+                    fromInventorySlot={item.slot}
+                    fromInventoryId={worldBuilding.id}
+                    onClick={function (): void {
+                      throw new Error('Function not implemented.');
+                    }}
+                    slot={item.slot}
+                    onDrop={onInventoryDropItem}
+                    key={item.slot}
+                  />
+                ) : (
+                  <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
+                );
+              })}
           </div>
         </div>
         <div className="justify-self-end place-items-end flex-1 flex">

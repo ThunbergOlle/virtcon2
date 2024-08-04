@@ -12,6 +12,8 @@ export class ItemRecipe extends BaseEntity {
   @Field(() => Item)
   @ManyToOne(() => Item, (Item) => Item.id, { nullable: false })
   requiredItem: Item;
+  @Column({ type: 'int' })
+  requiredItemId: number;
 
   @Field(() => Int)
   @Column({ type: 'int' })
@@ -19,5 +21,6 @@ export class ItemRecipe extends BaseEntity {
 
   @ManyToOne(() => Item, (Item) => Item.id, { nullable: false })
   resultingItem: Item;
-
+  @Column({ type: 'int' })
+  resultingItemId: number;
 }

@@ -40,6 +40,7 @@ export interface DBItem {
   recipe?: DBItemRecipe[];
   is_building: boolean;
   building?: DBBuilding;
+  buildingId?: number;
   animations?: {
     idle: number[];
   };

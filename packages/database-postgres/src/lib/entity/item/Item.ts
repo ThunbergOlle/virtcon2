@@ -52,4 +52,7 @@ export class Item extends BaseEntity {
   @Field(() => Building, { nullable: true })
   @OneToOne(() => Building, (b) => b.item, { nullable: true })
   building: Building;
+
+  @Column({ type: 'int', nullable: true })
+  buildingId: number;
 }

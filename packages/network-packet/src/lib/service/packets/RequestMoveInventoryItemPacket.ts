@@ -1,4 +1,4 @@
-import { InventoryType, ServerInventoryItem } from "@shared";
+import { InventoryType, ServerInventoryItem } from '@shared';
 
 export interface RequestMoveInventoryItemPacketData {
   fromInventoryType: InventoryType;
@@ -7,5 +7,5 @@ export interface RequestMoveInventoryItemPacketData {
   toInventoryType: InventoryType;
   toInventoryId: number;
   toInventorySlot: number;
-  item: ServerInventoryItem
+  inventoryItem: ServerInventoryItem;
 }

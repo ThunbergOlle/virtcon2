@@ -22,11 +22,12 @@ export default async function request_move_inventory_item_packet(packet: ClientP
   );
 }
 async function request_move_inventory_item_inside_building_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
+  console.log('request_move_inventory_item_inside_building_inventory', packet.data);
   await safelyMoveItemsBetweenInventories({
     fromId: packet.data.fromInventoryId,
     toId: packet.data.toInventoryId,
-    itemId: packet.data.item.item.id,
-    quantity: packet.data.item.quantity,
+    itemId: packet.data.inventoryItem.item.id,
+    quantity: packet.data.inventoryItem.quantity,
     fromType: 'building',
     toType: 'building',
     fromSlot: packet.data.fromInventorySlot,
@@ -39,8 +40,8 @@ async function request_move_inventory_item_inside_player_inventory(packet: Clien
   await safelyMoveItemsBetweenInventories({
     fromId: packet.sender.id,
     toId: packet.sender.id,
-    itemId: packet.data.item.item.id,
-    quantity: packet.data.item.quantity,
+    itemId: packet.data.inventoryItem.item.id,
+    quantity: packet.data.inventoryItem.quantity,
     fromType: 'user',
     toType: 'user',
     fromSlot: packet.data.fromInventorySlot,
@@ -49,12 +50,12 @@ async function request_move_inventory_item_inside_player_inventory(packet: Clien
 }
 async function request_move_inventory_item_to_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   const building_inventory_item = await WorldBuildingInventory.findOne({
-    where: { item: { id: packet.data.item.item.id }, world_building: { id: packet.data.fromInventoryId } },
+    where: { item: { id: packet.data.inventoryItem.item.id }, world_building: { id: packet.data.fromInventoryId } },
     relations: ['item', 'world_building'],
   });
   if (!building_inventory_item) {
     log(
-      `Building ${packet.data.fromInventoryId} does not have item ${packet.data.item} but tried to move it from their inventory! Sus 📮`,
+      `Building ${packet.data.fromInventoryId} does not have item ${packet.data.inventoryItem} but tried to move it from their inventory! Sus 📮`,
       LogLevel.ERROR,
       LogApp.PACKET_DATA_SERVER,
     );
@@ -76,8 +77,8 @@ async function request_move_inventory_item_to_player_inventory(packet: ClientPac
   await safelyMoveItemsBetweenInventories({
     fromId: building_to_drop_in.id,
     toId: packet.sender.id,
-    itemId: packet.data.item.item.id,
-    quantity: packet.data.item.quantity,
+    itemId: packet.data.inventoryItem.item.id,
+    quantity: packet.data.inventoryItem.quantity,
     fromType: 'building',
     toType: 'user',
     fromSlot: packet.data.fromInventorySlot,
@@ -87,12 +88,12 @@ async function request_move_inventory_item_to_player_inventory(packet: ClientPac
 
 async function request_move_inventory_item_to_building(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   const player_inventory_item = await UserInventoryItem.findOne({
-    where: { slot: packet.data.item.slot, user: { id: packet.sender.id } },
+    where: { slot: packet.data.inventoryItem.slot, user: { id: packet.sender.id } },
     relations: ['item'],
   });
   if (!player_inventory_item) {
     log(
-      `Player ${packet.sender.id} does not have item ${packet.data.item} but tried to move it from their inventory! Sus 📮`,
+      `Player ${packet.sender.id} does not have item ${packet.data.inventoryItem} but tried to move it from their inventory! Sus 📮`,
       LogLevel.ERROR,
       LogApp.PACKET_DATA_SERVER,
     );
@@ -111,14 +112,14 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
 
   const quantity_remainder = await WorldBuildingInventory.addToInventory(
     building_to_drop_in.id,
-    packet.data.item.item.id,
-    packet.data.item.quantity,
+    packet.data.inventoryItem.item.id,
+    packet.data.inventoryItem.quantity,
     packet.data.toInventorySlot,
   );
   await UserInventoryItem.addToInventory(
     packet.sender.id,
-    packet.data.item.item.id,
-    -(packet.data.item.quantity - quantity_remainder),
+    packet.data.inventoryItem.item.id,
+    -(packet.data.inventoryItem.quantity - quantity_remainder),
     packet.data.fromInventorySlot,
   );
 }

@@ -25,11 +25,11 @@ export interface DBWorldBuilding {
   output_pos_y: number;
   building: DBBuilding;
   output_world_building: DBWorldBuilding | null;
-  world_building_inventory: DBWorldBuildingInventory[];
+  world_building_inventory: DBWorldBuildingInventoryItem[];
   active: boolean;
 }
 
-export interface DBWorldBuildingInventory {
+export interface DBWorldBuildingInventoryItem {
   slot: number;
   item: DBItem;
   quantity: number;

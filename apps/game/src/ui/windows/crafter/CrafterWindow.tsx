@@ -1,52 +1,80 @@
-import { useMutation, useQuery } from '@apollo/client';
-import { ServerInventoryItem } from '@shared';
-import { PacketType } from '@virtcon2/network-packet';
+import { gql, useMutation, useQuery } from '@apollo/client';
+import { UserInventoryItem } from '@virtcon2/database-postgres';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
-import Game from '../../../scenes/Game';
 import Window from '../../components/window/Window';
+import { useUser } from '../../context/user/UserContext';
 import { isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
-import { CRAFT_MUTATION, ITEMS_QUERY } from './CrafterWindowGraphQL';
+import { CRAFTER_SIDE_BAR_ITEM_FRAGMENT, CrafterSideBarItem } from './CrafterSidebarItem';
+import { CRAFT_MUTATION } from './CrafterWindowGraphQL';
+import { CRAFTER_RECIPE_ITEM_FRAGMENT, CrafterRecipeItem } from './RecipeItem';
+
+const CRAFTER_WINDOW_QUERY = gql`
+  ${CRAFTER_SIDE_BAR_ITEM_FRAGMENT}
+  ${CRAFTER_RECIPE_ITEM_FRAGMENT}
+  query CrafterWindow($userId: ID!) {
+    userInventory(userId: $userId) {
+      quantity
+      slot
+      item {
+        id
+        display_name
+      }
+      ...CrafterRecipeInventoryFragment
+    }
+    items {
+      id
+      display_name
+      recipe {
+        id
+      }
+      ...CrafterSideBarItemFragment
+      ...CrafterRecipeItemFragment
+    }
+  }
+`;
+
+const PLAYER_INVENTORY_SUBSCRIPTION = gql`
+  subscription CrafterWindow($userId: ID!) {
+    userInventory(userId: $userId) {
+      quantity
+      slot
+      item {
+        id
+        display_name
+      }
+    }
+  }
+`;
 
 export default function CrafterWindow() {
-  const itemsQuery = useQuery(ITEMS_QUERY);
+  const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_CRAFTER));
+  const { id } = useUser();
+
+  const { data, error, loading } = useQuery<{ items: DBItem[]; userInventory: UserInventoryItem[] }>(CRAFTER_WINDOW_QUERY, {
+    variables: { userId: id },
+    skip: !isOpen,
+  });
+
   const [mutateCraftItem, craftItemMutation] = useMutation(CRAFT_MUTATION);
 
   const quantityInput = useRef<HTMLInputElement>(null);
   const [quantityToCraft, setQuantityToCraft] = useState<string>('1');
   const [selectedItem, setSelectedItem] = useState<DBItem | null>(null);
-  const [inventory, setInventory] = useState<Array<ServerInventoryItem>>([]);
 
-  const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_CRAFTER));
   const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    if (isOpen) {
-      Game.network.sendPacket({
-        data: {},
-        packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
-      });
-      craftItemMutation.reset();
-    }
-  }, [isOpen]);
 
   const onCrafterButtonPressed = useCallback(() => dispatch(toggle(WindowType.VIEW_CRAFTER)), [dispatch]);
 
-  const onNetWorkPlayerInventoryPacket = ({ inventory }: { inventory: Array<ServerInventoryItem> }) => {
-    setInventory(inventory);
-  };
-
   useEffect(() => {
     events.subscribe('onCrafterButtonPressed', onCrafterButtonPressed);
-    events.subscribe('networkPlayerInventory', onNetWorkPlayerInventoryPacket);
 
     return () => {
       events.unsubscribe('onCrafterButtonPressed', () => onCrafterButtonPressed);
-      events.unsubscribe('networkPlayerInventory', onNetWorkPlayerInventoryPacket);
     };
   }, [onCrafterButtonPressed]);
 
@@ -57,18 +85,21 @@ export default function CrafterWindow() {
         itemId: selectedItem?.id,
       },
       onCompleted: () => {
-        Game.network.sendPacket({
-          data: {},
-          packet_type: PacketType.REQUEST_PLAYER_INVENTORY,
-        });
         toast(`Crafted ${quantityToCraft}x ${selectedItem?.display_name}`, { type: 'success' });
       },
     });
   };
+
+  const onSelectedItem = (itemId: number) => {
+    setSelectedItem(data?.items.find((i) => i.id === itemId) || null);
+  };
+
+  const items = data?.items.filter((i) => i.recipe && i.recipe.length > 0) || [];
+
   return (
     <Window
-      loading={[itemsQuery.loading, craftItemMutation.loading]}
-      errors={[itemsQuery.error, craftItemMutation.error]}
+      loading={[loading, craftItemMutation.loading]}
+      errors={[error, craftItemMutation.error]}
       title="Crafter"
       width={800}
       height={600}
@@ -77,23 +108,9 @@ export default function CrafterWindow() {
     >
       <div className="flex flex-row h-full">
         <div className="flex-1">
-          {itemsQuery.data?.Items?.filter((i: DBItem) => i.recipe && i.recipe.length > 0).map((item: DBItem) => {
-            const icon = Game.getInstance().textures.getBase64(item?.name || '');
-            return (
-              <div
-                onClick={() => {
-                  setSelectedItem(item);
-                }}
-                key={item.id}
-                className="flex flex-row px-2  items-center  w-full h-10 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
-              >
-                <p className="flex-1">{item.display_name}</p>
-                <div className="flex-1">
-                  <img alt={item.display_name} className="pixelart h-10 w-10 float-right" src={icon}></img>
-                </div>
-              </div>
-            );
-          })}
+          {items.map(({ id }) => (
+            <CrafterSideBarItem key={`craftersidebaritem-${id}`} itemId={id} selectItem={onSelectedItem} />
+          ))}
         </div>
         <div className="flex-[2]">
           {selectedItem ? (
@@ -104,27 +121,9 @@ export default function CrafterWindow() {
               </div>
 
               <div className="flex flex-[5] flex-row flex-wrap  bg-[#282828] mx-10 ">
-                {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => {
-                  // optimize this later
-                  const quantity_in_inventory = inventory.filter((i) => i.item?.id === recipeItem.requiredItem.id).reduce((a, b) => a + b.quantity, 0);
-                  console.log(recipeItem);
-                  return (
-                    <div
-                      key={`recipe-${recipeItem.requiredItem.id}-${selectedItem.id}`}
-                      className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
-                    >
-                      <img
-                        alt={recipeItem.requiredItem.display_name}
-                        className="flex-1 pixelart w-12  m-auto"
-                        src={`/assets/sprites/items/${recipeItem.requiredItem.name}.png`}
-                      ></img>
-                      <p className="flex-1 m-[-8px]">
-                        {quantity_in_inventory || 0}/{recipeItem.requiredQuantity}
-                      </p>
-                      <p className="flex-1 text-[11px]">{recipeItem.requiredItem.display_name}</p>
-                    </div>
-                  );
-                })}
+                {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => (
+                  <CrafterRecipeItem itemRecipeId={recipeItem.id} inventoryItems={data?.userInventory || []} />
+                ))}
               </div>
               <div className="my-4 mx-10 flex-1 flex flex-col  ">
                 <div className="flex-row flex flex-1 items-center">

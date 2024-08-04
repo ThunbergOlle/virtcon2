@@ -7,14 +7,14 @@ export async function addToInventory(
   inventorySlots: (WorldBuildingInventory | UserInventoryItem)[],
   itemId: number,
   quantity: number,
-  slot: number,
+  slot?: number,
 ): Promise<number> {
   const { stack_size } = await Item.findOne({ where: { id: itemId } });
   if (quantity < 0) {
     return handleNegativeQuantities(inventorySlots, itemId, quantity, slot);
   }
 
-  if (slot) {
+  if (slot !== undefined) {
     log(`Adding ${quantity} of item ${itemId} to slot ${slot}`, LogLevel.INFO);
     // check if slot is occupied
     const slot_item = inventorySlots.find((i) => i.slot === slot);
@@ -22,11 +22,11 @@ export async function addToInventory(
       log(`Slot ${slot} cannot be found in inventory`, LogLevel.ERROR);
       return quantity;
     }
-    if (slot_item && !slot_item.item) {
+    if (slot_item && !slot_item.itemId) {
       return createNewStack(inventorySlots, itemId, quantity, slot);
     }
     // check if item is the same
-    if (slot_item.item?.id !== itemId) {
+    if (slot_item.itemId !== itemId) {
       return quantity;
     }
     // add the item to the slot
@@ -38,8 +38,8 @@ export async function addToInventory(
     return remainder;
   }
 
-  const similiar_inventory_stack = inventorySlots.filter((i) => i.item && i.item.id === itemId);
-  const empty_inventory_slots = inventorySlots.filter((i) => i.item === null);
+  const similiar_inventory_stack = inventorySlots.filter((i) => i.item && i.itemId === itemId);
+  const empty_inventory_slots = inventorySlots.filter((i) => i.itemId === null);
   const stack_with_space = similiar_inventory_stack.find((i) => i.quantity < stack_size);
 
   // create a new stack if we have space and if we need to.
@@ -64,7 +64,7 @@ async function createNewStack(
   preferred_slot?: number,
 ): Promise<number> {
   const slot = preferred_slot !== undefined ? empty_inventory_slots.find((s) => s.slot === preferred_slot) : empty_inventory_slots[0];
-  slot.item = { id: itemId } as Item;
+  slot.itemId = itemId;
   slot.quantity = quantity;
   await slot.save();
   return quantity - slot.quantity;
@@ -79,7 +79,7 @@ async function handleNegativeQuantities(
   if (slot) {
     log(`Removing ${quantity} of item ${itemId} from slot ${slot}`, LogLevel.INFO);
     // check if slot is occupied
-    const slot_item = inventorySlots.find((i) => i.slot === slot && i.item?.id === itemId);
+    const slot_item = inventorySlots.find((i) => i.slot === slot && i.itemId === itemId);
     if (!slot_item) {
       log(`Slot ${slot} cannot be found in inventory`, LogLevel.ERROR);
       return quantity;
@@ -92,13 +92,14 @@ async function handleNegativeQuantities(
 
     if (slot_item.quantity === 0) {
       slot_item.item = null;
+      slot_item.itemId = null;
     }
 
     await slot_item.save();
     return new_quantity < 0 ? new_quantity : 0;
   }
 
-  const similiar_inventory_stack = inventorySlots.filter((i) => i.item && i.item.id === itemId);
+  const similiar_inventory_stack = inventorySlots.filter((i) => i.itemId === itemId);
   if (!similiar_inventory_stack.length) {
     return quantity;
   }
@@ -115,6 +116,7 @@ async function handleNegativeQuantities(
       quantity_left_to_remove -= stack.quantity;
       stack.quantity = 0;
       stack.item = null;
+      stack.itemId = null;
     }
   }
 

@@ -1,8 +1,10 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { User, UserInventoryItem, World } from '@virtcon2/database-postgres';
-import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
+import { TOPIC_INVENTORY_UPDATE, User, UserInventoryItem, World } from '@virtcon2/database-postgres';
+import { withFilter } from 'graphql-subscriptions';
+import { Arg, Ctx, ID, Mutation, Query, Resolver, Subscription } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
 import { EmailService } from '../../service/EmailService';
+import { subscribe } from '../../service/RedisService';
 import { GenerateToken } from '../../utils/GenerateToken';
 import { HashPassword } from '../../utils/HashPassword';
 import RandomCode from '../../utils/RandomCode';
@@ -79,17 +81,7 @@ export class UserResolver {
 
     return { success: true };
   }
-  @Query(() => [UserInventoryItem], { nullable: false })
-  async UserInventory(
-    @Arg('userId', () => Int, { nullable: false })
-    userId: number,
-  ) {
-    const user = await User.findOne({
-      where: { id: userId },
-      relations: ['inventory', 'inventory.item'],
-    });
-    return user.inventory;
-  }
+
   @Query(() => User, { nullable: true })
   Me(@Ctx() context: RequestContext) {
     return context.user;

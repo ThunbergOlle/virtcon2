@@ -6,7 +6,6 @@ export enum PacketType {
   PLAYER_MOVE = 'playerMove',
   LOAD_WORLD = 'loadWorld',
   PLAYER_SET_POSITION = 'playerSetPosition',
-  REQUEST_PLAYER_INVENTORY = 'requestPlayerInventory',
   PLAYER_INVENTORY = 'playerInventory',
   REQUEST_JOIN = 'requestJoin',
   REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
@@ -16,7 +15,6 @@ export enum PacketType {
   INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING = 'internalWorldBuildingFinishedProcessing',
   WORLD_BUILDING = 'worldBuilding',
 
-  /* BitECS entities */
   SYNC_CLIENT_ENTITY = 'syncClientEntity',
   SYNC_SERVER_ENTITY = 'syncServerEntity',
 }

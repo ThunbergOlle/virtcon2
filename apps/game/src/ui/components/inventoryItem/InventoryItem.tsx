@@ -1,11 +1,12 @@
 import { InventoryType, ServerInventoryItem } from '@shared';
-import { get_item_by_id } from '@virtcon2/static-game-data';
+import { DBUserInventoryItem, DBWorldBuildingInventoryItem, get_item_by_id } from '@virtcon2/static-game-data';
 import { useMemo } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import Game from '../../../scenes/Game';
 
+type InventoryItem = DBUserInventoryItem | DBWorldBuildingInventoryItem;
 export interface InventoryItemType {
-  item: ServerInventoryItem;
+  inventoryItem: ServerInventoryItem;
   fromInventoryType: InventoryType;
   fromInventoryId: number;
   fromInventorySlot: number;
@@ -13,7 +14,7 @@ export interface InventoryItemType {
 }
 
 export default function InventoryItem({
-  item,
+  inventoryItem,
   onClick,
   fromInventoryType,
   fromInventoryId,
@@ -21,38 +22,40 @@ export default function InventoryItem({
   onDrop,
   slot,
 }: {
-  item: ServerInventoryItem;
+  inventoryItem: InventoryItem;
   fromInventoryType: InventoryType;
   fromInventoryId: number;
   fromInventorySlot: number;
-  onClick: (item: ServerInventoryItem) => void;
+  onClick: (item: InventoryItem) => void;
   onDrop: (item: InventoryItemType, slot: number, inventoryId: number) => void;
   slot: number;
 }) {
   const itemMetaData = useMemo(() => {
-    return get_item_by_id(item.item?.id || 0);
-  }, [item]);
+    return get_item_by_id(inventoryItem.item?.id || 0);
+  }, [inventoryItem]);
+
   const [{ canDrop }, drop] = useDrop(
     () => ({
       accept: 'inventoryItem',
-      drop: (droppedItem: InventoryItemType) => (droppedItem.item?.item?.id === item?.item?.id && onDrop(droppedItem, slot, fromInventoryId)) || undefined,
+      drop: (droppedItem: InventoryItemType) =>
+        (droppedItem.inventoryItem?.item?.id === inventoryItem?.item?.id && onDrop(droppedItem, slot, fromInventoryId)) || undefined,
       collect: (monitor) => ({
         isOver: monitor.isOver(),
         canDrop: monitor.canDrop(),
       }),
     }),
-    [slot, fromInventoryId, item],
+    [slot, fromInventoryId, inventoryItem],
   );
 
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: 'inventoryItem',
-      item: { item, fromInventoryType: fromInventoryType, fromInventoryId, fromInventorySlot },
+      item: { inventoryItem, fromInventoryType: fromInventoryType, fromInventoryId, fromInventorySlot },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
     }),
-    [item],
+    [inventoryItem],
   );
 
   const icon = useMemo(() => Game.getInstance().textures.getBase64(itemMetaData?.name || ''), [itemMetaData]);
@@ -60,15 +63,15 @@ export default function InventoryItem({
   return (
     <div
       ref={drag}
-      onClick={() => onClick(item)}
-      key={item.slot}
+      onClick={() => onClick(inventoryItem)}
+      key={inventoryItem.slot}
       className={`flex flex-col m-2 text-center w-16 h-16 bg-[#282828] cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b] ${
         isDragging && 'cursor-grabbing'
       }`}
     >
       <div ref={drop}>
         <img alt={itemMetaData?.display_name} className="flex-1 pixelart w-12  m-auto" src={icon}></img>
-        <p className="flex-1 m-[-8px]">x{item.quantity}</p>
+        <p className="flex-1 m-[-8px]">x{inventoryItem.quantity}</p>
         <p>{canDrop}</p>
       </div>
     </div>

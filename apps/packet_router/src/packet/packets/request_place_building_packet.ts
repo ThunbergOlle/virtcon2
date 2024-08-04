@@ -30,6 +30,7 @@ export default async function request_place_building_packet(packet: ClientPacket
     );
     return;
   }
+
   const isActive = item.building.items_to_be_placed_on ? item.building.items_to_be_placed_on?.find((i) => i.id === resource?.item.id) && true : true;
 
   const newWorldBuilding = {

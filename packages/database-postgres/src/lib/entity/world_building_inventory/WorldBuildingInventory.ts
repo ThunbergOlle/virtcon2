@@ -1,10 +1,12 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, BeforeUpdate, Column, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { AfterInsert, AfterUpdate, BaseEntity, BeforeUpdate, Column, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { addToInventory } from '../../shared/InventoryManagement';
 import { Item } from '../item/Item';
-import { WorldBuilding } from '../world_building/WorldBuilding';
+import { TOPIC_BUILDING_UPDATE, WorldBuilding } from '../world_building/WorldBuilding';
 import { LogApp, LogLevel, log } from '@shared';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 
+const pubsub = new RedisPubSub();
 @ObjectType()
 @Entity()
 export class WorldBuildingInventory extends BaseEntity {
@@ -23,6 +25,8 @@ export class WorldBuildingInventory extends BaseEntity {
   @ManyToOne(() => Item, { nullable: true })
   @Field(() => Item, { nullable: true })
   item: Item;
+
+  @Column({ type: 'int', nullable: true })
   itemId: number;
 
   @Field(() => Int)
@@ -49,9 +53,16 @@ export class WorldBuildingInventory extends BaseEntity {
     }
   }
 
+  @AfterInsert()
+  @AfterUpdate()
+  async publishUpdate() {
+    pubsub.publish(`${TOPIC_BUILDING_UPDATE}.${this.worldBuildingId}`, { id: this.worldBuildingId });
+  }
+
   // returns remainder of quantity that could not be added
   static async addToInventory(worldBuildingId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
     if (quantity === 0) {
+      log('Quantity is 0, nothing to add', LogLevel.INFO);
       return 0;
     }
     const world_building_inventory_slots = await WorldBuildingInventory.find({
