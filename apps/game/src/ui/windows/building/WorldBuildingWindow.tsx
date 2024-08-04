@@ -3,11 +3,11 @@ import { InventoryType, ServerInventoryItem } from '@shared';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../hooks';
+import { useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
-import { isWindowOpen, WindowType } from '../../lib/WindowSlice';
+import { WindowType } from '../../lib/WindowSlice';
 import WorldBuildingOutput, { WORLD_BUILDING_OUTPUT_FRAGMENT } from './WorldBuildingOutput';
 
 const WORLD_BUILDING_FRAGMENT = gql`
