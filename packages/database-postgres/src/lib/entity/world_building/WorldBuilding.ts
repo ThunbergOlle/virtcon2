@@ -22,9 +22,10 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @ManyToOne(() => World, (world) => world.id)
   world: World;
 
-  @ManyToOne(() => Building, (building) => building.id)
+  @ManyToOne(() => Building, (building) => building.id, { nullable: true })
   @Field(() => Building)
   building: Building;
+  @Column({ type: 'int', nullable: true })
   buildingId: number;
 
   @OneToOne(() => WorldResource, { nullable: true })
@@ -53,6 +54,7 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @Field(() => WorldBuilding, { nullable: true })
   @ManyToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
   output_world_building: WorldBuilding;
+  @Column({ type: 'int', nullable: true })
   outputWorldBuildingId: number;
 
   @Field(() => Int, { nullable: true })
