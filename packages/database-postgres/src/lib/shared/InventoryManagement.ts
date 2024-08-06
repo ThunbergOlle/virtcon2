@@ -140,16 +140,17 @@ export async function safelyMoveItemsBetweenInventories(transaction: {
 }) {
   const { fromId, fromType, toId, toType, toSlot, fromSlot, itemId, quantity } = transaction;
 
-  const fromInventory =
+  const fromQuantityLeft =
     fromType === 'user'
       ? UserInventoryItem.addToInventory(fromId, itemId, -quantity, fromSlot)
       : WorldBuildingInventory.addToInventory(fromId, itemId, -quantity, fromSlot);
-  const toInventory =
+  const toQuantityLeft =
     toType === 'user'
       ? UserInventoryItem.addToInventory(toId, itemId, quantity, toSlot)
       : WorldBuildingInventory.addToInventory(toId, itemId, quantity, toSlot);
 
-  const [from_quantity_left, to_quantity_left] = await Promise.all([fromInventory, toInventory]);
+  const from_quantity_left = await fromQuantityLeft;
+  const to_quantity_left = await toQuantityLeft;
 
   if (from_quantity_left !== 0 || to_quantity_left !== 0) {
     // If from_quantity_left is lower than 0, that means that we moved more items than we had in the inventory.
