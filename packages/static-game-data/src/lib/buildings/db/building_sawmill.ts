@@ -17,5 +17,6 @@ const building_sawmill: DBBuilding = {
   output_item: item_wood,
   can_collide: true,
   output_quantity: 2,
+  processing_requirements: [],
 };
 export default building_sawmill;

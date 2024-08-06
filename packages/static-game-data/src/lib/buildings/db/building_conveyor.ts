@@ -12,6 +12,7 @@ const building_conveyor: DBBuilding = {
   is_rotatable: true,
   inventory_slots: 2,
   items_to_be_placed_on: [],
+  processing_requirements: [],
   output_item: null,
   output_quantity: null,
   can_collide: false,

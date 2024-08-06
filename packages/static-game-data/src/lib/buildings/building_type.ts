@@ -1,5 +1,10 @@
 import { DBItem, DBItemName } from '../items/item_type';
 
+export interface DBBuildingProcessingRequirement {
+  item: DBItem;
+  quantity: number;
+}
+
 export interface DBBuilding {
   name: DBItemName;
   id: number;
@@ -14,6 +19,7 @@ export interface DBBuilding {
   width: number;
   height: number;
   can_collide: boolean;
+  processing_requirements: DBBuildingProcessingRequirement[];
 }
 
 export interface DBWorldBuilding {

@@ -15,6 +15,7 @@ const building_drill: DBBuilding = {
   is_rotatable: false,
   inventory_slots: 2,
   items_to_be_placed_on: [item_stone, item_coal, item_iron],
+  processing_requirements: [],
   output_item: null,
   output_quantity: 3,
   can_collide: true,

@@ -15,5 +15,6 @@ const building_pipe: DBBuilding = {
   output_item: null,
   output_quantity: null,
   can_collide: true,
+  processing_requirements: [],
 };
 export default building_pipe;

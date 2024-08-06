@@ -135,7 +135,7 @@ server.listen(4000, () => {
 const tickInterval = setInterval(async () => {
   tick++;
   for (const world of worlds) {
-    checkFinishedBuildings(world, tick, redisClient);
+    checkFinishedBuildings(world, tick);
     if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     const packets = await getAllPackets(redisClient, world);

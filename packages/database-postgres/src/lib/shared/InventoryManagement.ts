@@ -38,7 +38,7 @@ export async function addToInventory(
     return remainder;
   }
 
-  const similiar_inventory_stack = inventorySlots.filter((i) => i.item && i.itemId === itemId);
+  const similiar_inventory_stack = inventorySlots.filter((i) => i.itemId === itemId);
   const empty_inventory_slots = inventorySlots.filter((i) => i.itemId === null);
   const stack_with_space = similiar_inventory_stack.find((i) => i.quantity < stack_size);
 
