@@ -54,8 +54,14 @@ async function processBuildingWithRequirements(world: World, building: DBBuildin
 async function processInventories(world: World) {
   const worldBuildings = await WorldBuilding.find({
     where: { world: { id: world }, output_world_building: Not(IsNull()) },
-
-    relations: ['output_world_building', 'output_world_building.world_building_inventory', 'output_world_building.world_building_inventory.item'],
+    /* TODO: we need to improve the performance of this */
+    relations: [
+      'building',
+      'world_building_inventory',
+      'output_world_building',
+      'output_world_building.world_building_inventory',
+      'output_world_building.world_building_inventory.item',
+    ],
   });
 
   for (const worldBuilding of worldBuildings) {
@@ -65,7 +71,7 @@ async function processInventories(world: World) {
     await safelyMoveItemsBetweenInventories({
       fromId: worldBuilding.id,
       toId: worldBuilding.output_world_building.id,
-      itemId: itemsToMove.item.id,
+      itemId: itemsToMove.itemId,
       quantity: Math.min(itemsToMove.quantity, worldBuilding.building.inventory_transfer_quantity_per_cycle),
       fromType: 'building',
       toType: 'building',
