@@ -21,13 +21,15 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
     return WorldBuilding.findOne({ where: { id } });
   }
 
-  @FieldResolver(() => Building)
+  @FieldResolver(() => Building, { nullable: true })
   async building(@Root() worldBuilding: WorldBuilding): Promise<Building> {
+    if (!worldBuilding.buildingId) return null;
     return Building.findOne({ where: { id: worldBuilding.buildingId } });
   }
 
   @FieldResolver(() => WorldResource, { nullable: true })
   async world_resource(@Root() worldBuilding: WorldBuilding): Promise<WorldResource | undefined> {
+    if (!worldBuilding.worldResourceId) return null;
     return WorldResource.findOne({ where: { id: worldBuilding.worldResourceId } });
   }
 
@@ -38,6 +40,7 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
 
   @FieldResolver(() => WorldBuilding, { nullable: true })
   async output_world_building(@Root() worldBuilding: WorldBuilding): Promise<WorldBuilding | undefined> {
+    if (!worldBuilding.outputWorldBuildingId) return null;
     return WorldBuilding.findOne({ where: { id: worldBuilding.outputWorldBuildingId } });
   }
 }

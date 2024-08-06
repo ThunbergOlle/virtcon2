@@ -14,8 +14,9 @@ export class ItemResolver implements ResolverInterface<Item> {
     return await ItemRecipe.find({ where: { resultingItemId: item.id }, relations: ['requiredItem'] });
   }
 
-  @FieldResolver(() => Building)
+  @FieldResolver(() => Building, { nullable: true })
   async building(@Root() item: Item): Promise<Building> {
+    if (!item.buildingId) return null;
     return await Building.findOne({ where: { id: item.buildingId } });
   }
 
