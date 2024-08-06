@@ -17,28 +17,37 @@ import { useUser } from '../../context/user/UserContext';
 import { fromPhaserPos } from '../../lib/coordinates';
 import { close, isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 
-const PLAYER_INVENTORY_QUERY = gql`
-  query PlayerInventoryWindow($userId: ID!) {
-    userInventory(userId: $userId) {
-      quantity
-      slot
-      item {
+const PLAYER_INVENTORY_FRAGMENT = gql`
+  fragment PlayerInventoryFragment on UserInventoryItem {
+    quantity
+    slot
+    item {
+      id
+      display_name
+      name
+      is_building
+      building {
         id
-        display_name
+        is_rotatable
       }
     }
   }
 `;
 
+const PLAYER_INVENTORY_QUERY = gql`
+  ${PLAYER_INVENTORY_FRAGMENT}
+  query PlayerInventoryWindow($userId: ID!) {
+    userInventory(userId: $userId) {
+      ...PlayerInventoryFragment
+    }
+  }
+`;
+
 const PLAYER_INVENTORY_SUBSCRIPTION = gql`
+  ${PLAYER_INVENTORY_FRAGMENT}
   subscription PlayerInventoryWindow($userId: ID!) {
     userInventory(userId: $userId) {
-      quantity
-      slot
-      item {
-        id
-        display_name
-      }
+      ...PlayerInventoryFragment
     }
   }
 `;
@@ -94,8 +103,6 @@ export default function PlayerInventoryWindow() {
       return cancelPlaceBuildingIntent();
     }
     if (!buildingBeingPlacedEntity.current || !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current] || !buildingBeingPlaced.current.item) return;
-    buildingBeingPlaced.current.quantity--;
-
     toast('Placing building', { type: 'info' });
 
     /* Send network packet to backend that we want to place the building at the coordinates */
