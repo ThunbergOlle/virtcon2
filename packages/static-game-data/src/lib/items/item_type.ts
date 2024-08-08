@@ -1,4 +1,4 @@
-import { DBBuilding } from '../buildings/building_type';
+import { DBBuilding } from './building_type';
 import { DBItemRecipe } from '../items_recipe/item_recipe_type';
 
 export enum DBItemRarity {

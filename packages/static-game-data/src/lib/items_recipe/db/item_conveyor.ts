@@ -1,4 +1,4 @@
-import item_conveyor from '../../items/db/item_conveyor';
+import { item_conveyor } from '../../items/db/item_conveyor';
 import item_stone from '../../items/db/item_stone';
 import item_wood from '../../items/db/item_wood';
 import { DBItemRecipe } from '../item_recipe_type';

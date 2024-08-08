@@ -9,7 +9,6 @@ export class UserInventoryItemResolver implements ResolverInterface<UserInventor
     subscribe: withFilter(
       (_, args) => subscribe.asyncIterator(`${TOPIC_INVENTORY_UPDATE}.${args.userId}`),
       (payload, variables) => {
-        console.log(`Sending update: ${payload.userId} === ${variables.userId}`);
         return payload.userId === parseInt(variables.userId);
       },
     ),

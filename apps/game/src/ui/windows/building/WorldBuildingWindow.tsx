@@ -133,7 +133,6 @@ export default function WorldBuildingWindow() {
           <div className="flex flex-row flex-wrap w-full ">
             {worldBuilding &&
               inventorySorted.map((item) => {
-                console.log('item', item);
                 return item && item.item ? (
                   <InventoryItem
                     inventoryItem={item}

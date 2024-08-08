@@ -68,6 +68,7 @@ const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: P
     console.error(`No building for entity ${entity}`);
     return;
   }
+
   if (building.items_to_be_placed_on && building.items_to_be_placed_on?.length) {
     GhostBuilding.placementIsValid[entity] = 0;
     scene.physics.collide(sprite, state.gameObjectGroups[GameObjectGroups.RESOURCE] || [], (_, collided) => {

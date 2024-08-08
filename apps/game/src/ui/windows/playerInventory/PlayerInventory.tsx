@@ -68,7 +68,6 @@ export default function PlayerInventoryWindow() {
         document: PLAYER_INVENTORY_SUBSCRIPTION,
         variables: { userId: user.id },
         updateQuery: (prev, { subscriptionData }) => {
-          console.log(`received subscription data`);
           if (!subscriptionData.data) return prev;
           return subscriptionData.data;
         },
@@ -132,41 +131,41 @@ export default function PlayerInventoryWindow() {
   }, [onInventoryButtonPressed]);
 
   const onItemWasClicked = (inventoryItem: DBUserInventoryItem) => {
-    if (inventoryItem.item?.is_building) {
-      dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
+    if (!inventoryItem.item?.is_building) return;
 
-      const game = Game.getInstance();
-      if (!game.state.world) return;
+    dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
 
-      /* Create ghost building entity */
-      const ghostBuilding = addEntity(game.state.world);
-      addComponent(game.state.world, GhostBuilding, ghostBuilding);
-      addComponent(game.state.world, Sprite, ghostBuilding);
-      addComponent(game.state.world, Position, ghostBuilding);
-      addComponent(game.state.world, Collider, ghostBuilding);
+    const game = Game.getInstance();
+    if (!game.state.world) return;
 
-      const buildingSettings = get_building_by_id(inventoryItem.item.building?.id ?? 0);
-      if (!buildingSettings) return;
+    /* Create ghost building entity */
+    const ghostBuilding = addEntity(game.state.world);
+    addComponent(game.state.world, GhostBuilding, ghostBuilding);
+    addComponent(game.state.world, Sprite, ghostBuilding);
+    addComponent(game.state.world, Position, ghostBuilding);
+    addComponent(game.state.world, Collider, ghostBuilding);
 
-      game.state.ghostBuildingById[ghostBuilding] = buildingSettings;
+    const buildingSettings = get_building_by_id(inventoryItem.item.building?.id ?? 0);
+    if (!buildingSettings) return;
 
-      Sprite.texture[ghostBuilding] = ItemTextureMap[inventoryItem.item.name]?.textureId ?? 0;
-      Sprite.height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
-      Sprite.width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
-      Sprite.opacity[ghostBuilding] = 0.5;
-      Position.x[ghostBuilding] = 0;
-      Position.y[ghostBuilding] = 0;
+    game.state.ghostBuildingById[ghostBuilding] = buildingSettings;
 
-      buildingBeingPlacedEntity.current = ghostBuilding;
-      buildingBeingPlaced.current = inventoryItem;
+    Sprite.texture[ghostBuilding] = ItemTextureMap[inventoryItem.item.name]?.textureId ?? 0;
+    Sprite.height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
+    Sprite.width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
+    Sprite.opacity[ghostBuilding] = 0.5;
+    Position.x[ghostBuilding] = 0;
+    Position.y[ghostBuilding] = 0;
 
-      // Event listeners
-      game.input.on('pointerdown', placeBuilding);
-      game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
-      game.input.keyboard.once('keydown-Q', () => cancelPlaceBuildingIntent());
-      if (buildingSettings?.is_rotatable) {
-        game.input.keyboard.on('keydown-R', () => rotatePlaceBuildingIntent());
-      }
+    buildingBeingPlacedEntity.current = ghostBuilding;
+    buildingBeingPlaced.current = inventoryItem;
+
+    // Event listeners
+    game.input.on('pointerdown', placeBuilding);
+    game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
+    game.input.keyboard.once('keydown-Q', () => cancelPlaceBuildingIntent());
+    if (buildingSettings?.is_rotatable) {
+      game.input.keyboard.on('keydown-R', () => rotatePlaceBuildingIntent());
     }
   };
 

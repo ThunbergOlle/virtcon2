@@ -1,4 +1,4 @@
-import { DBItem, DBItemName } from '../items/item_type';
+import { DBItem, DBItemName } from './item_type';
 
 export interface DBBuildingProcessingRequirement {
   item: DBItem;

@@ -1,13 +1,9 @@
-import building_conveyor from './lib/buildings/db/building_conveyor';
-import building_drill from './lib/buildings/db/building_drill';
-import building_pipe from './lib/buildings/db/building_pipe';
-import building_sawmill from './lib/buildings/db/building_sawmill';
 import item_coal from './lib/items/db/item_coal';
-import item_conveyor from './lib/items/db/item_conveyor';
-import item_drill from './lib/items/db/item_drill';
+import { item_conveyor, building_conveyor } from './lib/items/db/item_conveyor';
+import { item_drill, building_drill } from './lib/items/db/item_drill';
 import item_iron from './lib/items/db/item_iron';
-import item_pipe from './lib/items/db/item_pipe';
-import item_sawmill from './lib/items/db/item_sawmill';
+import { item_pipe, building_pipe } from './lib/items/db/item_pipe';
+import { item_sawmill, building_sawmill } from './lib/items/db/item_sawmill';
 import item_stick from './lib/items/db/item_stick';
 import item_stone from './lib/items/db/item_stone';
 import item_wood from './lib/items/db/item_wood';
@@ -49,7 +45,7 @@ export * from './lib/items_recipe/db/item_pipe';
 export const all_db_items_recipes = [...item_stick_recipe, ...item_sawmill_recipe, ...item_pipe_recipe, ...item_conveyor_recipe];
 
 /* Buildings */
-export * from './lib/buildings/building_type';
+export * from './lib/items/building_type';
 export const all_db_buildings = [building_sawmill, building_pipe, building_drill, building_conveyor];
 
 export const get_building_by_id = (id: number) => {
