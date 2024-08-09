@@ -1,6 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { InventoryType } from '@shared';
-import { addComponent, addEntity, removeEntity } from '@virtcon2/bytenetc';
+import { addComponent, addEntity, addReservedEntity, removeEntity } from '@virtcon2/bytenetc';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
 import { DBUserInventoryItem, get_building_by_id } from '@virtcon2/static-game-data';
@@ -102,6 +102,7 @@ export default function PlayerInventoryWindow() {
       return cancelPlaceBuildingIntent();
     }
     if (!buildingBeingPlacedEntity.current || !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current] || !buildingBeingPlaced.current.item) return;
+
     toast('Placing building', { type: 'info' });
 
     /* Send network packet to backend that we want to place the building at the coordinates */
@@ -139,7 +140,7 @@ export default function PlayerInventoryWindow() {
     if (!game.state.world) return;
 
     /* Create ghost building entity */
-    const ghostBuilding = addEntity(game.state.world);
+    const ghostBuilding = addReservedEntity(game.state.world, 999);
     addComponent(game.state.world, GhostBuilding, ghostBuilding);
     addComponent(game.state.world, Sprite, ghostBuilding);
     addComponent(game.state.world, Position, ghostBuilding);

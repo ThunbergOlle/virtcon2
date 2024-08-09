@@ -257,6 +257,13 @@ export const addEntity = (world: World) => {
   throw new Error('No more entities');
 };
 
+export const addReservedEntity = (world: World, entity: Entity) => {
+  if ($store[world].$entityStore[entity]) throw new Error(`Cannot reserve entity ${entity}, already exists`);
+  $store[world].$queryCache.clear();
+  $store[world].$entityStore[entity] = [];
+  return entity;
+};
+
 export const dangerouslyAddEntity = (world: World, entity: Entity) => {
   $store[world].$queryCache.clear();
   $store[world].$entityStore[entity] = [];
@@ -302,8 +309,6 @@ const deserializeArray = (world: World, name: string, key: string, value: AllArr
   else if (deserializeInto instanceof Float32Array) $store[world].$componentStore[name][key][eid] = new Float32Array(value as Float32Array);
   else if (deserializeInto instanceof Float64Array) $store[world].$componentStore[name][key][eid] = new Float64Array(value as Float64Array);
   else throw new Error(`Invalid array type for ${name}.${key}, type: ${deserializeInto.constructor.name}`);
-
-  console.log(`Deserialized array ${name}.${key} for entity ${eid}`);
 };
 
 export const deserializeEntity = (world: World, data: SerializedData) => {
@@ -315,6 +320,10 @@ export const deserializeEntity = (world: World, data: SerializedData) => {
   }
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
   $store[world].$entityStore[eid] = uniqueComponents;
+
+  $store[world].$queryCache.clear();
+
+  return eid;
 };
 
 export const defineSerializer = (components: Component<any>[]) => {
@@ -350,6 +359,7 @@ export const defineDeserializer = (components: Component<any>[]) => {
 
       for (const [name, key, value] of entity.slice(1)) {
         if (!components.some((c) => decodeName(c) === name)) continue;
+
         if (value instanceof Array) deserializeArray(world, name, key, value as AllArrayTypes, eid);
         else $store[world].$componentStore[name][key][eid] = value;
         if (!$store[world].$entityStore[eid].includes(name)) {
@@ -359,6 +369,9 @@ export const defineDeserializer = (components: Component<any>[]) => {
 
       deserializedEnts.push(eid);
     }
+
+    $store[world].$queryCache.clear();
+
     return deserializedEnts;
   };
 };

@@ -5,7 +5,7 @@ import { RedisWorldResource, worldMapParser } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
-import { createWorld, defineDeserializer, deserializeEntity, registerComponents, removeEntity, System, World } from '@virtcon2/bytenetc';
+import { createWorld, debugEntity, defineDeserializer, deserializeEntity, registerComponents, removeEntity, System, World } from '@virtcon2/bytenetc';
 import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
 import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
@@ -226,8 +226,11 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
-
-    deserialize(world, data);
+    console.log(`Deserializing ${data.length} entities...`);
+    console.log(data);
+    const entityId = deserialize(world, data);
+    console.log(`Entity ID: ${entityId}`);
+    console.log(debugEntity(world, entityId[0]));
   }
 };
 

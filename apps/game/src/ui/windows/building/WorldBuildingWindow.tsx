@@ -65,7 +65,6 @@ export default function WorldBuildingWindow() {
         document: WORLD_BUILDING_SUBSCRIPTION,
         variables: { id: inspectedWorldBuilding },
         updateQuery: (prev, { subscriptionData }) => {
-          console.log('updateQuery', prev, subscriptionData);
           if (!subscriptionData.data) return prev;
           return subscriptionData.data;
         },
