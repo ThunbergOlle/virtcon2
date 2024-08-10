@@ -137,6 +137,23 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureId: 1000,
     textureName: 'player_character',
     texturePath: 'sprites/player_tmp.png',
+    animations: [
+      {
+        name: 'idle',
+        frames: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        frameRate: 10,
+        repeat: -1,
+        playOnCreate: true,
+      },
+      {
+        name: 'walk',
+        frames: [12, 13, 14, 15, 16, 17, 18, 19],
+        frameRate: 10,
+        repeat: -1,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
   },
   unknown: {
     textureId: 0,
