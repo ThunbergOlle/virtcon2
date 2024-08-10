@@ -1,8 +1,7 @@
-import { MainPlayer, Player, Sprite, Velocity } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
+import { getTextureFromTextureId, getVariantName, Player, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { GameState } from '../scenes/Game';
 import { setMainPlayerEntity } from './MainPlayerSystem';
-import { defineQuery, defineSystem, enterQuery, Not, World } from '@virtcon2/bytenetc';
-import { getTextureFromTextureId } from '../config/SpriteMap';
 
 const playerQuery = defineQuery(Player, Sprite, Velocity);
 const playerQueryEnter = enterQuery(playerQuery);
@@ -28,7 +27,10 @@ export const createPlayerSystem = (world: World, mainPlayerId: number) => {
       const isWalking = Math.abs(Velocity.x[id]) > 0 || Math.abs(Velocity.y[id]) > 0;
       const sprite = state.spritesById[id];
       if (sprite) {
-        const textureName = getTextureFromTextureId(Sprite.texture[id])?.textureName;
+        const texture = getTextureFromTextureId(Sprite.texture[id]);
+        if (!texture) throw new Error('Texture not found for id: ' + Sprite.texture[id]);
+
+        const textureName = getVariantName(texture, Sprite.variant[id]);
         const animationPrefix = `${textureName}_anim`;
         const animationName = `${animationPrefix}_${isWalking ? 'walk' : 'idle'}`;
 

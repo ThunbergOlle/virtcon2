@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { AllTextureMaps } from '../config/SpriteMap';
 import { SceneStates } from './interfaces';
+import { AllTextureMaps, getVariantName } from '@virtcon2/network-world-entities';
 
 export default class Preload extends Phaser.Scene implements SceneStates {
   constructor() {
@@ -13,21 +13,25 @@ export default class Preload extends Phaser.Scene implements SceneStates {
     /* Load all textures */
     for (const textureMapKey in AllTextureMaps) {
       const textureMap = AllTextureMaps[textureMapKey as keyof typeof AllTextureMaps];
-      if (textureMap) {
-        if (textureMap.animations) {
-          if (!textureMap.spriteSheetFrameWidth || !textureMap.spriteSheetFrameHeight) {
-            throw new Error('SpriteSheetFrameWidth or SpriteSheetFrameHeight not set');
-          }
-          this.load.spritesheet(textureMap.textureName, '../../assets/' + textureMap.texturePath, {
+      if (!textureMap) continue;
+
+      if (textureMap.animations) {
+        if (!textureMap.spriteSheetFrameWidth || !textureMap.spriteSheetFrameHeight) {
+          throw new Error('SpriteSheetFrameWidth or SpriteSheetFrameHeight not set');
+        }
+        for (let i = 0; i < textureMap.variants.length; i++) {
+          this.load.spritesheet(getVariantName(textureMap, i), '../../assets/' + textureMap.variants[i], {
             frameWidth: textureMap.spriteSheetFrameWidth,
             frameHeight: textureMap.spriteSheetFrameHeight,
           });
-        } else this.load.image(textureMap.textureName, '../../assets/' + textureMap.texturePath);
+        }
+      } else {
+        for (let i = 0; i < textureMap.variants.length; i++) {
+          this.load.image(getVariantName(textureMap, i), '../../assets/' + textureMap.variants[i]);
+        }
       }
     }
     this.load.image('tiles', '../../assets/tilemaps/tiles/tiles_extruded.png');
-
-    console.log('preloading scene done');
   }
 
   create() {

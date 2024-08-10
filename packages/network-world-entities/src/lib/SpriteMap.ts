@@ -3,7 +3,7 @@ import { DBItemName, ResourceNames } from '@virtcon2/static-game-data';
 export interface TextureMetaData {
   textureId: number; // for ECS
   textureName: string; // for Phaser
-  texturePath: string; // for Phaser
+  variants: string[]; // for Phaser
   animations?: {
     name: string;
     frames: number[];
@@ -18,57 +18,68 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
   [DBItemName.BUILDING_SAWMILL]: {
     textureId: 1,
     textureName: 'building_sawmill',
-    texturePath: 'sprites/items/building_sawmill.png',
+    variants: ['sprites/items/building_sawmill.png'],
+    animations: [
+      {
+        name: 'idle',
+        frames: [0, 1],
+        frameRate: 20,
+        repeat: -1,
+        playOnCreate: true,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
   },
   [DBItemName.WOOD]: {
     textureId: 2,
     textureName: 'wood',
-    texturePath: 'sprites/items/wood.png',
+    variants: ['sprites/items/wood.png'],
   },
   [DBItemName.WOOD_BIG]: {
     textureId: 2,
     textureName: 'wood',
-    texturePath: 'sprites/items/wood.png',
+    variants: ['sprites/items/wood.png'],
   },
   [DBItemName.STICK]: {
     textureId: 3,
     textureName: 'stick',
-    texturePath: 'sprites/items/stick.png',
+    variants: ['sprites/items/stick.png'],
   },
   [DBItemName.SAND]: {
     textureId: 4,
     textureName: 'sand',
-    texturePath: 'sprites/items/sand.png',
+    variants: ['sprites/items/sand.png'],
   },
   [DBItemName.GLASS]: {
     textureId: 5,
     textureName: 'glass',
-    texturePath: 'sprites/items/glass.png',
+    variants: ['sprites/items/glass.png'],
   },
   [DBItemName.COAL]: {
     textureId: 6,
     textureName: 'coal',
-    texturePath: 'sprites/items/coal.png',
+    variants: ['sprites/items/coal.png'],
   },
   [DBItemName.BUILDING_PIPE]: {
     textureId: 7,
     textureName: 'building_pipe',
-    texturePath: 'sprites/items/building_pipe.png',
+    variants: ['sprites/items/building_pipe.png'],
   },
   [DBItemName.BUILDING_FURNACE]: {
     textureId: 8,
     textureName: 'building_furnace',
-    texturePath: 'sprites/items/building_furnace.png',
+    variants: ['sprites/items/building_furnace.png'],
   },
   [DBItemName.STONE]: {
     textureId: 9,
     textureName: 'stone',
-    texturePath: 'sprites/items/stone.png',
+    variants: ['sprites/items/stone.png'],
   },
   [DBItemName.BUILDING_DRILL]: {
     textureId: 10,
     textureName: 'building_drill',
-    texturePath: 'sprites/items/building_drill.png',
+    variants: ['sprites/items/building_drill.png'],
     animations: [
       {
         name: 'idle',
@@ -84,7 +95,7 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
   [DBItemName.BUILDING_CONVEYOR]: {
     textureId: 11,
     textureName: 'building_conveyor',
-    texturePath: 'sprites/items/building_conveyor.png',
+    variants: ['sprites/items/building_conveyor.png'],
     animations: [
       {
         name: 'idle',
@@ -100,7 +111,7 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
   [DBItemName.IRON]: {
     textureId: 12,
     textureName: 'iron',
-    texturePath: 'sprites/items/iron.png',
+    variants: ['sprites/items/iron.png'],
   },
 };
 
@@ -108,27 +119,27 @@ export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> =
   [ResourceNames.WOOD_BIG]: {
     textureId: 100,
     textureName: 'resource_wood_big',
-    texturePath: 'sprites/resources/wood_big.png',
+    variants: ['sprites/resources/wood_big.png'],
   },
   [ResourceNames.WOOD]: {
     textureId: 101,
     textureName: 'resource_wood',
-    texturePath: 'sprites/resources/wood.png',
+    variants: ['sprites/resources/wood.png'],
   },
   [ResourceNames.STONE]: {
     textureId: 102,
     textureName: 'resource_stone',
-    texturePath: 'sprites/resources/stone.png',
+    variants: ['sprites/resources/stone_0.png', 'sprites/resources/stone_1.png'],
   },
   [ResourceNames.IRON]: {
     textureId: 103,
     textureName: 'resource_iron',
-    texturePath: 'sprites/resources/iron.png',
+    variants: ['sprites/resources/iron.png'],
   },
   [ResourceNames.COAL]: {
     textureId: 104,
     textureName: 'resource_coal',
-    texturePath: 'sprites/resources/coal.png',
+    variants: ['sprites/resources/coal.png'],
   },
 };
 
@@ -136,12 +147,29 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
   player_character: {
     textureId: 1000,
     textureName: 'player_character',
-    texturePath: 'sprites/player_tmp.png',
+    variants: ['sprites/player_tmp.png'],
+    animations: [
+      {
+        name: 'idle',
+        frames: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        frameRate: 10,
+        repeat: -1,
+        playOnCreate: true,
+      },
+      {
+        name: 'walk',
+        frames: [12, 13, 14, 15, 16, 17, 18, 19],
+        frameRate: 10,
+        repeat: -1,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
   },
   unknown: {
     textureId: 0,
     textureName: 'unknown',
-    texturePath: 'sprites/misc/unknown.png',
+    variants: ['sprites/misc/unknown.png'],
   },
 };
 export const AllTextureMaps = {
@@ -169,3 +197,5 @@ export const getTextureFromTextureId = (textureId: number): TextureMetaData | nu
   }
   return null;
 };
+
+export const getVariantName = (texture: TextureMetaData, variant: number): string => `${texture.textureName}_${variant}`;

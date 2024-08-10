@@ -1,9 +1,9 @@
 import { get_building_by_id } from '@virtcon2/static-game-data';
 import { Building, Collider, Position, Sprite } from '../network-world-entities';
-import { ItemTextureMap } from '../SpriteMap';
 import { tileSize, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
+import { ItemTextureMap } from '../SpriteMap';
 
 export interface NewBuildingEntity {
   worldBuildingId: number;
@@ -26,6 +26,7 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   addComponent(world, Sprite, building);
   Sprite.texture[building] = ItemTextureMap[metadata.name]?.textureId ?? 0;
   Sprite.rotation[building] = data.rotation;
+  Sprite.variant[building] = 0;
 
   addComponent(world, Collider, building);
   Collider.sizeWidth[building] = metadata.width * tileSize;

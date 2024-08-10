@@ -1,7 +1,7 @@
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
 import { Collider, Player, Position, Sprite, Tag, Velocity } from '../network-world-entities';
-import { MiscTextureMap } from '../SpriteMap';
 import { GameObjectGroups } from '../utils/gameObject';
+import { MiscTextureMap } from '../SpriteMap';
 
 export interface CreateNewPlayerEntity {
   userId: number;
@@ -26,6 +26,7 @@ export const createNewPlayerEntity = (world: World, newPlayer: CreateNewPlayerEn
 
   Sprite.texture[player] = MiscTextureMap['player_character']?.textureId ?? 0;
   Sprite.dynamicBody[player] = 1;
+  Sprite.variant[player] = 0;
 
   Collider.static[player] = 1;
   Collider.group[player] = GameObjectGroups.PLAYER;

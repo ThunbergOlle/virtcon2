@@ -1,5 +1,5 @@
-import { Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
-import { getTextureFromTextureId } from '../config/SpriteMap';
+import { Position, Sprite, Velocity, getTextureFromTextureId, getVariantName } from '@virtcon2/network-world-entities';
+
 import { GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 
@@ -18,21 +18,24 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
         console.error('Texture not found for id: ' + texId);
         continue;
       }
+
+      const textureName = getVariantName(texture, Sprite.variant[id]);
+
       const sprite = Sprite.dynamicBody[id]
-        ? scene.physics.add.sprite(Position.x[id], Position.y[id], texture.textureName)
-        : scene.add.sprite(Position.x[id], Position.y[id], texture.textureName);
+        ? scene.physics.add.sprite(Position.x[id], Position.y[id], textureName)
+        : scene.add.sprite(Position.x[id], Position.y[id], textureName);
 
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {
           const animation = texture.animations[i];
           scene.anims.create({
-            key: texture.textureName + '_anim_' + animation.name,
-            frames: scene.anims.generateFrameNumbers(texture.textureName, { frames: animation.frames }),
+            key: textureName + '_anim_' + animation.name,
+            frames: scene.anims.generateFrameNumbers(textureName, { frames: animation.frames }),
             frameRate: animation.frameRate,
             repeat: animation.repeat,
           });
           if (animation.playOnCreate) {
-            sprite.anims.play(texture.textureName + '_anim_' + animation.name);
+            sprite.anims.play(textureName + '_anim_' + animation.name);
           }
         }
       }

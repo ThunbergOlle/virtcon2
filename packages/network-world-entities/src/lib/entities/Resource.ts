@@ -1,9 +1,10 @@
 import { ResourceNames, Resources } from '@virtcon2/static-game-data';
 import { Position, Sprite, Collider, Resource } from '../network-world-entities';
-import { AllTextureMaps } from '../SpriteMap';
+
 import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
+import { AllTextureMaps } from '../SpriteMap';
 
 export const createNewResourceEntity = (
   world: World,
@@ -18,6 +19,7 @@ export const createNewResourceEntity = (
 
   addComponent(world, Sprite, resource);
   Sprite.texture[resource] = AllTextureMaps[data.resourceName]?.textureId ?? 0;
+  Sprite.variant[resource] = data.resourceId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
 
   addComponent(world, Collider, resource);
   Collider.sizeWidth[resource] = Resources[data.resourceName].width * 16;

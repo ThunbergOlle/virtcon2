@@ -65,7 +65,7 @@ export default function InventoryItem({
       ref={drag}
       onClick={() => onClick(inventoryItem)}
       key={inventoryItem.slot}
-      className={`flex flex-col text-center w-16 h-16 bg-[#282828] cursor-pointer hover:bg-[#4b4b4b] ${isDragging && 'cursor-grabbing'}`}
+      className={`flex flex-col rounded-md text-center w-16 h-16 bg-[#282828] cursor-pointer hover:bg-[#4b4b4b] ${isDragging && 'cursor-grabbing'}`}
     >
       <div ref={drop} className="flex flex-col my-auto">
         <img alt={itemMetaData?.display_name} className="flex-1 pixelart w-8  m-auto" src={icon}></img>
@@ -99,7 +99,7 @@ export function InventoryItemPlaceholder({
   return (
     <div
       ref={drop}
-      className={`flex flex-col  text-center w-16 h-16 bg-[#282828] cursor-pointerborder-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b] ${
+      className={`flex flex-col rounded-md text-center w-16 h-16 bg-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b] ${
         canDrop && isOver && '!  bg-green-200'
       } `}
     >
