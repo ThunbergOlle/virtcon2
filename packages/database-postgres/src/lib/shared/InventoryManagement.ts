@@ -64,6 +64,7 @@ async function createNewStack(
   const slot = preferred_slot !== undefined ? empty_inventory_slots.find((s) => s.slot === preferred_slot) : empty_inventory_slots[0];
   slot.itemId = itemId;
   slot.quantity = quantity;
+
   await transaction.save(slot);
   return quantity - slot.quantity;
 }
@@ -175,7 +176,7 @@ export const safelyMoveItemsBetweenInventories = async (options: {
         const refundToInventory =
           fromType === 'user'
             ? UserInventoryItem.addToInventory(queryRunner.manager, fromId, itemId, to_quantity_left, fromSlot)
-            : WorldBuildingInventory.addToInventory(queryRunner.manager, itemId, to_quantity_left, fromSlot);
+            : WorldBuildingInventory.addToInventory(queryRunner.manager, fromId, itemId, to_quantity_left, fromSlot);
         await refundToInventory;
       } else if (to_quantity_left < 0) throw new Error('Tried to move items to inventory that we did not have');
     }

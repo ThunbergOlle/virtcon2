@@ -39,7 +39,7 @@ async function processResourceExtractingBuilding(transaction: EntityManager, wor
     { concurrency: 10 },
   );
 
-  pMap(worldBuildings, (worldBuilding) => publishWorldBuildingInventoryUpdate(worldBuilding.id));
+  return pMap(worldBuildings, (worldBuilding) => publishWorldBuildingInventoryUpdate(worldBuilding.id));
 }
 
 async function processBuildingWithRequirements(transaction: EntityManager, world: World, building: DBBuilding) {
@@ -48,7 +48,7 @@ async function processBuildingWithRequirements(transaction: EntityManager, world
     relations: ['world_building_inventory'],
   });
 
-  pMap(worldBuildings, async (worldBuilding) => {
+  await pMap(worldBuildings, async (worldBuilding) => {
     const requirementsMet = building.processing_requirements.every((req) => {
       const inventory = worldBuilding.world_building_inventory.find((inv) => inv.itemId === req.item.id);
       return inventory && inventory.quantity >= req.quantity;

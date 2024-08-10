@@ -41,22 +41,22 @@ export class WorldBuildingInventory extends BaseEntity {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @BeforeUpdate()
-  async updateDates() {
-    const updatedAt = this.updatedAt;
-    const latest = await WorldBuildingInventory.findOne({ where: { worldBuildingId: this.worldBuildingId, slot: this.slot } });
-    if (latest) {
-      if (Number(latest.updatedAt) !== Number(updatedAt)) {
-        log(`Inventory slot ${this.slot} was updated by someone else`, LogLevel.ERROR);
-        log(`Objects: ${JSON.stringify(latest)} ${JSON.stringify(this)}`, LogLevel.ERROR);
-        log(
-          `Newest: ${latest.updatedAt.toISOString()} Outdated: ${updatedAt.toISOString()} Current time: ${new Date().toISOString()}`,
-          LogLevel.ERROR,
-          LogApp.DATABASE_POSTGRES,
-        );
-      }
-    }
-  }
+  // @BeforeUpdate()
+  // async updateDates() {
+  //   const updatedAt = this.updatedAt;
+  //   const latest = await WorldBuildingInventory.findOne({ where: { worldBuildingId: this.worldBuildingId, slot: this.slot } });
+  //   if (latest) {
+  //     if (Number(latest.updatedAt) !== Number(updatedAt)) {
+  //       log(`Inventory slot ${this.slot} was updated by someone else`, LogLevel.ERROR);
+  //       log(`Objects: ${JSON.stringify(latest)} ${JSON.stringify(this)}`, LogLevel.ERROR);
+  //       log(
+  //         `Newest: ${latest.updatedAt.toISOString()} Outdated: ${updatedAt.toISOString()} Current time: ${new Date().toISOString()}`,
+  //         LogLevel.ERROR,
+  //         LogApp.DATABASE_POSTGRES,
+  //       );
+  //     }
+  //   }
+  // }
 
   // returns remainder of quantity that could not be added
   static async addToInventory(transaction: EntityManager, worldBuildingId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
