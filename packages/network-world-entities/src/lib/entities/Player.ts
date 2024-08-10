@@ -31,6 +31,12 @@ export const createNewPlayerEntity = (world: World, newPlayer: CreateNewPlayerEn
   Collider.static[player] = 1;
   Collider.group[player] = GameObjectGroups.PLAYER;
 
+  Collider.sizeWidth[player] = 8;
+  Collider.offsetX[player] = 4;
+
+  Collider.sizeHeight[player] = 12;
+  Collider.offsetY[player] = 4;
+
   Tag.value[player] = encoder.encode(newPlayer.name);
 
   return player;
