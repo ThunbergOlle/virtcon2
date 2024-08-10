@@ -11,9 +11,12 @@ export enum ResourceNames {
 export interface ResourcesType {
   sprite: string;
   item: DBItemName;
+  full_health: number;
+
   width: number;
   height: number;
-  full_health: number;
+  spriteWidth?: number;
+  spriteHeight?: number;
 }
 
 export const Resources: Record<ResourceNames, ResourcesType> = {
@@ -27,9 +30,12 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   [ResourceNames.WOOD]: {
     item: DBItemName.WOOD,
     sprite: 'resource_wood',
-    width: 1,
-    height: 1,
     full_health: 5,
+
+    height: 2,
+    width: 1,
+    spriteHeight: 3,
+    spriteWidth: 2,
   },
   [ResourceNames.STONE]: {
     item: DBItemName.STONE,
@@ -41,6 +47,8 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   [ResourceNames.COAL]: {
     item: DBItemName.COAL,
     sprite: 'resource_coal',
+    spriteHeight: 2,
+    spriteWidth: 2,
     width: 1,
     height: 1,
     full_health: 5,
@@ -50,6 +58,8 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
     sprite: 'resource_iron',
     width: 1,
     height: 1,
+    spriteHeight: 2,
+    spriteWidth: 2,
     full_health: 5,
   },
 };

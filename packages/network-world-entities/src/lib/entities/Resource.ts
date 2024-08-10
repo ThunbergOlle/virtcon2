@@ -1,4 +1,4 @@
-import { ResourceNames, Resources } from '@virtcon2/static-game-data';
+import { get_resource_by_item_name, ResourceNames, Resources } from '@virtcon2/static-game-data';
 import { Position, Sprite, Collider, Resource } from '../network-world-entities';
 
 import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
@@ -12,6 +12,7 @@ export const createNewResourceEntity = (
 ): number => {
   const { x, y } = toPhaserPos({ x: data.pos.x, y: data.pos.y });
   const resource = addEntity(world);
+  const resourceInfo = Resources[data.resourceName];
 
   addComponent(world, Position, resource);
   Position.x[resource] = x;
@@ -22,10 +23,18 @@ export const createNewResourceEntity = (
   Sprite.variant[resource] = data.resourceId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
 
   addComponent(world, Collider, resource);
-  Collider.sizeWidth[resource] = Resources[data.resourceName].width * 16;
-  Collider.sizeHeight[resource] = Resources[data.resourceName].height * 16;
+  Collider.sizeWidth[resource] = resourceInfo.width * 16;
+  Collider.sizeHeight[resource] = resourceInfo.height * 16;
   Collider.offsetX[resource] = 0;
   Collider.offsetY[resource] = 0;
+
+  if (resourceInfo.spriteHeight && resourceInfo.spriteHeight !== resourceInfo.height) {
+    Collider.offsetY[resource] = (-(resourceInfo.height - resourceInfo.spriteHeight) * 16) / 2;
+  }
+  if (resourceInfo.spriteWidth && resourceInfo.spriteWidth !== resourceInfo.width) {
+    Collider.offsetX[resource] = (-(resourceInfo.width - resourceInfo.spriteWidth) * 16) / 2;
+  }
+
   Collider.static[resource] = 1;
   Collider.group[resource] = GameObjectGroups.RESOURCE;
 

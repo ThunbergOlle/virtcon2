@@ -45,7 +45,8 @@ export const CrafterRecipeItem = ({ itemRecipeId, inventoryItems }: { itemRecipe
     }, 0);
   }, [inventoryItems, data]);
 
-  console.log(data);
+  const icon = useMemo(() => Game.getInstance().textures.getBase64((data.requiredItem?.name || '') + '_0'), [data.requiredItem]);
+
   if (!data?.id) return null;
 
   return (
@@ -53,7 +54,7 @@ export const CrafterRecipeItem = ({ itemRecipeId, inventoryItems }: { itemRecipe
       key={`recipe-${itemRecipeId}-${data.requiredItem.id}`}
       className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
     >
-      <img alt={data.requiredItem.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${data.requiredItem.name}.png`}></img>
+      <img alt={data.requiredItem.display_name} className="flex-1 pixelart w-12  m-auto" src={icon} />
       <p className="flex-1 m-[-8px]">
         {inventoryQuantity || 0}/{data.requiredQuantity}
       </p>

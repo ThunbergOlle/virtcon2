@@ -22,7 +22,7 @@ export const CrafterSideBarItem = ({ itemId, selectItem }: { itemId: number; sel
     return null;
   }
 
-  const icon = Game.getInstance().textures.getBase64(data?.name || '');
+  const icon = Game.getInstance().textures.getBase64((data?.name || '') + '_0');
 
   return (
     <div

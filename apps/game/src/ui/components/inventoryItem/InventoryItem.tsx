@@ -58,7 +58,7 @@ export default function InventoryItem({
     [inventoryItem],
   );
 
-  const icon = useMemo(() => Game.getInstance().textures.getBase64(itemMetaData?.name || ''), [itemMetaData]);
+  const icon = useMemo(() => Game.getInstance().textures.getBase64((itemMetaData?.name || '') + '_0'), [itemMetaData]);
 
   return (
     <div

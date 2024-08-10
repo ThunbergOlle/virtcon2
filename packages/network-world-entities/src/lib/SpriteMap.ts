@@ -124,12 +124,12 @@ export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> =
   [ResourceNames.WOOD]: {
     textureId: 101,
     textureName: 'resource_wood',
-    variants: ['sprites/resources/wood.png'],
+    variants: ['sprites/resources/wood.png', 'sprites/resources/wood_1.png'],
   },
   [ResourceNames.STONE]: {
     textureId: 102,
     textureName: 'resource_stone',
-    variants: ['sprites/resources/stone_0.png', 'sprites/resources/stone_1.png'],
+    variants: ['sprites/resources/stone_0.png', 'sprites/resources/stone_1.png', 'sprites/resources/stone_2.png'],
   },
   [ResourceNames.IRON]: {
     textureId: 103,
