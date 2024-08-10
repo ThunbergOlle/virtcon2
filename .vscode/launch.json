@@ -2,17 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug server",
+      "name": "Debug API",
       "type": "node",
       "request": "attach",
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "port": 7778
     },
     {
-      "name": "Debug data server",
+      "name": "Debug game server",
       "type": "node",
       "request": "attach",
       "cwd": "${workspaceFolder}",
       "port": 7777
+    },
+    {
+      "name": "Debug game",
+      "type": "node",
+      "request": "attach",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

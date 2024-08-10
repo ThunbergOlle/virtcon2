@@ -4,7 +4,9 @@
   "license": "MIT",
   "scripts": {
     "start": "nx run-many --parallel --target=serve --maxParallel=100",
-    "linux": "yarn nx run-many --target=serve",
+    "start-game-server": "nx run packet_router:serve:development -- --inspect=true --port=7777",
+    "start-api": "nx run api:serve:development -- --inspect=true --port=7778",
+    "start-game": "nx run game:serve:development -- --inspect=true",
     "redis": "docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest"
   },
   "private": true,
