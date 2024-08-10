@@ -30,4 +30,7 @@ export class WorldResource extends BaseEntity {
   @OneToOne(() => WorldBuilding, { nullable: true })
   @JoinColumn()
   world_building: WorldBuilding | null;
+
+  @Column({ type: 'int', nullable: true })
+  worldBuildingId: number;
 }

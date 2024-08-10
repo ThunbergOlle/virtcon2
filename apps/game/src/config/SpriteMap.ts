@@ -19,6 +19,17 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     textureId: 1,
     textureName: 'building_sawmill',
     texturePath: 'sprites/items/building_sawmill.png',
+    animations: [
+      {
+        name: 'idle',
+        frames: [0, 1],
+        frameRate: 20,
+        repeat: -1,
+        playOnCreate: true,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
   },
   [DBItemName.WOOD]: {
     textureId: 2,

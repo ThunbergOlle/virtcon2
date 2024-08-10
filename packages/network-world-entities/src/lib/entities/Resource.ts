@@ -7,7 +7,7 @@ import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
 
 export const createNewResourceEntity = (
   world: World,
-  data: { resourceName: ResourceNames; pos: TileCoordinates; itemId: number; resourceId: number },
+  data: { resourceName: ResourceNames; pos: TileCoordinates; itemId: number; resourceId: number; worldBuildingId: number },
 ): number => {
   const { x, y } = toPhaserPos({ x: data.pos.x, y: data.pos.y });
   const resource = addEntity(world);
@@ -31,6 +31,7 @@ export const createNewResourceEntity = (
   Resource.health[resource] = 5;
   Resource.itemId[resource] = data.itemId;
   Resource.id[resource] = data.resourceId;
+  Resource.worldBuildingId[resource] = data.worldBuildingId;
 
   return resource;
 };

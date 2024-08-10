@@ -1,9 +1,10 @@
-import { MainPlayer, Player } from '@virtcon2/network-world-entities';
+import { MainPlayer, Player, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { GameState } from '../scenes/Game';
 import { setMainPlayerEntity } from './MainPlayerSystem';
 import { defineQuery, defineSystem, enterQuery, Not, World } from '@virtcon2/bytenetc';
+import { getTextureFromTextureId } from '../config/SpriteMap';
 
-const playerQuery = defineQuery(Player, Not(MainPlayer));
+const playerQuery = defineQuery(Player, Sprite, Velocity);
 const playerQueryEnter = enterQuery(playerQuery);
 
 export const createPlayerSystem = (world: World, mainPlayerId: number) => {
@@ -18,6 +19,21 @@ export const createPlayerSystem = (world: World, mainPlayerId: number) => {
       );
       if (Player.userId[eid] === mainPlayerId) {
         setMainPlayerEntity(world, eid);
+      }
+    }
+
+    const entities = playerQuery(world);
+    for (let i = 0; i < entities.length; i++) {
+      const id = entities[i];
+      const isWalking = Math.abs(Velocity.x[id]) > 0 || Math.abs(Velocity.y[id]) > 0;
+      const sprite = state.spritesById[id];
+      if (sprite) {
+        const textureName = getTextureFromTextureId(Sprite.texture[id])?.textureName;
+        const animationPrefix = `${textureName}_anim`;
+        const animationName = `${animationPrefix}_${isWalking ? 'walk' : 'idle'}`;
+
+        sprite.anims.play(animationName, true);
+        if (Velocity.x[id] !== 0) sprite.flipX = Velocity.x[id] < 0;
       }
     }
 

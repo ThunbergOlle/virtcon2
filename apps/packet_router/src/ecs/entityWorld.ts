@@ -45,6 +45,7 @@ export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
       },
       resourceId: resource.id,
       itemId: resource.item.id,
+      worldBuildingId: resource.worldBuildingId,
     });
   }
 };

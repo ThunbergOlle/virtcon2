@@ -4,7 +4,7 @@ import { Types } from 'phaser';
 import { toast } from 'react-toastify';
 import Game, { GameState } from '../scenes/Game';
 import { Resource, Sprite, Collider } from '@virtcon2/network-world-entities';
-import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
+import { defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 
 const resourceQuery = defineQuery(Resource, Sprite, Collider);
 const resourceEnterQuery = enterQuery(resourceQuery);
@@ -15,6 +15,10 @@ export const createResourceSystem = (world: World) => {
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
+      if (Resource.worldBuildingId[id]) {
+        removeEntity(world, id);
+        continue;
+      }
       // The name is important so we can check what type of resource we collided with just based off the name.
       sprite.setName(`resource-${get_item_by_id(Resource.itemId[id])?.name}`);
       if (sprite) {

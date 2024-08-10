@@ -19,8 +19,8 @@ export const item_sawmill: DBItem = {
 export const building_sawmill: DBBuilding = {
   name: DBItemName.BUILDING_SAWMILL,
   id: BUILDING_ID,
-  height: 2,
-  width: 2,
+  height: 1,
+  width: 1,
   item: item_sawmill,
   processing_ticks: 100,
   items_to_be_placed_on: [item_wood],
