@@ -1,5 +1,5 @@
 import { Field, Float, Int, ObjectType } from 'type-graphql';
-import { AfterInsert, AfterUpdate, BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Building } from '../building/Building';
 import { World } from '../world/World';
 import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
@@ -8,8 +8,6 @@ import { WorldResource } from '../world_resource/WorldResource';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 export const pubsub = new RedisPubSub();
-
-export const TOPIC_BUILDING_UPDATE = 'BUILDING_UPDATE';
 
 @ObjectType()
 @Entity()
@@ -68,10 +66,4 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   active: boolean;
-
-  @AfterInsert()
-  @AfterUpdate()
-  async publishUpdate() {
-    pubsub.publish(`${TOPIC_BUILDING_UPDATE}.${this.id}`, this);
-  }
 }

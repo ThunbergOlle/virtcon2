@@ -134,8 +134,9 @@ server.listen(4000, () => {
 
 const tickInterval = setInterval(async () => {
   tick++;
-  for (const world of worlds) {
-    checkFinishedBuildings(world, tick);
+  for (let i = 0; i < worlds.length; i++) {
+    const world = worlds[i];
+    await checkFinishedBuildings(world, tick);
     if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     const packets = await getAllPackets(redisClient, world);

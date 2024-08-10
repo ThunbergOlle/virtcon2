@@ -22,7 +22,6 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Sending login request');
     mutateLogin({ variables: { email, password } });
   };
 

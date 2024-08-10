@@ -1,8 +1,8 @@
-import { Building, Item, ItemRecipe, UserInventoryItem } from '@virtcon2/database-postgres';
+import { AppDataSource, Building, Item, ItemRecipe, publishUserInventoryUpdate, UserInventoryItem } from '@virtcon2/database-postgres';
 import { Arg, Ctx, FieldResolver, Int, Mutation, Query, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
 
-@Resolver((of) => Item)
+@Resolver(() => Item)
 export class ItemResolver implements ResolverInterface<Item> {
   @Query(() => [Item], { nullable: true })
   async items() {
@@ -55,14 +55,18 @@ export class ItemResolver implements ResolverInterface<Item> {
     if (!hasRequiredItems) {
       throw new Error('Missing required items');
     }
-    /* Remove the required items from the user's inventory */
-    await Promise.all(
-      requiredItems.map(async (requiredItem) => {
-        await UserInventoryItem.addToInventory(context.user.id, requiredItem.item.id, -requiredItem.quantity);
-      }),
-    );
-    /* Add the crafted item to the user's inventory */
-    await UserInventoryItem.addToInventory(context.user.id, item.id, quantity);
+    await AppDataSource.transaction(async (transaction) => {
+      /* Remove the required items from the user's inventory */
+      await Promise.all(
+        requiredItems.map(async (requiredItem) => {
+          await UserInventoryItem.addToInventory(transaction, context.user.id, requiredItem.item.id, -requiredItem.quantity);
+        }),
+      );
+      /* Add the crafted item to the user's inventory */
+      await UserInventoryItem.addToInventory(transaction, context.user.id, item.id, quantity);
+    });
+
+    publishUserInventoryUpdate(context.user.id);
     /* Return the crafted item */
     return await UserInventoryItem.findOne({ where: { user: { id: context.user.id }, item: { id: item.id } }, relations: ['item'] });
   }

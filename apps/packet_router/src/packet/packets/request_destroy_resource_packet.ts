@@ -1,5 +1,5 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { User, UserInventoryItem, WorldResource } from '@virtcon2/database-postgres';
+import { AppDataSource, publishUserInventoryUpdate, User, UserInventoryItem, WorldResource } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 
 export default async function request_destroy_resource_packet(packet: ClientPacketWithSender<RequestDestroyResourcePacket>) {
@@ -18,5 +18,7 @@ export default async function request_destroy_resource_packet(packet: ClientPack
     log(`Player ${player_id} not found`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
     return;
   }
-  UserInventoryItem.addToInventory(player_id, received_item.id, 1);
+
+  await AppDataSource.transaction(async (transaction) => UserInventoryItem.addToInventory(transaction, player_id, received_item.id, 1));
+  await publishUserInventoryUpdate(player_id);
 }

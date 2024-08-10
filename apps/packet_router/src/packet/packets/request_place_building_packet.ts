@@ -1,5 +1,13 @@
 import { log, LogApp, LogLevel } from '@shared';
-import { Item, UserInventoryItem, WorldBuilding, WorldBuildingInventory, WorldResource } from '@virtcon2/database-postgres';
+import {
+  AppDataSource,
+  Item,
+  publishUserInventoryUpdate,
+  UserInventoryItem,
+  WorldBuilding,
+  WorldBuildingInventory,
+  WorldResource,
+} from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 
@@ -62,7 +70,9 @@ export default async function request_place_building_packet(packet: ClientPacket
   }
 
   /* Remove the item from players inventory */
-  await UserInventoryItem.addToInventory(player_id, packet.data.buildingItemId, -1);
+  await AppDataSource.transaction(async (transaction) =>
+    UserInventoryItem.addToInventory(transaction, player_id, packet.data.buildingItemId, -1).then(() => publishUserInventoryUpdate(player_id)),
+  );
 
   // Update the output of the buildings that are next to the new building
   const positionsThatBuildingOccupies: [number, number][] = [];

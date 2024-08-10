@@ -226,11 +226,7 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
-    console.log(`Deserializing ${data.length} entities...`);
-    console.log(data);
     const entityId = deserialize(world, data);
-    console.log(`Entity ID: ${entityId}`);
-    console.log(debugEntity(world, entityId[0]));
   }
 };
 

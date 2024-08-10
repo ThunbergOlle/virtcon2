@@ -1,10 +1,8 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { TOPIC_INVENTORY_UPDATE, User, UserInventoryItem, World } from '@virtcon2/database-postgres';
-import { withFilter } from 'graphql-subscriptions';
-import { Arg, Ctx, ID, Mutation, Query, Resolver, Subscription } from 'type-graphql';
+import { User, UserInventoryItem, World } from '@virtcon2/database-postgres';
+import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
 import { EmailService } from '../../service/EmailService';
-import { subscribe } from '../../service/RedisService';
 import { GenerateToken } from '../../utils/GenerateToken';
 import { HashPassword } from '../../utils/HashPassword';
 import RandomCode from '../../utils/RandomCode';

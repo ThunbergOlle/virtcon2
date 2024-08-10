@@ -1,7 +1,7 @@
 import { Item, WorldBuilding, WorldBuildingInventory } from '@virtcon2/database-postgres';
 import { FieldResolver, Resolver, ResolverInterface, Root } from 'type-graphql';
 
-@Resolver((of) => WorldBuildingInventory)
+@Resolver(() => WorldBuildingInventory)
 export class WorldBuildingInventoryResolver implements ResolverInterface<WorldBuildingInventory> {
   @FieldResolver(() => WorldBuilding)
   async world_building(@Root() worldBuildingInventory: WorldBuildingInventory): Promise<WorldBuilding> {

@@ -46,6 +46,7 @@ async function request_move_inventory_item_inside_player_inventory(packet: Clien
     toType: 'user',
     fromSlot: packet.data.fromInventorySlot,
     toSlot: packet.data.toInventorySlot,
+    log: true,
   });
 }
 async function request_move_inventory_item_to_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
@@ -110,16 +111,14 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
     return;
   }
 
-  const quantity_remainder = await WorldBuildingInventory.addToInventory(
-    building_to_drop_in.id,
-    packet.data.inventoryItem.item.id,
-    packet.data.inventoryItem.quantity,
-    packet.data.toInventorySlot,
-  );
-  await UserInventoryItem.addToInventory(
-    packet.sender.id,
-    packet.data.inventoryItem.item.id,
-    -(packet.data.inventoryItem.quantity - quantity_remainder),
-    packet.data.fromInventorySlot,
-  );
+  await safelyMoveItemsBetweenInventories({
+    fromId: packet.sender.id,
+    toId: building_to_drop_in.id,
+    itemId: packet.data.inventoryItem.item.id,
+    quantity: packet.data.inventoryItem.quantity,
+    fromType: 'user',
+    toType: 'building',
+    fromSlot: packet.data.fromInventorySlot,
+    toSlot: packet.data.toInventorySlot,
+  });
 }

@@ -4,7 +4,6 @@ export * from './lib/types/redis/RedisTypes';
 
 export * from './lib/types/redis/RedisPlayer';
 
-
 export * from './lib/types/redis/RedisInventoryItem';
 
 export * from './lib/errors/errorTypes';
@@ -26,3 +25,5 @@ export * from './lib/types/redis/RedisWorldBuilding';
 export * from './lib/types/inventoryType';
 
 export * from './lib/utils/worldMapParser';
+
+export * from './lib/utils/functional';

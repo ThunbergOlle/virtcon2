@@ -3,13 +3,14 @@ import { Arg, FieldResolver, ID, Query, Resolver, ResolverInterface, Root, Subsc
 import { withFilter } from 'graphql-subscriptions';
 import { subscribe } from '../../service/RedisService';
 
-@Resolver((of) => UserInventoryItem)
+@Resolver(() => UserInventoryItem)
 export class UserInventoryItemResolver implements ResolverInterface<UserInventoryItem> {
+  @Query(() => [UserInventoryItem], { nullable: false })
   @Subscription(() => [UserInventoryItem], {
     subscribe: withFilter(
       (_, args) => subscribe.asyncIterator(`${TOPIC_INVENTORY_UPDATE}.${args.userId}`),
       (payload, variables) => {
-        return payload.userId === parseInt(variables.userId);
+        return payload === parseInt(variables.userId);
       },
     ),
   })
@@ -20,6 +21,7 @@ export class UserInventoryItemResolver implements ResolverInterface<UserInventor
   ) {
     return UserInventoryItem.find({
       where: { user: { id: userId } },
+      cache: false,
     });
   }
 

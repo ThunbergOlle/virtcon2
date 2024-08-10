@@ -18,7 +18,6 @@ async function SetupItems() {
   for (const item of all_db_items) {
     // validate the
     const result = validate(item, itemsSchema);
-    console.log(item);
     if (result.errors.length > 0) {
       log(`Invalid item: ${item}, ${result.errors}`, LogLevel.ERROR, LogApp.API);
       continue;

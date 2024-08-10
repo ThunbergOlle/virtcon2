@@ -3,14 +3,14 @@ import { withFilter } from 'graphql-subscriptions';
 import { Arg, FieldResolver, ID, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
 import { subscribe } from '../../service/RedisService';
 
-@Resolver((of) => WorldBuilding)
+@Resolver(() => WorldBuilding)
 export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   @Query(() => WorldBuilding)
   @Subscription(() => WorldBuilding, {
     subscribe: withFilter(
       (_, args) => subscribe.asyncIterator(`${TOPIC_BUILDING_UPDATE}.${args.id}`),
       (payload, variables) => {
-        return payload.id === parseInt(variables.id);
+        return payload === parseInt(variables.id);
       },
     ),
   })

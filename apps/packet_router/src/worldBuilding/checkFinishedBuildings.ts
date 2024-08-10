@@ -1,54 +1,69 @@
+import { pMap } from '@shared';
 import { World } from '@virtcon2/bytenetc';
-import { addToInventory, safelyMoveItemsBetweenInventories, WorldBuilding } from '@virtcon2/database-postgres';
+import {
+  addToInventory,
+  AppDataSource,
+  publishWorldBuildingInventoryUpdate,
+  safelyMoveItemsBetweenInventories,
+  WorldBuilding,
+} from '@virtcon2/database-postgres';
 import { all_db_buildings, DBBuilding } from '@virtcon2/static-game-data';
-import { IsNull, Not } from 'typeorm';
+import { EntityManager, IsNull, Not } from 'typeorm';
 
 export default async function checkFinishedBuildings(world: World, tick: number) {
   const processBuildings = all_db_buildings.filter((building) => tick % building.processing_ticks === 0);
   if (processBuildings.length === 0) return;
 
-  for (const buildingId of processBuildings) {
-    await processBuilding(world, buildingId);
-  }
-  processInventories(world);
+  await AppDataSource.manager.transaction(async (transaction) =>
+    pMap(processBuildings, (building) => processBuilding(transaction, world, building), { concurrency: 10 }),
+  );
+  await processInventories(world);
 }
 
-async function processBuilding(world: World, building: DBBuilding) {
-  if (!building.processing_requirements.length && building.output_item) return processResourceExtractingBuilding(world, building);
-  if (building.processing_requirements.length) return processBuildingWithRequirements(world, building);
+async function processBuilding(transaction: EntityManager, world: World, building: DBBuilding) {
+  if (!building.processing_requirements.length && building.output_item) return processResourceExtractingBuilding(transaction, world, building);
+  if (building.processing_requirements.length) return processBuildingWithRequirements(transaction, world, building);
 }
 
-async function processResourceExtractingBuilding(world: World, building: DBBuilding) {
+async function processResourceExtractingBuilding(transaction: EntityManager, world: World, building: DBBuilding) {
   const worldBuildings = await WorldBuilding.find({
     where: { building: { id: building.id }, world: { id: world } },
     relations: ['world_building_inventory'],
   });
 
-  for (const worldBuilding of worldBuildings) {
-    await addToInventory(worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
-  }
+  await pMap(
+    worldBuildings,
+    async (worldBuilding) => {
+      await addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
+    },
+    { concurrency: 10 },
+  );
+
+  pMap(worldBuildings, (worldBuilding) => publishWorldBuildingInventoryUpdate(worldBuilding.id));
 }
 
-async function processBuildingWithRequirements(world: World, building: DBBuilding) {
+async function processBuildingWithRequirements(transaction: EntityManager, world: World, building: DBBuilding) {
   const worldBuildings = await WorldBuilding.find({
     where: { building: { id: building.id }, world: { id: world } },
     relations: ['world_building_inventory'],
   });
 
-  for (const worldBuilding of worldBuildings) {
+  pMap(worldBuildings, async (worldBuilding) => {
     const requirementsMet = building.processing_requirements.every((req) => {
       const inventory = worldBuilding.world_building_inventory.find((inv) => inv.itemId === req.item.id);
       return inventory && inventory.quantity >= req.quantity;
     });
 
-    if (!requirementsMet) continue;
+    if (!requirementsMet) return;
 
-    for (const requirement of building.processing_requirements) {
-      await addToInventory(worldBuilding.world_building_inventory, requirement.item.id, -requirement.quantity);
-    }
+    await pMap(building.processing_requirements, (requirement) =>
+      addToInventory(transaction, worldBuilding.world_building_inventory, requirement.item.id, -requirement.quantity),
+    );
 
-    await addToInventory(worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
-  }
+    await addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
+  });
+
+  return pMap(worldBuildings, (worldBuilding) => publishWorldBuildingInventoryUpdate(worldBuilding.id));
 }
 
 async function processInventories(world: World) {
@@ -64,7 +79,8 @@ async function processInventories(world: World) {
     ],
   });
 
-  for (const worldBuilding of worldBuildings) {
+  for (let i = 0; i < worldBuildings.length; i++) {
+    const worldBuilding = worldBuildings[i];
     const itemsToMove = worldBuilding.world_building_inventory.find((inv) => inv.itemId);
     if (!itemsToMove) continue;
 

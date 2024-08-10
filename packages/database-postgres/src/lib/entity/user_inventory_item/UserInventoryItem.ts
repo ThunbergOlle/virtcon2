@@ -1,13 +1,18 @@
+import { log } from '@shared';
+import { DBUserInventoryItem } from '@virtcon2/static-game-data';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { AfterInsert, AfterUpdate, BaseEntity, Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, EntityManager, ManyToOne, PrimaryColumn } from 'typeorm';
 import { addToInventory } from '../../shared/InventoryManagement';
 import { Item } from '../item/Item';
 import { User } from '../user/User';
-import { RedisPubSub } from 'graphql-redis-subscriptions';
-import { DBUserInventoryItem } from '@virtcon2/static-game-data';
 
 const pubsub = new RedisPubSub();
-export const TOPIC_INVENTORY_UPDATE = 'BUILDING_UPDATE';
+export const TOPIC_INVENTORY_UPDATE = 'USER_INVENTORY_UPDATE';
+export const publishUserInventoryUpdate = async function (userId: number) {
+  log(`Publishing update for ${TOPIC_INVENTORY_UPDATE}.${userId}`);
+  return pubsub.publish(`${TOPIC_INVENTORY_UPDATE}.${userId}`, userId);
+};
 
 @ObjectType()
 @Entity()
@@ -33,23 +38,17 @@ export class UserInventoryItem extends BaseEntity implements DBUserInventoryItem
   @Column({ type: 'int', default: 0 })
   quantity: number;
 
-  @AfterInsert()
-  @AfterUpdate()
-  publishUpdate() {
-    return pubsub.publish(`${TOPIC_INVENTORY_UPDATE}.${this.userId}`, this);
-  }
-
-  static async addToInventory(userId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
+  static async addToInventory(transaction: EntityManager, userId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
     if (quantity === 0) {
       return;
     }
 
-    const slots = await UserInventoryItem.find({
+    const slots = await transaction.find(UserInventoryItem, {
       where: { user: { id: userId } },
       relations: ['item'],
       order: { slot: 'ASC' },
     });
 
-    return await addToInventory(slots, itemId, quantity, slot);
+    return await addToInventory(transaction, slots, itemId, quantity, slot);
   }
 }
