@@ -127,9 +127,9 @@ export default function WorldBuildingWindow() {
             <WorldBuildingOutput onNewPositionSelected={onNewOutputPositionSelected} worldBuildingId={worldBuilding?.id} />
           </div>
         </div>
-        <div>
+        <div className="flex-[3]">
           <h2 className="text-2xl">Inventory</h2>
-          <div className="flex flex-row flex-wrap w-full ">
+          <div className="flex flex-row flex-wrap gap-2">
             {worldBuilding &&
               inventorySorted.map((item) => {
                 return item && item.item ? (
@@ -149,12 +149,6 @@ export default function WorldBuildingWindow() {
                   <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
                 );
               })}
-          </div>
-        </div>
-        <div className="justify-self-end place-items-end flex-1 flex">
-          <div className="w-full my-3">
-            <p className="text-md">Building processing progress </p>
-            {/* {activeWorldBuilding ? <ProgressBar now={tickProgress} max={activeBuilding?.processing_ticks || 0} /> : null} */}
           </div>
         </div>
       </div>

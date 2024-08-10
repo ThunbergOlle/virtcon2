@@ -1,7 +1,7 @@
-import { LogApp, LogLevel, log } from '@shared';
+import { LogLevel, log } from '@shared';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, BeforeUpdate, Column, Entity, EntityManager, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, EntityManager, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { addToInventory } from '../../shared/InventoryManagement';
 import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';

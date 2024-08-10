@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
 import { UserInventoryItem } from '@virtcon2/database-postgres';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,12 +11,27 @@ import { useUser } from '../../context/user/UserContext';
 import { isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 import { CRAFTER_SIDE_BAR_ITEM_FRAGMENT, CrafterSideBarItem } from './CrafterSidebarItem';
 import { CRAFT_MUTATION } from './CrafterWindowGraphQL';
-import { CRAFTER_RECIPE_ITEM_FRAGMENT, CrafterRecipeItem } from './RecipeItem';
+import { CRAFTER_RECIPE_INVENTORY_FRAGMENT, CRAFTER_RECIPE_ITEM_FRAGMENT, CrafterRecipeItem } from './RecipeItem';
 
 const CRAFTER_WINDOW_QUERY = gql`
   ${CRAFTER_SIDE_BAR_ITEM_FRAGMENT}
   ${CRAFTER_RECIPE_ITEM_FRAGMENT}
-  query CrafterWindow($userId: ID!) {
+  query CrafterWindow {
+    items {
+      id
+      display_name
+      recipe {
+        id
+        ...CrafterRecipeItemFragment
+      }
+      ...CrafterSideBarItemFragment
+    }
+  }
+`;
+
+const PLAYER_INVENTORY_QUERY = gql`
+  ${CRAFTER_RECIPE_INVENTORY_FRAGMENT}
+  query PlayerInventoryWindow($userId: ID!) {
     userInventory(userId: $userId) {
       quantity
       slot
@@ -26,19 +41,11 @@ const CRAFTER_WINDOW_QUERY = gql`
       }
       ...CrafterRecipeInventoryFragment
     }
-    items {
-      id
-      display_name
-      recipe {
-        id
-      }
-      ...CrafterSideBarItemFragment
-      ...CrafterRecipeItemFragment
-    }
   }
 `;
 
 const PLAYER_INVENTORY_SUBSCRIPTION = gql`
+  ${CRAFTER_RECIPE_INVENTORY_FRAGMENT}
   subscription CrafterWindow($userId: ID!) {
     userInventory(userId: $userId) {
       quantity
@@ -47,6 +54,7 @@ const PLAYER_INVENTORY_SUBSCRIPTION = gql`
         id
         display_name
       }
+      ...CrafterRecipeInventoryFragment
     }
   }
 `;
@@ -56,9 +64,32 @@ export default function CrafterWindow() {
   const { id } = useUser();
 
   const { data, error, loading } = useQuery<{ items: DBItem[]; userInventory: UserInventoryItem[] }>(CRAFTER_WINDOW_QUERY, {
+    skip: !isOpen,
+  });
+
+  const { data: inventoryData, subscribeToMore } = useQuery<{ userInventory: UserInventoryItem[] }>(PLAYER_INVENTORY_QUERY, {
     variables: { userId: id },
     skip: !isOpen,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      const unsubscribe = subscribeToMore({
+        document: PLAYER_INVENTORY_SUBSCRIPTION,
+        variables: { userId: id },
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          return {
+            userInventory: subscriptionData.data.userInventory,
+          };
+        },
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [id, isOpen, subscribeToMore]);
 
   const [mutateCraftItem, craftItemMutation] = useMutation(CRAFT_MUTATION);
 
@@ -122,7 +153,7 @@ export default function CrafterWindow() {
 
               <div className="flex flex-[5] flex-row flex-wrap  bg-[#282828] mx-10 ">
                 {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => (
-                  <CrafterRecipeItem itemRecipeId={recipeItem.id} inventoryItems={data?.userInventory || []} />
+                  <CrafterRecipeItem itemRecipeId={recipeItem.id} inventoryItems={inventoryData?.userInventory || []} />
                 ))}
               </div>
               <div className="my-4 mx-10 flex-1 flex flex-col  ">

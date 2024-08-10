@@ -189,35 +189,30 @@ export default function PlayerInventoryWindow() {
   return (
     <Window
       title="Inventory"
-      width={800}
-      height={500}
+      width={600}
+      height={600}
       defaultPosition={{ x: window.innerWidth / 2 - 400, y: 40 }}
       windowType={WindowType.VIEW_PLAYER_INVENTORY}
       fullWindowLoading={loading}
       errors={[error]}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex-1">
-          <h2 className="text-2xl">Inventory</h2>
-          <div className="flex flex-row flex-wrap">
-            {sortedInventory.map((inventoryItem: DBUserInventoryItem) => {
-              return inventoryItem.item ? (
-                <InventoryItem
-                  key={inventoryItem.slot}
-                  inventoryItem={inventoryItem}
-                  slot={inventoryItem.slot}
-                  onDrop={onInventoryDropItem}
-                  onClick={() => onItemWasClicked(inventoryItem)}
-                  fromInventoryType={InventoryType.PLAYER}
-                  fromInventoryId={0}
-                  fromInventorySlot={inventoryItem.slot}
-                />
-              ) : (
-                <InventoryItemPlaceholder key={inventoryItem.slot} inventoryId={0} slot={inventoryItem.slot} onDrop={onInventoryDropItem} />
-              );
-            })}
-          </div>
-        </div>
+      <div className="grid grid-cols-8 grid-rows-8 gap-2">
+        {sortedInventory.map((inventoryItem: DBUserInventoryItem) => {
+          return inventoryItem.item ? (
+            <InventoryItem
+              key={inventoryItem.slot}
+              inventoryItem={inventoryItem}
+              slot={inventoryItem.slot}
+              onDrop={onInventoryDropItem}
+              onClick={() => onItemWasClicked(inventoryItem)}
+              fromInventoryType={InventoryType.PLAYER}
+              fromInventoryId={0}
+              fromInventorySlot={inventoryItem.slot}
+            />
+          ) : (
+            <InventoryItemPlaceholder key={inventoryItem.slot} inventoryId={0} slot={inventoryItem.slot} onDrop={onInventoryDropItem} />
+          );
+        })}
       </div>
     </Window>
   );

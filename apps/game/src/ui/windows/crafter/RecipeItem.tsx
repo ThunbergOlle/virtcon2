@@ -4,17 +4,18 @@ import { UserInventoryItem } from '@virtcon2/database-postgres';
 import { useMemo } from 'react';
 
 export const CRAFTER_RECIPE_ITEM_FRAGMENT = gql`
-  fragment CrafterRecipeItemFragment on Item {
-    recipe {
+  fragment CrafterRecipeItemFragment on ItemRecipe {
+    id
+    requiredItem {
       id
-      requiredItem {
-        id
-        display_name
-        name
-      }
-      requiredQuantity
+      display_name
+      name
     }
+    requiredQuantity
   }
+`;
+
+export const CRAFTER_RECIPE_INVENTORY_FRAGMENT = gql`
   fragment CrafterRecipeInventoryFragment on UserInventoryItem {
     item {
       id
@@ -26,6 +27,7 @@ export const CRAFTER_RECIPE_ITEM_FRAGMENT = gql`
 export const CrafterRecipeItem = ({ itemRecipeId, inventoryItems }: { itemRecipeId: number; inventoryItems: UserInventoryItem[] }) => {
   const { data } = useFragment({
     fragment: CRAFTER_RECIPE_ITEM_FRAGMENT,
+    fragmentName: 'CrafterRecipeItemFragment',
     from: {
       __typename: 'ItemRecipe',
       id: itemRecipeId,
@@ -33,16 +35,22 @@ export const CrafterRecipeItem = ({ itemRecipeId, inventoryItems }: { itemRecipe
   });
 
   const inventoryQuantity = useMemo(() => {
-    if (!data?.requiredItem.id) return 0;
+    if (!data?.requiredItem?.id) return 0;
 
-    return inventoryItems.find((i) => i.item?.id === data?.requiredItem.id)?.quantity || 0;
+    return inventoryItems.reduce((acc, i) => {
+      if (i.item?.id === data.requiredItem.id) {
+        return acc + i.quantity;
+      }
+      return acc;
+    }, 0);
   }, [inventoryItems, data]);
 
+  console.log(data);
   if (!data?.id) return null;
 
   return (
     <div
-      key={`recipe-${data.requiredItem.id}`}
+      key={`recipe-${itemRecipeId}-${data.requiredItem.id}`}
       className="flex flex-col text-center w-20 h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]"
     >
       <img alt={data.requiredItem.display_name} className="flex-1 pixelart w-12  m-auto" src={`/assets/sprites/items/${data.requiredItem.name}.png`}></img>
