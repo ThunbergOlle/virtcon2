@@ -36,7 +36,10 @@ export default function Window(props: {
         x: props.defaultPosition?.x ?? 40,
         y: props.defaultPosition?.y ?? 40,
       }}
-      onMouseDown={() => dispatch(select(props.windowType))}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        dispatch(select(props.windowType));
+      }}
     >
       <Card ref={nodeRef} className={'window  ' + windowClass} style={{ width: props.width, height: props.height }}>
         <WindowHeader
