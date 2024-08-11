@@ -123,6 +123,8 @@ export default async function request_place_building_packet(packet: ClientPacket
     x: worldBuilding.x,
     y: worldBuilding.y,
     rotation: worldBuilding.rotation,
+    outputX: worldBuilding.output_pos_x,
+    outputY: worldBuilding.output_pos_y,
   });
 
   const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);

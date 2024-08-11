@@ -3,7 +3,7 @@ import { Conveyor, getTextureFromTextureId, getVariantName, Position, Sprite } f
 import { GameState } from '../scenes/Game';
 import { fromPhaserPos } from '../ui/lib/coordinates';
 
-const conveyorQuery = defineQuery(Conveyor);
+const conveyorQuery = defineQuery(Conveyor, Sprite);
 const conveyorEnterQuery = enterQuery(conveyorQuery);
 
 export const createConveyorSystem = (world: World) => {
