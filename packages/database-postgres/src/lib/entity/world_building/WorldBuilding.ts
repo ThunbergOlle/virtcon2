@@ -20,6 +20,9 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @ManyToOne(() => World, (world) => world.id)
   world: World;
 
+  @Column({ type: 'varchar' })
+  worldId: string;
+
   @ManyToOne(() => Building, (building) => building.id, { nullable: true })
   @Field(() => Building)
   building: Building;
@@ -40,8 +43,8 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @Column({ type: 'int', default: 0 })
   y: number;
 
-  @Field(() => Float)
-  @Column({ type: 'float', default: 0 }) // rotation in radians
+  @Field(() => Int)
+  @Column({ type: 'int', default: 0 })
   rotation: number;
 
   @Field(() => [WorldBuildingInventory], { nullable: true })

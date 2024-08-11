@@ -21,6 +21,7 @@ export * from './lib/items/db/item_stick';
 export * from './lib/items/db/item_sawmill';
 export * from './lib/items/db/item_pipe';
 export * from './lib/items/db/item_drill';
+export * from './lib/items/db/item_conveyor';
 
 export const all_db_items = [item_wood, item_stick, item_sawmill, item_pipe, item_drill, item_stone, item_conveyor, item_coal, item_iron];
 export const all_spawnable_db_items = all_db_items.filter((i) => i.spawnSettings);

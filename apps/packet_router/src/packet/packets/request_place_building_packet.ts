@@ -11,9 +11,9 @@ import {
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 
-import requestWorldBuldingChangeOutput from './request_world_building_change_output';
-import { createNewBuildingEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { defineSerializer } from '@virtcon2/bytenetc';
+import worldBuildingChangeOutput from './request_world_building_change_output';
+import { createNewBuildingEntity, Resource, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSerializer, removeEntity } from '@virtcon2/bytenetc';
 
 export default async function request_place_building_packet(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
   // get the sender
@@ -86,33 +86,31 @@ export default async function request_place_building_packet(packet: ClientPacket
     const [x, y] = position;
     const wb = await WorldBuilding.findOne({ where: { output_pos_x: x, output_pos_y: y, world: { id: packet.world_id } } });
     if (wb) {
-      requestWorldBuldingChangeOutput({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } });
+      worldBuildingChangeOutput({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } });
     }
   });
 
-  const rotation = Math.round((newWorldBuilding.rotation * 180) / Math.PI); // convert radians to degrees because float is not precise enough
-
-  switch (rotation) {
+  switch (newWorldBuilding.rotation) {
     case 0:
-      requestWorldBuldingChangeOutput({
+      worldBuildingChangeOutput({
         ...packet,
         data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y },
       });
       break;
     case 90:
-      requestWorldBuldingChangeOutput({
+      worldBuildingChangeOutput({
         ...packet,
         data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height },
       });
       break;
     case 180:
-      requestWorldBuldingChangeOutput({
+      worldBuildingChangeOutput({
         ...packet,
         data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y },
       });
       break;
     case 270:
-      requestWorldBuldingChangeOutput({
+      worldBuildingChangeOutput({
         ...packet,
         data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height },
       });
@@ -130,6 +128,11 @@ export default async function request_place_building_packet(packet: ClientPacket
   const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);
 
   const serializedBuilding = serialize(packet.world_id, [buildingEntityId]);
+
+  // TODO: implement syncing destroyed resources
+  const resources = defineQuery(Resource)(packet.world_id);
+  const resourceEntity = resources.find((r) => Resource.id[r] === resource?.id);
+  removeEntity(packet.world_id, resourceEntity);
 
   return syncServerEntities(client, packet.world_id, packet.world_id, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
 }

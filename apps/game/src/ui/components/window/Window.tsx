@@ -37,7 +37,7 @@ export default function Window(props: {
         y: props.defaultPosition?.y ?? 40,
       }}
       onMouseDown={(e) => {
-        e.preventDefault();
+        // e.preventDefault();
         dispatch(select(props.windowType));
       }}
     >

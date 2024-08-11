@@ -92,7 +92,7 @@ export default function PlayerInventoryWindow() {
   function rotatePlaceBuildingIntent() {
     const game = Game.getInstance();
     if (!game.state.world || !buildingBeingPlacedEntity.current) return;
-    Sprite.rotation[buildingBeingPlacedEntity.current] += (Math.PI / 2) % (Math.PI * 2);
+    Sprite.rotation[buildingBeingPlacedEntity.current] = (90 + Sprite.rotation[buildingBeingPlacedEntity.current]) % 360;
   }
 
   function placeBuilding(e: Phaser.Input.Pointer) {

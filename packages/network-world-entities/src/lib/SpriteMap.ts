@@ -104,6 +104,13 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
         repeat: -1,
         playOnCreate: true,
       },
+      {
+        name: 'idle_corner',
+        frames: [19, 18, 17, 16],
+        frameRate: 20,
+        repeat: -1,
+        playOnCreate: false,
+      },
     ],
     spriteSheetFrameWidth: 16,
     spriteSheetFrameHeight: 16,

@@ -6,6 +6,6 @@ export const Sprite = defineComponent('sprite', {
   opacity: Types.f32, // float between 0 and 1
   width: Types.ui8,
   height: Types.ui8,
-  rotation: Types.f32, // radians
+  rotation: Types.ui16,
   dynamicBody: Types.ui8, // boolean
 });

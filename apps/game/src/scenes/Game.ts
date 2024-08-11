@@ -7,7 +7,7 @@ import { events } from '../events/Events';
 
 import { createWorld, debugEntity, defineDeserializer, deserializeEntity, registerComponents, removeEntity, System, World } from '@virtcon2/bytenetc';
 import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, Player, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { allComponents, Conveyor, ItemTextureMap, Player, SerializationID, serializeConfig, Sprite } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -18,6 +18,7 @@ import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createMovingSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
+import { createConveyorSystem } from '../systems/ConveyorSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -68,6 +69,7 @@ export default class Game extends Scene implements SceneStates {
   public buildingSystem?: System<GameState>;
   public tagSystem?: System<GameState>;
   public playerSystem?: System<GameState>;
+  public conveyorSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -134,6 +136,7 @@ export default class Game extends Scene implements SceneStates {
       this.buildingSystem = createBuildingSystem(this.state.world);
       this.tagSystem = createTagSystem(this.state.world, this);
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId);
+      this.conveyorSystem = createConveyorSystem(this.state.world);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -168,6 +171,7 @@ export default class Game extends Scene implements SceneStates {
       !this.buildingSystem ||
       !this.playerSystem ||
       !this.tagSystem ||
+      !this.conveyorSystem ||
       !this.isInitialized
     )
       return;
@@ -189,6 +193,8 @@ export default class Game extends Scene implements SceneStates {
 
     newState = this.buildingPlacementSystem(newState);
     newState = this.tagSystem(newState);
+
+    newState = this.conveyorSystem(newState);
 
     // Update state
     this.state = newState;
@@ -222,7 +228,10 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
 
   if (serializationId === SerializationID.WORLD) {
     for (let i = 0; i < data.length; i++) {
-      deserializeEntity(world, data[i]);
+      const eid = deserializeEntity(world, data[i]);
+      if (Sprite.texture[eid] === ItemTextureMap['building_conveyor']?.textureId) {
+        console.log(debugEntity(world, eid));
+      }
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);

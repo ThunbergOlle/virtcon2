@@ -16,7 +16,7 @@ import request_destroy_resource_packet from './packets/request_destroy_resource_
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
 import request_place_building_packet from './packets/request_place_building_packet';
-import requestWorldBuldingChangeOutput from './packets/request_world_building_change_output';
+import { requestWorldBuildingChangeOutput } from './packets/request_world_building_change_output';
 import syncClientEntity from './packets/syncClientEntity';
 
 interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
@@ -32,7 +32,7 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
     case PacketType.REQUEST_PLACE_BUILDING:
       return request_place_building_packet(packet as ClientPacketWithSender<RequestPlaceBuildingPacketData>, client);
     case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT:
-      return requestWorldBuldingChangeOutput(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>);
+      return requestWorldBuildingChangeOutput(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client);
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM:
       return request_move_inventory_item_packet(packet as ClientPacketWithSender<RequestMoveInventoryItemPacketData>);
     case PacketType.SYNC_CLIENT_ENTITY:

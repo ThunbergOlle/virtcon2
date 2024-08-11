@@ -1,9 +1,12 @@
 import { LogApp, LogLevel } from '@shared';
-import { AppDataSource, WorldBuilding } from '@virtcon2/database-postgres';
-import { ClientPacketWithSender, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
+import { defineQuery, defineSerializer } from '@virtcon2/bytenetc';
+import { AppDataSource, publishWorldBuildingUpdate, WorldBuilding } from '@virtcon2/database-postgres';
+import { ClientPacketWithSender, RequestWorldBuildingChangeOutput, syncServerEntities } from '@virtcon2/network-packet';
+import { Building, SerializationID, serializeConfig, Sprite } from '@virtcon2/network-world-entities';
 import { log } from 'console';
+import { RedisClientType } from 'redis';
 
-export default async function requestWorldBuldingChangeOutput(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>) {
+export default async function worldBuildingChangeOutput(packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>) {
   const world_building = await WorldBuilding.findOne({ where: { id: packet.data.building_id }, relations: ['building'] });
   if (!world_building) {
     log(
@@ -38,8 +41,23 @@ export default async function requestWorldBuldingChangeOutput(packet: ClientPack
     world_building.rotation = getRotationFromOutputPosition(world_building);
   }
 
-  await world_building.save();
+  return world_building.save();
 }
+
+export const requestWorldBuildingChangeOutput = async (packet: ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client: RedisClientType) => {
+  const world_building = await worldBuildingChangeOutput(packet);
+  publishWorldBuildingUpdate(world_building.id);
+
+  const buildings = defineQuery(Building)(world_building.worldId);
+  const eid = buildings.find((b) => Building.worldBuildingId[b] === world_building.id);
+
+  Sprite.rotation[eid] = world_building.rotation;
+
+  const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);
+  const serializedBuilding = serialize(packet.world_id, [eid]);
+
+  return syncServerEntities(client, packet.world_id, packet.world_id, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
+};
 
 // return radians
 function getRotationFromOutputPosition(worldBuilding: WorldBuilding): number {
@@ -49,7 +67,7 @@ function getRotationFromOutputPosition(worldBuilding: WorldBuilding): number {
   const isOutputBottom = worldBuilding.output_pos_y > worldBuilding.y + worldBuilding.building.height - 1;
 
   if (isOutputLeft) {
-    return Math.PI;
+    return 180;
   }
 
   if (isOutputRight) {
@@ -57,10 +75,10 @@ function getRotationFromOutputPosition(worldBuilding: WorldBuilding): number {
   }
 
   if (isOutputTop) {
-    return (3 * Math.PI) / 2;
+    return 90;
   }
 
   if (isOutputBottom) {
-    return Math.PI / 2;
+    return 270;
   }
 }

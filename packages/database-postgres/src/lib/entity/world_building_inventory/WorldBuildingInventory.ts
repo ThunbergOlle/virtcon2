@@ -8,7 +8,7 @@ import { WorldBuilding } from '../world_building/WorldBuilding';
 
 const pubsub = new RedisPubSub();
 export const TOPIC_BUILDING_UPDATE = 'BUILDING_UPDATE';
-export const publishWorldBuildingInventoryUpdate = async function (worldBuildingId: number) {
+export const publishWorldBuildingUpdate = async function (worldBuildingId: number) {
   return pubsub.publish(`${TOPIC_BUILDING_UPDATE}.${worldBuildingId}`, worldBuildingId);
 };
 

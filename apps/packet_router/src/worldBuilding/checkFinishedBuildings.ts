@@ -1,12 +1,6 @@
 import { pMap } from '@shared';
 import { World } from '@virtcon2/bytenetc';
-import {
-  addToInventory,
-  AppDataSource,
-  publishWorldBuildingInventoryUpdate,
-  safelyMoveItemsBetweenInventories,
-  WorldBuilding,
-} from '@virtcon2/database-postgres';
+import { addToInventory, AppDataSource, publishWorldBuildingUpdate, safelyMoveItemsBetweenInventories, WorldBuilding } from '@virtcon2/database-postgres';
 import { all_db_buildings, DBBuilding } from '@virtcon2/static-game-data';
 import { EntityManager, IsNull, Not } from 'typeorm';
 
@@ -39,7 +33,7 @@ async function processResourceExtractingBuilding(transaction: EntityManager, wor
     { concurrency: 10 },
   );
 
-  return pMap(worldBuildings, (worldBuilding) => publishWorldBuildingInventoryUpdate(worldBuilding.id));
+  return pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
 }
 
 async function processBuildingWithRequirements(transaction: EntityManager, world: World, building: DBBuilding) {
@@ -63,7 +57,7 @@ async function processBuildingWithRequirements(transaction: EntityManager, world
     await addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
   });
 
-  return pMap(worldBuildings, (worldBuilding) => publishWorldBuildingInventoryUpdate(worldBuilding.id));
+  return pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
 }
 
 async function processInventories(world: World) {

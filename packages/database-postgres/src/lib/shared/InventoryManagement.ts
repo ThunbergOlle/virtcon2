@@ -1,6 +1,6 @@
 import { LogLevel, log } from '@shared';
 import { publishUserInventoryUpdate, UserInventoryItem } from '../entity/user_inventory_item/UserInventoryItem';
-import { publishWorldBuildingInventoryUpdate, WorldBuildingInventory } from '../entity/world_building_inventory/WorldBuildingInventory';
+import { publishWorldBuildingUpdate, WorldBuildingInventory } from '../entity/world_building_inventory/WorldBuildingInventory';
 import { EntityManager } from 'typeorm';
 import { AppDataSource } from '../data-source';
 import { all_db_items } from '@virtcon2/static-game-data';
@@ -182,8 +182,8 @@ export const safelyMoveItemsBetweenInventories = async (options: {
     }
     await queryRunner.commitTransaction();
 
-    fromType === 'user' ? publishUserInventoryUpdate(fromId) : publishWorldBuildingInventoryUpdate(fromId);
-    toType === 'user' ? publishUserInventoryUpdate(toId) : publishWorldBuildingInventoryUpdate(toId);
+    fromType === 'user' ? publishUserInventoryUpdate(fromId) : publishWorldBuildingUpdate(fromId);
+    toType === 'user' ? publishUserInventoryUpdate(toId) : publishWorldBuildingUpdate(toId);
 
     options.log && log(`Moved ${quantity} of item ${itemId} from inventory ${fromId} to inventory ${toId}`, LogLevel.INFO);
   } catch (e) {
