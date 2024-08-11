@@ -16,6 +16,7 @@ const WORLD_BUILDING_FRAGMENT = gql`
     id
     x
     y
+    rotation
     world_building_inventory {
       slot
       quantity
@@ -121,6 +122,7 @@ export default function WorldBuildingWindow() {
             <p className="text-md">
               Position: {worldBuilding?.x}, {worldBuilding?.y}
             </p>
+            <p className="text-md">Rotation: {worldBuilding?.rotation}°</p>
           </div>
           <div className="flex-1">
             <h2 className="text-2xl">Top view I/O</h2>

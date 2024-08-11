@@ -1,5 +1,5 @@
-import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
-import { Conveyor, getTextureFromTextureId, getVariantName, Position, Sprite } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSystem, enterQuery, Entity, World } from '@virtcon2/bytenetc';
+import { Building, Conveyor, getTextureFromTextureId, getVariantName, Position, Sprite } from '@virtcon2/network-world-entities';
 import { GameState } from '../scenes/Game';
 import { fromPhaserPos } from '../ui/lib/coordinates';
 
@@ -12,63 +12,87 @@ export const createConveyorSystem = (world: World) => {
 
     if (enterEntities.length === 0) return state;
 
-    const entities = conveyorQuery(world);
-
     for (let i = 0; i < enterEntities.length; i++) {
-      const { x, y } = fromPhaserPos({ x: Position.x[enterEntities[i]], y: Position.y[enterEntities[i]] });
-      const leftConveyor = entities.find((eid) => {
-        const { x: compareX, y: compareY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-        if (compareX === x - 1 && compareY === y) return true;
-        return false;
-      });
-      const rightConveyor = entities.find((eid) => {
-        const { x: compareX, y: compareY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-        if (compareX === x + 1 && compareY === y) return true;
-        return false;
-      });
-
-      const upConveyor = entities.find((eid) => {
-        const { x: compareX, y: compareY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-        if (compareX === x && compareY === y - 1) return true;
-        return false;
-      });
-      const downConveyor = entities.find((eid) => {
-        const { x: compareX, y: compareY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-        if (compareX === x && compareY === y + 1) return true;
-        return false;
-      });
-
-      const neighbors = {
-        left: leftConveyor,
-        right: rightConveyor,
-        up: upConveyor,
-        down: downConveyor,
-      };
-      // rotation is in radians
-      const rotation = Sprite.rotation[enterEntities[i]];
-      const sprite = state.spritesById[enterEntities[i]];
-
-      console.log('Conveyor', enterEntities[i], 'at', x, y, 'has neighbors', neighbors, 'and rotation', rotation);
-
-      if (neighbors.left && neighbors.right) continue;
-      if (neighbors.up && neighbors.down) continue;
-      if (neighbors.left && !neighbors.right) {
-        const texture = getTextureFromTextureId(Sprite.texture[enterEntities[i]]);
-        if (!texture) throw new Error('Texture not found for id: ' + Sprite.texture[enterEntities[i]]);
-
-        const textureName = getVariantName(texture, Sprite.variant[enterEntities[i]]);
-
-        sprite.setTexture(textureName);
-        sprite.anims.play(textureName + '_anim_idle_corner');
-
-        continue;
-      }
-      if (neighbors.left && neighbors.down) {
-        Sprite.variant[enterEntities[i]] = 1;
-        continue;
-      }
+      updateConveyorAnimations(state, world, enterEntities[i]);
     }
 
     return state;
   });
+};
+
+export const updateConveyorAnimations = (state: GameState, world: World, entity: Entity) => {
+  const entities = conveyorQuery(world);
+  const { x, y } = fromPhaserPos({ x: Position.x[entity], y: Position.y[entity] });
+  const connectedConveyors = entities.filter((eid) => {
+    return Building.outputX[eid] === x && Building.outputY[eid] === y;
+  });
+
+  const left = connectedConveyors.find((eid) => {
+    const { x: xComp, y: yComp } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
+    return xComp === x - 1 && yComp === y;
+  });
+  const right = connectedConveyors.find((eid) => {
+    const { x: xComp, y: yComp } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
+    return xComp === x + 1 && yComp === y;
+  });
+  const up = connectedConveyors.find((eid) => {
+    const { x: xComp, y: yComp } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
+    return xComp === x && yComp === y - 1;
+  });
+  const down = connectedConveyors.find((eid) => {
+    const { x: xComp, y: yComp } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
+    return xComp === x && yComp === y + 1;
+  });
+
+  const rotation = Sprite.rotation[entity];
+  const sprite = state.spritesById[entity];
+
+  const texture = getTextureFromTextureId(Sprite.texture[entity]);
+  if (!texture) throw new Error('Texture not found for id: ' + Sprite.texture[entity]);
+  const textureName = getVariantName(texture, Sprite.variant[entity]);
+
+  if (rotation === 90 || rotation === 270) {
+    sprite.resetFlip();
+    if (left && right) return sprite.anims.play(textureName + '_anim_idle');
+    if (up || down) return sprite.anims.play(textureName + '_anim_idle');
+
+    sprite.anims.play(textureName + '_anim_idle_corner_1');
+
+    if (left && !right && rotation === 90) {
+      sprite.setFlip(false, false);
+    }
+    if (left && !right && rotation === 270) {
+      sprite.setFlip(false, true);
+    }
+    if (!left && right && rotation === 90) {
+      sprite.setFlip(false, true);
+    }
+    if (!left && right && rotation === 270) {
+      return;
+    }
+  }
+  if (rotation === 0 || rotation === 180) {
+    if (up && down) return;
+
+    const texture = getTextureFromTextureId(Sprite.texture[entity]);
+    if (!texture) throw new Error('Texture not found for id: ' + Sprite.texture[entity]);
+    const textureName = getVariantName(texture, Sprite.variant[entity]);
+
+    sprite.setTexture(textureName);
+    sprite.anims.play(textureName + '_anim_idle');
+
+    sprite.resetFlip();
+    if (up && !down && rotation === 0) {
+      sprite.setFlip(false, false);
+    }
+    if (up && !down && rotation === 180) {
+      sprite.setFlip(false, true);
+    }
+    if (!up && down && rotation === 0) {
+      sprite.setFlip(false, true);
+    }
+    if (!up && down && rotation === 180) {
+      return;
+    }
+  }
 };

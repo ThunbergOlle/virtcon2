@@ -105,8 +105,15 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
         playOnCreate: true,
       },
       {
-        name: 'idle_corner',
+        name: 'idle_corner_1',
         frames: [19, 18, 17, 16],
+        frameRate: 20,
+        repeat: -1,
+        playOnCreate: false,
+      },
+      {
+        name: 'idle_corner_2',
+        frames: [20, 21, 22, 23],
         frameRate: 20,
         repeat: -1,
         playOnCreate: false,
