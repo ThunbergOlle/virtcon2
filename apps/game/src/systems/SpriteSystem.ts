@@ -76,7 +76,7 @@ export const createMovingSpriteSystem = (world: World) => {
       const sprite = state.spritesById[id];
       if (sprite && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
         sprite.setPosition(Position.x[id], Position.y[id]);
-        sprite.setRotation(Sprite.rotation[id] * (Math.PI / 180));
+        sprite.setRotation(Sprite.rotation[id] * -(Math.PI / 180));
       }
     }
 

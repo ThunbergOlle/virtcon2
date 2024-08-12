@@ -1,4 +1,5 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
+import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
 import { ClientPacket, DisconnectPacketData, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
 import { Player } from '@virtcon2/network-world-entities';
@@ -11,10 +12,10 @@ import { RedisClientType, createClient, createClient as createRedisClient } from
 import 'reflect-metadata';
 import * as socketio from 'socket.io';
 import { IsNull, Not } from 'typeorm';
+import { deleteEntityWorld } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
-import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -84,6 +85,8 @@ io.on('connection', (socket) => {
       sender: SERVER_SENDER,
       data: { eid },
     });
+
+    if (playersEid.length - 1 === 0) deleteEntityWorld(entityWorld);
   });
 
   socket.on('packet', async (packetJson: ClientPacket<unknown>) => {

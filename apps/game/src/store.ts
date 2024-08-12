@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { windowSlice } from './ui/lib/WindowSlice';
 import { inspectedBuildingSlice } from './ui/windows/building/inspectedBuildingSlice';
+import { hotbarSlice } from './ui/components/hotbar/HotbarSlice';
 
 export const store = configureStore({
   reducer: {
     window: windowSlice.reducer,
     inspectedBuilding: inspectedBuildingSlice.reducer,
+    hotbar: hotbarSlice.reducer,
   },
 });
 

@@ -2,17 +2,21 @@ import { Collider, MainPlayer, Player, Position, Sprite, Velocity } from '@virtc
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { addComponent, defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
+import { useSelector } from 'react-redux';
+import { store } from '../store';
+import { currentTool } from '../ui/components/hotbar/HotbarSlice';
 
 const speed = 750;
 const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider);
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
 export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
-  const [keyW, keyA, keyS, keyD] = [
+  const [keyW, keyA, keyS, keyD, keySpace] = [
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
     scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
   ];
 
   return defineSystem<GameState>((state) => {
@@ -53,11 +57,21 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
 
       Velocity.x[entities[i]] = xVel * speed;
       Velocity.y[entities[i]] = yVel * speed;
+
+      if (scene.input.keyboard.checkDown(keySpace)) {
+        attack(world, entities[i]);
+      }
     }
     return state;
   });
 };
 
+function attack(world: World, eid: number) {
+  const selectedTool = currentTool(store.getState());
+  if (selectedTool === 'none') return;
+  console.log('Attacking');
+  // create "attack" entity which plays the animation and is destroyed after the animation is done
+}
 export const setMainPlayerEntity = (world: World, eid: number) => {
   addComponent(world, MainPlayer, eid);
 

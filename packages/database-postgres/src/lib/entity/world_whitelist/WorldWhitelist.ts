@@ -26,6 +26,6 @@ export class WorldWhitelist extends BaseEntity {
   user: User;
 
   @Field(() => String)
-  @Column({ type: 'text', unique: true, default: AccessLevel.visitor })
+  @Column({ type: 'text', default: AccessLevel.visitor })
   access_level: AccessLevel;
 }

@@ -117,12 +117,16 @@ export default async function request_place_building_packet(packet: ClientPacket
       break;
   }
 
+  const updatedWorldBuilding = await WorldBuilding.findOne({ where: { id: worldBuilding.id }, relations: ['building'] });
+
   const buildingEntityId = createNewBuildingEntity(packet.world_id, {
-    buildingId: worldBuilding.building.id,
-    worldBuildingId: worldBuilding.id,
-    x: worldBuilding.x,
-    y: worldBuilding.y,
-    rotation: worldBuilding.rotation,
+    buildingId: updatedWorldBuilding.building.id,
+    worldBuildingId: updatedWorldBuilding.id,
+    x: updatedWorldBuilding.x,
+    y: updatedWorldBuilding.y,
+    rotation: updatedWorldBuilding.rotation,
+    outputX: updatedWorldBuilding.output_pos_x,
+    outputY: updatedWorldBuilding.output_pos_y,
   });
 
   const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);

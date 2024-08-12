@@ -13,8 +13,19 @@ const LOGIN_MUTATION = gql`
     }
   }
 `;
+
+const CREATE_USER_MUTATION = gql`
+  mutation CreateUser($options: UserNewInput!) {
+    UserNew(options: $options) {
+      success
+      message
+    }
+  }
+`;
+
 export default function LoginPage() {
   const [mutateLogin, { data, loading, error }] = useMutation(LOGIN_MUTATION);
+  const [createUser] = useMutation(CREATE_USER_MUTATION);
 
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -37,6 +48,24 @@ export default function LoginPage() {
     }
   }, [data, navigate]);
 
+  const onCreateAccount = async () => {
+    const display_name = prompt('Enter display name');
+    if (!display_name) return;
+
+    const email = prompt('Enter email');
+    if (!email) return;
+
+    const password = prompt('Enter password');
+    if (!password) return;
+
+    const { data } = await createUser({ variables: { options: { display_name, email, password } } });
+    if (!data?.UserNew?.success) {
+      alert(data.UserNew.message);
+      return;
+    }
+    mutateLogin({ variables: { email, password } });
+  };
+
   return (
     <div className="text-center">
       <h1 className="my-8">Login</h1>
@@ -49,6 +78,9 @@ export default function LoginPage() {
         <Button disabled={loading} title="Login" type="submit">
           Login
           {loading && <Spinner animation="border" size="sm" className="ml-2" />}
+        </Button>
+        <Button onClick={onCreateAccount} variant="secondary" disabled={loading} title="Login" type="submit">
+          Create account
         </Button>
         <p className="text-red-600">{error?.message || data?.UserLogin?.message}</p>
       </form>

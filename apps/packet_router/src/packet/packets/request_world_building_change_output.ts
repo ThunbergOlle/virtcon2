@@ -34,12 +34,8 @@ export default async function worldBuildingChangeOutput(packet: ClientPacketWith
   if (occupies.length > 0) {
     const matched_building = await WorldBuilding.findOne({ where: { id: occupies[0].id } });
     world_building.output_world_building = matched_building;
-  } else {
-    world_building.output_world_building = null;
-  }
-  if (world_building.building.is_rotatable) {
-    world_building.rotation = getRotationFromOutputPosition(world_building);
-  }
+  } else world_building.output_world_building = null;
+  if (world_building.building.is_rotatable) world_building.rotation = getRotationFromOutputPosition(world_building);
 
   return world_building.save();
 }
@@ -66,19 +62,8 @@ function getRotationFromOutputPosition(worldBuilding: WorldBuilding): number {
   const isOutputTop = worldBuilding.output_pos_y < worldBuilding.y;
   const isOutputBottom = worldBuilding.output_pos_y > worldBuilding.y + worldBuilding.building.height - 1;
 
-  if (isOutputLeft) {
-    return 180;
-  }
-
-  if (isOutputRight) {
-    return 0;
-  }
-
-  if (isOutputTop) {
-    return 90;
-  }
-
-  if (isOutputBottom) {
-    return 270;
-  }
+  if (isOutputLeft) return 180;
+  if (isOutputRight) return 0;
+  if (isOutputTop) return 90;
+  if (isOutputBottom) return 270;
 }

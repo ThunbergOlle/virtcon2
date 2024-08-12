@@ -30,8 +30,8 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
 
   addComponent(world, Building, building);
   Building.worldBuildingId[building] = data.worldBuildingId;
-  Building.outputX[building] = 0;
-  Building.outputY[building] = 0;
+  Building.outputX[building] = data.outputX;
+  Building.outputY[building] = data.outputY;
 
   addComponent(world, Sprite, building);
   Sprite.texture[building] = ItemTextureMap[metadata.name]?.textureId ?? 0;

@@ -38,6 +38,7 @@ export default function Window(props: {
       }}
       onMouseDown={(e) => {
         // e.preventDefault();
+        e.stopPropagation();
         dispatch(select(props.windowType));
       }}
     >

@@ -1,6 +1,6 @@
 import { loadWorldFromDb } from './loaders';
 import { log } from '@shared';
-import { createWorld, registerComponents, World } from '@virtcon2/bytenetc';
+import { createWorld, deleteWorld, registerComponents, World } from '@virtcon2/bytenetc';
 import { allComponents, createNewBuildingEntity, createNewResourceEntity } from '@virtcon2/network-world-entities';
 import { getResourceNameFromItemName } from '@virtcon2/static-game-data';
 
@@ -18,6 +18,13 @@ export const newEntityWorld = (world: World) => {
 };
 
 export const doesWorldExist = (world: World) => worlds.includes(world);
+export const deleteEntityWorld = (world: World) => {
+  const index = worlds.indexOf(world);
+  if (index === -1) throw new Error(`World with id ${world} does not exist`);
+
+  worlds.splice(index, 1);
+  deleteWorld(world);
+};
 
 export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
   const { resources, worldBuildings } = await loadWorldFromDb(dbWorldId);
@@ -30,6 +37,8 @@ export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
       x: worldBuilding.x,
       y: worldBuilding.y,
       rotation: worldBuilding.rotation,
+      outputX: worldBuilding.output_pos_x,
+      outputY: worldBuilding.output_pos_y,
     });
   }
 

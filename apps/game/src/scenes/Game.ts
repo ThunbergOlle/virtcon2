@@ -18,7 +18,7 @@ import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
 import { createSpriteRegisterySystem, createMovingSpriteSystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
-import { createConveyorSystem } from '../systems/ConveyorSystem';
+import { createConveyorSystem, updateConveyorAnimations } from '../systems/ConveyorSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -178,7 +178,7 @@ export default class Game extends Scene implements SceneStates {
 
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
-    receiveServerPackets(this.state.world, packets);
+    receiveServerPackets(this.state, this.state.world, packets);
 
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
@@ -209,12 +209,12 @@ export default class Game extends Scene implements SceneStates {
   }
 }
 
-const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) => {
+const receiveServerPackets = (state: GameState, world: World, packets: ServerPacket<unknown>[]) => {
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
     switch (packet.packet_type) {
       case PacketType.SYNC_SERVER_ENTITY:
-        handleSyncServerEntityPacket(world, packet as ServerPacket<SyncServerEntityPacket>);
+        handleSyncServerEntityPacket(state, world, packet as ServerPacket<SyncServerEntityPacket>);
         break;
       case PacketType.DISCONNECT:
         handleDisconnectPacket(world, packet as ServerPacket<DisconnectPacketData>);
@@ -223,7 +223,11 @@ const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) =>
   }
 };
 
-const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncServerEntityPacket>) => {
+const delayOneUpdate = (fn: () => void) => {
+  setTimeout(fn, 0);
+};
+
+const handleSyncServerEntityPacket = (state: GameState, world: World, packet: ServerPacket<SyncServerEntityPacket>) => {
   const { data, serializationId } = packet.data;
 
   if (serializationId === SerializationID.WORLD) {
@@ -235,7 +239,12 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
-    const entityId = deserialize(world, data);
+    const entities = deserialize(world, data);
+    if (serializationId === SerializationID.BUILDING_FULL_SERVER) {
+      for (let i = 0; i < entities.length; i++) {
+        delayOneUpdate(() => updateConveyorAnimations(state, world, entities[i]));
+      }
+    }
   }
 };
 
