@@ -9,6 +9,7 @@ import Game from '../../../scenes/Game';
 import WorldBuildingWindow from '../../windows/building/WorldBuildingWindow';
 import CrafterWindow from '../../windows/crafter/CrafterWindow';
 import PlayerInventoryWindow from '../../windows/playerInventory/PlayerInventory';
+import { Hotbar } from '../../components/hotbar/Hotbar';
 
 function GamePage() {
   const { worldId } = useParams();
@@ -44,11 +45,14 @@ function GamePage() {
     };
   }, [game]);
   return (
-    <div className="absolute">
-      <PlayerInventoryWindow />
-      <CrafterWindow />
-      <WorldBuildingWindow />
-    </div>
+    <>
+      <div className="absolute">
+        <PlayerInventoryWindow />
+        <CrafterWindow />
+        <WorldBuildingWindow />
+      </div>
+      <Hotbar />
+    </>
   );
 }
 
