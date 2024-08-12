@@ -69,7 +69,7 @@ export class UserResolver {
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 
     // Create all inventory slots
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 64; i++) {
       const userInventoryItem = new UserInventoryItem();
       userInventoryItem.user = newUserEntity;
       userInventoryItem.slot = i;
