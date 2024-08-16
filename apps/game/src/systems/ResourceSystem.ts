@@ -1,10 +1,10 @@
-import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
+import { defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
+import { Collider, Resource, Sprite } from '@virtcon2/network-world-entities';
 import { get_item_by_id } from '@virtcon2/static-game-data';
 import { Types } from 'phaser';
-import { toast } from 'react-toastify';
 import Game, { GameState } from '../scenes/Game';
-import { Resource, Sprite, Collider } from '@virtcon2/network-world-entities';
-import { defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
+import { toast } from 'react-toastify';
+import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 
 const resourceQuery = defineQuery(Resource, Sprite, Collider);
 const resourceEnterQuery = enterQuery(resourceQuery);
@@ -21,41 +21,26 @@ export const createResourceSystem = (world: World) => {
       }
       // The name is important so we can check what type of resource we collided with just based off the name.
       sprite.setName(`resource-${get_item_by_id(Resource.itemId[id])?.name}`);
-      if (sprite) {
-        setupResourceEventListeners(sprite, id, state);
-      }
     }
     return state;
   });
 };
 
-/* TODO: migrate to new architecture */
-const setupResourceEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDynamicBody, eid: number, state: GameState) => {
-  if (!sprite.body) {
-    console.error(`No body for resource ${eid}`);
-    return;
+export const damageResource = (state: GameState, eid: number, damage: number) => {
+  Resource.health[eid] -= damage;
+  if (Resource.health[eid] <= 0) {
+    // send resource destroy packet
+    toast(`+1 ${get_item_by_id(Resource.itemId[eid])?.display_name} added to inventory`, { type: 'success', autoClose: 1000 });
+    const destroyResourcePacket: ClientPacket<RequestDestroyResourcePacket> = {
+      data: {
+        resourceId: Resource.id[eid],
+      },
+      packet_type: PacketType.REQUEST_DESTROY_RESOURCE,
+      world_id: state.world,
+    };
+
+    Game.network.sendPacket(destroyResourcePacket);
+
+    Resource.health[eid] = 5;
   }
-  sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
-    // tint the resource red to indicate that it is being damanged
-    sprite.setTint(0xff0000);
-    setTimeout(() => {
-      sprite.clearTint();
-    }, 100);
-    /* Future security improvements:  Send resource damage package.*/
-    /* Currently, backend does not check if the destroy resource is legit. */
-    Resource.health[eid] -= 1;
-    if (Resource.health[eid] <= 0) {
-      // send resource destroy packet
-      toast(`+1 ${get_item_by_id(Resource.itemId[eid])?.display_name} added to inventory`, { type: 'success', autoClose: 1000 });
-      const destroyResourcePacket: ClientPacket<RequestDestroyResourcePacket> = {
-        data: {
-          resourceId: Resource.id[eid],
-        },
-        packet_type: PacketType.REQUEST_DESTROY_RESOURCE,
-        world_id: state.world,
-      };
-      Game.network.sendPacket(destroyResourcePacket);
-      Resource.health[eid] = 5;
-    }
-  });
 };

@@ -33,7 +33,7 @@ const PLAYER_INVENTORY_FRAGMENT = gql`
   }
 `;
 
-const PLAYER_INVENTORY_QUERY = gql`
+export const PLAYER_INVENTORY_QUERY = gql`
   ${PLAYER_INVENTORY_FRAGMENT}
   query PlayerInventoryWindow($userId: ID!) {
     userInventory(userId: $userId) {
@@ -62,18 +62,17 @@ export default function PlayerInventoryWindow() {
   });
 
   useEffect(() => {
-    if (isOpen) {
-      const unsubscribe = subscribeToMore({
-        document: PLAYER_INVENTORY_SUBSCRIPTION,
-        variables: { userId: user.id },
-        updateQuery: (prev, { subscriptionData }) => {
-          if (!subscriptionData.data) return prev;
-          return subscriptionData.data;
-        },
-      });
-      return unsubscribe;
-    }
-  }, [data, isOpen, subscribeToMore]);
+    const unsubscribe = subscribeToMore({
+      document: PLAYER_INVENTORY_SUBSCRIPTION,
+      variables: { userId: user.id },
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        return subscriptionData.data;
+      },
+    });
+
+    return unsubscribe;
+  }, [subscribeToMore, user.id]);
 
   const buildingBeingPlaced = useRef<DBUserInventoryItem | null>(null);
   const buildingBeingPlacedEntity = useRef<number | null>(null);

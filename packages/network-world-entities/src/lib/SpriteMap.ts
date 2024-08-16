@@ -185,6 +185,11 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureName: 'unknown',
     variants: ['sprites/misc/unknown.png'],
   },
+  tool_axe: {
+    textureId: 999,
+    textureName: 'tool_axe',
+    variants: ['sprites/misc/tool_axe.png'],
+  },
 };
 export const AllTextureMaps = {
   ...ItemTextureMap,

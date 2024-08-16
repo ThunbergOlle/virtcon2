@@ -19,7 +19,7 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
         continue;
       }
 
-      const textureName = getVariantName(texture, Sprite.variant[id]);
+      const textureName = getVariantName(texture, Sprite.variant[id] || 0);
 
       const sprite = Sprite.dynamicBody[id]
         ? scene.physics.add.sprite(Position.x[id], Position.y[id], textureName)

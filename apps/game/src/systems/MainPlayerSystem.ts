@@ -1,10 +1,16 @@
-import { Collider, MainPlayer, Player, Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
+import { Collider, MainPlayer, MainPlayerAction, MiscTextureMap, Player, Position, Resource, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { events } from '../events/Events';
-import { GameObjectGroups, GameState } from '../scenes/Game';
-import { addComponent, defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
+import Game, { GameObjectGroups, GameState } from '../scenes/Game';
+import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 import { useSelector } from 'react-redux';
 import { store } from '../store';
 import { currentTool } from '../ui/components/hotbar/HotbarSlice';
+import { toast } from 'react-toastify';
+import { get_item_by_id } from '@virtcon2/static-game-data';
+import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
+import { client } from '../App';
+import { PLAYER_INVENTORY_QUERY } from '../ui/windows/playerInventory/PlayerInventory';
+import { damageResource } from './ResourceSystem';
 
 const speed = 750;
 const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider);
@@ -59,19 +65,66 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       Velocity.y[entities[i]] = yVel * speed;
 
       if (scene.input.keyboard.checkDown(keySpace)) {
-        attack(world, entities[i]);
+        attack(state, world, entities[i]);
       }
     }
     return state;
   });
 };
 
-function attack(world: World, eid: number) {
+const closestResourceQuery = defineQuery(Position, Resource);
+function attack(state: GameState, world: World, eid: number) {
+  if (MainPlayer.action[eid] !== MainPlayerAction.IDLE) return;
+
   const selectedTool = currentTool(store.getState());
   if (selectedTool === 'none') return;
-  console.log('Attacking');
-  // create "attack" entity which plays the animation and is destroyed after the animation is done
+
+  const textureId = MiscTextureMap[`tool_${selectedTool}`]?.textureId;
+  if (!textureId) throw new Error(`Texture not found for tool: ${selectedTool}`);
+
+  const closestResources = closestResourceQuery(world);
+
+  let resourceTargetId = null;
+  let distanceBetween = 1000000;
+  for (let i = 0; i < closestResources.length; i++) {
+    const resource = closestResources[i];
+    const distance = Math.sqrt(Math.pow(Position.x[eid] - Position.x[resource], 2) + Math.pow(Position.y[eid] - Position.y[resource], 2));
+
+    if (distance <= 2 * 16) {
+      if (!resourceTargetId || distance < distanceBetween) {
+        resourceTargetId = resource;
+        distanceBetween = distance;
+      }
+    }
+  }
+  if (resourceTargetId === null) return;
+
+  MainPlayer.action[eid] = MainPlayerAction.ATTACKING;
+
+  const tool = addEntity(world);
+  addComponent(world, Sprite, tool);
+
+  Sprite.texture[tool] = textureId;
+  Sprite.dynamicBody[tool] = 1;
+
+  addComponent(world, Position, tool);
+  Position.x[tool] = Position.x[resourceTargetId];
+  Position.y[tool] = Position.y[resourceTargetId] - 10;
+
+  state.spritesById[resourceTargetId].setTint(0xff0000);
+  setTimeout(() => state.spritesById[resourceTargetId].clearTint(), 100);
+
+  addComponent(world, Velocity, tool);
+  Velocity.x[tool] = 0;
+  Velocity.y[tool] = -10;
+
+  setTimeout(() => {
+    removeEntity(world, tool);
+    MainPlayer.action[eid] = MainPlayerAction.IDLE;
+    damageResource(state, resourceTargetId, 1);
+  }, 500);
 }
+
 export const setMainPlayerEntity = (world: World, eid: number) => {
   addComponent(world, MainPlayer, eid);
 
