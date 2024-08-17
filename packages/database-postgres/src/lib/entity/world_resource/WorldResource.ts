@@ -23,6 +23,9 @@ export class WorldResource extends BaseEntity {
   @Field(() => Item)
   item: Item;
 
+  @Column({ type: 'int' })
+  itemId: number;
+
   @Field(() => World)
   @ManyToOne(() => World, (world) => world.id)
   world: World;

@@ -106,6 +106,7 @@ function attack(state: GameState, world: World, eid: number) {
 
   Sprite.texture[tool] = textureId;
   Sprite.dynamicBody[tool] = 1;
+  Sprite.variant[tool] = 0;
 
   addComponent(world, Position, tool);
   Position.x[tool] = Position.x[resourceTargetId];

@@ -9,6 +9,7 @@ import item_stone from './lib/items/db/item_stone';
 import item_wood from './lib/items/db/item_wood';
 import { DBItemName } from './lib/items/item_type';
 import { item_conveyor_recipe } from './lib/items_recipe/db/item_conveyor';
+import { item_drill_recipe } from './lib/items_recipe/db/item_drill';
 import { item_sawmill_recipe } from './lib/items_recipe/db/item_sawmill';
 import { item_stick_recipe } from './lib/items_recipe/db/item_stick';
 import { ResourceNames, Resources } from './lib/resources/resources_type';
@@ -41,8 +42,9 @@ export * from './lib/items_recipe/item_recipe_type';
 export * from './lib/items_recipe/db/item_stick';
 export * from './lib/items_recipe/db/item_sawmill';
 export * from './lib/items_recipe/db/item_pipe';
+export * from './lib/items_recipe/db/item_drill';
 
-export const all_db_items_recipes = [...item_stick_recipe, ...item_sawmill_recipe, ...item_conveyor_recipe];
+export const all_db_items_recipes = [...item_stick_recipe, ...item_sawmill_recipe, ...item_conveyor_recipe, ...item_drill_recipe];
 
 /* Buildings */
 export * from './lib/items/building_type';

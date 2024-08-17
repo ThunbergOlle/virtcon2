@@ -15,20 +15,23 @@ export default async function checkFinishedBuildings(world: World, tick: number)
 }
 
 async function processBuilding(transaction: EntityManager, world: World, building: DBBuilding) {
-  if (!building.processing_requirements.length && building.output_item) return processResourceExtractingBuilding(transaction, world, building);
+  if (!building.processing_requirements.length && (building.output_item || building.items_to_be_placed_on.length))
+    return processResourceExtractingBuilding(transaction, world, building);
   if (building.processing_requirements.length) return processBuildingWithRequirements(transaction, world, building);
 }
 
 async function processResourceExtractingBuilding(transaction: EntityManager, world: World, building: DBBuilding) {
   const worldBuildings = await WorldBuilding.find({
     where: { building: { id: building.id }, world: { id: world } },
-    relations: ['world_building_inventory'],
+    relations: ['world_building_inventory', 'world_resource'],
   });
 
   await pMap(
     worldBuildings,
     async (worldBuilding) => {
-      await addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
+      if (building.output_item?.id)
+        return addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
+      else addToInventory(transaction, worldBuilding.world_building_inventory, worldBuilding.world_resource.itemId, building.output_quantity);
     },
     { concurrency: 10 },
   );
