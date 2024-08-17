@@ -1,10 +1,10 @@
-import { get_resource_by_item_name, ResourceNames, Resources } from '@virtcon2/static-game-data';
-import { Position, Sprite, Collider, Resource } from '../network-world-entities';
+import { ResourceNames, Resources } from '@virtcon2/static-game-data';
+import { Collider, Position, Resource, Sprite } from '../network-world-entities';
 
-import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
-import { GameObjectGroups } from '../utils/gameObject';
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
 import { AllTextureMaps } from '../SpriteMap';
+import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
+import { GameObjectGroups } from '../utils/gameObject';
 
 export const createNewResourceEntity = (
   world: World,

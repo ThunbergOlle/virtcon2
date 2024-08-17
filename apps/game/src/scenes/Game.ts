@@ -114,7 +114,7 @@ export default class Game extends Scene implements SceneStates {
     this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? []);
 
     events.subscribe('joinWorld', (worldId) => {
-      // this.physics.world.createDebugGraphic();
+      this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 

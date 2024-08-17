@@ -15,7 +15,7 @@ import { RedisClientType } from 'redis';
 import request_destroy_resource_packet from './packets/request_destroy_resource_packet';
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
-import request_place_building_packet from './packets/request_place_building_packet';
+import requestPlaceBuildingPacket from './packets/request_place_building_packet';
 import { requestWorldBuildingChangeOutput } from './packets/request_world_building_change_output';
 import syncClientEntity from './packets/syncClientEntity';
 
@@ -30,7 +30,7 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
     case PacketType.REQUEST_DESTROY_RESOURCE:
       return request_destroy_resource_packet(packet as ClientPacketWithSender<RequestDestroyResourcePacket>);
     case PacketType.REQUEST_PLACE_BUILDING:
-      return request_place_building_packet(packet as ClientPacketWithSender<RequestPlaceBuildingPacketData>, client);
+      return requestPlaceBuildingPacket(packet as ClientPacketWithSender<RequestPlaceBuildingPacketData>, client);
     case PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT:
       return requestWorldBuildingChangeOutput(packet as ClientPacketWithSender<RequestWorldBuildingChangeOutput>, client);
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM:

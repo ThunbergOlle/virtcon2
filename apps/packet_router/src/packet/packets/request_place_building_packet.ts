@@ -15,7 +15,7 @@ import worldBuildingChangeOutput from './request_world_building_change_output';
 import { createNewBuildingEntity, Resource, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { defineQuery, defineSerializer, removeEntity } from '@virtcon2/bytenetc';
 
-export default async function request_place_building_packet(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
+export default async function requestPlaceBuildingPacket(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
   // get the sender
   const player_id = packet.sender.id;
   // check if player has the item
@@ -25,8 +25,8 @@ export default async function request_place_building_packet(packet: ClientPacket
     return;
   }
   const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.items_to_be_placed_on', 'building.item'] });
-  /* Get if there are any resources at the coordinates. */
-  const resource = await WorldResource.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } }, relations: ['item'] });
+  const resource = await WorldResource.findOne({ where: { world: { id: packet.world_id }, id: packet.data.resourceId }, relations: ['item'] });
+  if (!resource || !item) throw new Error('Resource or item not found');
 
   /* Check if position is occupied */
   const occuping_building = await WorldBuilding.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });

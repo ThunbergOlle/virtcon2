@@ -1,4 +1,4 @@
-import { Collider, GhostBuilding, Position, Sprite } from '@virtcon2/network-world-entities';
+import { Collider, GhostBuilding, Position, Resource, Sprite } from '@virtcon2/network-world-entities';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
 import { defineQuery, defineSystem, Entity, exitQuery, World } from '@virtcon2/bytenetc';
@@ -71,11 +71,14 @@ const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: P
 
   if (building.items_to_be_placed_on && building.items_to_be_placed_on?.length) {
     GhostBuilding.placementIsValid[entity] = 0;
+
     scene.physics.collide(sprite, state.gameObjectGroups[GameObjectGroups.RESOURCE] || [], (_, collided) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       for (const item of building.items_to_be_placed_on!) {
         if (collided.name === `resource-${item.name}`) {
           GhostBuilding.placementIsValid[entity] = 1;
+          const dbResourceId = Resource.id[collided.data.get('entityId')];
+          GhostBuilding.resourceId[entity] = dbResourceId;
         }
       }
     });

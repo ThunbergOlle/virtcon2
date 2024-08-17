@@ -25,6 +25,9 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
         ? scene.physics.add.sprite(Position.x[id], Position.y[id], textureName)
         : scene.add.sprite(Position.x[id], Position.y[id], textureName);
 
+      sprite.setDataEnabled();
+      sprite.setData('entityId', id);
+
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {
           const animation = texture.animations[i];

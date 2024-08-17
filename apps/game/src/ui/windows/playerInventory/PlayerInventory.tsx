@@ -106,12 +106,12 @@ export default function PlayerInventoryWindow() {
     /* Send network packet to backend that we want to place the building at the coordinates */
     /* Convert phaser coordinates to the tilemap coordinates*/
     const { x, y } = fromPhaserPos({ x: e.worldX, y: e.worldY });
-
     const packet: ClientPacket<RequestPlaceBuildingPacketData> = {
       data: {
         buildingItemId: buildingBeingPlaced.current.item.id,
-        x,
+        resourceId: GhostBuilding.resourceId[buildingBeingPlacedEntity.current],
         rotation: Sprite.rotation[buildingBeingPlacedEntity.current],
+        x,
         y,
       },
       packet_type: PacketType.REQUEST_PLACE_BUILDING,
