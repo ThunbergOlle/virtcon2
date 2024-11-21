@@ -31,12 +31,16 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {
           const animation = texture.animations[i];
-          scene.anims.create({
-            key: textureName + '_anim_' + animation.name,
-            frames: scene.anims.generateFrameNumbers(textureName, { frames: animation.frames }),
-            frameRate: animation.frameRate,
-            repeat: animation.repeat,
-          });
+          const animationKey = textureName + '_anim_' + animation.name;
+
+          const existingAnimations = scene.anims.get(animationKey);
+          if (!existingAnimations)
+            scene.anims.create({
+              key: animationKey,
+              frames: scene.anims.generateFrameNumbers(textureName, { frames: animation.frames }),
+              frameRate: animation.frameRate,
+              repeat: animation.repeat,
+            });
           if (animation.playOnCreate) {
             sprite.anims.play(textureName + '_anim_' + animation.name);
           }
