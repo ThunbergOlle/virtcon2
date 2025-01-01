@@ -1,9 +1,8 @@
-import { Field, Float, Int, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Building } from '../building/Building';
 import { World } from '../world/World';
 import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
-import { WorldResource } from '../world_resource/WorldResource';
 
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -28,12 +27,6 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   building: Building;
   @Column({ type: 'int', nullable: true })
   buildingId: number;
-
-  @OneToOne(() => WorldResource, { nullable: true })
-  @Field(() => WorldResource, { nullable: true })
-  @JoinColumn()
-  world_resource: WorldResource;
-  worldResourceId: number;
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })

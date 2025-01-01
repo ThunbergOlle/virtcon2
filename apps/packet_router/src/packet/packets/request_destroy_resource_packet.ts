@@ -1,17 +1,11 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { AppDataSource, publishUserInventoryUpdate, User, UserInventoryItem, WorldResource } from '@virtcon2/database-postgres';
+import { AppDataSource, publishUserInventoryUpdate, User, UserInventoryItem } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
+import { Resource } from '@virtcon2/network-world-entities';
 
 export default async function request_destroy_resource_packet(packet: ClientPacketWithSender<RequestDestroyResourcePacket>) {
-  // get resource from the database
-  const resource = await WorldResource.findOne({ where: { id: packet.data.resourceId }, relations: ['item'] });
-  if (!resource) {
-    return;
-  }
-  // get the item
-  const received_item = resource.item;
+  const receivedItemId = Resource.itemId[packet.data.resourceEntityId];
 
-  // add the item to the players inventory
   const player_id = packet.sender.id;
   const player = await User.findOne({ where: { id: player_id } });
   if (!player) {
@@ -19,6 +13,6 @@ export default async function request_destroy_resource_packet(packet: ClientPack
     return;
   }
 
-  await AppDataSource.transaction(async (transaction) => UserInventoryItem.addToInventory(transaction, player_id, received_item.id, 1));
+  await AppDataSource.transaction(async (transaction) => UserInventoryItem.addToInventory(transaction, player_id, receivedItemId, 1));
   await publishUserInventoryUpdate(player_id);
 }

@@ -6,9 +6,11 @@ import { AllTextureMaps } from '../SpriteMap';
 import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 
+export const resourceEntityComponents = [Position, Sprite, Collider, Resource];
+
 export const createNewResourceEntity = (
   world: World,
-  data: { resourceName: ResourceNames; pos: TileCoordinates; itemId: number; resourceId: number; worldBuildingId: number },
+  data: { resourceName: ResourceNames; pos: TileCoordinates; itemId: number; worldBuildingId: number },
 ): number => {
   const { x, y } = toPhaserPos({ x: data.pos.x, y: data.pos.y });
   const resource = addEntity(world);
@@ -20,7 +22,7 @@ export const createNewResourceEntity = (
 
   addComponent(world, Sprite, resource);
   Sprite.texture[resource] = AllTextureMaps[data.resourceName]?.textureId ?? 0;
-  Sprite.variant[resource] = data.resourceId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
+  Sprite.variant[resource] = data.itemId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
 
   addComponent(world, Collider, resource);
   Collider.sizeWidth[resource] = resourceInfo.width * 16;
@@ -41,7 +43,6 @@ export const createNewResourceEntity = (
   addComponent(world, Resource, resource);
   Resource.health[resource] = 5;
   Resource.itemId[resource] = data.itemId;
-  Resource.id[resource] = data.resourceId;
   Resource.worldBuildingId[resource] = data.worldBuildingId;
 
   return resource;

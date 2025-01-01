@@ -1,4 +1,4 @@
-import { TOPIC_BUILDING_UPDATE, WorldBuilding, WorldBuildingInventory, WorldResource, Building } from '@virtcon2/database-postgres';
+import { TOPIC_BUILDING_UPDATE, WorldBuilding, WorldBuildingInventory, Building } from '@virtcon2/database-postgres';
 import { withFilter } from 'graphql-subscriptions';
 import { Arg, FieldResolver, ID, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
 import { subscribe } from '../../service/RedisService';
@@ -25,12 +25,6 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   async building(@Root() worldBuilding: WorldBuilding): Promise<Building> {
     if (!worldBuilding.buildingId) return null;
     return Building.findOne({ where: { id: worldBuilding.buildingId } });
-  }
-
-  @FieldResolver(() => WorldResource, { nullable: true })
-  async world_resource(@Root() worldBuilding: WorldBuilding): Promise<WorldResource | undefined> {
-    if (!worldBuilding.worldResourceId) return null;
-    return WorldResource.findOne({ where: { id: worldBuilding.worldResourceId } });
   }
 
   @FieldResolver(() => [WorldBuildingInventory], { nullable: true })

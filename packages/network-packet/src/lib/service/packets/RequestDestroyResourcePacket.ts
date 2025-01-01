@@ -1,3 +1,3 @@
 export interface RequestDestroyResourcePacket {
-  resourceId: number;
+  resourceEntityId: number;
 }

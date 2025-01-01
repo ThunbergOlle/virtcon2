@@ -33,7 +33,7 @@ export const damageResource = (state: GameState, eid: number, damage: number) =>
     toast(`+1 ${get_item_by_id(Resource.itemId[eid])?.display_name} added to inventory`, { type: 'success', autoClose: 1000 });
     const destroyResourcePacket: ClientPacket<RequestDestroyResourcePacket> = {
       data: {
-        resourceId: Resource.id[eid],
+        resourceEntityId: eid,
       },
       packet_type: PacketType.REQUEST_DESTROY_RESOURCE,
       world_id: state.world,

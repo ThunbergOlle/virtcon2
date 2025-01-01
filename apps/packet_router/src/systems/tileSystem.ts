@@ -13,7 +13,6 @@ export const createTileSystem = (world: World, seed: number) =>
     const tileEntities = tileQuery(world);
     const playerEntities = playerQuery(world);
     if (!playerEntities.length) return;
-    if (!tileEntities.length) return;
 
     const removedEntities = [];
     const newEntities = [];

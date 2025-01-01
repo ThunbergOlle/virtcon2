@@ -1,9 +1,9 @@
 import { loadWorldFromDb } from './loaders';
 import { log, LogApp, LogLevel } from '@shared';
 import { createWorld, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
-import { allComponents, createNewBuildingEntity, createNewResourceEntity } from '@virtcon2/network-world-entities';
-import { getResourceNameFromItemName } from '@virtcon2/static-game-data';
+import { allComponents, createNewBuildingEntity } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
+import { createResourceSystem } from '../systems/resourceSystem';
 
 const worlds = [];
 const systems: { [key: string]: System<void>[] } = {};
@@ -20,8 +20,7 @@ const newEntityWorld = (world: World) => {
 };
 
 const setupSystems = (world: World, seed: number) => {
-  systems[world] = [];
-  systems[world].push(createTileSystem(world, seed));
+  systems[world] = [createTileSystem(world, seed), createResourceSystem(world, seed)];
 };
 
 export const doesWorldExist = (world: World) => worlds.includes(world);
@@ -35,7 +34,7 @@ export const deleteEntityWorld = (world: World) => {
 };
 
 export const initializeWorld = async (dbWorldId: string) => {
-  const { resources, worldBuildings, world: dbWorld } = await loadWorldFromDb(dbWorldId);
+  const { worldBuildings, world: dbWorld } = await loadWorldFromDb(dbWorldId);
 
   const world = newEntityWorld(dbWorldId);
   setupSystems(world, dbWorld.seed);
@@ -49,22 +48,6 @@ export const initializeWorld = async (dbWorldId: string) => {
       rotation: worldBuilding.rotation,
       outputX: worldBuilding.output_pos_x,
       outputY: worldBuilding.output_pos_y,
-    });
-  }
-
-  for (const resource of resources) {
-    const resourceName = getResourceNameFromItemName(resource.item.name);
-    if (!resourceName) throw new Error(`Resource ${resource.item.name} does not exist`);
-
-    createNewResourceEntity(world, {
-      resourceName,
-      pos: {
-        x: resource.x,
-        y: resource.y,
-      },
-      resourceId: resource.id,
-      itemId: resource.item.id,
-      worldBuildingId: resource.worldBuildingId,
     });
   }
 };

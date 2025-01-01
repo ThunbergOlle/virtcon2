@@ -18,8 +18,6 @@ export * from './lib/logger/logger';
 
 export * from './lib/types/redis/RedisWorld';
 
-export * from './lib/types/redis/RedisWorldResource';
-
 export * from './lib/types/redis/RedisWorldBuilding';
 
 export * from './lib/types/inventoryType';

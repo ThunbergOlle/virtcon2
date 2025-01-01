@@ -1,6 +1,12 @@
 import { pMap } from '@shared';
 import { World } from '@virtcon2/bytenetc';
-import { addToInventory, AppDataSource, publishWorldBuildingUpdate, safelyMoveItemsBetweenInventories, WorldBuilding } from '@virtcon2/database-postgres';
+import {
+  addToInventory,
+  AppDataSource,
+  publishWorldBuildingUpdate,
+  safelyMoveItemsBetweenInventories,
+  WorldBuilding,
+} from '@virtcon2/database-postgres';
 import { all_db_buildings, DBBuilding } from '@virtcon2/static-game-data';
 import { EntityManager, IsNull, Not } from 'typeorm';
 
@@ -23,7 +29,7 @@ async function processBuilding(transaction: EntityManager, world: World, buildin
 async function processResourceExtractingBuilding(transaction: EntityManager, world: World, building: DBBuilding) {
   const worldBuildings = await WorldBuilding.find({
     where: { building: { id: building.id }, world: { id: world } },
-    relations: ['world_building_inventory', 'world_resource'],
+    relations: ['world_building_inventory'],
   });
 
   await pMap(
@@ -31,7 +37,7 @@ async function processResourceExtractingBuilding(transaction: EntityManager, wor
     async (worldBuilding) => {
       if (building.output_item?.id)
         return addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
-      else addToInventory(transaction, worldBuilding.world_building_inventory, worldBuilding.world_resource.itemId, building.output_quantity);
+      else console.log('TODO: Implement this');
     },
     { concurrency: 10 },
   );

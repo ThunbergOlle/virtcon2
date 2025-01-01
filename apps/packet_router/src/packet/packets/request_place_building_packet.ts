@@ -6,7 +6,6 @@ import {
   UserInventoryItem,
   WorldBuilding,
   WorldBuildingInventory,
-  WorldResource,
 } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
@@ -31,11 +30,6 @@ export default async function requestPlaceBuildingPacket(
     where: { id: packet.data.buildingItemId },
     relations: ['building', 'building.items_to_be_placed_on', 'building.item'],
   });
-  const resource = await WorldResource.findOne({
-    where: { world: { id: packet.world_id }, id: packet.data.resourceId },
-    relations: ['item'],
-  });
-  if (!resource || !item) throw new Error('Resource or item not found');
 
   /* Check if position is occupied */
   const occuping_building = await WorldBuilding.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });
@@ -48,16 +42,11 @@ export default async function requestPlaceBuildingPacket(
     return;
   }
 
-  const isActive = item.building.items_to_be_placed_on
-    ? item.building.items_to_be_placed_on?.find((i) => i.id === resource?.item.id) && true
-    : true;
-
   const newWorldBuilding = {
     x: packet.data.x,
     y: packet.data.y,
     building: item.building,
-    world_resource: resource,
-    active: isActive,
+    active: true,
     rotation: packet.data.rotation,
     world: { id: packet.world_id },
   };
@@ -66,10 +55,6 @@ export default async function requestPlaceBuildingPacket(
   const worldBuilding = WorldBuilding.create({ ...newWorldBuilding });
   await worldBuilding.save();
 
-  if (resource !== null) {
-    resource.world_building = worldBuilding;
-    await resource.save();
-  }
   // Create all the slots
   for (let i = 0; i < item.building.inventory_slots; i++) {
     const inventoryItem = WorldBuildingInventory.create();
@@ -145,12 +130,6 @@ export default async function requestPlaceBuildingPacket(
   const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);
 
   const serializedBuilding = serialize(packet.world_id, [buildingEntityId]);
-
-  const resources = defineQuery(Resource)(packet.world_id);
-  const resourceEntity = resources.find((r) => Resource.id[r] === resource?.id);
-
-  removeEntity(packet.world_id, resourceEntity);
-  await syncRemoveEntities(client, packet.world_id, packet.world_id, [resourceEntity]);
 
   return syncServerEntities(client, packet.world_id, packet.world_id, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
 }

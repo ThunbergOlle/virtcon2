@@ -1,6 +1,6 @@
-import { World, WorldBuilding, WorldResource } from '@virtcon2/database-postgres';
+import { World, WorldBuilding } from '@virtcon2/database-postgres';
 
-export const loadWorldFromDb = async (worldId: string): Promise<{ resources: WorldResource[]; worldBuildings: WorldBuilding[]; world: World }> => {
+export const loadWorldFromDb = async (worldId: string): Promise<{ worldBuildings: WorldBuilding[]; world: World }> => {
   const world = await World.findOne({ where: { id: worldId } });
   if (!world) {
     throw new Error(`World ${worldId} does not exist.`);
@@ -11,10 +11,6 @@ export const loadWorldFromDb = async (worldId: string): Promise<{ resources: Wor
     where: { world: { id: world.id } },
     relations: ['building'],
   });
-  const resources = await WorldResource.find({
-    where: { world: { id: world.id } },
-    relations: ['item'],
-  });
 
-  return { resources, worldBuildings, world };
+  return { worldBuildings, world };
 };
