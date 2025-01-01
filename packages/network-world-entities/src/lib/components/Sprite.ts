@@ -8,4 +8,5 @@ export const Sprite = defineComponent('sprite', {
   height: Types.ui8,
   rotation: Types.ui16,
   dynamicBody: Types.ui8, // boolean
+  depth: Types.i8,
 });

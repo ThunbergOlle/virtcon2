@@ -1,24 +1,33 @@
 import { Scene, Tilemaps } from 'phaser';
 import { SceneStates } from './interfaces';
 
-import { RedisWorldResource, worldMapParser } from '@shared';
+import { RedisWorldResource } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
-import { createWorld, debugEntity, defineDeserializer, deserializeEntity, registerComponents, removeEntity, System, World } from '@virtcon2/bytenetc';
-import { DisconnectPacketData, PacketType, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, Conveyor, ItemTextureMap, Player, SerializationID, serializeConfig, Sprite } from '@virtcon2/network-world-entities';
+import {
+  createWorld,
+  defineDeserializer,
+  deserializeEntity,
+  doesEntityExist,
+  registerComponents,
+  removeEntity,
+  System,
+  World,
+} from '@virtcon2/bytenetc';
+import { DisconnectPacketData, PacketType, RemoveEntityPacket, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
+import { allComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
+import { createConveyorSystem, updateConveyorAnimations } from '../systems/ConveyorSystem';
 import { createMainPlayerSyncSystem } from '../systems/MainPlayerSyncSystem';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
 import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
-import { createSpriteRegisterySystem, createMovingSpriteSystem } from '../systems/SpriteSystem';
+import { createMovingSpriteSystem, createSpriteRegisterySystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
-import { createConveyorSystem, updateConveyorAnimations } from '../systems/ConveyorSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -108,17 +117,23 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.BUILDING_NO_COLLIDE]: this.physics.add.staticGroup(),
     };
 
-    this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? []);
+    this.physics.add.collider(
+      this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
+      this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? [],
+    );
     // this is commented out since we don't want to collide with resources. This may change in the future.
     // this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
-    this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? []);
+    this.physics.add.collider(
+      this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
+      this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? [],
+    );
 
     events.subscribe('joinWorld', (worldId) => {
-      this.physics.world.createDebugGraphic();
+      // this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 
-    events.subscribe('networkLoadWorld', ({ heightMap, id, mainPlayerId }) => {
+    events.subscribe('networkLoadWorld', ({ id, mainPlayerId }) => {
       Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
 
@@ -128,7 +143,6 @@ export default class Game extends Scene implements SceneStates {
       this.spriteRegisterySystem = createSpriteRegisterySystem(this.state.world, this);
       this.spriteSystem = createMovingSpriteSystem(this.state.world);
       this.mainPlayerSystem = createMainPlayerSystem(this.state.world, this, this.input.keyboard.createCursorKeys());
-      // this.playerReceiveNetworkSystem = createPlayerReceiveNetworkSystem(); - replaced by networked entities
       this.mainPlayerSyncSystem = createMainPlayerSyncSystem(this.state.world);
       this.colliderSystem = createColliderSystem(this.state.world, this);
       this.resourceSystem = createResourceSystem(this.state.world);
@@ -141,18 +155,12 @@ export default class Game extends Scene implements SceneStates {
       this.map = this.make.tilemap({
         tileWidth: 16,
         tileHeight: 16,
-        data: worldMapParser(heightMap),
+        height: 32,
+        width: 32,
       });
 
-      const tileSet = this.map.addTilesetImage('OutdoorsTileset', 'tiles', 16, 16, 1);
-
-      this.map.layers.forEach((layer, index) => {
-        const new_layer = this.map.createLayer(index, tileSet, 0, 0);
-        new_layer.setCollisionBetween(32, 34);
-        this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], new_layer);
-      });
-
-      this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+      //loadChunk(heightMap.slice(0, 2), this.state.world);
+      // const groundTileset = this.map.addTilesetImage('GrassTileset', 'grassTiles', 16, 16, 1);
 
       this.isInitialized = true;
     });
@@ -179,6 +187,8 @@ export default class Game extends Scene implements SceneStates {
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
     receiveServerPackets(this.state, this.state.world, packets);
+
+    console.log(this.game.loop.actualFps);
 
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
@@ -216,6 +226,11 @@ const receiveServerPackets = (state: GameState, world: World, packets: ServerPac
       case PacketType.SYNC_SERVER_ENTITY:
         handleSyncServerEntityPacket(state, world, packet as ServerPacket<SyncServerEntityPacket>);
         break;
+      case PacketType.REMOVE_ENTITY:
+        (packet as ServerPacket<RemoveEntityPacket>).data.entityIds.forEach((eid) => {
+          removeEntity(world, eid);
+        });
+        break;
       case PacketType.DISCONNECT:
         handleDisconnectPacket(world, packet as ServerPacket<DisconnectPacketData>);
         break;
@@ -232,10 +247,11 @@ const handleSyncServerEntityPacket = (state: GameState, world: World, packet: Se
 
   if (serializationId === SerializationID.WORLD) {
     for (let i = 0; i < data.length; i++) {
-      const eid = deserializeEntity(world, data[i]);
-      if (Sprite.texture[eid] === ItemTextureMap['building_conveyor']?.textureId) {
-        console.log(debugEntity(world, eid));
-      }
+      const eid = data[i][0][2];
+      const conflict = doesEntityExist(world, eid as number);
+
+      if (conflict) console.error(`Conflict, entity with id ${eid} already exists`);
+      deserializeEntity(world, data[i]);
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);

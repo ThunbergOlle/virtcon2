@@ -49,6 +49,13 @@ export class World extends BaseEntity {
     }
     return map;
   }
+
+  static getHeightAtPoint(seed: number, x: number, y: number): number {
+    const randomGenerator = seedRandom(seed);
+    const noise = createNoise2D(randomGenerator);
+    return noise(x / 20, y / 20);
+  }
+
   static async RegenerateWorld(world_id: string, size = WorldSettings.world_size) {
     const world = await World.findOne({ where: { id: world_id } });
     if (!world) {
@@ -64,7 +71,12 @@ export class World extends BaseEntity {
       await resource.save();
     }
   }
-  static async GenerateResources(world: World, world_map: number[][], seed: number, size = WorldSettings.world_size): Promise<Array<WorldResource>> {
+  static async GenerateResources(
+    world: World,
+    world_map: number[][],
+    seed: number,
+    size = WorldSettings.world_size,
+  ): Promise<Array<WorldResource>> {
     const seededRandom: () => number = seedRandom(seed);
     // this will make some resources are more likely to spawn if they are higher in the array
     const shuffled_spawnable_resources = all_spawnable_db_items.sort(() => 0.5 - seededRandom());

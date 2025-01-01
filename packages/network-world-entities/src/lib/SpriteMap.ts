@@ -157,6 +157,34 @@ export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> =
   },
 };
 
+export const TileTextureMap: Record<string, TextureMetaData | null> = {
+  water: {
+    textureId: 200,
+    textureName: 'water',
+    variants: ['sprites/tiles/water.png',
+      'sprites/tiles/water_bottom.png',
+      'sprites/tiles/water_bottom_left.png',
+      'sprites/tiles/water_bottom_right.png',
+      'sprites/tiles/water_left.png',
+      'sprites/tiles/water_right.png',
+      'sprites/tiles/water_top.png',
+      'sprites/tiles/water_top_left.png',
+      'sprites/tiles/water_top_right.png',
+    ],
+  },
+  sand: {
+    textureId: 201,
+    textureName: 'sand',
+    variants: ['sprites/tiles/sand.png'],
+  },
+  grass: {
+    textureId: 202,
+    textureName: 'grass',
+    variants: ['sprites/tiles/grass.png'],
+  },
+
+};
+
 export const MiscTextureMap: Record<string, TextureMetaData | null> = {
   player_character: {
     textureId: 1000,
@@ -191,11 +219,14 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     variants: ['sprites/misc/tool_axe.png'],
   },
 };
+
 export const AllTextureMaps = {
   ...ItemTextureMap,
   ...ResourceTextureMap,
   ...MiscTextureMap,
+  ...TileTextureMap,
 };
+
 export const getTextureNameFromTextureId = (textureId: number): string | null => {
   const allTextureMaps = Object.keys(AllTextureMaps) as string[];
   for (const textureMapKey of allTextureMaps) {
@@ -206,6 +237,7 @@ export const getTextureNameFromTextureId = (textureId: number): string | null =>
   }
   return null;
 };
+
 export const getTextureFromTextureId = (textureId: number): TextureMetaData | null => {
   const allTextureMaps = Object.keys(AllTextureMaps) as string[];
   for (const textureMapKey of allTextureMaps) {

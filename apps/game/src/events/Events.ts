@@ -1,6 +1,6 @@
 import { ErrorType } from '@shared';
 import EventSystem from 'events-system';
-import { LoadWorldPacketData, PlayerInventoryServerPacket, WorldBuildingServerPacket } from '@virtcon2/network-packet';
+import { LoadWorldPacketData, WorldBuildingServerPacket } from '@virtcon2/network-packet';
 import { DBItem } from '@virtcon2/static-game-data';
 
 type Events = {

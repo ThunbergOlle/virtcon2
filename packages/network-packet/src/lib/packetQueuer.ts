@@ -1,6 +1,7 @@
 import { SerializedData } from '@virtcon2/bytenetc';
 import { SerializationID } from '@virtcon2/network-world-entities';
 import { RedisClientType } from 'redis';
+import { RemoveEntityPacket } from './service/packets/RemoveEntityPacket';
 import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
 import { PacketType, ServerPacket } from './types/packet';
 
@@ -42,13 +43,37 @@ export const getAllPackets = async (client: RedisClientType, worldId: string): P
 
 const parsePacket = (packet: string): ServerPacket<unknown> => JSON.parse(packet);
 
-export const syncServerEntities = async (client: RedisClientType, queue: string, target: string, data: SerializedData[], serializationId: SerializationID) => {
+export const syncServerEntities = async (
+  client: RedisClientType,
+  queue: string,
+  target: string,
+  data: SerializedData[],
+  serializationId: SerializationID,
+) => {
+  if (!data.length) return;
   await enqueuePacket<SyncServerEntityPacket>(client, queue, {
     packet_type: PacketType.SYNC_SERVER_ENTITY,
     target: target,
     data: {
       serializationId,
       data,
+    },
+    sender: {
+      id: -1,
+      name: 'server_syncer',
+      socket_id: '',
+      world_id: '',
+    },
+  });
+};
+
+export const syncRemoveEntities = async (client: RedisClientType, queue: string, target: string, eids: number[]) => {
+  if (!eids.length) return;
+  await enqueuePacket<RemoveEntityPacket>(client, queue, {
+    packet_type: PacketType.REMOVE_ENTITY,
+    target: target,
+    data: {
+      entityIds: eids,
     },
     sender: {
       id: -1,

@@ -1,12 +1,14 @@
 import { loadWorldFromDb } from './loaders';
-import { log } from '@shared';
-import { createWorld, deleteWorld, registerComponents, World } from '@virtcon2/bytenetc';
+import { log, LogApp, LogLevel } from '@shared';
+import { createWorld, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
 import { allComponents, createNewBuildingEntity, createNewResourceEntity } from '@virtcon2/network-world-entities';
 import { getResourceNameFromItemName } from '@virtcon2/static-game-data';
+import { createTileSystem } from '../systems/tileSystem';
 
 const worlds = [];
+const systems: { [key: string]: System<void>[] } = {};
 
-export const newEntityWorld = (world: World) => {
+const newEntityWorld = (world: World) => {
   if (worlds.includes(world)) throw new Error(`World with id ${world} already exists`);
 
   worlds.push(createWorld(world));
@@ -17,18 +19,26 @@ export const newEntityWorld = (world: World) => {
   return world;
 };
 
+const setupSystems = (world: World, seed: number) => {
+  systems[world] = [];
+  systems[world].push(createTileSystem(world, seed));
+};
+
 export const doesWorldExist = (world: World) => worlds.includes(world);
 export const deleteEntityWorld = (world: World) => {
   const index = worlds.indexOf(world);
   if (index === -1) throw new Error(`World with id ${world} does not exist`);
 
   worlds.splice(index, 1);
+  systems[world] = [];
   deleteWorld(world);
 };
 
-export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
-  const { resources, worldBuildings } = await loadWorldFromDb(dbWorldId);
+export const initializeWorld = async (dbWorldId: string) => {
+  const { resources, worldBuildings, world: dbWorld } = await loadWorldFromDb(dbWorldId);
+
   const world = newEntityWorld(dbWorldId);
+  setupSystems(world, dbWorld.seed);
 
   for (const worldBuilding of worldBuildings) {
     createNewBuildingEntity(world, {
@@ -56,5 +66,12 @@ export const loadEntitiesIntoMemory = async (dbWorldId: string) => {
       itemId: resource.item.id,
       worldBuildingId: resource.worldBuildingId,
     });
+  }
+};
+
+export const tickSystems = (world: World) => {
+  if (!systems[world]) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+  for (const system of systems[world]) {
+    system();
   }
 };

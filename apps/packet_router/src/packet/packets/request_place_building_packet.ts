@@ -8,14 +8,17 @@ import {
   WorldBuildingInventory,
   WorldResource,
 } from '@virtcon2/database-postgres';
-import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncServerEntities } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 
 import worldBuildingChangeOutput from './request_world_building_change_output';
 import { createNewBuildingEntity, Resource, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { defineQuery, defineSerializer, removeEntity } from '@virtcon2/bytenetc';
 
-export default async function requestPlaceBuildingPacket(packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>, client: RedisClientType) {
+export default async function requestPlaceBuildingPacket(
+  packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>,
+  client: RedisClientType,
+) {
   // get the sender
   const player_id = packet.sender.id;
   // check if player has the item
@@ -24,8 +27,14 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
     log(`Player ${player_id} does not have item ${packet.data.buildingItemId}`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
     return;
   }
-  const item = await Item.findOne({ where: { id: packet.data.buildingItemId }, relations: ['building', 'building.items_to_be_placed_on', 'building.item'] });
-  const resource = await WorldResource.findOne({ where: { world: { id: packet.world_id }, id: packet.data.resourceId }, relations: ['item'] });
+  const item = await Item.findOne({
+    where: { id: packet.data.buildingItemId },
+    relations: ['building', 'building.items_to_be_placed_on', 'building.item'],
+  });
+  const resource = await WorldResource.findOne({
+    where: { world: { id: packet.world_id }, id: packet.data.resourceId },
+    relations: ['item'],
+  });
   if (!resource || !item) throw new Error('Resource or item not found');
 
   /* Check if position is occupied */
@@ -39,7 +48,9 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
     return;
   }
 
-  const isActive = item.building.items_to_be_placed_on ? item.building.items_to_be_placed_on?.find((i) => i.id === resource?.item.id) && true : true;
+  const isActive = item.building.items_to_be_placed_on
+    ? item.building.items_to_be_placed_on?.find((i) => i.id === resource?.item.id) && true
+    : true;
 
   const newWorldBuilding = {
     x: packet.data.x,
@@ -71,7 +82,9 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
 
   /* Remove the item from players inventory */
   await AppDataSource.transaction(async (transaction) =>
-    UserInventoryItem.addToInventory(transaction, player_id, packet.data.buildingItemId, -1).then(() => publishUserInventoryUpdate(player_id)),
+    UserInventoryItem.addToInventory(transaction, player_id, packet.data.buildingItemId, -1).then(() =>
+      publishUserInventoryUpdate(player_id),
+    ),
   );
 
   // Update the output of the buildings that are next to the new building
@@ -133,10 +146,11 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
 
   const serializedBuilding = serialize(packet.world_id, [buildingEntityId]);
 
-  // TODO: implement syncing destroyed resources
   const resources = defineQuery(Resource)(packet.world_id);
   const resourceEntity = resources.find((r) => Resource.id[r] === resource?.id);
+
   removeEntity(packet.world_id, resourceEntity);
+  await syncRemoveEntities(client, packet.world_id, packet.world_id, [resourceEntity]);
 
   return syncServerEntities(client, packet.world_id, packet.world_id, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
 }

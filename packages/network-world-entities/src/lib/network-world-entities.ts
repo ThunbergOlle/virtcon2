@@ -9,10 +9,13 @@ export * from './components/Sprite';
 export * from './components/Tag';
 export * from './components/Velocity';
 export * from './components/Conveyor';
+export * from './components/Tile';
 
 /* Entities */
 export * from './entities/Building';
 export * from './entities/Player';
 export * from './entities/Resource';
+export * from './entities/Tile';
 
 export * from './serializeConfig';
+export * from './utils/coordinates';

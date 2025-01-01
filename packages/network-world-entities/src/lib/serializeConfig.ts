@@ -1,6 +1,7 @@
 import { Component } from '@virtcon2/bytenetc';
 import { Position } from './components/Position';
 import { Velocity } from './components/Velocity';
+import { tileEntityComponents } from './entities/Tile';
 import { Player, playerEntityComponents, worldBuildingEntityComponents } from './network-world-entities';
 
 export enum SerializationID {
@@ -8,11 +9,13 @@ export enum SerializationID {
   PLAYER_MOVEMENT = 'player-movement',
   BUILDING_FULL_SERVER = 'building-full-server',
   PLAYER_FULL_SERVER = 'player-full-server',
+  TILE = 'tile'
 }
 
 export const serializeConfig: { [key in SerializationID]: Component<any>[] } = {
   [SerializationID.PLAYER_MOVEMENT]: [Player, Velocity, Position],
   [SerializationID.PLAYER_FULL_SERVER]: playerEntityComponents,
   [SerializationID.BUILDING_FULL_SERVER]: worldBuildingEntityComponents,
+  [SerializationID.TILE]: tileEntityComponents,
   [SerializationID.WORLD]: [],
 };

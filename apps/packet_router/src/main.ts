@@ -1,20 +1,29 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
-import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
+import { defineQuery, removeEntity, System } from '@virtcon2/bytenetc';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
-import { ClientPacket, DisconnectPacketData, PacketType, RequestJoinPacketData, enqueuePacket, getAllPackets } from '@virtcon2/network-packet';
+import { groupBy, map, pick, uniq } from 'ramda';
+import {
+  ClientPacket,
+  DisconnectPacketData,
+  PacketType,
+  RequestJoinPacketData,
+  enqueuePacket,
+  getAllPackets,
+  ServerPacket,
+} from '@virtcon2/network-packet';
 import { Player } from '@virtcon2/network-world-entities';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
 import * as http from 'http';
 import { cwd } from 'process';
-import { RedisClientType, createClient, createClient as createRedisClient } from 'redis';
 import 'reflect-metadata';
 import * as socketio from 'socket.io';
 import { IsNull, Not } from 'typeorm';
-import { deleteEntityWorld } from './ecs/entityWorld';
+import { deleteEntityWorld, tickSystems } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
+import { redisClient } from './redis';
 import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
 
 dotenv.config({ path: `${cwd()}/.env` });
@@ -24,19 +33,6 @@ AppDataSource.initialize().then(() => {
 
 let tick = 0;
 const worlds: string[] = [];
-
-const redisClient = createRedisClient() as RedisClientType;
-
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
-
-/* Temporary code, will be moved later. */
-redisClient.connect().then(async () => {
-  await redisClient.json.set('worlds', '$', {});
-});
-
-const redisPubSub = createClient() as RedisClientType;
-redisPubSub.on('error', (err) => log(err, LogLevel.ERROR, LogApp.SERVER));
-redisPubSub.connect();
 
 const app = express.default();
 app.use(express.json());
@@ -140,17 +136,22 @@ const tickInterval = setInterval(async () => {
   for (let i = 0; i < worlds.length; i++) {
     const world = worlds[i];
     await checkFinishedBuildings(world, tick);
+    tickSystems(world);
+
     if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     const packets = await getAllPackets(redisClient, world);
     if (!packets.length) continue;
 
-    log(`Sending ${packets.length} packets to world ${world}`, LogLevel.INFO, LogApp.SERVER);
-    for (const packet of packets) {
-      io.sockets.to(packet.target).emit('packet', {
-        data: packet.data,
-        packet_type: packet.packet_type,
-      });
+    const types = uniq(map((packet) => packet.packet_type, packets));
+
+    log(`Sending ${packets.length} packets to world ${world}, ${types}`, LogLevel.INFO, LogApp.SERVER);
+
+    const groupedByTarget = groupBy((packet: ServerPacket<unknown>) => packet.target)(packets);
+
+    for (const target in groupedByTarget) {
+      const packets = groupedByTarget[target];
+      io.sockets.to(target).emit('packets', packets);
     }
   }
 }, 1000 / TPS);

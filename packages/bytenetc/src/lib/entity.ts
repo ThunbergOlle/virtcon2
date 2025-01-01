@@ -403,3 +403,5 @@ export const serializeAllEntities = (world: World) => {
 
   return data;
 };
+
+export const doesEntityExist = (world: World, entity: Entity) => !!$store[world].$entityStore[entity];

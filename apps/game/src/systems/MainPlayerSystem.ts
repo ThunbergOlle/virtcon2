@@ -1,15 +1,9 @@
+import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 import { Collider, MainPlayer, MainPlayerAction, MiscTextureMap, Player, Position, Resource, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { events } from '../events/Events';
-import Game, { GameObjectGroups, GameState } from '../scenes/Game';
-import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
-import { useSelector } from 'react-redux';
+import { GameObjectGroups, GameState } from '../scenes/Game';
 import { store } from '../store';
 import { currentTool } from '../ui/components/hotbar/HotbarSlice';
-import { toast } from 'react-toastify';
-import { get_item_by_id } from '@virtcon2/static-game-data';
-import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
-import { client } from '../App';
-import { PLAYER_INVENTORY_QUERY } from '../ui/windows/playerInventory/PlayerInventory';
 import { damageResource } from './ResourceSystem';
 
 const speed = 750;
@@ -34,7 +28,7 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       if (texture && texture.body) {
         /* Follow the main character */
         scene.cameras.main.startFollow(texture);
-        scene.cameras.main.setZoom(3);
+        scene.cameras.main.setZoom(5);
       }
       /* Add event listeners */
       /* Event listener for inventory event */

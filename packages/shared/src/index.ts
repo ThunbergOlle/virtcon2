@@ -24,6 +24,4 @@ export * from './lib/types/redis/RedisWorldBuilding';
 
 export * from './lib/types/inventoryType';
 
-export * from './lib/utils/worldMapParser';
-
 export * from './lib/utils/functional';

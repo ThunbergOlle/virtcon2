@@ -23,13 +23,15 @@ export class Network {
       this.isConnected = true;
     });
 
-    socket.on('packet', (packet: ServerPacket<unknown>) => {
-      this.received_packets.push(packet);
-      const event = packet.packet_type.charAt(0).toUpperCase() + packet.packet_type.slice(1);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      events.notify(('network' + event) as any, packet.data);
+    socket.on('packets', (packets: ServerPacket<unknown>[]) => {
+      this.received_packets.push(...packets);
 
-      //events.notify(('network' + event) as any, packetJSON.data);
+      for (let i = 0; i < packets.length; i++) {
+        const packet = packets[i];
+        const event = packet.packet_type.charAt(0).toUpperCase() + packet.packet_type.slice(1);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        events.notify(('network' + event) as any, packet.data);
+      }
     });
   }
 

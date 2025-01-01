@@ -31,7 +31,6 @@ export default class Preload extends Phaser.Scene implements SceneStates {
         }
       }
     }
-    this.load.image('tiles', '../../assets/tilemaps/tiles/tiles_extruded.png');
   }
 
   create() {
