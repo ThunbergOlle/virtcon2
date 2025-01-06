@@ -13,6 +13,7 @@ import {
 import seedRandom from 'seedrandom';
 import { all_spawnable_db_items, getResourceNameFromItemName } from '@virtcon2/static-game-data';
 import { syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
+import { World as DBWorld } from '@virtcon2/database-postgres';
 import { redisClient } from '../redis';
 
 const resourceQuery = defineQuery(Resource, Position);
@@ -44,8 +45,6 @@ export const createResourceSystem = (world: World, seed: number) => {
     const tileEnterEntities = tileQueryEnter(world);
     const playerEntities = playerQuery(world);
 
-    if (!playerEntities.length) return;
-
     const removedEntities = [];
     const newEntities = [];
 
@@ -57,6 +56,9 @@ export const createResourceSystem = (world: World, seed: number) => {
         const resourceAtLocation = shouldGenerateResource(x, y, seed, item.spawnSettings.chance);
 
         if (!resourceAtLocation) continue spawnLoop;
+        const height = DBWorld.getHeightAtPoint(seed, x, y);
+        const canSpawn = item.spawnSettings.minHeight <= height && item.spawnSettings.maxHeight >= height;
+        if (!canSpawn) continue spawnLoop;
 
         const resourceEntityId = createNewResourceEntity(world, {
           resourceName: getResourceNameFromItemName(item.name),
