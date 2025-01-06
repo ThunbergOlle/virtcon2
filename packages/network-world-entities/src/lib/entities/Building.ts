@@ -1,6 +1,6 @@
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
-import { building_conveyor, get_building_by_id } from '@virtcon2/static-game-data';
-import { Building, Collider, Conveyor, Position, Sprite } from '../network-world-entities';
+import { get_building_by_id } from '@virtcon2/static-game-data';
+import { Building, Collider, Position, Sprite } from '../network-world-entities';
 import { ItemTextureMap } from '../SpriteMap';
 import { tileSize, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -15,13 +15,7 @@ export interface NewBuildingEntity {
   buildingId: number;
 }
 
-export const CUSTOM_BUILDING_CREATOR = {
-  [building_conveyor.id]: (world: World, eid: number) => {
-    addComponent(world, Conveyor, eid);
-  },
-};
-
-export const worldBuildingEntityComponents = [Building, Sprite, Collider, Position, Conveyor];
+export const worldBuildingEntityComponents = [Building, Sprite, Collider, Position];
 export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): number => {
   const metadata = get_building_by_id(data.buildingId);
   if (!metadata) throw new Error(`Building with id ${data.buildingId} not found`);
@@ -48,8 +42,6 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   const { x, y } = toPhaserPos(data);
   Position.x[building] = x + (((metadata.width + 1) % 2) / 2) * tileSize;
   Position.y[building] = y + (((metadata.height + 1) % 2) / 2) * tileSize;
-
-  if (CUSTOM_BUILDING_CREATOR[data.buildingId]) CUSTOM_BUILDING_CREATOR[data.buildingId](world, building);
 
   return building;
 };

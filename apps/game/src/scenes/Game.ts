@@ -1,7 +1,6 @@
 import { Scene, Tilemaps } from 'phaser';
 import { SceneStates } from './interfaces';
 
-import { RedisWorldResource } from '@shared';
 import { DBBuilding } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
@@ -21,7 +20,6 @@ import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
-import { createConveyorSystem, updateConveyorAnimations } from '../systems/ConveyorSystem';
 import { createMainPlayerSyncSystem } from '../systems/MainPlayerSyncSystem';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
 import { createPlayerSystem } from '../systems/PlayerSystem';
@@ -42,7 +40,6 @@ export interface GameState {
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
   tagGameObjectById: { [key: number]: Phaser.GameObjects.Text };
-  resourcesById: { [key: number]: RedisWorldResource } /* entity id to resource id string in database */;
   ghostBuildingById: { [key: number]: DBBuilding };
   gameObjectGroups: {
     [key in GameObjectGroups]: Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup | null;
@@ -57,7 +54,6 @@ export default class Game extends Scene implements SceneStates {
     world: '',
     spritesById: {},
     playerById: {},
-    resourcesById: {},
     ghostBuildingById: {},
     tagGameObjectById: {},
     gameObjectGroups: {
@@ -78,7 +74,6 @@ export default class Game extends Scene implements SceneStates {
   public buildingSystem?: System<GameState>;
   public tagSystem?: System<GameState>;
   public playerSystem?: System<GameState>;
-  public conveyorSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -150,7 +145,6 @@ export default class Game extends Scene implements SceneStates {
       this.buildingSystem = createBuildingSystem(this.state.world);
       this.tagSystem = createTagSystem(this.state.world, this);
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId);
-      this.conveyorSystem = createConveyorSystem(this.state.world);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -179,7 +173,6 @@ export default class Game extends Scene implements SceneStates {
       !this.buildingSystem ||
       !this.playerSystem ||
       !this.tagSystem ||
-      !this.conveyorSystem ||
       !this.isInitialized
     )
       return;
@@ -203,8 +196,6 @@ export default class Game extends Scene implements SceneStates {
 
     newState = this.buildingPlacementSystem(newState);
     newState = this.tagSystem(newState);
-
-    newState = this.conveyorSystem(newState);
 
     // Update state
     this.state = newState;
@@ -255,12 +246,7 @@ const handleSyncServerEntityPacket = (state: GameState, world: World, packet: Se
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
-    const entities = deserialize(world, data);
-    if (serializationId === SerializationID.BUILDING_FULL_SERVER) {
-      for (let i = 0; i < entities.length; i++) {
-        delayOneUpdate(() => updateConveyorAnimations(state, world, entities[i]));
-      }
-    }
+    deserialize(world, data);
   }
 };
 

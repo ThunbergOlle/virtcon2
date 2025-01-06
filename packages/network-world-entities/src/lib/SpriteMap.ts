@@ -61,11 +61,6 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     textureName: 'coal',
     variants: ['sprites/items/coal.png'],
   },
-  [DBItemName.BUILDING_PIPE]: {
-    textureId: 7,
-    textureName: 'building_pipe',
-    variants: ['sprites/items/building_pipe.png'],
-  },
   [DBItemName.BUILDING_FURNACE]: {
     textureId: 8,
     textureName: 'building_furnace',
@@ -87,36 +82,6 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
         frameRate: 20,
         repeat: -1,
         playOnCreate: true,
-      },
-    ],
-    spriteSheetFrameWidth: 16,
-    spriteSheetFrameHeight: 16,
-  },
-  [DBItemName.BUILDING_CONVEYOR]: {
-    textureId: 11,
-    textureName: 'building_conveyor',
-    variants: ['sprites/items/building_conveyor.png'],
-    animations: [
-      {
-        name: 'idle',
-        frames: [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
-        frameRate: 20,
-        repeat: -1,
-        playOnCreate: true,
-      },
-      {
-        name: 'idle_corner_1',
-        frames: [19, 18, 17, 16],
-        frameRate: 20,
-        repeat: -1,
-        playOnCreate: false,
-      },
-      {
-        name: 'idle_corner_2',
-        frames: [20, 21, 22, 23],
-        frameRate: 20,
-        repeat: -1,
-        playOnCreate: false,
       },
     ],
     spriteSheetFrameWidth: 16,
@@ -161,7 +126,8 @@ export const TileTextureMap: Record<string, TextureMetaData | null> = {
   water: {
     textureId: 200,
     textureName: 'water',
-    variants: ['sprites/tiles/water.png',
+    variants: [
+      'sprites/tiles/water.png',
       'sprites/tiles/water_bottom.png',
       'sprites/tiles/water_bottom_left.png',
       'sprites/tiles/water_bottom_right.png',
@@ -182,7 +148,6 @@ export const TileTextureMap: Record<string, TextureMetaData | null> = {
     textureName: 'grass',
     variants: ['sprites/tiles/grass.png'],
   },
-
 };
 
 export const MiscTextureMap: Record<string, TextureMetaData | null> = {

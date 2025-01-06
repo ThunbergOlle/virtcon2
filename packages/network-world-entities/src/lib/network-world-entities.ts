@@ -8,7 +8,6 @@ export * from './components/Resource';
 export * from './components/Sprite';
 export * from './components/Tag';
 export * from './components/Velocity';
-export * from './components/Conveyor';
 export * from './components/Tile';
 
 /* Entities */

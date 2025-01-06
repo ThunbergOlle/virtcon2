@@ -17,8 +17,6 @@ export enum DBItemName {
   GLASS = 'glass',
   COAL = 'coal',
   IRON = 'iron',
-  BUILDING_PIPE = 'building_pipe',
-  BUILDING_CONVEYOR = 'building_conveyor',
   BUILDING_FURNACE = 'building_furnace',
   BUILDING_SAWMILL = 'building_sawmill',
   BUILDING_DRILL = 'building_drill',
