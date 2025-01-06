@@ -8,3 +8,11 @@ export const pMap = async <T, R>(arr: T[], mapper: (item: T) => Promise<R>, { co
 
   return results;
 };
+
+export const every = (x: number) => {
+  let count = 0;
+  return () => {
+    count++;
+    return count % x === 0;
+  };
+};
