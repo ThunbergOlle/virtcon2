@@ -3,5 +3,4 @@ export interface RequestPlaceBuildingPacketData {
   rotation: number;
   x: number;
   y: number;
-  resourceId: number;
 }

@@ -28,7 +28,6 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
       sprite.setDataEnabled();
       sprite.setData('entityId', id);
       sprite.depth = Sprite.depth[id];
-      console.log(sprite.depth);
 
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {

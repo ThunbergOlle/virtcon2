@@ -99,7 +99,12 @@ export default function PlayerInventoryWindow() {
       toast('You do not have any more of this building in your inventory', { type: 'error' });
       return cancelPlaceBuildingIntent();
     }
-    if (!buildingBeingPlacedEntity.current || !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current] || !buildingBeingPlaced.current.item) return;
+    if (
+      !buildingBeingPlacedEntity.current ||
+      !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current] ||
+      !buildingBeingPlaced.current.item
+    )
+      return;
 
     toast('Placing building', { type: 'info' });
 
@@ -109,7 +114,6 @@ export default function PlayerInventoryWindow() {
     const packet: ClientPacket<RequestPlaceBuildingPacketData> = {
       data: {
         buildingItemId: buildingBeingPlaced.current.item.id,
-        resourceId: GhostBuilding.resourceId[buildingBeingPlacedEntity.current],
         rotation: Sprite.rotation[buildingBeingPlacedEntity.current],
         x,
         y,

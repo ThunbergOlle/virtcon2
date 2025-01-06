@@ -26,6 +26,7 @@ import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
 import { createMovingSpriteSystem, createSpriteRegisterySystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
+import { createConnectionSystem } from '../systems/ConnectionSystem';
 
 export enum GameObjectGroups {
   PLAYER = 0,
@@ -41,12 +42,15 @@ export interface GameState {
   playerById: { [key: number]: string };
   tagGameObjectById: { [key: number]: Phaser.GameObjects.Text };
   ghostBuildingById: { [key: number]: DBBuilding };
+  worldConnectionPointById: {
+    [key: number]: { startPoint: Phaser.GameObjects.Arc; endPoint: Phaser.GameObjects.Arc; line: Phaser.GameObjects.Line };
+  };
+
   gameObjectGroups: {
     [key in GameObjectGroups]: Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup | null;
   };
 }
 export default class Game extends Scene implements SceneStates {
-  private map!: Tilemaps.Tilemap;
   private isInitialized = false;
 
   public state: GameState = {
@@ -56,6 +60,7 @@ export default class Game extends Scene implements SceneStates {
     playerById: {},
     ghostBuildingById: {},
     tagGameObjectById: {},
+    worldConnectionPointById: {},
     gameObjectGroups: {
       [GameObjectGroups.PLAYER]: null,
       [GameObjectGroups.BUILDING]: null,
@@ -74,6 +79,7 @@ export default class Game extends Scene implements SceneStates {
   public buildingSystem?: System<GameState>;
   public tagSystem?: System<GameState>;
   public playerSystem?: System<GameState>;
+  public connectionSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -145,6 +151,7 @@ export default class Game extends Scene implements SceneStates {
       this.buildingSystem = createBuildingSystem(this.state.world);
       this.tagSystem = createTagSystem(this.state.world, this);
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId);
+      this.connectionSystem = createConnectionSystem(this.state.world, this);
 
       this.map = this.make.tilemap({
         tileWidth: 16,
@@ -173,15 +180,14 @@ export default class Game extends Scene implements SceneStates {
       !this.buildingSystem ||
       !this.playerSystem ||
       !this.tagSystem ||
-      !this.isInitialized
+      !this.isInitialized ||
+      !this.connectionSystem
     )
       return;
 
     let newState = { ...this.state, dt: dt };
     const [packets, length] = Game.network.getReceivedPackets();
-    receiveServerPackets(this.state, this.state.world, packets);
-
-    console.log(this.game.loop.actualFps);
+    receiveServerPackets(this.state.world, packets);
 
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
@@ -197,7 +203,8 @@ export default class Game extends Scene implements SceneStates {
     newState = this.buildingPlacementSystem(newState);
     newState = this.tagSystem(newState);
 
-    // Update state
+    newState = this.connectionSystem(newState);
+
     this.state = newState;
 
     Game.network.readReceivedPackets(length);
@@ -210,12 +217,12 @@ export default class Game extends Scene implements SceneStates {
   }
 }
 
-const receiveServerPackets = (state: GameState, world: World, packets: ServerPacket<unknown>[]) => {
+const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) => {
   for (let i = 0; i < packets.length; i++) {
     const packet = packets[i];
     switch (packet.packet_type) {
       case PacketType.SYNC_SERVER_ENTITY:
-        handleSyncServerEntityPacket(state, world, packet as ServerPacket<SyncServerEntityPacket>);
+        handleSyncServerEntityPacket(world, packet as ServerPacket<SyncServerEntityPacket>);
         break;
       case PacketType.REMOVE_ENTITY:
         (packet as ServerPacket<RemoveEntityPacket>).data.entityIds.forEach((eid) => {
@@ -229,11 +236,7 @@ const receiveServerPackets = (state: GameState, world: World, packets: ServerPac
   }
 };
 
-const delayOneUpdate = (fn: () => void) => {
-  setTimeout(fn, 0);
-};
-
-const handleSyncServerEntityPacket = (state: GameState, world: World, packet: ServerPacket<SyncServerEntityPacket>) => {
+const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncServerEntityPacket>) => {
   const { data, serializationId } = packet.data;
 
   if (serializationId === SerializationID.WORLD) {

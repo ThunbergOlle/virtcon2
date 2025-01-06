@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
 import { InventoryType } from '@shared';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
+import { createWorldConnectionPoint, toPhaserPos } from '@virtcon2/network-world-entities';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';
@@ -9,6 +10,7 @@ import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { WindowType } from '../../lib/WindowSlice';
+import { WorldBuildingConnection } from './WorldBuildingConnection';
 import WorldBuildingOutput, { WORLD_BUILDING_OUTPUT_FRAGMENT } from './WorldBuildingOutput';
 
 const WORLD_BUILDING_FRAGMENT = gql`
@@ -129,6 +131,7 @@ export default function WorldBuildingWindow() {
             <WorldBuildingOutput onNewPositionSelected={onNewOutputPositionSelected} worldBuildingId={worldBuilding?.id} />
           </div>
         </div>
+
         <div className="flex-[3]">
           <h2 className="text-2xl">Inventory</h2>
           <div className="flex flex-row flex-wrap gap-2">
@@ -153,6 +156,7 @@ export default function WorldBuildingWindow() {
               })}
           </div>
         </div>
+        <WorldBuildingConnection x={worldBuilding?.x ?? 0} y={worldBuilding?.y ?? 0} />
       </div>
     </Window>
   );

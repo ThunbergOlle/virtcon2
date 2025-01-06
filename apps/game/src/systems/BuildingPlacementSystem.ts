@@ -77,8 +77,6 @@ const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: P
       for (const item of building.items_to_be_placed_on!) {
         if (collided.name === `resource-${item.name}`) {
           GhostBuilding.placementIsValid[entity] = 1;
-          const dbResourceId = Resource.id[collided.data.get('entityId')];
-          GhostBuilding.resourceId[entity] = dbResourceId;
         }
       }
     });

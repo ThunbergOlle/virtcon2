@@ -8,6 +8,7 @@ import { UserInventoryItem } from './user_inventory_item/UserInventoryItem';
 import { World } from './world/World';
 import { WorldBuilding } from './world_building/WorldBuilding';
 import { WorldBuildingInventory } from './world_building_inventory/WorldBuildingInventory';
+import { WorldConnectionPoint } from './world_connection_point/WorldConnectionPoint';
 import { WorldWhitelist } from './world_whitelist/WorldWhitelist';
 
 export default [
@@ -22,4 +23,5 @@ export default [
   ItemRecipe,
   WorldBuildingInventory,
   BuildingProcessingRequirement,
+  WorldConnectionPoint,
 ];

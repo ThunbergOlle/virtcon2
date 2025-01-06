@@ -12,6 +12,20 @@ import {
   Tag,
   Tile,
   Velocity,
+  ConnectionPoint,
 } from './lib/network-world-entities';
 
-export const allComponents = [Building, Collider, GhostBuilding, MainPlayer, Player, Position, Resource, Sprite, Tag, Velocity, Tile];
+export const allComponents = [
+  Building,
+  Collider,
+  GhostBuilding,
+  MainPlayer,
+  Player,
+  Position,
+  Resource,
+  Sprite,
+  Tag,
+  Velocity,
+  Tile,
+  ConnectionPoint,
+];

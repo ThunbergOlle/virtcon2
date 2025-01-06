@@ -9,6 +9,7 @@ export * from './components/Sprite';
 export * from './components/Tag';
 export * from './components/Velocity';
 export * from './components/Tile';
+export * from './components/ConnectionPoint';
 
 /* Entities */
 export * from './entities/Building';
