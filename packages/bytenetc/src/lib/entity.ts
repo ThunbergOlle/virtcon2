@@ -37,7 +37,7 @@ type TypeToTypedArray<T extends Type> = T extends 'i8'
   ? Uint32Array
   : never;
 
-export type Component<S extends Schema> = SchemaToComponent<S> & { _name: Uint8Array };
+export type Component<S extends Schema> = SchemaToComponent<S> & { _name: Uint8Array; _schema: S };
 
 type SchemaToComponent<S extends Schema> = {
   [K in keyof S]: S[K] extends Type ? TypeToTypedArray<S[K]> : S[K] extends ArrayType ? Array<TypeToTypedArray<S[K][0]>> : never;
@@ -98,6 +98,7 @@ export const defineComponent = <S extends Schema>(name: string, schema: S): Comp
 
   const component: any = {
     _name: nameUint8,
+    _schema: schema,
   };
 
   for (const key in schema) {
@@ -272,6 +273,23 @@ export const dangerouslyAddEntity = (world: World, entity: Entity) => {
 export const removeEntity = (world: World, entity: Entity) => {
   $store[world].$queryCache.clear();
   $store[world].$entityStore[entity] = null;
+
+  for (const name in $store[world].$componentStore) {
+    const schema = $store[world].$componentStore[name]._schema;
+
+    for (const key in schema) {
+      if (key === '_name') continue;
+      if (key === '_schema') continue;
+
+      if (schema[key] instanceof Array) {
+        const [type, length] = schema[key] as ArrayType;
+        const array = chooseArray(type, length);
+        $store[world].$componentStore[name][key][entity] = array;
+      } else {
+        $store[world].$componentStore[name][key][entity] = 0;
+      }
+    }
+  }
 };
 
 export const clearEntities = (world: World) => {
@@ -290,7 +308,7 @@ export const serializeEntity = (world: World, entity: Entity): SerializedData =>
 
   for (const name of components) {
     for (const key in $store[world].$componentStore[name]) {
-      if (key === '_name') continue;
+      if (key === '_name' || key === '_schema') continue;
       data.push([name, key, $store[world].$componentStore[name][key][entity]]);
     }
   }
@@ -318,6 +336,7 @@ export const deserializeEntity = (world: World, data: SerializedData) => {
     if (value instanceof Array) deserializeArray(world, name, key, value as AllArrayTypes, eid);
     else $store[world].$componentStore[name][key][eid] = value;
   }
+
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
   $store[world].$entityStore[eid] = uniqueComponents;
 
@@ -338,6 +357,7 @@ export const defineSerializer = (components: Component<any>[]) => {
 
         for (const key in $store[world].$componentStore[componentName]) {
           if (key === '_name') continue;
+          if (key === '_schema') continue;
           const value = $store[world].$componentStore[componentName][key][entity];
           serializedData.push([componentName, key, value]);
         }
