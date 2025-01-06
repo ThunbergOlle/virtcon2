@@ -24,20 +24,6 @@ export const createTileSystem = (world: World, seed: number) =>
       const [minX, maxX] = [x - renderDistance, x + renderDistance];
       const [minY, maxY] = [y - renderDistance, y + renderDistance];
 
-      for (let j = 0; j < tileEntities.length; j++) {
-        const tileEid = tileEntities[j];
-        const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
-
-        if (tileX >= minX && tileX <= maxX && tileY >= minY && tileY <= maxY) {
-          continue;
-        }
-
-        if (tileX < minX || tileX > maxX || tileY < minY || tileY > maxY) {
-          removeEntity(world, tileEid);
-          removedEntities.push(tileEid);
-        }
-      }
-
       for (let j = minX; j <= maxX; j++) {
         for (let k = minY; k <= maxY; k++) {
           if (
@@ -51,6 +37,20 @@ export const createTileSystem = (world: World, seed: number) =>
           const height = DB.World.getHeightAtPoint(seed, j, k);
           const tileEntityId = createTile(j, k, height, world);
           newEntities.push(tileEntityId);
+        }
+      }
+
+      for (let j = 0; j < tileEntities.length; j++) {
+        const tileEid = tileEntities[j];
+        const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
+
+        if (tileX >= minX && tileX <= maxX && tileY >= minY && tileY <= maxY) {
+          continue;
+        }
+
+        if (tileX < minX || tileX > maxX || tileY < minY || tileY > maxY) {
+          removeEntity(world, tileEid);
+          removedEntities.push(tileEid);
         }
       }
     }

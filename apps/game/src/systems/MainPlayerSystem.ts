@@ -1,5 +1,15 @@
-import { addComponent, addEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
-import { Collider, MainPlayer, MainPlayerAction, MiscTextureMap, Player, Position, Resource, Sprite, Velocity } from '@virtcon2/network-world-entities';
+import { addComponent, addEntity, debugEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
+import {
+  Collider,
+  MainPlayer,
+  MainPlayerAction,
+  MiscTextureMap,
+  Player,
+  Position,
+  Resource,
+  Sprite,
+  Velocity,
+} from '@virtcon2/network-world-entities';
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { store } from '../store';
@@ -12,17 +22,18 @@ const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
 export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
   const [keyW, keyA, keyS, keyD, keySpace] = [
-    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-    scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
   ];
 
   return defineSystem<GameState>((state) => {
     const enterEntities = mainPlayerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
+      console.log(debugEntity(world, id));
 
       const texture = state.spritesById[id];
       if (texture && texture.body) {
@@ -32,11 +43,11 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       }
       /* Add event listeners */
       /* Event listener for inventory event */
-      scene.input.keyboard.on('keydown-E', () => {
+      scene.input.keyboard?.on('keydown-E', () => {
         events.notify('onInventoryButtonPressed');
       });
       /* Event listener for crafter event */
-      scene.input.keyboard.on('keydown-C', () => {
+      scene.input.keyboard?.on('keydown-C', () => {
         events.notify('onCrafterButtonPressed');
       });
 
@@ -45,9 +56,13 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     const entities = mainPlayerQuery(world);
     for (let i = 0; i < entities.length; i++) {
       let xVel: number =
-        (Number(cursors.right.isDown || scene.input.keyboard.checkDown(keyD)) - Number(cursors.left.isDown || scene.input.keyboard.checkDown(keyA))) / 10;
+        (Number(cursors.right.isDown || scene.input.keyboard?.checkDown(keyD)) -
+          Number(cursors.left.isDown || scene.input.keyboard.checkDown(keyA))) /
+        10;
       let yVel: number =
-        (Number(cursors.down.isDown || scene.input.keyboard.checkDown(keyS)) - Number(cursors.up.isDown || scene.input.keyboard.checkDown(keyW))) / 10;
+        (Number(cursors.down.isDown || scene.input.keyboard?.checkDown(keyS)) -
+          Number(cursors.up.isDown || scene.input.keyboard.checkDown(keyW))) /
+        10;
 
       // Normalize speed in the diagonals
       if (yVel !== 0 && xVel !== 0) {
@@ -78,7 +93,7 @@ function attack(state: GameState, world: World, eid: number) {
 
   const closestResources = closestResourceQuery(world);
 
-  let resourceTargetId = null;
+  let resourceTargetId: number | null = null;
   let distanceBetween = 1000000;
   for (let i = 0; i < closestResources.length; i++) {
     const resource = closestResources[i];

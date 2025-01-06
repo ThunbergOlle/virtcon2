@@ -11,7 +11,7 @@ import {
   Tile,
 } from '@virtcon2/network-world-entities';
 import seedRandom from 'seedrandom';
-import { all_spawnable_db_items, getResourceNameFromItemName, ResourceNames } from '@virtcon2/static-game-data';
+import { all_spawnable_db_items, getResourceNameFromItemName } from '@virtcon2/static-game-data';
 import { syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { redisClient } from '../redis';
 
@@ -19,6 +19,21 @@ const resourceQuery = defineQuery(Resource, Position);
 const tileQuery = defineQuery(Tile, Position);
 const tileQueryEnter = enterQuery(tileQuery);
 const playerQuery = defineQuery(Player, Position);
+
+const shouldGenerateResource = (x: number, y: number, seed: number, resourceChance = 0.1) => {
+  const combinedSeed = `${x},${y},${seed}`;
+
+  let hash = 0;
+  for (let i = 0; i < combinedSeed.length; i++) {
+    const char = combinedSeed.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32-bit integer
+  }
+
+  const pseudoRandom = Math.abs(hash % 10000) / 10000;
+
+  return pseudoRandom < resourceChance;
+};
 
 export const createResourceSystem = (world: World, seed: number) => {
   const seededRandom: () => number = seedRandom(seed);
@@ -39,10 +54,9 @@ export const createResourceSystem = (world: World, seed: number) => {
       const { x, y } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
 
       spawnLoop: for (const item of shuffled_spawnable_resources) {
-        const randomSpawnNumber = seededRandom();
-        if (randomSpawnNumber > item.spawnSettings.chance) {
-          continue spawnLoop;
-        }
+        const resourceAtLocation = shouldGenerateResource(x, y, seed, item.spawnSettings.chance);
+
+        if (!resourceAtLocation) continue spawnLoop;
 
         const resourceEntityId = createNewResourceEntity(world, {
           resourceName: getResourceNameFromItemName(item.name),

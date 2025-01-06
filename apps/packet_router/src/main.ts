@@ -1,7 +1,7 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
-import { defineQuery, removeEntity, System } from '@virtcon2/bytenetc';
+import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
-import { groupBy, map, pick, uniq } from 'ramda';
+import { groupBy, map, uniq } from 'ramda';
 import {
   ClientPacket,
   DisconnectPacketData,
