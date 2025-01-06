@@ -8,6 +8,7 @@ export const Hotbar = () => {
 
   useHotkey('1', () => dispatch(select('none')));
   useHotkey('2', () => dispatch(select('axe')));
+  useHotkey('3', () => dispatch(select('electric_wrench')));
 
   return (
     <div className="absolute h-16  z-[2] bottom-4 w-full flex">
@@ -26,6 +27,15 @@ export const Hotbar = () => {
             src="/assets/sprites/misc/tool_axe.png"
             alt="axe"
             className={`pixelart h-10 w-10 mx-3 cursor-pointer ${currentTool === 'axe' && 'border-green-600 border-b-4'}`}
+            draggable="false"
+            unselectable="on"
+          />
+        </div>
+        <div onClick={() => dispatch(select('electric_wrench'))}>
+          <img
+            src="/assets/sprites/misc/tool_wrench.png"
+            alt="wrench"
+            className={`pixelart h-10 w-10 mx-3 cursor-pointer ${currentTool === 'electric_wrench' && 'border-green-600 border-b-4'}`}
             draggable="false"
             unselectable="on"
           />

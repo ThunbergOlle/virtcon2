@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-type ToolTypes = 'none' | 'axe' | 'pickaxe';
+type ToolTypes = 'none' | 'axe' | 'pickaxe' | 'electric_wrench';
 const initialState: { tool: ToolTypes } = {
   tool: 'none',
 };

@@ -87,6 +87,7 @@ function attack(state: GameState, world: World, eid: number) {
 
   const selectedTool = currentTool(store.getState());
   if (selectedTool === 'none') return;
+  if (selectedTool === 'electric_wrench') return;
 
   const textureId = MiscTextureMap[`tool_${selectedTool}`]?.textureId;
   if (!textureId) throw new Error(`Texture not found for tool: ${selectedTool}`);
