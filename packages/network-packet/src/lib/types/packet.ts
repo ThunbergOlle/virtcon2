@@ -13,12 +13,13 @@ export enum PacketType {
   REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
   REQUEST_MOVE_INVENTORY_ITEM = 'requestMoveInventoryItem',
   REQUEST_WORLD_BUILDING_CHANGE_OUTPUT = 'requestWorldBuildingChangeOutput',
-  INTERNAL_WORLD_BUILDING_FINISHED_PROCESSING = 'internalWorldBuildingFinishedProcessing',
   WORLD_BUILDING = 'worldBuilding',
 
   SYNC_CLIENT_ENTITY = 'syncClientEntity',
   SYNC_SERVER_ENTITY = 'syncServerEntity',
   REMOVE_ENTITY = 'removeEntity',
+
+  REQUEST_CONNECT_BUILDING = 'requestConnectBuilding',
 }
 
 export interface PacketSender {

@@ -5,4 +5,5 @@ export const ConnectionPoint = defineComponent('connectionPoint', {
   startY: Types.i32,
   endX: Types.i32,
   endY: Types.i32,
+  valid: Types.i8,
 });

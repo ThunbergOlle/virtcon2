@@ -1,9 +1,8 @@
 import { SerializedData } from '@virtcon2/bytenetc';
 import { SerializationID } from '@virtcon2/network-world-entities';
 import { RedisClientType } from 'redis';
-import { RemoveEntityPacket } from './service/packets/RemoveEntityPacket';
-import { SyncServerEntityPacket } from './service/packets/SyncServerEntity';
 import { PacketType, ServerPacket } from './types/packet';
+import { RemoveEntityPacket, SyncServerEntityPacket } from './types/packetData';
 
 function replacer(key, value) {
   if (value instanceof Uint8Array) {
