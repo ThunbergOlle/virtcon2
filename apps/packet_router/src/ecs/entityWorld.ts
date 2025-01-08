@@ -46,8 +46,6 @@ export const initializeWorld = async (dbWorldId: string) => {
       x: worldBuilding.x,
       y: worldBuilding.y,
       rotation: worldBuilding.rotation,
-      outputX: worldBuilding.output_pos_x,
-      outputY: worldBuilding.output_pos_y,
     });
   }
 };

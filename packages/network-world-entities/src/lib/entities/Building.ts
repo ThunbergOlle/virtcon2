@@ -7,8 +7,6 @@ import { GameObjectGroups } from '../utils/gameObject';
 
 export interface NewBuildingEntity {
   worldBuildingId: number;
-  outputX: number;
-  outputY: number;
   x: number;
   y: number;
   rotation: number;
@@ -24,8 +22,6 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
 
   addComponent(world, Building, building);
   Building.worldBuildingId[building] = data.worldBuildingId;
-  Building.outputX[building] = data.outputX;
-  Building.outputY[building] = data.outputY;
 
   addComponent(world, Sprite, building);
   Sprite.texture[building] = ItemTextureMap[metadata.name]?.textureId ?? 0;

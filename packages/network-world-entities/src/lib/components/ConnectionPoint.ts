@@ -6,4 +6,5 @@ export const ConnectionPoint = defineComponent('connectionPoint', {
   endX: Types.i32,
   endY: Types.i32,
   valid: Types.i8,
+  followMouse: Types.i8,
 });

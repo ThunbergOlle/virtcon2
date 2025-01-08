@@ -27,8 +27,6 @@ export interface DBWorldBuilding {
   x: number;
   y: number;
   rotation: number;
-  output_pos_x: number;
-  output_pos_y: number;
   building: DBBuilding;
   output_world_building: DBWorldBuilding | null;
   world_building_inventory: DBWorldBuildingInventoryItem[];

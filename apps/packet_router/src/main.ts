@@ -1,7 +1,7 @@
 import { LogApp, LogLevel, TPS, log } from '@shared';
 import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
-import { groupBy, map, uniq } from 'ramda';
+import { groupBy } from 'ramda';
 import {
   ClientPacket,
   DisconnectPacketData,
@@ -142,10 +142,6 @@ const tickInterval = setInterval(async () => {
 
     const packets = await getAllPackets(redisClient, world);
     if (!packets.length) continue;
-
-    const types = uniq(map((packet) => packet.packet_type, packets));
-
-    log(`Sending ${packets.length} packets to world ${world}, ${types}`, LogLevel.INFO, LogApp.SERVER);
 
     const groupedByTarget = groupBy((packet: ServerPacket<unknown>) => packet.target)(packets);
 

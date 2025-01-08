@@ -10,9 +10,8 @@ import {
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 
-import worldBuildingChangeOutput from './request_world_building_change_output';
-import { createNewBuildingEntity, Resource, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { defineQuery, defineSerializer, removeEntity } from '@virtcon2/bytenetc';
+import { createNewBuildingEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { defineSerializer } from '@virtcon2/bytenetc';
 
 export default async function requestPlaceBuildingPacket(
   packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>,
@@ -72,49 +71,6 @@ export default async function requestPlaceBuildingPacket(
     ),
   );
 
-  // Update the output of the buildings that are next to the new building
-  const positionsThatBuildingOccupies: [number, number][] = [];
-  for (let i = 0; i < item.building.width; i++) {
-    for (let j = 0; j < item.building.height; j++) {
-      positionsThatBuildingOccupies.push([packet.data.x + i, packet.data.y + j]);
-    }
-  }
-
-  positionsThatBuildingOccupies.forEach(async (position) => {
-    const [x, y] = position;
-    const wb = await WorldBuilding.findOne({ where: { output_pos_x: x, output_pos_y: y, world: { id: packet.world_id } } });
-    if (wb) {
-      worldBuildingChangeOutput({ ...packet, data: { building_id: wb.id, output_pos_x: x, output_pos_y: y } });
-    }
-  });
-
-  switch (newWorldBuilding.rotation) {
-    case 0:
-      worldBuildingChangeOutput({
-        ...packet,
-        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x + item.building.width, output_pos_y: newWorldBuilding.y },
-      });
-      break;
-    case 90:
-      worldBuildingChangeOutput({
-        ...packet,
-        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y + item.building.height },
-      });
-      break;
-    case 180:
-      worldBuildingChangeOutput({
-        ...packet,
-        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x - item.building.width, output_pos_y: newWorldBuilding.y },
-      });
-      break;
-    case 270:
-      worldBuildingChangeOutput({
-        ...packet,
-        data: { building_id: worldBuilding.id, output_pos_x: newWorldBuilding.x, output_pos_y: newWorldBuilding.y - item.building.height },
-      });
-      break;
-  }
-
   const updatedWorldBuilding = await WorldBuilding.findOne({ where: { id: worldBuilding.id }, relations: ['building'] });
 
   const buildingEntityId = createNewBuildingEntity(packet.world_id, {
@@ -123,8 +79,6 @@ export default async function requestPlaceBuildingPacket(
     x: updatedWorldBuilding.x,
     y: updatedWorldBuilding.y,
     rotation: updatedWorldBuilding.rotation,
-    outputX: updatedWorldBuilding.output_pos_x,
-    outputY: updatedWorldBuilding.output_pos_y,
   });
 
   const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);

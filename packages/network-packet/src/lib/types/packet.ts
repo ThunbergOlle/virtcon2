@@ -5,7 +5,6 @@ export enum PacketType {
   DISCONNECT = 'disconnect',
   PLAYER_MOVE = 'playerMove',
   LOAD_WORLD = 'loadWorld',
-  LOAD_CHUNK = 'loadChunk',
   PLAYER_SET_POSITION = 'playerSetPosition',
   PLAYER_INVENTORY = 'playerInventory',
   REQUEST_JOIN = 'requestJoin',
@@ -19,7 +18,7 @@ export enum PacketType {
   SYNC_SERVER_ENTITY = 'syncServerEntity',
   REMOVE_ENTITY = 'removeEntity',
 
-  REQUEST_CONNECT_BUILDING = 'requestConnectBuilding',
+  REQUEST_CREATE_CONNECTION_POINT = 'requestCreateConnectionPoint',
 }
 
 export interface PacketSender {

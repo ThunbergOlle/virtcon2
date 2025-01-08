@@ -1,6 +1,6 @@
 import { ErrorType } from '@shared';
 import EventSystem from 'events-system';
-import { LoadWorldPacketData, WorldBuildingServerPacket } from '@virtcon2/network-packet';
+import { LoadWorldPacketData } from '@virtcon2/network-packet';
 import { DBItem } from '@virtcon2/static-game-data';
 
 type Events = {
@@ -12,7 +12,6 @@ type Events = {
   joinWorld: (worldId: string) => void;
   networkLoadWorld: (data: LoadWorldPacketData) => void;
   networkPlayerInventory: (playerInventory: PlayerInventoryServerPacket) => void;
-  networkWorldBuilding: (worldBuildingPacket: WorldBuildingServerPacket) => void;
 
   networkError: (error: { message: string; type: ErrorType }) => void;
 };

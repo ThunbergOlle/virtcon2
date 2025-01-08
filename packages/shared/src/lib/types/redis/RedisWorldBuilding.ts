@@ -11,7 +11,4 @@ export interface RedisWorldBuilding {
   rotation: number;
   world_building_inventory?: ServerInventoryItem[];
   output_world_building?: { id: number };
-  output_pos_x?: number;
-  output_pos_y?: number;
-  inspectors: string[]; // Socket IDs of players inspecting this building
 }

@@ -37,7 +37,7 @@ export interface InspectBuildingClientPacket {
   worldBuildingId: number;
 }
 
-export interface CreateConnectionPacket {
+export interface CreateConnectionPointPacket {
   startX: number;
   startY: number;
   endX: number;
@@ -70,10 +70,4 @@ export interface RequestMoveInventoryItemPacketData {
   toInventoryId: number;
   toInventorySlot: number;
   inventoryItem: ServerInventoryItem;
-}
-
-export interface RequestWorldBuildingChangeOutput {
-  building_id: number;
-  output_pos_x: number;
-  output_pos_y: number;
 }

@@ -1,7 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { InventoryType } from '@shared';
-import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestWorldBuildingChangeOutput } from '@virtcon2/network-packet';
-import { createWorldConnectionPoint, toPhaserPos } from '@virtcon2/network-world-entities';
+import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';
@@ -11,7 +10,6 @@ import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../.
 import Window from '../../components/window/Window';
 import { WindowType } from '../../lib/WindowSlice';
 import { WorldBuildingConnection } from './WorldBuildingConnection';
-import WorldBuildingOutput, { WORLD_BUILDING_OUTPUT_FRAGMENT } from './WorldBuildingOutput';
 
 const WORLD_BUILDING_FRAGMENT = gql`
   fragment WorldBuildingFragment on WorldBuilding {
@@ -32,22 +30,18 @@ const WORLD_BUILDING_FRAGMENT = gql`
 
 const WORLD_BUILDING_QUERY = gql`
   ${WORLD_BUILDING_FRAGMENT}
-  ${WORLD_BUILDING_OUTPUT_FRAGMENT}
   query WorldBuildingWindow($id: ID!) {
     worldBuilding(id: $id) {
       ...WorldBuildingFragment
-      ...WorldBuildingOutputFragment
     }
   }
 `;
 
 const WORLD_BUILDING_SUBSCRIPTION = gql`
   ${WORLD_BUILDING_FRAGMENT}
-  ${WORLD_BUILDING_OUTPUT_FRAGMENT}
   subscription WorldBuildingWindow($id: ID!) {
     worldBuilding(id: $id) {
       ...WorldBuildingFragment
-      ...WorldBuildingOutputFragment
     }
   }
 `;
@@ -91,19 +85,6 @@ export default function WorldBuildingWindow() {
     Game.network.sendPacket(packet);
   };
 
-  const onNewOutputPositionSelected = (pos: { x: number; y: number }) => {
-    if (!worldBuilding) return;
-    const packet: ClientPacket<RequestWorldBuildingChangeOutput> = {
-      data: {
-        building_id: worldBuilding.id,
-        output_pos_x: pos.x,
-        output_pos_y: pos.y,
-      },
-      packet_type: PacketType.REQUEST_WORLD_BUILDING_CHANGE_OUTPUT,
-    };
-    Game.network.sendPacket(packet);
-  };
-
   const inventorySorted = sortBy(prop('slot'))(worldBuilding?.world_building_inventory ?? []);
 
   return (
@@ -125,10 +106,6 @@ export default function WorldBuildingWindow() {
               Position: {worldBuilding?.x}, {worldBuilding?.y}
             </p>
             <p className="text-md">Rotation: {worldBuilding?.rotation}°</p>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-2xl">Top view I/O</h2>
-            <WorldBuildingOutput onNewPositionSelected={onNewOutputPositionSelected} worldBuildingId={worldBuilding?.id} />
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { defineQuery, defineSystem, enterQuery, exitQuery, World } from '@virtcon2/bytenetc';
 import { ConnectionPoint, fromPhaserPos, toPhaserPos } from '@virtcon2/network-world-entities';
-import Game, { GameState } from '../scenes/Game';
+import Game, { GameObjectGroups, GameState } from '../scenes/Game';
 
 const connectionPointQuery = defineQuery(ConnectionPoint);
 const connectionPointEnterQuery = enterQuery(connectionPointQuery);
@@ -18,10 +18,11 @@ export const createConnectionSystem = (world: World, game: Game) =>
       const startPoint = scene.add.circle(x, y, 3, 0xff0000);
 
       const { x: endX, y: endY } = toPhaserPos({
-        x: ConnectionPoint.endX[enterEntities[i]] || scene.input.activePointer.x,
-        y: ConnectionPoint.endY[enterEntities[i]] || scene.input.activePointer.y,
+        x: ConnectionPoint.endX[enterEntities[i]],
+        y: ConnectionPoint.endY[enterEntities[i]],
       });
       const endPoint = scene.add.circle(endX, endY, 3, 0xff0000);
+      scene.physics.add.existing(endPoint);
 
       const line = scene.add.line(0, 0, startPoint.x, startPoint.y, endPoint.x, endPoint.y, 0xff0000);
       line.setOrigin(0);
@@ -30,8 +31,13 @@ export const createConnectionSystem = (world: World, game: Game) =>
     }
 
     for (let i = 0; i < entities.length; i++) {
-      if (!ConnectionPoint.endX[entities[i]] && !ConnectionPoint.endY[entities[i]]) {
-        const { x, y } = toPhaserPos(fromPhaserPos({ x: scene.input.activePointer.worldX, y: scene.input.activePointer.worldY }));
+      if (ConnectionPoint.followMouse[entities[i]]) {
+        const { x: endX, y: endY } = fromPhaserPos({ x: scene.input.activePointer.worldX, y: scene.input.activePointer.worldY });
+        ConnectionPoint.endX[entities[i]] = endX;
+        ConnectionPoint.endY[entities[i]] = endY;
+
+        const { x, y } = toPhaserPos({ x: endX, y: endY });
+
         game.state.worldConnectionPointById[entities[i]].endPoint.setPosition(x, y);
         game.state.worldConnectionPointById[entities[i]].line.setTo(
           game.state.worldConnectionPointById[entities[i]].startPoint.x,
@@ -39,6 +45,17 @@ export const createConnectionSystem = (world: World, game: Game) =>
           x,
           y,
         );
+
+        const endPoint = game.state.worldConnectionPointById[entities[i]].endPoint;
+        if (scene.physics.collide(endPoint, state.gameObjectGroups[GameObjectGroups.BUILDING] || [])) {
+          ConnectionPoint.valid[entities[i]] = 1;
+          game.state.worldConnectionPointById[entities[i]].line.setStrokeStyle(2, 0x00ff00);
+          game.state.worldConnectionPointById[entities[i]].endPoint.setFillStyle(0x00ff00);
+        } else {
+          ConnectionPoint.valid[entities[i]] = 0;
+          game.state.worldConnectionPointById[entities[i]].line.setStrokeStyle(2, 0xff0000);
+          game.state.worldConnectionPointById[entities[i]].endPoint.setFillStyle(0xff0000);
+        }
       }
     }
 

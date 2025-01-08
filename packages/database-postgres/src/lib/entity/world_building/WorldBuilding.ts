@@ -51,14 +51,6 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @Column({ type: 'int', nullable: true })
   outputWorldBuildingId: number;
 
-  @Field(() => Int, { nullable: true })
-  @Column({ type: 'int', nullable: true })
-  output_pos_x: number;
-
-  @Field(() => Int, { nullable: true })
-  @Column({ type: 'int', nullable: true })
-  output_pos_y: number;
-
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   active: boolean;
