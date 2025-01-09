@@ -1,4 +1,4 @@
-import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
+import { addComponent, addEntity, Entity, World } from '@virtcon2/bytenetc';
 import { get_building_by_id } from '@virtcon2/static-game-data';
 import { Building, Collider, Position, Sprite } from '../network-world-entities';
 import { ItemTextureMap } from '../SpriteMap';
@@ -14,7 +14,7 @@ export interface NewBuildingEntity {
 }
 
 export const worldBuildingEntityComponents = [Building, Sprite, Collider, Position];
-export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): number => {
+export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): Entity => {
   const metadata = get_building_by_id(data.buildingId);
   if (!metadata) throw new Error(`Building with id ${data.buildingId} not found`);
 

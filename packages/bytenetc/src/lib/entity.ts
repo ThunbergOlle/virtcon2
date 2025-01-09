@@ -290,6 +290,8 @@ export const removeEntity = (world: World, entity: Entity) => {
       }
     }
   }
+
+  return entity;
 };
 
 export const clearEntities = (world: World) => {

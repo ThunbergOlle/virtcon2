@@ -10,8 +10,15 @@ import {
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData, syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 
-import { createNewBuildingEntity, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
-import { defineSerializer } from '@virtcon2/bytenetc';
+import {
+  createNewBuildingEntity,
+  fromPhaserPos,
+  Position,
+  Resource,
+  SerializationID,
+  serializeConfig,
+} from '@virtcon2/network-world-entities';
+import { defineQuery, defineSerializer, Entity, removeEntity, World } from '@virtcon2/bytenetc';
 
 export default async function requestPlaceBuildingPacket(
   packet: ClientPacketWithSender<RequestPlaceBuildingPacketData>,
@@ -81,9 +88,24 @@ export default async function requestPlaceBuildingPacket(
     rotation: updatedWorldBuilding.rotation,
   });
 
-  const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);
+  deleteResource(client, packet.world_id, buildingEntityId);
 
+  const serialize = defineSerializer(serializeConfig[SerializationID.BUILDING_FULL_SERVER]);
   const serializedBuilding = serialize(packet.world_id, [buildingEntityId]);
 
   return syncServerEntities(client, packet.world_id, packet.world_id, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
 }
+
+const resourceQuery = defineQuery(Resource, Position);
+const deleteResource = (client: RedisClientType, world: World, buildingId: Entity) => {
+  const { x, y } = fromPhaserPos({ x: Position.x[buildingId], y: Position.y[buildingId] });
+  const resourceEntities = resourceQuery(world);
+  for (let i = 0; i < resourceEntities.length; i++) {
+    const resourceEid = resourceEntities[i];
+    const { x: resourceX, y: resourceY } = fromPhaserPos({ x: Position.x[resourceEid], y: Position.y[resourceEid] });
+    if (resourceX === x && resourceY === y) {
+      syncRemoveEntities(client, world, world, [removeEntity(world, resourceEid)]);
+      break;
+    }
+  }
+};

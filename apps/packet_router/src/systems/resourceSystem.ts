@@ -1,6 +1,7 @@
 import { renderDistance } from '@shared';
 import { defineQuery, defineSerializer, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 import {
+  Building,
   createNewResourceEntity,
   fromPhaserPos,
   Player,
@@ -36,6 +37,7 @@ const shouldGenerateResource = (x: number, y: number, seed: number, resourceChan
   return pseudoRandom < resourceChance;
 };
 
+const buildingQuery = defineQuery(Building, Position);
 export const createResourceSystem = (world: World, seed: number) => {
   const seededRandom: () => number = seedRandom(seed);
   const shuffled_spawnable_resources = all_spawnable_db_items.sort(() => 0.5 - seededRandom());
@@ -44,6 +46,7 @@ export const createResourceSystem = (world: World, seed: number) => {
     const resourceEntities = resourceQuery(world);
     const tileEnterEntities = tileQueryEnter(world);
     const playerEntities = playerQuery(world);
+    const buildingEntities = buildingQuery(world);
 
     const removedEntities = [];
     const newEntities = [];
@@ -59,6 +62,8 @@ export const createResourceSystem = (world: World, seed: number) => {
         const height = DBWorld.getHeightAtPoint(seed, x, y);
         const canSpawn = item.spawnSettings.minHeight <= height && item.spawnSettings.maxHeight >= height;
         if (!canSpawn) continue spawnLoop;
+
+        if (buildingEntities.some(buildingAtPosition(x, y))) continue spawnLoop;
 
         const resourceEntityId = createNewResourceEntity(world, {
           resourceName: getResourceNameFromItemName(item.name),
@@ -99,4 +104,10 @@ export const createResourceSystem = (world: World, seed: number) => {
       syncServerEntities(redisClient, world, world, serializedResources, SerializationID.RESOURCE);
     });
   });
+};
+
+const buildingAtPosition = (x: number, y: number) => (building: number) => {
+  const { x: buildingX, y: buildingY } = fromPhaserPos({ x: Position.x[building], y: Position.y[building] });
+
+  return buildingX === x && buildingY === y;
 };
