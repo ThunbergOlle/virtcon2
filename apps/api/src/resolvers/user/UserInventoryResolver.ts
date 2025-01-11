@@ -1,5 +1,5 @@
 import { Item, TOPIC_INVENTORY_UPDATE, UserInventoryItem } from '@virtcon2/database-postgres';
-import { Arg, FieldResolver, ID, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
+import { Arg, FieldResolver, ID, Int, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
 import { withFilter } from 'graphql-subscriptions';
 import { subscribe } from '../../service/RedisService';
 
@@ -18,9 +18,13 @@ export class UserInventoryItemResolver implements ResolverInterface<UserInventor
   async userInventory(
     @Arg('userId', () => ID, { nullable: false })
     userId: number,
+    @Arg('limit', () => Number, { nullable: true })
+    limit: number,
   ) {
     return UserInventoryItem.find({
       where: { user: { id: userId } },
+      take: limit,
+      order: { slot: 'ASC' },
       cache: false,
     });
   }
@@ -29,5 +33,10 @@ export class UserInventoryItemResolver implements ResolverInterface<UserInventor
   async item(@Root() inventoryItem: UserInventoryItem): Promise<Item> {
     if (!inventoryItem.itemId) return null;
     return Item.findOne({ where: { id: inventoryItem.itemId } });
+  }
+
+  @FieldResolver(() => Int, { nullable: false })
+  async id(@Root() inventoryItem: UserInventoryItem): Promise<number> {
+    return inventoryItem.id;
   }
 }

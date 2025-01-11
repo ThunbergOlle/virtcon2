@@ -18,7 +18,7 @@ export const hotbarSlice = createSlice({
     select: (state, action: PayloadAction<{ slot: number }>) => {
       state.selectedSlot = action.payload.slot;
     },
-    add: (state, action: PayloadAction<{ item: DBItem; slot: number }>) => {
+    set: (state, action: PayloadAction<{ item: DBItem; slot: number }>) => {
       state.items[action.payload.slot] = action.payload.item;
     },
   },

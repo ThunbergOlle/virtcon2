@@ -2,7 +2,7 @@ import { log } from '@shared';
 import { DBUserInventoryItem } from '@virtcon2/static-game-data';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, EntityManager, ManyToOne, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, EntityManager, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { addToInventory } from '../../shared/InventoryManagement';
 import { Item } from '../item/Item';
 import { User } from '../user/User';
@@ -17,6 +17,10 @@ export const publishUserInventoryUpdate = async function (userId: number) {
 @ObjectType()
 @Entity()
 export class UserInventoryItem extends BaseEntity implements DBUserInventoryItem {
+  @PrimaryGeneratedColumn({ type: 'int' })
+  @Field(() => Int, { nullable: false })
+  id: number;
+
   @PrimaryColumn({ type: 'int' })
   userId: number;
 
@@ -38,7 +42,13 @@ export class UserInventoryItem extends BaseEntity implements DBUserInventoryItem
   @Column({ type: 'int', default: 0 })
   quantity: number;
 
-  static async addToInventory(transaction: EntityManager, userId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
+  static async addToInventory(
+    transaction: EntityManager,
+    userId: number,
+    itemId: number,
+    quantity: number,
+    slot?: number,
+  ): Promise<number> {
     if (quantity === 0) {
       return;
     }

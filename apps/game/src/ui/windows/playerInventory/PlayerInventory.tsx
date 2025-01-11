@@ -1,9 +1,9 @@
 import { gql, useQuery } from '@apollo/client';
 import { InventoryType } from '@shared';
-import { addComponent, addEntity, addReservedEntity, removeEntity } from '@virtcon2/bytenetc';
+import { addComponent, addReservedEntity, removeEntity } from '@virtcon2/bytenetc';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { Collider, GhostBuilding, Position, Sprite, ItemTextureMap } from '@virtcon2/network-world-entities';
-import { DBUserInventoryItem, get_building_by_id, get_item_by_id, get_tool_by_item_name } from '@virtcon2/static-game-data';
+import { DBUserInventoryItem, get_building_by_id, get_tool_by_item_name } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
@@ -19,6 +19,7 @@ import { close, isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 
 const PLAYER_INVENTORY_FRAGMENT = gql`
   fragment PlayerInventoryFragment on UserInventoryItem {
+    id
     quantity
     slot
     item {
@@ -38,6 +39,7 @@ export const PLAYER_INVENTORY_QUERY = gql`
   ${PLAYER_INVENTORY_FRAGMENT}
   query PlayerInventoryWindow($userId: ID!) {
     userInventory(userId: $userId) {
+      id
       ...PlayerInventoryFragment
     }
   }
@@ -47,6 +49,7 @@ const PLAYER_INVENTORY_SUBSCRIPTION = gql`
   ${PLAYER_INVENTORY_FRAGMENT}
   subscription PlayerInventoryWindow($userId: ID!) {
     userInventory(userId: $userId) {
+      id
       ...PlayerInventoryFragment
     }
   }

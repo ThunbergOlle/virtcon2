@@ -1,29 +1,36 @@
-import { DBItem } from '@virtcon2/static-game-data';
+import { gql, useFragment, useQuery } from '@apollo/client';
+import { DBItem, DBUserInventoryItem } from '@virtcon2/static-game-data';
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
-import { currentItem, hotbarItems, select } from './HotbarSlice';
+import { useUser } from '../../context/user/UserContext';
+import { currentItem, hotbarItems, hotbarSlice, select } from './HotbarSlice';
 import { useHotkey } from './useHotkey';
 
-export const Hotbar = () => {
-  const items = useAppSelector(hotbarItems);
+const HOTBAR_ITEM_FRAGMENT = gql`
+  fragment HotbarItemFragment on UserInventoryItem {
+    id
+    slot
+    item {
+      id
+      name
+    }
+  }
+`;
 
-  return (
-    <div className="absolute h-16  z-[2] bottom-4 w-full flex">
-      <div className="m-auto bg-gray-800 h-full rounded-lg flex flex-row items-center ">
-        {items.map((item, index) => (
-          <HotbarItem item={item} slot={index} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const HotbarItem = ({ item, slot }: { item: DBItem | null; slot: number }) => {
+const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) => {
   const dispatch = useAppDispatch();
   const current = useAppSelector(currentItem);
 
+  useEffect(() => {
+    if (inventoryItem.item?.id) {
+      dispatch(hotbarSlice.actions.set({ item: inventoryItem.item as DBItem, slot: inventoryItem.slot }));
+    }
+  }, [inventoryItem.item?.id]);
+
+  const slot = inventoryItem.slot;
   useHotkey(slot + 1 + '', () => dispatch(select({ slot })));
 
-  if (!item) {
+  if (!inventoryItem?.item) {
     return (
       <div onClick={() => dispatch(select({ slot }))}>
         <div
@@ -35,6 +42,8 @@ const HotbarItem = ({ item, slot }: { item: DBItem | null; slot: number }) => {
     );
   }
 
+  const item = inventoryItem.item as DBItem;
+
   return (
     <div onClick={() => dispatch(select({ slot }))}>
       <img
@@ -44,6 +53,35 @@ const HotbarItem = ({ item, slot }: { item: DBItem | null; slot: number }) => {
         draggable="false"
         unselectable="on"
       />
+    </div>
+  );
+};
+
+const HOTBAR_QUERY = gql`
+  ${HOTBAR_ITEM_FRAGMENT}
+  query HotBar($userId: ID!) {
+    userInventory(userId: $userId, limit: 8) {
+      id
+      slot
+      ...HotbarItemFragment
+    }
+  }
+`;
+export const Hotbar = () => {
+  const { id: userId } = useUser();
+  const { data, loading } = useQuery(HOTBAR_QUERY, {
+    variables: { userId },
+  });
+
+  if (loading) return null;
+
+  return (
+    <div className="absolute h-16  z-[2] bottom-4 w-full flex">
+      <div className="m-auto bg-gray-800 h-full rounded-lg flex flex-row items-center ">
+        {data?.userInventory.map((inventoryItem: DBUserInventoryItem) => (
+          <HotbarItem key={inventoryItem.slot} inventoryItem={inventoryItem} />
+        ))}
+      </div>
     </div>
   );
 };

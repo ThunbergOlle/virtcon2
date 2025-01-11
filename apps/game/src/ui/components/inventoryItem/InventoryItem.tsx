@@ -30,9 +30,7 @@ export default function InventoryItem({
   onDrop: (item: InventoryItemType, slot: number, inventoryId: number) => void;
   slot: number;
 }) {
-  const itemMetaData = useMemo(() => {
-    return get_item_by_id(inventoryItem.item?.id || 0);
-  }, [inventoryItem]);
+  const itemMetaData = useMemo(() => get_item_by_id(inventoryItem.item?.id || 0), [inventoryItem]);
 
   const [{ canDrop }, drop] = useDrop(
     () => ({
@@ -65,7 +63,9 @@ export default function InventoryItem({
       ref={drag}
       onClick={() => onClick(inventoryItem)}
       key={inventoryItem.slot}
-      className={`flex flex-col rounded-md text-center w-16 h-16 bg-[#282828] cursor-pointer hover:bg-[#4b4b4b] ${isDragging && 'cursor-grabbing'}`}
+      className={`flex flex-col rounded-md text-center w-16 h-16 bg-[#282828] cursor-pointer hover:bg-[#4b4b4b] ${
+        isDragging && 'cursor-grabbing'
+      }`}
     >
       <div ref={drop} className="flex flex-col my-auto">
         <img alt={itemMetaData?.display_name} className="flex-1 pixelart w-8  m-auto" src={icon}></img>
