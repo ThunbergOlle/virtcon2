@@ -110,6 +110,35 @@ export default class Game extends Scene implements SceneStates {
 
   create() {
     Game.network = new Network();
+
+    class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.SinglePipeline {
+      constructor(game: Phaser.Game) {
+        super({
+          game: game,
+          fragShader: game.cache.shader.get('outlineShader').fragmentSrc,
+          uniforms: [
+            'uProjectionMatrix', // Default uniform
+            'uMainSampler', // Default texture sampler
+            'uTextureSize', // Custom uniform for sprite size
+            'uOutlineColor', // Custom uniform for outline color
+            'uOutlineThickness', // Custom uniform for outline thickness
+          ],
+        });
+      }
+
+      onBind(gameObject: Phaser.GameObjects.Sprite) {
+        const width = gameObject.width;
+        const height = gameObject.height;
+
+        this.set2f('uTextureSize', width, height); // Set uTextureSize (vec2)
+        super.onBind(gameObject);
+      }
+    }
+
+    const outlinePipeline = (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer).pipelines.add('outline', new OutlinePipeline(this.game));
+
+    outlinePipeline.set4f('uOutlineColor', 1.0, 1.0, 1.0, 1.0); // White outline (RGBA)
+
     this.state.gameObjectGroups = {
       [GameObjectGroups.PLAYER]: this.physics.add.group(),
       [GameObjectGroups.BUILDING]: this.physics.add.staticGroup(),

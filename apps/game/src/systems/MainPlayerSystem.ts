@@ -1,3 +1,4 @@
+import { every } from '@shared';
 import { addComponent, addEntity, debugEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 import {
   Collider,
@@ -11,8 +12,8 @@ import {
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
-import { getItemByName, get_resource_by_item_name, Resources } from '@virtcon2/static-game-data';
-import { pick } from 'ramda';
+import { getItemByName, get_resource_by_item_name, Resources, ToolType } from '@virtcon2/static-game-data';
+import { memoizeWith, pick } from 'ramda';
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { store } from '../store';
@@ -77,12 +78,68 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       if (scene.input.keyboard.checkDown(keySpace)) {
         attack(state, world, entities[i]);
       }
+      highlightTargets(state, world, entities[i]);
     }
     return state;
   });
 };
 
+const getTargetItemIds = (tool: ToolType) =>
+  tool.targets
+    .map((targetResourceName) => Resources[targetResourceName].item)
+    .map(getItemByName)
+    .filter((item) => item)
+    .map((item) => item!.id);
+
+const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
+
 const closestResourceQuery = defineQuery(Position, Resource);
+const findClosestResource = (world: World, x: number, y: number): [number | undefined, number] => {
+  const resources = closestResourceQuery(world);
+  let closestResource: number | undefined = undefined;
+  let closestDistance = 1000000;
+  for (let i = 0; i < resources.length; i++) {
+    const resource = resources[i];
+    const distance = Math.sqrt(Math.pow(Position.x[resource] - x, 2) + Math.pow(Position.y[resource] - y, 2));
+    if (distance < closestDistance) {
+      closestResource = resource;
+      closestDistance = distance;
+    }
+  }
+  return [closestResource, closestDistance];
+};
+
+const shouldUpdateHighlight = every(30);
+let highlightedSprite: Phaser.GameObjects.Sprite | null = null;
+const highlightTargets = (state: GameState, world: World, eid: number) => {
+  if (!shouldUpdateHighlight()) return;
+  const selectedTool = currentTool(store.getState());
+  if (!selectedTool) {
+    highlightedSprite?.resetPipeline();
+    return;
+  }
+
+  const playerSprite = state.spritesById[eid];
+  const [x, y] = [playerSprite.x, playerSprite.y];
+
+  const [closestResourceId, distance] = findClosestResource(world, x, y);
+  if (!closestResourceId) return;
+
+  const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
+
+  if (distance <= 2 * 16) {
+    const canDamage = targetItemsIds.includes(Resource.itemId[closestResourceId]);
+
+    const sprite = state.spritesById[closestResourceId];
+    if (highlightedSprite) highlightedSprite.resetPipeline();
+    sprite.setPipeline('outline');
+    highlightedSprite = sprite;
+
+    if (canDamage) sprite.pipeline.set4f('uOutlineColor', 0, 1, 0, 1);
+    else sprite.pipeline.set4f('uOutlineColor', 1, 0, 0, 1);
+  } else highlightedSprite?.resetPipeline();
+};
+
 function attack(state: GameState, world: World, eid: number) {
   if (MainPlayer.action[eid] !== MainPlayerAction.IDLE) return;
 
@@ -91,33 +148,15 @@ function attack(state: GameState, world: World, eid: number) {
   const selectedTool = currentTool(store.getState());
   if (!selectedTool) return;
 
-  const targetItemsIds = selectedTool.targets
-    .map((targetResourceName) => Resources[targetResourceName].item)
-    .map(getItemByName)
-    .filter((item) => item)
-    .map((item) => item!.id);
-
   const textureId = ItemTextureMap[selectedItem.name]?.textureId;
   if (!textureId) throw new Error(`Texture not found for tool: ${selectedItem}`);
 
-  const closestResources = closestResourceQuery(world);
-
-  let resourceTargetId: number | null = null;
-  let distanceBetween = 1000000;
-  for (let i = 0; i < closestResources.length; i++) {
-    const resource = closestResources[i];
-
-    if (!targetItemsIds.includes(Resource.itemId[resource])) continue;
-    const distance = Math.sqrt(Math.pow(Position.x[eid] - Position.x[resource], 2) + Math.pow(Position.y[eid] - Position.y[resource], 2));
-
-    if (distance <= 2 * 16) {
-      if (!resourceTargetId || distance < distanceBetween) {
-        resourceTargetId = resource;
-        distanceBetween = distance;
-      }
-    }
-  }
+  const [x, y] = [state.spritesById[eid].x, state.spritesById[eid].y];
+  const [resourceTargetId] = findClosestResource(world, x, y);
   if (resourceTargetId === null) return;
+
+  const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
+  if (!targetItemsIds.includes(Resource.itemId[resourceTargetId!])) return;
 
   MainPlayer.action[eid] = MainPlayerAction.ATTACKING;
 

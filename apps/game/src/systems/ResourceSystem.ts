@@ -15,6 +15,7 @@ export const createResourceSystem = (world: World) => {
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
+
       if (Resource.worldBuildingId[id]) {
         removeEntity(world, id);
         continue;
