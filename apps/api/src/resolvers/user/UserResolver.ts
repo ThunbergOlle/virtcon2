@@ -1,5 +1,6 @@
 import { LogApp, LogLevel, log } from '@shared';
-import { User, UserInventoryItem, World } from '@virtcon2/database-postgres';
+import { addToInventory, AppDataSource, User, UserInventoryItem, World } from '@virtcon2/database-postgres';
+import { wood_axe } from '@virtcon2/static-game-data';
 import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
 import { EmailService } from '../../service/EmailService';
@@ -38,7 +39,6 @@ export class UserResolver {
     options: UserNewInput,
   ): Promise<UserNewResponse> {
     log(`New user: ${options.email} (${options.display_name})`, LogLevel.INFO, LogApp.API);
-    // Hash password and generate one-time confirmation code
     const passwordHash = HashPassword(options.password);
     const confirmationCode = RandomCode();
 
@@ -46,7 +46,6 @@ export class UserResolver {
       if (key === 'password') options[key] = passwordHash;
       else if (key === 'display_name') options[key].replace(/ /g, '_');
     }
-    // TODO: Combine this into one database request
     const playerWithSameEmail = await User.findOne({
       where: { email: options.email },
     });
@@ -56,7 +55,6 @@ export class UserResolver {
     if (playerWithSameEmail) return { success: false, message: 'Email already exists' };
     else if (playerWithSameDisplayName) return { success: false, message: 'Name already exists' };
 
-    /* Create database entry */
     const newUserEntity = User.create({
       ...options,
       confirmationCode,
@@ -64,11 +62,10 @@ export class UserResolver {
     });
 
     await User.save(newUserEntity);
-    await World.GenerateNewWorld(newUserEntity);
+    await World.GenerateNewWorld(newUserEntity.display_name);
 
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 
-    // Create all inventory slots
     for (let i = 0; i < 64; i++) {
       const userInventoryItem = new UserInventoryItem();
       userInventoryItem.user = newUserEntity;
@@ -76,6 +73,11 @@ export class UserResolver {
       userInventoryItem.quantity = 0;
       await userInventoryItem.save();
     }
+
+    await AppDataSource.transaction(async (transaction) => {
+      const inventorySlot = await UserInventoryItem.findOne({ where: { userId: newUserEntity.id, slot: 0 } });
+      await addToInventory(transaction, [inventorySlot], wood_axe.id, 1);
+    });
 
     return { success: true };
   }

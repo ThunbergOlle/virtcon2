@@ -14,7 +14,7 @@ export interface TextureMetaData {
   spriteSheetFrameWidth?: number;
   spriteSheetFrameHeight?: number;
 }
-export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
+export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
   [DBItemName.BUILDING_SAWMILL]: {
     textureId: 1,
     textureName: 'building_sawmill',
@@ -73,8 +73,8 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
   },
   [DBItemName.BUILDING_DRILL]: {
     textureId: 10,
-    textureName: 'building_drill',
-    variants: ['sprites/items/building_drill.png'],
+    textureName: 'building_stone_drill',
+    variants: ['sprites/items/building_stone_drill.png'],
     animations: [
       {
         name: 'idle',
@@ -91,6 +91,16 @@ export const ItemTextureMap: Record<DBItemName, TextureMetaData | null> = {
     textureId: 12,
     textureName: 'iron',
     variants: ['sprites/items/iron.png'],
+  },
+  [DBItemName.WOOD_AXE]: {
+    textureId: 13,
+    textureName: 'wood_axe',
+    variants: ['sprites/items/wood_axe.png'],
+  },
+  [DBItemName.WOOD_PICKAXE]: {
+    textureId: 14,
+    textureName: 'wood_pickaxe',
+    variants: ['sprites/items/wood_pickaxe.png'],
   },
 };
 
@@ -177,11 +187,6 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureId: 0,
     textureName: 'unknown',
     variants: ['sprites/misc/unknown.png'],
-  },
-  tool_axe: {
-    textureId: 999,
-    textureName: 'tool_axe',
-    variants: ['sprites/misc/tool_axe.png'],
   },
 };
 

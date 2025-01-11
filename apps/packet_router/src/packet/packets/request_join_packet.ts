@@ -172,8 +172,8 @@ export const loadTilesAroundEntity = (seed: number, worldId: string, eid: number
 
 const ensureWorldIsRunning = async (worldId: string) => {
   /* Check if world is currently running in Redis */
-  const dbWorld = await World.findOne({ where: { id: worldId } });
-  if (!dbWorld) return log(`World ${worldId} does not exist.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
+  let dbWorld = await World.findOne({ where: { id: worldId } });
+  if (!dbWorld) dbWorld = await World.GenerateNewWorld(worldId);
 
   if (!doesWorldExist(worldId)) {
     log(`World ${worldId} is not running. Starting up world...`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);

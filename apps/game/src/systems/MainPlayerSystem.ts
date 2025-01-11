@@ -1,6 +1,7 @@
 import { addComponent, addEntity, debugEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 import {
   Collider,
+  ItemTextureMap,
   MainPlayer,
   MainPlayerAction,
   MiscTextureMap,
@@ -10,10 +11,12 @@ import {
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
+import { getItemByName, get_resource_by_item_name, Resources } from '@virtcon2/static-game-data';
+import { pick } from 'ramda';
 import { events } from '../events/Events';
 import { GameObjectGroups, GameState } from '../scenes/Game';
 import { store } from '../store';
-import { currentTool } from '../ui/components/hotbar/HotbarSlice';
+import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
 import { damageResource } from './ResourceSystem';
 
 const speed = 750;
@@ -50,8 +53,6 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       scene.input.keyboard?.on('keydown-C', () => {
         events.notify('onCrafterButtonPressed');
       });
-
-      // Add keys
     }
     const entities = mainPlayerQuery(world);
     for (let i = 0; i < entities.length; i++) {
@@ -85,12 +86,19 @@ const closestResourceQuery = defineQuery(Position, Resource);
 function attack(state: GameState, world: World, eid: number) {
   if (MainPlayer.action[eid] !== MainPlayerAction.IDLE) return;
 
+  const selectedItem = currentItem(store.getState());
+  if (!selectedItem) return;
   const selectedTool = currentTool(store.getState());
-  if (selectedTool === 'none') return;
-  if (selectedTool === 'electric_wrench') return;
+  if (!selectedTool) return;
 
-  const textureId = MiscTextureMap[`tool_${selectedTool}`]?.textureId;
-  if (!textureId) throw new Error(`Texture not found for tool: ${selectedTool}`);
+  const targetItemsIds = selectedTool.targets
+    .map((targetResourceName) => Resources[targetResourceName].item)
+    .map(getItemByName)
+    .filter((item) => item)
+    .map((item) => item!.id);
+
+  const textureId = ItemTextureMap[selectedItem.name]?.textureId;
+  if (!textureId) throw new Error(`Texture not found for tool: ${selectedItem}`);
 
   const closestResources = closestResourceQuery(world);
 
@@ -98,6 +106,8 @@ function attack(state: GameState, world: World, eid: number) {
   let distanceBetween = 1000000;
   for (let i = 0; i < closestResources.length; i++) {
     const resource = closestResources[i];
+
+    if (!targetItemsIds.includes(Resource.itemId[resource])) continue;
     const distance = Math.sqrt(Math.pow(Position.x[eid] - Position.x[resource], 2) + Math.pow(Position.y[eid] - Position.y[resource], 2));
 
     if (distance <= 2 * 16) {
@@ -123,7 +133,7 @@ function attack(state: GameState, world: World, eid: number) {
   Position.y[tool] = Position.y[resourceTargetId] - 10;
 
   state.spritesById[resourceTargetId].setTint(0xff0000);
-  setTimeout(() => state.spritesById[resourceTargetId].clearTint(), 100);
+  setTimeout(() => state.spritesById[resourceTargetId!].clearTint(), 100);
 
   addComponent(world, Velocity, tool);
   Velocity.x[tool] = 0;
@@ -132,7 +142,7 @@ function attack(state: GameState, world: World, eid: number) {
   setTimeout(() => {
     removeEntity(world, tool);
     MainPlayer.action[eid] = MainPlayerAction.IDLE;
-    damageResource(state, resourceTargetId, 1);
+    damageResource(state, resourceTargetId!, selectedTool.damage);
   }, 500);
 }
 

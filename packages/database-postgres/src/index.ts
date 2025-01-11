@@ -9,7 +9,6 @@ export * from './lib/entity/user_inventory_item/UserInventoryItem';
 export * from './lib/entity/world/World';
 export * from './lib/entity/building/Building';
 export * from './lib/entity/item_recipe/ItemRecipe';
-export * from './lib/entity/world_whitelist/WorldWhitelist';
 export * from './lib/entity/world_building/WorldBuilding';
 export * from './lib/entity/world_connection_point/WorldConnectionPoint';
 export * from './lib/entity/world_building_inventory/WorldBuildingInventory';

@@ -6,7 +6,10 @@ import { RequestContext } from '../../graphql/RequestContext';
 export class ItemResolver implements ResolverInterface<Item> {
   @Query(() => [Item], { nullable: true })
   async items() {
-    return await Item.find({ relations: ['recipe', 'recipe.requiredItem', 'building', 'building.items_to_be_placed_on'] });
+    return await Item.find({
+      relations: ['recipe', 'recipe.requiredItem', 'building', 'building.items_to_be_placed_on'],
+      order: { id: 'ASC' },
+    });
   }
 
   @FieldResolver(() => [ItemRecipe])

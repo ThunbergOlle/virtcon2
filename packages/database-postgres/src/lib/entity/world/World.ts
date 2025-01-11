@@ -4,9 +4,7 @@ import { createNoise2D } from 'simplex-noise';
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, BeforeInsert, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { AppDataSource } from '../../data-source';
-import { User } from '../user/User';
 import { WorldBuilding } from '../world_building/WorldBuilding';
-import { AccessLevel, WorldWhitelist } from '../world_whitelist/WorldWhitelist';
 
 @ObjectType()
 @Entity()
@@ -19,10 +17,6 @@ export class World extends BaseEntity {
   @Field(() => Number)
   seed: number;
 
-  @Field(() => [WorldWhitelist])
-  @OneToMany(() => WorldWhitelist, (worldWhitelist) => worldWhitelist.world)
-  whitelist: string;
-
   @Field(() => [WorldBuilding])
   @OneToMany(() => WorldBuilding, (building) => building.world)
   buildings: WorldBuilding[];
@@ -31,6 +25,7 @@ export class World extends BaseEntity {
   replaceSpacesInId() {
     this.id = this.id.replace(/\s/g, '_');
   }
+
   static Get2DWorldMap(seed: number, size = WorldSettings.world_size): number[][] {
     const randomGenerator = seedRandom(seed);
     const noise = createNoise2D(randomGenerator);
@@ -50,21 +45,13 @@ export class World extends BaseEntity {
     return noise(x / 20, y / 20);
   }
 
-  static async GenerateNewWorld(owner: User, size = WorldSettings.world_size): Promise<World> {
+  static async GenerateNewWorld(worldId: string): Promise<World> {
     return new Promise((resolve) => {
       AppDataSource.manager.transaction(async (transaction) => {
-        const world = World.create();
+        const world = World.create({ id: worldId });
         world.seed = Math.floor(Math.random() * 1000000000);
-        world.id = owner.display_name.replace(/\s/g, '_'); // replace spaces with underscores
-
-        const newWorldWhitelist = WorldWhitelist.create({
-          world: world,
-          user: owner,
-          access_level: AccessLevel.owner,
-        });
 
         await transaction.save(world);
-        await transaction.save(newWorldWhitelist);
 
         return resolve(world);
       });

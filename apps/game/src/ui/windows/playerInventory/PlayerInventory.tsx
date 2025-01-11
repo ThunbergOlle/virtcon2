@@ -3,13 +3,14 @@ import { InventoryType } from '@shared';
 import { addComponent, addEntity, addReservedEntity, removeEntity } from '@virtcon2/bytenetc';
 import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { Collider, GhostBuilding, Position, Sprite, ItemTextureMap } from '@virtcon2/network-world-entities';
-import { DBUserInventoryItem, get_building_by_id } from '@virtcon2/static-game-data';
+import { DBUserInventoryItem, get_building_by_id, get_item_by_id, get_tool_by_item_name } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { events } from '../../../events/Events';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
+import { hotbarSlice } from '../../components/hotbar/HotbarSlice';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { useUser } from '../../context/user/UserContext';
@@ -134,6 +135,10 @@ export default function PlayerInventoryWindow() {
   }, [onInventoryButtonPressed]);
 
   const onItemWasClicked = (inventoryItem: DBUserInventoryItem) => {
+    if (inventoryItem.item?.name && get_tool_by_item_name(inventoryItem.item.name)) {
+      dispatch(hotbarSlice.actions.add({ item: inventoryItem.item, slot: 0 }));
+    }
+
     if (!inventoryItem.item?.is_building) return;
 
     dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
