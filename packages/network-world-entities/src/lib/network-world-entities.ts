@@ -10,6 +10,7 @@ export * from './components/Tag';
 export * from './components/Velocity';
 export * from './components/Tile';
 export * from './components/ConnectionPoint';
+export * from './components/Range';
 
 /* Entities */
 export * from './entities/Building';

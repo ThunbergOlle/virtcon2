@@ -13,6 +13,7 @@ import {
   Tile,
   Velocity,
   ConnectionPoint,
+  Range,
 } from './lib/network-world-entities';
 
 export const allComponents = [
@@ -28,4 +29,5 @@ export const allComponents = [
   Velocity,
   Tile,
   ConnectionPoint,
+  Range,
 ];

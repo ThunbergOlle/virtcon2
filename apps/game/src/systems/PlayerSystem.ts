@@ -6,7 +6,7 @@ import { setMainPlayerEntity } from './MainPlayerSystem';
 const playerQuery = defineQuery(Player, Sprite, Velocity);
 const playerQueryEnter = enterQuery(playerQuery);
 
-export const createPlayerSystem = (world: World, mainPlayerId: number) => {
+export const createPlayerSystem = (world: World, mainPlayerId: number, scene: Phaser.Scene) => {
   return defineSystem<GameState>((state) => {
     const enterEntities = playerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {

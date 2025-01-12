@@ -1,5 +1,15 @@
 import { every } from '@shared';
-import { addComponent, addEntity, debugEntity, defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
+import {
+  addComponent,
+  addEntity,
+  debugEntity,
+  defineQuery,
+  defineSystem,
+  enterQuery,
+  Entity,
+  removeEntity,
+  World,
+} from '@virtcon2/bytenetc';
 import {
   Collider,
   ItemTextureMap,
@@ -8,6 +18,7 @@ import {
   MiscTextureMap,
   Player,
   Position,
+  Range,
   Resource,
   Sprite,
   Velocity,
@@ -21,7 +32,7 @@ import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
 import { damageResource } from './ResourceSystem';
 
 const speed = 750;
-const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider);
+const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider, Range);
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
 export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
@@ -32,6 +43,8 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
   ];
+  const minAngleLine = scene.add.line(0, 0, 0, 0, 0, 0, 0xff0000);
+  const maxAngleLine = scene.add.line(0, 0, 0, 0, 0, 0, 0xff0000);
 
   return defineSystem<GameState>((state) => {
     const enterEntities = mainPlayerQueryEnter(world);
@@ -75,6 +88,33 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       Velocity.x[entities[i]] = xVel * speed;
       Velocity.y[entities[i]] = yVel * speed;
 
+      const sprite = state.spritesById[entities[i]];
+      const { x: velX, y: velY } = sprite.body?.velocity || { x: 0, y: 0 };
+      if (velX !== 0 || velY !== 0) {
+        const angle = Math.atan2(velY, velX);
+        const angleRange = (32 * Math.PI) / 180;
+        const range = 32;
+        const maxAngle = angle + angleRange;
+        const minAngle = angle - angleRange;
+
+        const maxY = range * Math.sin(maxAngle);
+        const maxX = range * Math.cos(maxAngle);
+
+        const minY = range * Math.sin(minAngle);
+        const minX = range * Math.cos(minAngle);
+
+        Range.minX[entities[i]] = sprite.x + minX;
+        Range.minY[entities[i]] = sprite.y + minY;
+        Range.maxX[entities[i]] = sprite.x + maxX;
+        Range.maxY[entities[i]] = sprite.y + maxY;
+
+        minAngleLine.setTo(sprite.x, sprite.y, sprite.x + minX, sprite.y + minY);
+        maxAngleLine.setTo(sprite.x, sprite.y, sprite.x + maxX, sprite.y + maxY);
+
+        minAngleLine.setAlpha(0.5);
+        maxAngleLine.setAlpha(0.5);
+      }
+
       if (scene.input.keyboard.checkDown(keySpace)) {
         attack(state, world, entities[i]);
       }
@@ -82,6 +122,26 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     }
     return state;
   });
+};
+
+const isWithinRange = (eid: Entity, x: number, y: number) => {
+  const [playerX, playerY] = [Position.x[eid], Position.y[eid]];
+  const [minX, minY, maxX, maxY] = [Range.minX[eid], Range.minY[eid], Range.maxX[eid], Range.maxY[eid]];
+
+  // Helper function to calculate the area of a triangle given three points
+  const triangleArea = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) =>
+    Math.abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2);
+
+  // Area of the main triangle formed by the player's position and the min/max points
+  const totalArea = triangleArea(playerX, playerY, minX, minY, maxX, maxY);
+
+  // Areas of sub-triangles formed with the point (x, y)
+  const area1 = triangleArea(x, y, minX, minY, maxX, maxY);
+  const area2 = triangleArea(playerX, playerY, x, y, maxX, maxY);
+  const area3 = triangleArea(playerX, playerY, minX, minY, x, y);
+
+  // Check if the sum of the sub-triangle areas equals the total area
+  return Math.abs(totalArea - (area1 + area2 + area3)) < 1e-6; // Tolerance for floating-point arithmetic
 };
 
 const getTargetItemIds = (tool: ToolType) =>
@@ -93,20 +153,14 @@ const getTargetItemIds = (tool: ToolType) =>
 
 const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
 
-const closestResourceQuery = defineQuery(Position, Resource);
-const findClosestResource = (world: World, x: number, y: number): [number | undefined, number] => {
-  const resources = closestResourceQuery(world);
-  let closestResource: number | undefined = undefined;
-  let closestDistance = 1000000;
+const resourceQuery = defineQuery(Position, Resource);
+const findResourceInRange = (world: World, playerEid: number) => {
+  const resources = resourceQuery(world);
   for (let i = 0; i < resources.length; i++) {
     const resource = resources[i];
-    const distance = Math.sqrt(Math.pow(Position.x[resource] - x, 2) + Math.pow(Position.y[resource] - y, 2));
-    if (distance < closestDistance) {
-      closestResource = resource;
-      closestDistance = distance;
-    }
+    if (isWithinRange(playerEid, Position.x[resource], Position.y[resource])) return resource;
   }
-  return [closestResource, closestDistance];
+  return null;
 };
 
 const shouldUpdateHighlight = every(30);
@@ -122,15 +176,13 @@ const highlightTargets = (state: GameState, world: World, eid: number) => {
   const playerSprite = state.spritesById[eid];
   const [x, y] = [playerSprite.x, playerSprite.y];
 
-  const [closestResourceId, distance] = findClosestResource(world, x, y);
-  if (!closestResourceId) return;
-
   const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
 
-  if (distance <= 2 * 16) {
-    const canDamage = targetItemsIds.includes(Resource.itemId[closestResourceId]);
+  const resourceId = findResourceInRange(world, eid);
+  if (resourceId !== null) {
+    const canDamage = targetItemsIds.includes(Resource.itemId[resourceId]);
 
-    const sprite = state.spritesById[closestResourceId];
+    const sprite = state.spritesById[resourceId];
     if (highlightedSprite) highlightedSprite.resetPipeline();
     sprite.setPipeline('outline');
     highlightedSprite = sprite;
@@ -151,8 +203,7 @@ function attack(state: GameState, world: World, eid: number) {
   const textureId = ItemTextureMap[selectedItem.name]?.textureId;
   if (!textureId) throw new Error(`Texture not found for tool: ${selectedItem}`);
 
-  const [x, y] = [state.spritesById[eid].x, state.spritesById[eid].y];
-  const [resourceTargetId] = findClosestResource(world, x, y);
+  const resourceTargetId = findResourceInRange(world, eid);
   if (resourceTargetId === null) return;
 
   const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
@@ -200,4 +251,7 @@ export const setMainPlayerEntity = (world: World, eid: number) => {
   addComponent(world, Velocity, eid);
   Velocity.x[eid] = 0;
   Velocity.y[eid] = 0;
+
+  addComponent(world, Range, eid);
+  Range.radius[eid] = 32;
 };

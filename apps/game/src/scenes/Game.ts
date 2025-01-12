@@ -179,7 +179,7 @@ export default class Game extends Scene implements SceneStates {
       this.buildingPlacementSystem = createBuildingPlacementSystem(this.state.world, this);
       this.buildingSystem = createBuildingSystem(this.state.world);
       this.tagSystem = createTagSystem(this.state.world, this);
-      this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId);
+      this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId, this);
       this.connectionSystem = createConnectionSystem(this.state.world, this);
 
       this.map = this.make.tilemap({
