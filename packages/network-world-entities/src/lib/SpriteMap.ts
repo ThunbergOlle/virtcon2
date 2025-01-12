@@ -36,11 +36,6 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'wood',
     variants: ['sprites/items/wood.png'],
   },
-  [DBItemName.WOOD_BIG]: {
-    textureId: 2,
-    textureName: 'wood',
-    variants: ['sprites/items/wood.png'],
-  },
   [DBItemName.STICK]: {
     textureId: 3,
     textureName: 'stick',
@@ -105,11 +100,6 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
 };
 
 export const ResourceTextureMap: Record<ResourceNames, TextureMetaData | null> = {
-  [ResourceNames.WOOD_BIG]: {
-    textureId: 100,
-    textureName: 'resource_wood_big',
-    variants: ['sprites/resources/wood_big.png'],
-  },
   [ResourceNames.WOOD]: {
     textureId: 101,
     textureName: 'resource_wood',

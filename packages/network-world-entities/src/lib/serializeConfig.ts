@@ -2,7 +2,13 @@ import { Component } from '@virtcon2/bytenetc';
 import { Position } from './components/Position';
 import { Velocity } from './components/Velocity';
 import { tileEntityComponents } from './entities/Tile';
-import { Player, playerEntityComponents, resourceEntityComponents, worldBuildingEntityComponents } from './network-world-entities';
+import {
+  itemEntityComponents,
+  Player,
+  playerEntityComponents,
+  resourceEntityComponents,
+  worldBuildingEntityComponents,
+} from './network-world-entities';
 
 export enum SerializationID {
   WORLD = 'world',
@@ -11,6 +17,7 @@ export enum SerializationID {
   PLAYER_FULL_SERVER = 'player-full-server',
   TILE = 'tile',
   RESOURCE = 'resource',
+  ITEM = 'item',
 }
 
 export const serializeConfig: { [key in SerializationID]: Component<any>[] } = {
@@ -20,4 +27,5 @@ export const serializeConfig: { [key in SerializationID]: Component<any>[] } = {
   [SerializationID.TILE]: tileEntityComponents,
   [SerializationID.RESOURCE]: resourceEntityComponents,
   [SerializationID.WORLD]: [],
+  [SerializationID.ITEM]: itemEntityComponents,
 };

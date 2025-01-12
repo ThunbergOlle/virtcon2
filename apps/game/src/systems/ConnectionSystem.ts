@@ -1,6 +1,6 @@
 import { defineQuery, defineSystem, enterQuery, exitQuery, World } from '@virtcon2/bytenetc';
-import { ConnectionPoint, fromPhaserPos, toPhaserPos } from '@virtcon2/network-world-entities';
-import Game, { GameObjectGroups, GameState } from '../scenes/Game';
+import { ConnectionPoint, fromPhaserPos, GameObjectGroups, toPhaserPos } from '@virtcon2/network-world-entities';
+import Game, { GameState } from '../scenes/Game';
 
 const connectionPointQuery = defineQuery(ConnectionPoint);
 const connectionPointEnterQuery = enterQuery(connectionPointQuery);

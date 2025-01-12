@@ -10,7 +10,6 @@ export enum DBItemRarity {
 }
 export enum DBItemName {
   WOOD = 'wood',
-  WOOD_BIG = 'wood_big',
   STICK = 'stick',
   STONE = 'stone',
   SAND = 'sand',

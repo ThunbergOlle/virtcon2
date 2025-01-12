@@ -4,4 +4,5 @@ export enum GameObjectGroups {
   RESOURCE = 2,
   TERRAIN = 3,
   BUILDING_NO_COLLIDE = 4,
+  ITEM = 5,
 }

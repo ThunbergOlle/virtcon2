@@ -1,7 +1,7 @@
 import { every } from '@shared';
 import {
   addComponent,
-  addEntity,
+  addReservedEntity,
   debugEntity,
   defineQuery,
   defineSystem,
@@ -12,10 +12,10 @@ import {
 } from '@virtcon2/bytenetc';
 import {
   Collider,
+  GameObjectGroups,
   ItemTextureMap,
   MainPlayer,
   MainPlayerAction,
-  MiscTextureMap,
   Player,
   Position,
   Range,
@@ -23,10 +23,10 @@ import {
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
-import { getItemByName, get_resource_by_item_name, Resources, ToolType } from '@virtcon2/static-game-data';
-import { memoizeWith, pick } from 'ramda';
+import { getItemByName, Resources, ToolType } from '@virtcon2/static-game-data';
+import { memoizeWith } from 'ramda';
 import { events } from '../events/Events';
-import { GameObjectGroups, GameState } from '../scenes/Game';
+import { GameState } from '../scenes/Game';
 import { store } from '../store';
 import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
 import { damageResource } from './ResourceSystem';
@@ -173,9 +173,6 @@ const highlightTargets = (state: GameState, world: World, eid: number) => {
     return;
   }
 
-  const playerSprite = state.spritesById[eid];
-  const [x, y] = [playerSprite.x, playerSprite.y];
-
   const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
 
   const resourceId = findResourceInRange(world, eid);
@@ -211,7 +208,7 @@ function attack(state: GameState, world: World, eid: number) {
 
   MainPlayer.action[eid] = MainPlayerAction.ATTACKING;
 
-  const tool = addEntity(world);
+  const tool = addReservedEntity(world, 998);
   addComponent(world, Sprite, tool);
 
   Sprite.texture[tool] = textureId;
@@ -245,7 +242,6 @@ export const setMainPlayerEntity = (world: World, eid: number) => {
   Collider.offsetY[eid] = 0;
   Collider.sizeWidth[eid] = 16;
   Collider.sizeHeight[eid] = 16;
-  Collider.scale[eid] = 1;
   Collider.group[eid] = GameObjectGroups.PLAYER;
 
   addComponent(world, Velocity, eid);

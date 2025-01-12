@@ -53,6 +53,10 @@ export interface RequestDestroyResourcePacket {
   resourceEntityId: number;
 }
 
+export interface RequestPickupItemPacketData {
+  itemEntityId: number;
+}
+
 export interface RequestPlaceBuildingPacketData {
   buildingItemId: number;
   rotation: number;

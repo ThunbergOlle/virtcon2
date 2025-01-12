@@ -414,6 +414,7 @@ export const debugEntity = (world: World, entity: Entity) => ({
 
     return { [name]: data };
   }),
+  entityId: entity,
 });
 
 export const serializeAllEntities = (world: World) => {

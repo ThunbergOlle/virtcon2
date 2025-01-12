@@ -1,5 +1,5 @@
 import { defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
-import { Collider, Resource, Sprite } from '@virtcon2/network-world-entities';
+import { Collider, createItem, Position, Resource, Sprite } from '@virtcon2/network-world-entities';
 import { get_item_by_id } from '@virtcon2/static-game-data';
 import { Types } from 'phaser';
 import Game, { GameState } from '../scenes/Game';
@@ -16,10 +16,6 @@ export const createResourceSystem = (world: World) => {
       const id = enterEntities[i];
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
 
-      if (Resource.worldBuildingId[id]) {
-        removeEntity(world, id);
-        continue;
-      }
       // The name is important so we can check what type of resource we collided with just based off the name.
       sprite.setName(`resource-${get_item_by_id(Resource.itemId[id])?.name}`);
     }
@@ -30,8 +26,6 @@ export const createResourceSystem = (world: World) => {
 export const damageResource = (state: GameState, eid: number, damage: number) => {
   Resource.health[eid] -= damage;
   if (Resource.health[eid] <= 0) {
-    // send resource destroy packet
-    toast(`+1 ${get_item_by_id(Resource.itemId[eid])?.display_name} added to inventory`, { type: 'success', autoClose: 1000 });
     const destroyResourcePacket: ClientPacket<RequestDestroyResourcePacket> = {
       data: {
         resourceEntityId: eid,

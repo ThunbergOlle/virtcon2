@@ -11,6 +11,7 @@ export * from './components/Velocity';
 export * from './components/Tile';
 export * from './components/ConnectionPoint';
 export * from './components/Range';
+export * from './components/Item';
 
 /* Entities */
 export * from './entities/Building';

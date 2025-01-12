@@ -6,6 +6,7 @@ import { events } from '../events/Events';
 
 import {
   createWorld,
+  debugEntity,
   defineDeserializer,
   deserializeEntity,
   doesEntityExist,
@@ -15,7 +16,7 @@ import {
   World,
 } from '@virtcon2/bytenetc';
 import { DisconnectPacketData, PacketType, RemoveEntityPacket, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { allComponents, createItem, GameObjectGroups, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -27,14 +28,8 @@ import { createResourceSystem } from '../systems/ResourceSystem';
 import { createMovingSpriteSystem, createSpriteRegisterySystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
 import { createConnectionSystem } from '../systems/ConnectionSystem';
+import { createItemSystem } from '../systems/ItemSystem';
 
-export enum GameObjectGroups {
-  PLAYER = 0,
-  BUILDING = 1,
-  RESOURCE = 2,
-  TERRAIN = 3,
-  BUILDING_NO_COLLIDE = 4,
-}
 export interface GameState {
   dt: number;
   world: World;
@@ -67,6 +62,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.RESOURCE]: null,
       [GameObjectGroups.TERRAIN]: null,
       [GameObjectGroups.BUILDING_NO_COLLIDE]: null,
+      [GameObjectGroups.ITEM]: null,
     },
   };
   public spriteSystem?: System<GameState>;
@@ -80,6 +76,7 @@ export default class Game extends Scene implements SceneStates {
   public tagSystem?: System<GameState>;
   public playerSystem?: System<GameState>;
   public connectionSystem?: System<GameState>;
+  public itemSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -145,6 +142,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.RESOURCE]: this.physics.add.staticGroup(),
       [GameObjectGroups.TERRAIN]: this.physics.add.staticGroup(),
       [GameObjectGroups.BUILDING_NO_COLLIDE]: this.physics.add.staticGroup(),
+      [GameObjectGroups.ITEM]: this.physics.add.staticGroup(),
     };
 
     this.physics.add.collider(
@@ -159,13 +157,16 @@ export default class Game extends Scene implements SceneStates {
     );
 
     events.subscribe('joinWorld', (worldId) => {
-      // this.physics.world.createDebugGraphic();
+      this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 
     events.subscribe('networkLoadWorld', ({ id, mainPlayerId }) => {
       Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
+
+      // @ts-ignore
+      window.debugEntity = (eid: string) => console.log(debugEntity(this.state.world, parseInt(eid)));
 
       registerComponents(this.state.world, allComponents);
       console.log('Loading world data...');
@@ -181,16 +182,7 @@ export default class Game extends Scene implements SceneStates {
       this.tagSystem = createTagSystem(this.state.world, this);
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId, this);
       this.connectionSystem = createConnectionSystem(this.state.world, this);
-
-      this.map = this.make.tilemap({
-        tileWidth: 16,
-        tileHeight: 16,
-        height: 32,
-        width: 32,
-      });
-
-      //loadChunk(heightMap.slice(0, 2), this.state.world);
-      // const groundTileset = this.map.addTilesetImage('GrassTileset', 'grassTiles', 16, 16, 1);
+      this.itemSystem = createItemSystem(this.state.world, this);
 
       this.isInitialized = true;
     });
@@ -209,8 +201,9 @@ export default class Game extends Scene implements SceneStates {
       !this.buildingSystem ||
       !this.playerSystem ||
       !this.tagSystem ||
-      !this.isInitialized ||
-      !this.connectionSystem
+      !this.itemSystem ||
+      !this.connectionSystem ||
+      !this.isInitialized
     )
       return;
 
@@ -233,6 +226,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.tagSystem(newState);
 
     newState = this.connectionSystem(newState);
+    newState = this.itemSystem(newState);
 
     this.state = newState;
 

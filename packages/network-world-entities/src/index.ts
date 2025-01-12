@@ -1,5 +1,7 @@
 export * from './lib/network-world-entities';
 export * from './lib/SpriteMap';
+export * from './lib/utils/gameObject';
+
 import {
   Building,
   Collider,
@@ -14,6 +16,7 @@ import {
   Velocity,
   ConnectionPoint,
   Range,
+  Item,
 } from './lib/network-world-entities';
 
 export const allComponents = [
@@ -30,4 +33,5 @@ export const allComponents = [
   Tile,
   ConnectionPoint,
   Range,
+  Item,
 ];

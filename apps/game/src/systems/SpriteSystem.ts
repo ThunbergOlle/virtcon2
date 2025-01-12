@@ -48,14 +48,15 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
         }
       }
 
-      sprite.setDataEnabled();
-      state.spritesById[id] = sprite;
       if (Sprite.height[id] && Sprite.width[id]) {
         sprite.setDisplaySize(Sprite.width[id], Sprite.height[id]);
       }
+
       if (Sprite.opacity[id]) {
         sprite.setAlpha(Sprite.opacity[id]);
       }
+
+      state.spritesById[id] = sprite;
     }
     const exitEntities = spriteQueryExit(world);
     for (let i = 0; i < exitEntities.length; i++) {

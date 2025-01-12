@@ -19,6 +19,7 @@ export enum PacketType {
   REMOVE_ENTITY = 'removeEntity',
 
   REQUEST_CREATE_CONNECTION_POINT = 'requestCreateConnectionPoint',
+  REQUEST_PICKUP_ITEM = 'requestPickupItem',
 }
 
 export interface PacketSender {

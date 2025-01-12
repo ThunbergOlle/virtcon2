@@ -8,11 +8,13 @@ import {
   RequestDestroyResourcePacket,
   RequestJoinPacketData,
   RequestMoveInventoryItemPacketData,
+  RequestPickupItemPacketData,
   RequestPlaceBuildingPacketData,
   SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
 import { RedisClientType } from 'redis';
 import { requestCreateConnectionPoint } from './packets/requestCreateConnectionPoint';
+import requestPickupItemPacket from './packets/requestPickupItemPacket';
 import request_destroy_resource_packet from './packets/request_destroy_resource_packet';
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
@@ -37,6 +39,8 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return syncClientEntity(packet as ClientPacketWithSender<SyncClientEntityPacket>, client);
     case PacketType.REQUEST_CREATE_CONNECTION_POINT:
       return requestCreateConnectionPoint(packet as ClientPacketWithSender<CreateConnectionPointPacket>);
+    case PacketType.REQUEST_PICKUP_ITEM:
+      return requestPickupItemPacket(packet as ClientPacketWithSender<RequestPickupItemPacketData>);
 
     default: {
       log(`Unknown packet type: ${packet.packet_type}`, LogLevel.ERROR);

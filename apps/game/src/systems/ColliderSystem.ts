@@ -1,6 +1,6 @@
 import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
-import { GameObjectGroups, GameState } from '../scenes/Game';
-import { Sprite, Collider } from '@virtcon2/network-world-entities';
+import { GameState } from '../scenes/Game';
+import { Sprite, Collider, GameObjectGroups } from '@virtcon2/network-world-entities';
 
 const colliderQuery = defineQuery(Sprite, Collider);
 const colliderQueryEnter = enterQuery(colliderQuery);
@@ -16,10 +16,12 @@ export const createColliderSystem = (world: World, scene: Phaser.Scene) => {
         const collider = scene.physics.add.existing(sprite, Collider.static[eid] === 1) as
           | Phaser.Types.Physics.Arcade.SpriteWithStaticBody
           | Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+
         collider.body.setSize(Collider.sizeWidth[eid], Collider.sizeHeight[eid]);
         collider.body.setOffset(Collider.offsetX[eid], Collider.offsetY[eid]);
-        collider.setScale(Collider.scale[eid] || 1);
+
         sprite.setInteractive();
+
         const collisionGroup = state.gameObjectGroups[Collider.group[eid] as GameObjectGroups];
         if (collisionGroup) {
           collisionGroup.add(collider);
