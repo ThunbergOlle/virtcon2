@@ -81,8 +81,8 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
 
       // Normalize speed in the diagonals
       if (yVel !== 0 && xVel !== 0) {
-        yVel = yVel / 2;
-        xVel = xVel / 2;
+        yVel = yVel / 1.5;
+        xVel = xVel / 1.5;
       }
 
       Velocity.x[entities[i]] = xVel * speed;

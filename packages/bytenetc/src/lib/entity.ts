@@ -11,7 +11,7 @@ export const Types = {
   ui32: 'ui32',
 } as const;
 
-const MAX_ENTITIES = 1000;
+const MAX_ENTITIES = 3000;
 
 type Type = (typeof Types)[keyof typeof Types];
 type ArrayType = [Type, number];

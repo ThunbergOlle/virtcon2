@@ -21,6 +21,11 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 
       const textureName = getVariantName(texture, Sprite.variant[id] || 0);
 
+      if (!scene.textures.exists(textureName)) {
+        console.error('Texture not found: ' + textureName);
+        continue;
+      }
+
       const sprite = Sprite.dynamicBody[id]
         ? scene.physics.add.sprite(Position.x[id], Position.y[id], textureName)
         : scene.add.sprite(Position.x[id], Position.y[id], textureName);
@@ -85,7 +90,7 @@ export const createMovingSpriteSystem = (world: World) => {
       const sprite = state.spritesById[id];
       if (sprite && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
         sprite.setPosition(Position.x[id], Position.y[id]);
-        sprite.setRotation(Sprite.rotation[id] * -(Math.PI / 180));
+        sprite.setRotation(Sprite.rotation[id] * (Math.PI / 180));
       }
     }
 

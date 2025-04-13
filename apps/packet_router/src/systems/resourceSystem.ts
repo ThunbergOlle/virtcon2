@@ -11,7 +11,6 @@ import {
   serializeConfig,
   Tile,
 } from '@virtcon2/network-world-entities';
-import seedRandom from 'seedrandom';
 import { all_spawnable_db_items, getResourceNameFromItemName } from '@virtcon2/static-game-data';
 import { syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { World as DBWorld } from '@virtcon2/database-postgres';
@@ -21,6 +20,19 @@ const resourceQuery = defineQuery(Resource, Position);
 const tileQuery = defineQuery(Tile, Position);
 const tileQueryEnter = enterQuery(tileQuery);
 const playerQuery = defineQuery(Player, Position);
+
+const whichResource = (x: number, y: number, seed: number) => {
+  const combinedSeed = `${x},${y},${seed}`;
+
+  let hash = 0;
+  for (let i = 0; i < combinedSeed.length; i++) {
+    const char = combinedSeed.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32-bit integer
+  }
+
+  return all_spawnable_db_items[Math.abs(hash % all_spawnable_db_items.length)];
+};
 
 const shouldGenerateResource = (x: number, y: number, seed: number, resourceChance = 0.1) => {
   const combinedSeed = `${x},${y},${seed}`;
@@ -39,9 +51,6 @@ const shouldGenerateResource = (x: number, y: number, seed: number, resourceChan
 
 const buildingQuery = defineQuery(Building, Position);
 export const createResourceSystem = (world: World, seed: number) => {
-  const seededRandom: () => number = seedRandom(seed);
-  const shuffled_spawnable_resources = all_spawnable_db_items.sort(() => 0.5 - seededRandom());
-
   return defineSystem(() => {
     const resourceEntities = resourceQuery(world);
     const tileEnterEntities = tileQueryEnter(world);
@@ -55,26 +64,25 @@ export const createResourceSystem = (world: World, seed: number) => {
       const tileEid = tileEnterEntities[i];
       const { x, y } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
 
-      spawnLoop: for (const item of shuffled_spawnable_resources) {
-        const resourceAtLocation = shouldGenerateResource(x, y, seed, item.spawnSettings.chance);
+      const item = whichResource(x, y, seed);
+      const resourceAtLocation = shouldGenerateResource(x, y, seed, item.spawnSettings.chance);
 
-        if (!resourceAtLocation) continue spawnLoop;
-        const height = DBWorld.getHeightAtPoint(seed, x, y);
-        const canSpawn = item.spawnSettings.minHeight <= height && item.spawnSettings.maxHeight >= height;
-        if (!canSpawn) continue spawnLoop;
+      if (!resourceAtLocation) continue;
+      const height = DBWorld.getHeightAtPoint(seed, x, y);
+      const canSpawn = item.spawnSettings.minHeight <= height && item.spawnSettings.maxHeight >= height;
+      if (!canSpawn) continue;
 
-        if (buildingEntities.some(buildingAtPosition(x, y))) continue spawnLoop;
+      if (buildingEntities.some(buildingAtPosition(x, y))) continue;
 
-        const resourceEntityId = createNewResourceEntity(world, {
-          resourceName: getResourceNameFromItemName(item.name),
-          pos: { x, y },
-          itemId: item.id,
-          worldBuildingId: 0,
-        });
+      const resourceEntityId = createNewResourceEntity(world, {
+        resourceName: getResourceNameFromItemName(item.name),
+        pos: { x, y },
+        itemId: item.id,
+        worldBuildingId: 0,
+      });
 
-        newEntities.push(resourceEntityId);
-        break spawnLoop;
-      }
+      newEntities.push(resourceEntityId);
+      break;
     }
 
     for (let i = 0; i < playerEntities.length; i++) {

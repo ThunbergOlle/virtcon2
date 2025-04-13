@@ -72,103 +72,12 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
     position: startingPosition,
   });
 
-  const seed = await World.findOne({ where: { id: packet.world_id } }).then((w) => w.seed);
-  const serializedTiles = loadTilesAroundEntity(seed, packet.world_id, joinedPlayerEntity);
-  await syncServerEntities(client, packet.world_id, packet.world_id, serializedTiles, SerializationID.TILE);
-
   const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
   const serializedPlayer = serialize(packet.world_id, [joinedPlayerEntity]);
   syncServerEntities(client, packet.world_id, packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
 
   return;
 }
-
-export const loadTilesAroundEntity = (seed: number, worldId: string, eid: number): SerializedData[] => {
-  const phaserX = Position.x[eid];
-  const phaserY = Position.y[eid];
-
-  const { x, y } = fromPhaserPos({ x: phaserX, y: phaserY });
-
-  const [minX, maxX] = [x - renderDistance, x + renderDistance];
-  const [minY, maxY] = [y - renderDistance, y + renderDistance];
-
-  const tileEids = [];
-
-  const loadedTiles = defineQuery(Tile)(worldId);
-
-  for (let i = minX; i <= maxX; i++) {
-    for (let j = minY; j <= maxY; j++) {
-      if (
-        loadedTiles.some((eid) => {
-          const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-          return tileX === i && tileY === j;
-        })
-      )
-        continue;
-
-      const height = World.getHeightAtPoint(seed, i, j);
-      const tileEntityId = createTile(i, j, height, worldId);
-      tileEids.push(tileEntityId);
-    }
-  }
-
-  const findTile = ({ x, y }: Coordinates) =>
-    tileEids.find((eid) => {
-      const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-      return tileX === x && tileY === y;
-    });
-
-  const decoder = new TextDecoder();
-
-  // update variants to depending on neighbors
-  for (const middleTile of tileEids) {
-    const middleTileType = decoder.decode(Tile.type[middleTile]);
-    const { x, y } = fromPhaserPos({ x: Position.x[middleTile], y: Position.y[middleTile] });
-
-    const [leftTile, rightTile, topTile, bottomTile] = [
-      findTile({ x: x - 1, y: y }),
-      findTile({ x: x + 1, y: y }),
-      findTile({ x: x, y: y - 1 }),
-      findTile({ x: x, y: y + 1 }),
-    ];
-
-    const [leftTileType, rightTileType, topTileType, bottomTileType] = [
-      decoder.decode(Tile.type[leftTile]),
-      decoder.decode(Tile.type[rightTile]),
-      decoder.decode(Tile.type[topTile]),
-      decoder.decode(Tile.type[bottomTile]),
-    ];
-
-    //    console.log(`x${topTile.slice(0, 1)}x
-    //${leftTile.slice(0, 1)}${middleTileType.slice(0, 1)}${rightTile.slice(0, 1)}
-    //x${bottomTile.slice(0, 1)}x
-    //`)
-
-    switch (middleTileType) {
-      case TILE_TYPE.WATER: {
-        if (rightTileType === TILE_TYPE.SAND) {
-          const rightShoreTile = createTile(x + 1, y, TILE_LEVEL[TILE_TYPE.WATER], worldId);
-          Sprite.variant[rightShoreTile] = 5;
-          break;
-        }
-        if (leftTileType === TILE_TYPE.SAND) {
-          const leftShoreTile = createTile(x - 1, y, TILE_LEVEL[TILE_TYPE.WATER], worldId);
-          Sprite.variant[leftShoreTile] = 4;
-          break;
-        }
-        if (topTileType === TILE_TYPE.SAND) {
-          const topShoreTile = createTile(x, y - 1, TILE_LEVEL[TILE_TYPE.WATER], worldId);
-          Sprite.variant[topShoreTile] = 6;
-          break;
-        } else break;
-      }
-    }
-  }
-
-  const tiles = defineQuery(Tile)(worldId);
-  const serialize = defineSerializer(serializeConfig[SerializationID.TILE]);
-  return serialize(worldId, tiles);
-};
 
 const ensureWorldIsRunning = async (worldId: string) => {
   /* Check if world is currently running in Redis */

@@ -1,4 +1,4 @@
-import { WorldSettings } from '@shared';
+import { TILE_LEVEL, TILE_TYPE, WorldSettings, TileType } from '@shared';
 import seedRandom from 'seedrandom';
 import { createNoise2D } from 'simplex-noise';
 import { Field, ObjectType } from 'type-graphql';
@@ -43,6 +43,17 @@ export class World extends BaseEntity {
     const randomGenerator = seedRandom(seed);
     const noise = createNoise2D(randomGenerator);
     return noise(x / 20, y / 20);
+  }
+
+  static getTileAtPoint(seed: number, x: number, y: number) {
+    const height = World.getHeightAtPoint(seed, x, y);
+    const tileType = Object.entries(TILE_LEVEL).reduce((prev, [key, value]) => {
+      if (height >= value) return key;
+
+      return prev;
+    }, TILE_TYPE.WATER as TileType);
+
+    return tileType as TileType;
   }
 
   static async GenerateNewWorld(worldId: string): Promise<World> {
