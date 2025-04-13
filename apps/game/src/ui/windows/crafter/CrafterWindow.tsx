@@ -93,7 +93,6 @@ export default function CrafterWindow() {
 
   const [mutateCraftItem, craftItemMutation] = useMutation(CRAFT_MUTATION);
 
-  const quantityInput = useRef<HTMLInputElement>(null);
   const [quantityToCraft, setQuantityToCraft] = useState<string>('1');
   const [selectedItem, setSelectedItem] = useState<DBItem | null>(null);
 
@@ -153,16 +152,15 @@ export default function CrafterWindow() {
 
               <div className="flex flex-[5] flex-row flex-wrap  bg-[#282828] mx-10 ">
                 {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => (
-                  <CrafterRecipeItem itemRecipeId={recipeItem.id} inventoryItems={inventoryData?.userInventory || []} />
+                  <CrafterRecipeItem key={recipeItem.id} itemRecipeId={recipeItem.id} inventoryItems={inventoryData?.userInventory || []} />
                 ))}
               </div>
-              <div className="my-4 mx-10 flex-1 flex flex-col  ">
+              <div className="my-4 mx-10 flex-1 flex flex-col">
                 <div className="flex-row flex flex-1 items-center">
                   <label htmlFor="quantityToCraft" className="flex-1">
                     Quantity
                   </label>
                   <input
-                    ref={quantityInput}
                     name="quantityToCraft"
                     className="min-w-[200] h-9 text-center flex-[4]"
                     type="number"
@@ -175,7 +173,7 @@ export default function CrafterWindow() {
                   />
                 </div>
                 <div className="flex-1">
-                  <Button onClick={() => craftItem()} variant="primary" disabled={!quantityInput.current?.validity.valid} className="float-right">
+                  <Button onClick={craftItem} variant="primary" className="float-right">
                     Craft
                   </Button>
                 </div>
