@@ -1,10 +1,10 @@
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
-const item_iron: DBItem = {
+const item_iron_ore: DBItem = {
   id: 9,
-  name: DBItemName.IRON,
-  display_name: 'Iron',
-  description: 'Iron can be used to craft hard things.',
+  name: DBItemName.IRON_ORE,
+  display_name: 'Iron ore',
+  description: 'Needs to be melted to be useful',
   icon: 'iron.png',
   rarity: DBItemRarity.common,
   stack_size: 256,
@@ -15,4 +15,4 @@ const item_iron: DBItem = {
   },
   is_building: false,
 };
-export default item_iron;
+export default item_iron_ore;

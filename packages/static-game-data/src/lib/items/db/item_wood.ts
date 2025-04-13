@@ -10,7 +10,7 @@ const item_wood: DBItem = {
   rarity: DBItemRarity.common,
   spawnSettings: {
     minHeight: 0.2,
-    maxHeight: 0.5,
+    maxHeight: 0.4,
     chance: 0.3,
   },
   is_building: false,

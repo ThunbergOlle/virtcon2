@@ -15,12 +15,13 @@ export enum DBItemName {
   SAND = 'sand',
   GLASS = 'glass',
   COAL = 'coal',
-  IRON = 'iron',
+  IRON_ORE = 'iron_ore',
   BUILDING_FURNACE = 'building_furnace',
   BUILDING_SAWMILL = 'building_sawmill',
   BUILDING_DRILL = 'building_stone_drill',
   WOOD_AXE = 'wood_axe',
   WOOD_PICKAXE = 'wood_pickaxe',
+  STONE_PICKAXE = 'stone_pickaxe',
 }
 export interface DBItemSpawnSettings {
   minHeight: number;

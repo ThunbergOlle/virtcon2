@@ -82,10 +82,10 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     spriteSheetFrameWidth: 16,
     spriteSheetFrameHeight: 16,
   },
-  [DBItemName.IRON]: {
+  [DBItemName.IRON_ORE]: {
     textureId: 12,
-    textureName: 'iron',
-    variants: ['sprites/items/iron.png'],
+    textureName: 'iron_ore',
+    variants: ['sprites/items/iron_ore.png'],
   },
   [DBItemName.WOOD_AXE]: {
     textureId: 13,
@@ -96,6 +96,11 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureId: 14,
     textureName: 'wood_pickaxe',
     variants: ['sprites/items/wood_pickaxe.png'],
+  },
+  [DBItemName.STONE_PICKAXE]: {
+    textureId: 15,
+    textureName: 'stone_pickaxe',
+    variants: ['sprites/items/stone_pickaxe.png'],
   },
 };
 
@@ -126,27 +131,43 @@ export const TileTextureMap: Record<string, TextureMetaData | null> = {
   water: {
     textureId: 200,
     textureName: 'water',
-    variants: [
-      'sprites/tiles/water.png',
-      'sprites/tiles/water_bottom.png',
-      'sprites/tiles/water_bottom_left.png',
-      'sprites/tiles/water_bottom_right.png',
-      'sprites/tiles/water_left.png',
-      'sprites/tiles/water_right.png',
-      'sprites/tiles/water_top.png',
-      'sprites/tiles/water_top_left.png',
-      'sprites/tiles/water_top_right.png',
-    ],
+    variants: ['sprites/tiles/water.png'],
   },
   sand: {
     textureId: 201,
     textureName: 'sand',
-    variants: ['sprites/tiles/sand.png'],
+    variants: [
+      'sprites/tiles/sand/v1.png',
+      'sprites/tiles/sand/v2.png',
+      'sprites/tiles/sand/v3.png',
+      'sprites/tiles/sand/v4.png',
+      'sprites/tiles/sand/v5.png',
+      'sprites/tiles/sand/v6.png',
+      'sprites/tiles/sand/v7.png',
+      'sprites/tiles/sand/v8.png',
+      'sprites/tiles/sand/v9.png',
+      'sprites/tiles/sand/v10.png',
+      'sprites/tiles/sand/v11.png',
+      'sprites/tiles/sand/v12.png',
+    ],
   },
   grass: {
     textureId: 202,
     textureName: 'grass',
-    variants: ['sprites/tiles/grass.png'],
+    variants: [
+      'sprites/tiles/grass/v1.png',
+      'sprites/tiles/grass/v2.png',
+      'sprites/tiles/grass/v3.png',
+      'sprites/tiles/grass/v4.png',
+      'sprites/tiles/grass/v5.png',
+      'sprites/tiles/grass/v6.png',
+      'sprites/tiles/grass/v7.png',
+      'sprites/tiles/grass/v8.png',
+      'sprites/tiles/grass/v9.png',
+      'sprites/tiles/grass/v10.png',
+      'sprites/tiles/grass/v11.png',
+      'sprites/tiles/grass/v12.png',
+    ],
   },
 };
 

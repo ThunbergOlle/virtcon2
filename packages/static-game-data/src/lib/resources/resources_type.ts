@@ -46,8 +46,8 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
     full_health: 5,
   },
   [ResourceNames.IRON]: {
-    item: DBItemName.IRON,
-    sprite: 'resource_iron',
+    item: DBItemName.IRON_ORE,
+    sprite: 'resource_iron_ore',
     width: 1,
     height: 1,
     spriteHeight: 2,
