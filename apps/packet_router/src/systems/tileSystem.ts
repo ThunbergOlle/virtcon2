@@ -158,6 +158,16 @@ const gridVariant12: SimplifiedVariant = [
   [false, false],
 ];
 
+const gridVariant13: SimplifiedVariant = [
+  [false, false],
+  [true, false],
+];
+
+const gridVariant14: SimplifiedVariant = [
+  [false, false],
+  [false, true],
+];
+
 const isVariant = (variant: SimplifiedVariant, surroundingTileHeights: SimplifiedVariant) =>
   variant.every((row, i) => row.every((bool, j) => bool === surroundingTileHeights[i][j]));
 
@@ -198,6 +208,8 @@ export const pickTiles = (
     { pattern: gridVariant10, id: 9 },
     { pattern: gridVariant11, id: 10 },
     { pattern: gridVariant12, id: 11 },
+    { pattern: gridVariant13, id: 12 },
+    { pattern: gridVariant14, id: 13 },
   ];
 
   for (const { pattern, id } of variants) {

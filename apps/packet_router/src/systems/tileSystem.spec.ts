@@ -1,4 +1,4 @@
-import { TILE_LEVEL, TILE_TYPE, TileType } from '@shared';
+import { TILE_TYPE, TileType } from '@shared';
 import { pickTiles, pickFoundationTile } from './tileSystem';
 
 describe('TileSystem', () => {
@@ -73,6 +73,36 @@ Grass, Sand
 
         expect(pickTiles(surroundingTiles)).toEqual({
           overlay: { variant: 9, rotation: 0, tileType: TILE_TYPE.GRASS },
+          foundation: TILE_TYPE.SAND,
+        });
+      });
+
+      test(`
+Sand, Sand
+Grass, Sand
+`, () => {
+        const surroundingTiles: [[TileType, TileType], [TileType, TileType]] = [
+          [TILE_TYPE.SAND, TILE_TYPE.SAND],
+          [TILE_TYPE.GRASS, TILE_TYPE.SAND],
+        ];
+
+        expect(pickTiles(surroundingTiles)).toEqual({
+          overlay: { variant: 12, rotation: 0, tileType: TILE_TYPE.GRASS },
+          foundation: TILE_TYPE.SAND,
+        });
+      });
+
+      test(`
+Sand, Sand
+Sand, Grass
+`, () => {
+        const surroundingTiles: [[TileType, TileType], [TileType, TileType]] = [
+          [TILE_TYPE.SAND, TILE_TYPE.SAND],
+          [TILE_TYPE.SAND, TILE_TYPE.GRASS],
+        ];
+
+        expect(pickTiles(surroundingTiles)).toEqual({
+          overlay: { variant: 13, rotation: 0, tileType: TILE_TYPE.GRASS },
           foundation: TILE_TYPE.SAND,
         });
       });
