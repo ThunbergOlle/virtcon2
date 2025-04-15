@@ -1,7 +1,17 @@
-import { RedisWorldBuilding } from '@shared';
 import { SerializedData } from '@virtcon2/bytenetc';
 import { SerializationID } from '@virtcon2/network-world-entities';
-import { InventoryType, ServerInventoryItem } from '@shared';
+import { DBItem } from '@virtcon2/static-game-data';
+
+export type ServerInventoryItem = {
+  quantity: number;
+  slot: number;
+  item: DBItem | null;
+};
+
+export enum InventoryType {
+  PLAYER = 'PLAYER',
+  BUILDING = 'BUILDING',
+}
 
 export type SyncClientEntityPacket = {
   serializationId: SerializationID;
@@ -63,8 +73,6 @@ export interface RequestPlaceBuildingPacketData {
   x: number;
   y: number;
 }
-
-export type PlaceBuildingPacket = RedisWorldBuilding;
 
 export interface RequestMoveInventoryItemPacketData {
   fromInventoryType: InventoryType;

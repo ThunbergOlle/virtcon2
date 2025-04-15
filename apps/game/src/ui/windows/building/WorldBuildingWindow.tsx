@@ -1,6 +1,5 @@
 import { gql, useQuery } from '@apollo/client';
-import { InventoryType } from '@shared';
-import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
+import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';

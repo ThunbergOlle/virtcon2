@@ -1,4 +1,4 @@
-import { RedisPlayer, serverUrl } from '@shared';
+import { serverUrl } from '@shared';
 import { useContext, useEffect, useState } from 'react';
 import { Button, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { UserContext } from '../../context/user/UserContext';
 
 export default function LobbyPage() {
   const user = useContext(UserContext);
-  const [worlds, setWorlds] = useState<{ id: string; name: string; players: RedisPlayer[] }[]>([]);
+  const [worlds, setWorlds] = useState<{ id: string; name: string }[]>([]);
 
   const navigate = useNavigate();
   useEffect(() => {

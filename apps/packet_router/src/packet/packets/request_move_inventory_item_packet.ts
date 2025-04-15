@@ -1,6 +1,6 @@
-import { InventoryType, LogApp, LogLevel, log } from '@shared';
+import { LogApp, LogLevel, log } from '@shared';
 import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safelyMoveItemsBetweenInventories } from '@virtcon2/database-postgres';
-import { ClientPacketWithSender, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, InventoryType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
 
 export default async function request_move_inventory_item_packet(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   /* Handle differently depending on if items moves between player inventory or building inventory */

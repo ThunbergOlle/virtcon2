@@ -1,4 +1,4 @@
-import { InventoryType, ServerInventoryItem } from '@shared';
+import { InventoryType, ServerInventoryItem } from '@virtcon2/network-packet';
 import { DBUserInventoryItem, DBWorldBuildingInventoryItem, get_item_by_id } from '@virtcon2/static-game-data';
 import { useMemo } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
