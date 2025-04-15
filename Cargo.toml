@@ -1,8 +1,0 @@
-
-[workspace]
-members = [
-	'apps/packet_tick_server',
-]
-
-[profile.release]
-lto = true
