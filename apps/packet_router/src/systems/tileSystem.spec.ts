@@ -1,5 +1,7 @@
-import { TILE_TYPE, TileType } from '@shared';
-import { pickTiles, pickFoundationTile } from './tileSystem';
+import { TILE_TYPE, TileType, renderDistance } from '@shared';
+import { clearEntities, createWorld, registerComponents, addEntity, addComponent } from '@virtcon2/bytenetc';
+import { Position, tileSize } from '@virtcon2/network-world-entities';
+import { pickTiles, pickFoundationTile, shouldServerKeep } from './tileSystem';
 
 describe('TileSystem', () => {
   describe('pickFoundationTile', () => {
@@ -15,6 +17,7 @@ describe('TileSystem', () => {
       });
     });
   });
+
   describe('when generating', () => {
     describe('a 2x2 tilemap being', () => {
       test(`
@@ -104,6 +107,96 @@ Sand, Grass
         expect(pickTiles(surroundingTiles)).toEqual({
           overlay: { variant: 13, rotation: 0, tileType: TILE_TYPE.GRASS },
           foundation: TILE_TYPE.SAND,
+        });
+      });
+    });
+  });
+
+  describe('shouldServerKeep())', () => {
+    const world = createWorld('test');
+
+    beforeAll(() => {
+      registerComponents(world, [Position]);
+    });
+
+    beforeEach(() => {
+      clearEntities(world);
+    });
+
+    describe("don't keep if entity", () => {
+      describe('is outside the render distance', () => {
+        test('by 2 tiles', () => {
+          const playerEid = addEntity(world);
+          addComponent(world, Position, playerEid);
+          Position.x[playerEid] = 0;
+          Position.y[playerEid] = 0;
+
+          const tile = addEntity(world);
+          addComponent(world, Position, tile);
+          Position.x[tile] = renderDistance * tileSize + tileSize * 2;
+          Position.y[tile] = renderDistance * tileSize + tileSize * 2;
+
+          expect(shouldServerKeep([playerEid], tile)).toEqual(false);
+        });
+
+        test('by 1 tile', () => {
+          const playerEid = addEntity(world);
+          addComponent(world, Position, playerEid);
+          Position.x[playerEid] = 0;
+          Position.y[playerEid] = 0;
+
+          const tile = addEntity(world);
+          addComponent(world, Position, tile);
+          Position.x[tile] = renderDistance * tileSize + tileSize * 1;
+          Position.y[tile] = renderDistance * tileSize + tileSize * 1;
+
+          expect(shouldServerKeep([playerEid], tile)).toEqual(false);
+        });
+
+        test('by -1 tile', () => {
+          const playerEid = addEntity(world);
+          addComponent(world, Position, playerEid);
+          Position.x[playerEid] = 0;
+          Position.y[playerEid] = 0;
+
+          const tile = addEntity(world);
+          addComponent(world, Position, tile);
+          Position.x[tile] = -renderDistance * tileSize + tileSize * -1;
+          Position.y[tile] = -renderDistance * tileSize + tileSize * -1;
+
+          expect(shouldServerKeep([playerEid], tile)).toEqual(false);
+        });
+      });
+    });
+
+    describe('keep if entity', () => {
+      describe('is inside the render distance', () => {
+        test('by 1 tile', () => {
+          const playerEid = addEntity(world);
+          addComponent(world, Position, playerEid);
+          Position.x[playerEid] = 0;
+          Position.y[playerEid] = 0;
+
+          const tile = addEntity(world);
+          addComponent(world, Position, tile);
+          Position.x[tile] = renderDistance * tileSize + tileSize * -1;
+          Position.y[tile] = renderDistance * tileSize + tileSize * -1;
+
+          expect(shouldServerKeep([playerEid], tile)).toEqual(true);
+        });
+
+        test('by 2 tiles', () => {
+          const playerEid = addEntity(world);
+          addComponent(world, Position, playerEid);
+          Position.x[playerEid] = 0;
+          Position.y[playerEid] = 0;
+
+          const tile = addEntity(world);
+          addComponent(world, Position, tile);
+          Position.x[tile] = renderDistance * tileSize + tileSize * -2;
+          Position.y[tile] = renderDistance * tileSize + tileSize * -2;
+
+          expect(shouldServerKeep([playerEid], tile)).toEqual(true);
         });
       });
     });

@@ -33,11 +33,15 @@ export const createTileSystem = (world: World, seed: number) =>
         if (tileX >= minX && tileX <= maxX && tileY >= minY && tileY <= maxY) {
           continue;
         }
+      }
+    }
 
-        if (tileX < minX || tileX > maxX || tileY < minY || tileY > maxY) {
-          removeEntity(world, tileEid);
-          removedEntities.push(tileEid);
-        }
+    for (let i = 0; i < tileEntities.length; i++) {
+      const tileEid = tileEntities[i];
+
+      if (!shouldServerKeep(playerEntities, tileEid)) {
+        removedEntities.push(tileEid);
+        removeEntity(world, tileEid);
       }
     }
 
@@ -56,13 +60,7 @@ const generateTilesInArea = (
   const newEntities: Entity[] = [];
   for (let j = minX; j <= maxX; j++) {
     for (let k = minY; k <= maxY; k++) {
-      if (
-        existingEntities.some((eid) => {
-          const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[eid], y: Position.y[eid] });
-          return tileX === j && tileY === k;
-        })
-      )
-        continue;
+      if (getTileOnPosition(existingEntities, j, k)) continue;
 
       const heights: [[TileType, TileType], [TileType, TileType]] = [
         [DB.World.getTileAtPoint(seed, j, k), DB.World.getTileAtPoint(seed, j + 1, k)],
@@ -94,6 +92,34 @@ const generateTilesInArea = (
   }
 
   return newEntities;
+};
+
+const getTileOnPosition = (tiles: Entity[], x: number, y: number) => {
+  for (let i = 0; i < tiles.length; i++) {
+    const tileEid = tiles[i];
+    const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
+
+    if (tileX === x && tileY === y) {
+      return tileEid;
+    }
+  }
+};
+
+export const shouldServerKeep = (players: Entity[], entity: Entity): boolean => {
+  for (let i = 0; i < players.length; i++) {
+    const playerEid = players[i];
+    const { x, y } = fromPhaserPos({ x: Position.x[playerEid], y: Position.y[playerEid] });
+
+    const [minX, maxX] = [x - renderDistance, x + renderDistance];
+    const [minY, maxY] = [y - renderDistance, y + renderDistance];
+
+    const { x: entityX, y: entityY } = fromPhaserPos({ x: Position.x[entity], y: Position.y[entity] });
+    if (entityX >= minX && entityX <= maxX && entityY >= minY && entityY <= maxY) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 type SimplifiedVariant = [[boolean, boolean], [boolean, boolean]];
