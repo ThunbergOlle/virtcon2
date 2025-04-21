@@ -5,7 +5,7 @@ import 'reflect-metadata';
 
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { AppDataSource, setupDatabase } from '@virtcon2/database-postgres';
+import { AppDataSource, pubSub, setupDatabase } from '@virtcon2/database-postgres';
 import cors from 'cors';
 import express from 'express';
 import { useServer } from 'graphql-ws/lib/use/ws';
@@ -42,6 +42,7 @@ const port = 3000;
 
   const schema = await buildSchema({
     resolvers: resolvers,
+    pubSub: pubSub,
     validate: {
       forbidUnknownValues: false,
     },

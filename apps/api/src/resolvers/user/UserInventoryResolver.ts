@@ -1,18 +1,14 @@
-import { Item, TOPIC_INVENTORY_UPDATE, UserInventoryItem } from '@virtcon2/database-postgres';
+import { Item, Topic, UserInventoryItem } from '@virtcon2/database-postgres';
 import { Arg, FieldResolver, ID, Int, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
-import { withFilter } from 'graphql-subscriptions';
-import { subscribe } from '../../service/RedisService';
 
 @Resolver(() => UserInventoryItem)
 export class UserInventoryItemResolver implements ResolverInterface<UserInventoryItem> {
   @Query(() => [UserInventoryItem], { nullable: false })
   @Subscription(() => [UserInventoryItem], {
-    subscribe: withFilter(
-      (_, args) => subscribe.asyncIterator(`${TOPIC_INVENTORY_UPDATE}.${args.userId}`),
-      (payload, variables) => {
-        return payload === parseInt(variables.userId);
-      },
-    ),
+    topics: Topic.USER_INVENTORY_UPDATE,
+    filter: ({ payload, args }) => {
+      return payload === Number(args.userId);
+    },
   })
   @Query(() => [UserInventoryItem], { nullable: false })
   async userInventory(

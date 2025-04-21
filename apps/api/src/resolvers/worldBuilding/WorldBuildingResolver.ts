@@ -1,18 +1,14 @@
-import { TOPIC_BUILDING_UPDATE, WorldBuilding, WorldBuildingInventory, Building } from '@virtcon2/database-postgres';
-import { withFilter } from 'graphql-subscriptions';
+import { WorldBuilding, WorldBuildingInventory, Building, Topic } from '@virtcon2/database-postgres';
 import { Arg, FieldResolver, ID, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
-import { subscribe } from '../../service/RedisService';
 
 @Resolver(() => WorldBuilding)
 export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   @Query(() => WorldBuilding)
   @Subscription(() => WorldBuilding, {
-    subscribe: withFilter(
-      (_, args) => subscribe.asyncIterator(`${TOPIC_BUILDING_UPDATE}.${args.id}`),
-      (payload, variables) => {
-        return payload === parseInt(variables.id);
-      },
-    ),
+    topics: Topic.BUILDING_UPDATE,
+    filter: ({ payload, args }) => {
+      return payload.worldBuildingId === Number(args.id);
+    },
   })
   worldBuilding(
     @Arg('id', () => ID, { nullable: false })

@@ -149,6 +149,9 @@ export const TileTextureMap: Record<string, TextureMetaData | null> = {
       'sprites/tiles/sand/v10.png',
       'sprites/tiles/sand/v11.png',
       'sprites/tiles/sand/v12.png',
+      'sprites/misc/no_tool.png',
+      'sprites/misc/no_tool.png',
+      'sprites/misc/no_tool.png',
     ],
   },
   grass: {
@@ -167,6 +170,9 @@ export const TileTextureMap: Record<string, TextureMetaData | null> = {
       'sprites/tiles/grass/v10.png',
       'sprites/tiles/grass/v11.png',
       'sprites/tiles/grass/v12.png',
+      'sprites/misc/no_tool.png',
+      'sprites/misc/no_tool.png',
+      'sprites/misc/no_tool.png',
     ],
   },
 };

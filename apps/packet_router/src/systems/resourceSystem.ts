@@ -1,4 +1,3 @@
-import { renderDistance } from '@shared';
 import { defineQuery, defineSerializer, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
 import {
   Building,

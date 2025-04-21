@@ -18,3 +18,5 @@ export * from './lib/error/InventoryFullError';
 
 /* Misc */
 export * from './lib/shared/InventoryManagement';
+
+export * from './lib/pubsub';

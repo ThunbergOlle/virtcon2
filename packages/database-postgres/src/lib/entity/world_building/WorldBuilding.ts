@@ -5,8 +5,6 @@ import { World } from '../world/World';
 import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
 
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
-import { RedisPubSub } from 'graphql-redis-subscriptions';
-export const pubsub = new RedisPubSub();
 
 @ObjectType()
 @Entity()

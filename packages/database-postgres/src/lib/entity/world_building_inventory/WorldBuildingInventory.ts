@@ -1,15 +1,13 @@
 import { LogLevel, log } from '@shared';
-import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, EntityManager, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { pubSub, Topic } from '../../pubsub';
 import { addToInventory } from '../../shared/InventoryManagement';
 import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 
-const pubsub = new RedisPubSub();
-export const TOPIC_BUILDING_UPDATE = 'BUILDING_UPDATE';
 export const publishWorldBuildingUpdate = async function (worldBuildingId: number) {
-  return pubsub.publish(`${TOPIC_BUILDING_UPDATE}.${worldBuildingId}`, worldBuildingId);
+  return pubSub.publish(Topic.BUILDING_UPDATE, worldBuildingId);
 };
 
 @ObjectType()
@@ -59,7 +57,13 @@ export class WorldBuildingInventory extends BaseEntity {
   // }
 
   // returns remainder of quantity that could not be added
-  static async addToInventory(transaction: EntityManager, worldBuildingId: number, itemId: number, quantity: number, slot?: number): Promise<number> {
+  static async addToInventory(
+    transaction: EntityManager,
+    worldBuildingId: number,
+    itemId: number,
+    quantity: number,
+    slot?: number,
+  ): Promise<number> {
     if (quantity === 0) {
       log('Quantity is 0, nothing to add', LogLevel.INFO);
       return 0;

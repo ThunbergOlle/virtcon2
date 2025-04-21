@@ -1,7 +1,12 @@
 import { gql, useQuery } from '@apollo/client';
-import { InventoryType } from '@shared';
 import { addComponent, addReservedEntity, removeEntity } from '@virtcon2/bytenetc';
-import { ClientPacket, PacketType, RequestMoveInventoryItemPacketData, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
+import {
+  ClientPacket,
+  InventoryType,
+  PacketType,
+  RequestMoveInventoryItemPacketData,
+  RequestPlaceBuildingPacketData,
+} from '@virtcon2/network-packet';
 import { Collider, GhostBuilding, Position, Sprite, ItemTextureMap } from '@virtcon2/network-world-entities';
 import { DBUserInventoryItem, get_building_by_id, get_tool_by_item_name } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';

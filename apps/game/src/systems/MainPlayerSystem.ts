@@ -87,33 +87,6 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       Velocity.x[entities[i]] = xVel * speed;
       Velocity.y[entities[i]] = yVel * speed;
 
-      const sprite = state.spritesById[entities[i]];
-      const { x: velX, y: velY } = sprite.body?.velocity || { x: 0, y: 0 };
-      if (velX !== 0 || velY !== 0) {
-        const angle = Math.atan2(velY, velX);
-        const angleRange = (32 * Math.PI) / 180;
-        const range = 32;
-        const maxAngle = angle + angleRange;
-        const minAngle = angle - angleRange;
-
-        const maxY = range * Math.sin(maxAngle);
-        const maxX = range * Math.cos(maxAngle);
-
-        const minY = range * Math.sin(minAngle);
-        const minX = range * Math.cos(minAngle);
-
-        Range.minX[entities[i]] = sprite.x + minX;
-        Range.minY[entities[i]] = sprite.y + minY;
-        Range.maxX[entities[i]] = sprite.x + maxX;
-        Range.maxY[entities[i]] = sprite.y + maxY;
-
-        minAngleLine.setTo(sprite.x, sprite.y, sprite.x + minX, sprite.y + minY);
-        maxAngleLine.setTo(sprite.x, sprite.y, sprite.x + maxX, sprite.y + maxY);
-
-        minAngleLine.setAlpha(0.5);
-        maxAngleLine.setAlpha(0.5);
-      }
-
       if (keyboard.checkDown(keySpace)) {
         attack(state, world, entities[i]);
       }
@@ -121,26 +94,6 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     }
     return state;
   });
-};
-
-const isWithinRange = (eid: Entity, x: number, y: number) => {
-  const [playerX, playerY] = [Position.x[eid], Position.y[eid]];
-  const [minX, minY, maxX, maxY] = [Range.minX[eid], Range.minY[eid], Range.maxX[eid], Range.maxY[eid]];
-
-  // Helper function to calculate the area of a triangle given three points
-  const triangleArea = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) =>
-    Math.abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2);
-
-  // Area of the main triangle formed by the player's position and the min/max points
-  const totalArea = triangleArea(playerX, playerY, minX, minY, maxX, maxY);
-
-  // Areas of sub-triangles formed with the point (x, y)
-  const area1 = triangleArea(x, y, minX, minY, maxX, maxY);
-  const area2 = triangleArea(playerX, playerY, x, y, maxX, maxY);
-  const area3 = triangleArea(playerX, playerY, minX, minY, x, y);
-
-  // Check if the sum of the sub-triangle areas equals the total area
-  return Math.abs(totalArea - (area1 + area2 + area3)) < 1e-6; // Tolerance for floating-point arithmetic
 };
 
 const getTargetItemIds = (tool: ToolType) =>
@@ -153,13 +106,27 @@ const getTargetItemIds = (tool: ToolType) =>
 const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
 
 const resourceQuery = defineQuery(Position, Resource);
-const findResourceInRange = (world: World, playerEid: number) => {
+const findResourceInRange = (world: World, playerEid: Entity): Entity | null => {
   const resources = resourceQuery(world);
+
+  let closestResourceEid: Entity | null = null;
+  let cloestDistance = Number.MAX_VALUE;
+
   for (let i = 0; i < resources.length; i++) {
     const resource = resources[i];
-    if (isWithinRange(playerEid, Position.x[resource], Position.y[resource])) return resource;
+    const resourceX = Position.x[resource];
+    const resourceY = Position.y[resource];
+    const playerX = Position.x[playerEid];
+    const playerY = Position.y[playerEid];
+
+    const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
+    if (distance < Range.radius[playerEid] && distance < cloestDistance) {
+      cloestDistance = distance;
+      closestResourceEid = resource;
+    }
   }
-  return null;
+
+  return closestResourceEid;
 };
 
 const shouldUpdateHighlight = every(30);

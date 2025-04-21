@@ -48,6 +48,7 @@ export function getLogLevelPrefix(level: LogLevel) {
 
   return colors[level](`[${chalk.black(level)}]`);
 }
+
 export const log = (message: string, level: LogLevel = LogLevel.INFO, app: LogApp = LogApp.DEFAULT) => {
   console.log(`[${chalk.cyan(new Date().toLocaleTimeString())}] ${getLogLevelPrefix(level)} [${getAppPrefix(app)}] → ${message}`);
 };

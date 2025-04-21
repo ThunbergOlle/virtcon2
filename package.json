@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "nx run-many --parallel --target=serve --maxParallel=100",
+    "start": "REDIS_URL=redis://127.0.0.1:6379 nx run-many --parallel --target=serve --maxParallel=100",
     "start-game-server": "nx run packet_router:serve:development -- --inspect=true --port=7777",
     "start-api": "nx run api:serve:development -- --inspect=true --port=7778",
     "start-game": "nx run game:serve:development -- --inspect=true",
@@ -15,6 +15,7 @@
     "@apollo/client": "^3.11.2",
     "@apollo/server": "^4.6.0",
     "@graphql-tools/schema": "^10.0.3",
+    "@graphql-yoga/redis-event-target": "^3.0.3",
     "@graphql-yoga/subscription": "^5.0.0",
     "@monodon/rust": "^1.1.1",
     "@reduxjs/toolkit": "^2.2.2",

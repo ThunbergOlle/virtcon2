@@ -72,7 +72,7 @@ const generateTilesInArea = (
         x: j,
         y: k,
         height: TILE_LEVEL[foundation],
-        variant: -1,
+        variant: 0,
         rotation: 0,
         dualGrid: true,
       });
@@ -125,8 +125,8 @@ export const shouldServerKeep = (players: Entity[], entity: Entity): boolean => 
 type SimplifiedVariant = [[boolean, boolean], [boolean, boolean]];
 
 const gridVariant1: SimplifiedVariant = [
-  [true, false],
-  [false, true],
+  [true, true],
+  [true, true],
 ];
 
 const gridVariant2: SimplifiedVariant = [
@@ -155,8 +155,8 @@ const gridVariant6: SimplifiedVariant = [
 ];
 
 const gridVariant7: SimplifiedVariant = [
-  [true, true],
-  [true, true],
+  [true, false],
+  [false, true],
 ];
 
 const gridVariant8: SimplifiedVariant = [
@@ -192,6 +192,11 @@ const gridVariant13: SimplifiedVariant = [
 const gridVariant14: SimplifiedVariant = [
   [false, false],
   [false, true],
+];
+
+const gridVariant15: SimplifiedVariant = [
+  [false, false],
+  [true, true],
 ];
 
 const isVariant = (variant: SimplifiedVariant, surroundingTileHeights: SimplifiedVariant) =>
@@ -236,6 +241,7 @@ export const pickTiles = (
     { pattern: gridVariant12, id: 11 },
     { pattern: gridVariant13, id: 12 },
     { pattern: gridVariant14, id: 13 },
+    { pattern: gridVariant15, id: 14 },
   ];
 
   for (const { pattern, id } of variants) {
