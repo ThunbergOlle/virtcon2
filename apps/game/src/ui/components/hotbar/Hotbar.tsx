@@ -3,7 +3,7 @@ import { DBItem, DBUserInventoryItem } from '@virtcon2/static-game-data';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { useUser } from '../../context/user/UserContext';
-import { currentItem, currentSlot, hotbarSlice, select } from './HotbarSlice';
+import { currentSlot, hotbarSlice, select } from './HotbarSlice';
 import { useHotkey } from './useHotkey';
 
 const HOTBAR_ITEM_FRAGMENT = gql`
@@ -20,7 +20,6 @@ const HOTBAR_ITEM_FRAGMENT = gql`
 
 const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) => {
   const dispatch = useAppDispatch();
-  const current = useAppSelector(currentItem);
   const selectedSlot = useAppSelector(currentSlot);
 
   useEffect(() => {
