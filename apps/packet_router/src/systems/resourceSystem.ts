@@ -15,6 +15,7 @@ import { all_spawnable_db_items, getResourceNameFromItemName } from '@virtcon2/s
 import { syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { World as DBWorld } from '@virtcon2/database-postgres';
 import { redisClient } from '../redis';
+import { shouldServerKeep } from './tileSystem';
 
 const resourceQuery = defineQuery(Resource, Position);
 const tileQuery = defineQuery(Tile, Position);
@@ -85,26 +86,13 @@ export const createResourceSystem = (world: World, seed: number) => {
       break;
     }
 
-    for (let i = 0; i < playerEntities.length; i++) {
-      const playerEid = playerEntities[i];
-      const { x, y } = fromPhaserPos({ x: Position.x[playerEid], y: Position.y[playerEid] });
+    for (let i = 0; i < resourceEntities.length; i++) {
+      const resourceEid = resourceEntities[i];
 
-      const [minX, maxX] = [x - renderDistance, x + renderDistance];
-      const [minY, maxY] = [y - renderDistance, y + renderDistance];
+      if (shouldServerKeep(playerEntities, resourceEid)) continue;
 
-      for (let j = 0; j < resourceEntities.length; j++) {
-        const resourceEid = resourceEntities[j];
-        const { x: resourceX, y: resourceY } = fromPhaserPos({ x: Position.x[resourceEid], y: Position.y[resourceEid] });
-
-        if (resourceX >= minX && resourceX <= maxX && resourceY >= minY && resourceY <= maxY) {
-          continue;
-        }
-
-        if (resourceX < minX || resourceX > maxX || resourceY < minY || resourceY > maxY) {
-          removeEntity(world, resourceEid);
-          removedEntities.push(resourceEid);
-        }
-      }
+      removedEntities.push(resourceEid);
+      removeEntity(world, resourceEid);
     }
 
     syncRemoveEntities(redisClient, world, world, removedEntities).then(() => {
