@@ -1,4 +1,4 @@
-import { log, LogApp, LogLevel, renderDistance, TILE_LEVEL, TILE_TYPE } from '@shared';
+import { log, LogApp, LogLevel } from '@shared';
 import { User, World } from '@virtcon2/database-postgres';
 import {
   ClientPacketWithSender,
@@ -10,21 +10,9 @@ import {
   SyncServerEntityPacket,
 } from '@virtcon2/network-packet';
 
-import {
-  Coordinates,
-  createNewPlayerEntity,
-  createTile,
-  fromPhaserPos,
-  Player,
-  playerEntityComponents,
-  Position,
-  SerializationID,
-  serializeConfig,
-  Sprite,
-  Tile,
-} from '@virtcon2/network-world-entities';
+import { createNewPlayerEntity, Player, playerEntityComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 
-import { defineQuery, defineSerializer, serializeAllEntities, SerializedData } from '@virtcon2/bytenetc';
+import { defineQuery, defineSerializer, serializeAllEntities } from '@virtcon2/bytenetc';
 import { RedisClientType } from 'redis';
 import { doesWorldExist, initializeWorld } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';

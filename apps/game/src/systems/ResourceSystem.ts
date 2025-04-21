@@ -1,9 +1,8 @@
-import { defineQuery, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
-import { Collider, createItem, Position, Resource, Sprite } from '@virtcon2/network-world-entities';
+import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
+import { Collider, Resource, Sprite } from '@virtcon2/network-world-entities';
 import { get_item_by_id } from '@virtcon2/static-game-data';
 import { Types } from 'phaser';
 import Game, { GameState } from '../scenes/Game';
-import { toast } from 'react-toastify';
 import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 
 const resourceQuery = defineQuery(Resource, Sprite, Collider);

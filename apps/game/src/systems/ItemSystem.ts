@@ -6,7 +6,6 @@ import { ClientPacket, PacketType, RequestDestroyResourcePacket, RequestPickupIt
 
 const itemQuery = defineQuery(Item, Sprite);
 const mainPlayerQuery = defineQuery(MainPlayer, Sprite);
-const itemQueryEnter = enterQuery(itemQuery);
 
 export const createItemSystem = (world: World, scene: Scene) => {
   return defineSystem<GameState>((state) => {

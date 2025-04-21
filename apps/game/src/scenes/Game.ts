@@ -165,7 +165,6 @@ export default class Game extends Scene implements SceneStates {
       Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
 
-      // @ts-ignore
       window.debugEntity = (eid: string) => console.log(debugEntity(this.state.world, parseInt(eid)));
 
       registerComponents(this.state.world, allComponents);
@@ -173,7 +172,7 @@ export default class Game extends Scene implements SceneStates {
 
       this.spriteRegisterySystem = createSpriteRegisterySystem(this.state.world, this);
       this.spriteSystem = createMovingSpriteSystem(this.state.world);
-      this.mainPlayerSystem = createMainPlayerSystem(this.state.world, this, this.input.keyboard.createCursorKeys());
+      this.mainPlayerSystem = createMainPlayerSystem(this.state.world, this, this.input.keyboard!.createCursorKeys());
       this.mainPlayerSyncSystem = createMainPlayerSyncSystem(this.state.world);
       this.colliderSystem = createColliderSystem(this.state.world, this);
       this.resourceSystem = createResourceSystem(this.state.world);

@@ -36,12 +36,13 @@ const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collid
 const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
 export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
+  const keyboard = scene.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
   const [keyW, keyA, keyS, keyD, keySpace] = [
-    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-    scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
   ];
   const minAngleLine = scene.add.line(0, 0, 0, 0, 0, 0, 0xff0000);
   const maxAngleLine = scene.add.line(0, 0, 0, 0, 0, 0, 0xff0000);
@@ -71,12 +72,10 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     const entities = mainPlayerQuery(world);
     for (let i = 0; i < entities.length; i++) {
       let xVel: number =
-        (Number(cursors.right.isDown || scene.input.keyboard?.checkDown(keyD)) -
-          Number(cursors.left.isDown || scene.input.keyboard.checkDown(keyA))) /
-        10;
+        (Number(cursors.right.isDown || keyboard.checkDown(keyD)) - Number(cursors.left.isDown || keyboard.checkDown(keyA))) / 10;
       let yVel: number =
         (Number(cursors.down.isDown || scene.input.keyboard?.checkDown(keyS)) -
-          Number(cursors.up.isDown || scene.input.keyboard.checkDown(keyW))) /
+          Number(cursors.up.isDown || scene.input.keyboard?.checkDown(keyW))) /
         10;
 
       // Normalize speed in the diagonals
@@ -115,7 +114,7 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
         maxAngleLine.setAlpha(0.5);
       }
 
-      if (scene.input.keyboard.checkDown(keySpace)) {
+      if (keyboard.checkDown(keySpace)) {
         attack(state, world, entities[i]);
       }
       highlightTargets(state, world, entities[i]);
