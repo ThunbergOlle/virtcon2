@@ -1,15 +1,16 @@
-import { gql, useFragment, useQuery } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { DBItem, DBUserInventoryItem } from '@virtcon2/static-game-data';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { useUser } from '../../context/user/UserContext';
-import { currentItem, hotbarItems, hotbarSlice, select } from './HotbarSlice';
+import { currentItem, currentSlot, hotbarSlice, select } from './HotbarSlice';
 import { useHotkey } from './useHotkey';
 
 const HOTBAR_ITEM_FRAGMENT = gql`
   fragment HotbarItemFragment on UserInventoryItem {
     id
     slot
+    quantity
     item {
       id
       name
@@ -20,6 +21,7 @@ const HOTBAR_ITEM_FRAGMENT = gql`
 const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) => {
   const dispatch = useAppDispatch();
   const current = useAppSelector(currentItem);
+  const selectedSlot = useAppSelector(currentSlot);
 
   useEffect(() => {
     if (inventoryItem.item?.id) {
@@ -32,12 +34,11 @@ const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) =
 
   if (!inventoryItem?.item) {
     return (
-      <div onClick={() => dispatch(select({ slot }))}>
-        <div
-          className={`pixelart h-10 w-10 mx-3 rounded-full bg-black cursor-pointer ${
-            current?.id === null && 'border-green-600 border-b-4'
-          }`}
-        />
+      <div
+        onClick={() => dispatch(select({ slot }))}
+        className={`p-1 relative hover:cursor-pointer hover:bg-gray-700 rounded-lg ${selectedSlot === slot && 'bg-green-700'}`}
+      >
+        <div className={`pixelart h-10 w-10 `} />
       </div>
     );
   }
@@ -45,14 +46,20 @@ const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) =
   const item = inventoryItem.item as DBItem;
 
   return (
-    <div onClick={() => dispatch(select({ slot }))}>
+    <div
+      onClick={() => dispatch(select({ slot }))}
+      className={`p-1 relative hover:cursor-pointer hover:bg-gray-700 rounded-lg ${selectedSlot === slot && 'bg-green-700'}`}
+    >
       <img
         src={`/assets/sprites/items/${item.name}.png`}
         alt="wrench"
-        className={`pixelart h-10 w-10 mx-3 cursor-pointer ${item.id && current?.id === item.id && 'border-green-600 border-b-4'}`}
+        className={`pixelart h-10 w-10 cursor-pointer`}
         draggable="false"
         unselectable="on"
       />
+      <div className="absolute top-0 left-0 w-full h-full flex items-end justify-end">
+        <span className="text-xs text-white font-bold">{inventoryItem.quantity}</span>
+      </div>
     </div>
   );
 };
@@ -77,7 +84,7 @@ export const Hotbar = () => {
 
   return (
     <div className="absolute h-16  z-[2] bottom-4 w-full flex">
-      <div className="m-auto bg-gray-800 h-full rounded-lg flex flex-row items-center ">
+      <div className="m-auto bg-gray-800 h-full rounded-lg flex flex-row items-center gap-2 px-2">
         {data?.userInventory.map((inventoryItem: DBUserInventoryItem) => (
           <HotbarItem key={inventoryItem.slot} inventoryItem={inventoryItem} />
         ))}

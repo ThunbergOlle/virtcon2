@@ -25,6 +25,7 @@ export const hotbarSlice = createSlice({
 });
 
 export const currentItem = (state: { hotbar: HotbarState }) => state.hotbar.items[state.hotbar.selectedSlot];
+export const currentSlot = (state: { hotbar: HotbarState }) => state.hotbar.selectedSlot;
 export const currentTool = (state: { hotbar: HotbarState }) =>
   state.hotbar.items[state.hotbar.selectedSlot] && get_tool_by_item_name(state.hotbar.items[state.hotbar.selectedSlot]!.name);
 export const hotbarItems = (state: { hotbar: HotbarState }) => state.hotbar.items;
