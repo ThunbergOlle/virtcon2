@@ -16,6 +16,10 @@ const WORLD_BUILDING_FRAGMENT = gql`
     x
     y
     rotation
+    building {
+      id
+      name
+    }
     world_building_inventory {
       slot
       quantity
@@ -70,8 +74,6 @@ export default function WorldBuildingWindow() {
   }, [data, inspectedWorldBuilding, subscribeToMore, worldBuilding]);
 
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {
-    // Construct network packet to move the item to the new invenory.
-
     const packet: ClientPacket<RequestMoveInventoryItemPacketData> = {
       data: {
         ...item,

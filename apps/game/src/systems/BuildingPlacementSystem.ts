@@ -1,4 +1,4 @@
-import { Collider, GhostBuilding, Position, Resource, Sprite } from '@virtcon2/network-world-entities';
+import { Collider, GameObjectGroups, GhostBuilding, Position, Resource, Sprite } from '@virtcon2/network-world-entities';
 import { GameState } from '../scenes/Game';
 import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
 import { defineQuery, defineSystem, Entity, exitQuery, World } from '@virtcon2/bytenetc';

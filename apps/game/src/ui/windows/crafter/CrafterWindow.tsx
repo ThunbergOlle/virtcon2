@@ -1,6 +1,7 @@
 import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
 import { UserInventoryItem } from '@virtcon2/database-postgres';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
+import Game from 'apps/game/src/scenes/Game';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -146,14 +147,32 @@ export default function CrafterWindow() {
           {selectedItem ? (
             <div className="text-center flex flex-col justify-between h-full">
               <div className="flex-1">
-                <h3 className="text-2xl ">{selectedItem.display_name}</h3>
+                <div className="flex flex-row justify-center gap-2 items-center">
+                  <h3 className="text-2xl ">{selectedItem.display_name}</h3>
+                  <img
+                    className="w-12 h-12 pixelart"
+                    src={Game.getInstance().textures.getBase64((selectedItem.name || '') + '_0')}
+                    alt={selectedItem.display_name}
+                  />
+                </div>
                 <p>{selectedItem.description}</p>
               </div>
 
               <div className="flex flex-[5] flex-row flex-wrap  bg-[#282828] mx-10 ">
                 {selectedItem.recipe?.map((recipeItem: DBItemRecipe) => (
-                  <CrafterRecipeItem key={recipeItem.id} itemRecipeId={recipeItem.id} inventoryItems={inventoryData?.userInventory || []} />
+                  <CrafterRecipeItem
+                    onClick={onSelectedItem}
+                    key={recipeItem.id}
+                    itemRecipeId={recipeItem.id}
+                    inventoryItems={inventoryData?.userInventory || []}
+                  />
                 ))}
+
+                {!selectedItem.recipe?.length && (
+                  <div className="flex flex-col text-center w-full h-20  cursor-pointer border-2 border-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b]">
+                    <p className="flex-1">No recipes available</p>
+                  </div>
+                )}
               </div>
               <div className="my-4 mx-10 flex-1 flex flex-col">
                 <div className="flex-row flex flex-1 items-center">

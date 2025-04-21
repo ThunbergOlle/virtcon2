@@ -7,7 +7,7 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   @Subscription(() => WorldBuilding, {
     topics: Topic.BUILDING_UPDATE,
     filter: ({ payload, args }) => {
-      return payload.worldBuildingId === Number(args.id);
+      return payload === Number(args.id);
     },
   })
   worldBuilding(
