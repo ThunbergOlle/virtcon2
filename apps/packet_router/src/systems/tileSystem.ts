@@ -67,15 +67,20 @@ const generateTilesInArea = (
         [DB.World.getTileAtPoint(seed, j, k + 1), DB.World.getTileAtPoint(seed, j + 1, k + 1)],
       ];
 
-      const { overlay, foundation } = pickTiles(heights);
-      const foundationTile = createTile(world, {
-        x: j,
-        y: k,
-        height: TILE_LEVEL[foundation],
-        variant: 0,
-        rotation: 0,
-        dualGrid: true,
-      });
+      const { overlay, foundation, midlevel } = pickTiles(heights);
+
+      if (overlay.tileType !== foundation) {
+        const foundationTile = createTile(world, {
+          x: j,
+          y: k,
+          height: TILE_LEVEL[foundation],
+          variant: 0,
+          rotation: 0,
+          dualGrid: true,
+        });
+
+        newEntities.push(foundationTile);
+      }
 
       const overlayTileEntityId = createTile(world, {
         x: j,
@@ -86,7 +91,18 @@ const generateTilesInArea = (
         dualGrid: true,
       });
 
-      newEntities.push(foundationTile);
+      if (midlevel) {
+        const midlevelTileEntitiyId = createTile(world, {
+          x: j,
+          y: k,
+          height: TILE_LEVEL[midlevel.tileType],
+          variant: midlevel.variant,
+          rotation: midlevel.rotation,
+          dualGrid: true,
+        });
+        newEntities.push(midlevelTileEntitiyId);
+      }
+
       newEntities.push(overlayTileEntityId);
     }
   }
@@ -212,43 +228,75 @@ export const pickOverlayTile = (tiles: [[TileType, TileType], [TileType, TileTyp
   return overlayTile;
 };
 
+export const pickMiddleTile = (tiles: [[TileType, TileType], [TileType, TileType]]): TileType | undefined => {
+  const overlayTileType = pickOverlayTile(tiles);
+  const foundationTileType = pickFoundationTile(tiles);
+  return tiles.flat().filter((tileType) => tileType !== overlayTileType && tileType !== foundationTileType)[0];
+};
+
 export const pickTiles = (
   tiles: [[TileType, TileType], [TileType, TileType]],
 ): {
   overlay: { variant: number; rotation: number; tileType: TileType };
+  midlevel?: { variant: number; rotation: number; tileType: TileType };
   foundation: TileType;
 } => {
   const foundation = pickFoundationTile(tiles);
-  const overlayTileType = pickOverlayTile(tiles);
 
-  const toBools = [
-    [tiles[0][0] === overlayTileType, tiles[0][1] === overlayTileType],
-    [tiles[1][0] === overlayTileType, tiles[1][1] === overlayTileType],
-  ] as SimplifiedVariant;
+  const pickTilesFromTop = (tiles: [[TileType, TileType], [TileType, TileType]]): { variant: number; tileType: TileType } => {
+    const overlayTileType = pickOverlayTile(tiles);
 
-  const variants = [
-    { pattern: gridVariant1, id: 0 },
-    { pattern: gridVariant2, id: 1 },
-    { pattern: gridVariant3, id: 2 },
-    { pattern: gridVariant4, id: 3 },
-    { pattern: gridVariant5, id: 4 },
-    { pattern: gridVariant6, id: 5 },
-    { pattern: gridVariant7, id: 6 },
-    { pattern: gridVariant8, id: 7 },
-    { pattern: gridVariant9, id: 8 },
-    { pattern: gridVariant10, id: 9 },
-    { pattern: gridVariant11, id: 10 },
-    { pattern: gridVariant12, id: 11 },
-    { pattern: gridVariant13, id: 12 },
-    { pattern: gridVariant14, id: 13 },
-    { pattern: gridVariant15, id: 14 },
-  ];
+    const toBools = [
+      [tiles[0][0] === overlayTileType, tiles[0][1] === overlayTileType],
+      [tiles[1][0] === overlayTileType, tiles[1][1] === overlayTileType],
+    ] as SimplifiedVariant;
 
-  for (const { pattern, id } of variants) {
-    if (isVariant(pattern, toBools)) {
-      return { overlay: { variant: id, rotation: 0, tileType: overlayTileType }, foundation };
+    const variants = [
+      { pattern: gridVariant1, id: 0 },
+      { pattern: gridVariant2, id: 1 },
+      { pattern: gridVariant3, id: 2 },
+      { pattern: gridVariant4, id: 3 },
+      { pattern: gridVariant5, id: 4 },
+      { pattern: gridVariant6, id: 5 },
+      { pattern: gridVariant7, id: 6 },
+      { pattern: gridVariant8, id: 7 },
+      { pattern: gridVariant9, id: 8 },
+      { pattern: gridVariant10, id: 9 },
+      { pattern: gridVariant11, id: 10 },
+      { pattern: gridVariant12, id: 11 },
+      { pattern: gridVariant13, id: 12 },
+      { pattern: gridVariant14, id: 13 },
+      { pattern: gridVariant15, id: 14 },
+    ];
+
+    for (const { pattern, id } of variants) {
+      if (isVariant(pattern, toBools)) {
+        return { variant: id, tileType: overlayTileType };
+      }
     }
-  }
 
-  throw new Error(`No matching variant found for tiles: ${JSON.stringify(tiles)}`);
+    throw new Error(`No matching variant found for tiles: ${JSON.stringify(tiles)}`);
+  };
+
+  const overlay = pickTilesFromTop(tiles);
+
+  // replace overlay tiles with middle layer
+  const middleTile = pickMiddleTile(tiles);
+  const allMiddle = middleTile ? tiles.flat().map((tile) => (tile === overlay.tileType ? middleTile : tile)) : tiles.flat();
+  const middle = pickTilesFromTop([
+    [allMiddle[0], allMiddle[1]],
+    [allMiddle[2], allMiddle[3]],
+  ]);
+
+  return {
+    overlay: {
+      ...overlay,
+      rotation: 0,
+    },
+    midlevel: {
+      ...middle,
+      rotation: 0,
+    },
+    foundation,
+  };
 };
