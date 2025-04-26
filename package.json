@@ -57,7 +57,7 @@
     "socket.io-client": "^4.6.1",
     "tailwindcss": "^3.2.7",
     "tslib": "^2.3.0",
-    "type-graphql": "^2.0.0-beta.1",
+    "type-graphql": "^2.0.0-rc.2",
     "typeorm": "^0.3.12",
     "ws": "^8.16.0"
   },
