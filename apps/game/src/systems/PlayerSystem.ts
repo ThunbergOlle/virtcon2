@@ -31,10 +31,19 @@ export const createPlayerSystem = (world: World, mainPlayerId: number, scene: Ph
         if (!texture) throw new Error('Texture not found for id: ' + Sprite.texture[id]);
 
         const textureName = getVariantName(texture, Sprite.variant[id]);
-        const animationPrefix = `${textureName}_anim`;
-        const animationName = `${animationPrefix}_${isWalking ? 'walk' : 'idle'}`;
+        const currentPlaying = sprite.anims.currentAnim?.key;
 
+        const animationPrefix = `${textureName}_anim`;
+        const walkAnimationName = `${animationPrefix}_walk`;
+        const idleAnimationName = `${animationPrefix}_idle`;
+
+        if (currentPlaying !== walkAnimationName && currentPlaying !== idleAnimationName && sprite.anims.isPlaying) {
+          continue;
+        }
+
+        const animationName = isWalking ? walkAnimationName : idleAnimationName;
         sprite.anims.play(animationName, true);
+
         if (Velocity.x[id] !== 0) sprite.flipX = Velocity.x[id] < 0;
       }
     }

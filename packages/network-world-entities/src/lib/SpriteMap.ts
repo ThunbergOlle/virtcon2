@@ -196,9 +196,15 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
         frameRate: 10,
         repeat: -1,
       },
+      {
+        name: 'cut',
+        frames: [20, 21, 22, 23],
+        frameRate: 10,
+        repeat: 0,
+      },
     ],
-    spriteSheetFrameWidth: 16,
-    spriteSheetFrameHeight: 16,
+    spriteSheetFrameWidth: 64,
+    spriteSheetFrameHeight: 64,
   },
   unknown: {
     textureId: 0,

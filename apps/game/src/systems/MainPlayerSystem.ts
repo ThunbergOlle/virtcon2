@@ -13,6 +13,7 @@ import {
 import {
   Collider,
   GameObjectGroups,
+  getVariantName,
   ItemTextureMap,
   MainPlayer,
   MainPlayerAction,
@@ -44,8 +45,6 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
   ];
-  const minAngleLine = scene.add.line(0, 0, 0, 0, 0, 0, 0xff0000);
-  const maxAngleLine = scene.add.line(0, 0, 0, 0, 0, 0, 0xff0000);
 
   return defineSystem<GameState>((state) => {
     const enterEntities = mainPlayerQueryEnter(world);
@@ -173,6 +172,11 @@ function attack(state: GameState, world: World, eid: number) {
   if (!targetItemsIds.includes(Resource.itemId[resourceTargetId!])) return;
 
   MainPlayer.action[eid] = MainPlayerAction.ATTACKING;
+
+  const sprite = state.spritesById[eid];
+  const animationName = `player_character_0_anim_cut`;
+
+  sprite.anims.play(animationName, true);
 
   const tool = addReservedEntity(world, 998);
   addComponent(world, Sprite, tool);
