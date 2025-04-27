@@ -1,4 +1,4 @@
-import { Position, Sprite, Velocity, getTextureFromTextureId, getVariantName } from '@virtcon2/network-world-entities';
+import { Position, Sprite, Velocity, getTextureFromTextureId, getVariantName, Item } from '@virtcon2/network-world-entities';
 
 import { GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
@@ -77,7 +77,7 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 };
 
 const movingSpriteQuery = defineQuery(Sprite, Position, Velocity);
-const nonMovingSpriteQuery = defineQuery(Sprite, Position, Not(Velocity));
+const nonMovingSpriteQuery = defineQuery(Sprite, Position, Not(Velocity), Not(Item));
 
 export const createMovingSpriteSystem = (world: World) => {
   return defineSystem<GameState>((state) => {
@@ -88,10 +88,14 @@ export const createMovingSpriteSystem = (world: World) => {
     for (let i = 0; i < spriteEntities.length; i++) {
       const id = spriteEntities[i];
       const sprite = state.spritesById[id];
-      if (sprite && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
-        sprite.setPosition(Position.x[id], Position.y[id]);
-        sprite.setRotation(Sprite.rotation[id] * (Math.PI / 180));
-        sprite.setDepth(Sprite.depth[id] + Position.y[id]);
+      if (sprite) {
+        const activeTweens = sprite.scene.tweens.getTweensOf(sprite);
+
+        if (activeTweens.length === 0 && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
+          sprite.setPosition(Position.x[id], Position.y[id]);
+          sprite.setRotation(Sprite.rotation[id] * (Math.PI / 180));
+          sprite.setDepth(Sprite.depth[id] + Position.y[id]);
+        }
       }
     }
 

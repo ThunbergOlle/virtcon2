@@ -8,6 +8,8 @@ import { Sprite } from './Sprite';
 
 export const Item = defineComponent('item', {
   itemId: Types.ui32,
+  droppedFromX: Types.f32,
+  droppedFromY: Types.f32,
 });
 
 interface CreateItem {
@@ -15,10 +17,12 @@ interface CreateItem {
   itemId: number;
   x: number;
   y: number;
+  droppedFromX?: number;
+  droppedFromY?: number;
 }
 
 export const itemEntityComponents = [Item, Position, Sprite, Collider];
-export const createItem = ({ world, itemId, x, y }: CreateItem) => {
+export const createItem = ({ world, itemId, x, y, droppedFromX, droppedFromY }: CreateItem) => {
   const eid = addEntity(world);
   const item = get_item_by_id(itemId);
   if (!item) {
@@ -27,6 +31,10 @@ export const createItem = ({ world, itemId, x, y }: CreateItem) => {
 
   addComponent(world, Item, eid);
   Item.itemId[eid] = itemId;
+  if (droppedFromX && droppedFromY) {
+    Item.droppedFromX[eid] = droppedFromX;
+    Item.droppedFromY[eid] = droppedFromY;
+  }
 
   addComponent(world, Position, eid);
   Position.x[eid] = x;
@@ -37,6 +45,7 @@ export const createItem = ({ world, itemId, x, y }: CreateItem) => {
   Sprite.variant[eid] = itemId % (AllTextureMaps[item.name]?.variants.length ?? 0);
   Sprite.width[eid] = 8;
   Sprite.height[eid] = 8;
+  Sprite.dynamicBody[eid] = 1;
 
   addComponent(world, Collider, eid);
   Collider.group[eid] = GameObjectGroups.ITEM;
