@@ -9,8 +9,8 @@ const item_iron_ore: DBItem = {
   rarity: DBItemRarity.common,
   stack_size: 256,
   spawnSettings: {
-    minHeight: 0.3,
-    maxHeight: 0.5,
+    minHeight: 0.5,
+    maxHeight: 0.9,
     chance: 0.1,
   },
   is_building: false,

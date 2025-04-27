@@ -33,7 +33,7 @@ export class World extends BaseEntity {
     for (let x = 0; x < size; x++) {
       map[x] = [];
       for (let y = 0; y < size; y++) {
-        map[x][y] = noise(x / 20, y / 20);
+        map[x][y] = noise(x / 50, y / 50);
       }
     }
     return map;
@@ -42,7 +42,7 @@ export class World extends BaseEntity {
   static getHeightAtPoint(seed: number, x: number, y: number): number {
     const randomGenerator = seedRandom(seed);
     const noise = createNoise2D(randomGenerator);
-    return noise(x / 20, y / 20);
+    return noise(x / 50, y / 50);
   }
 
   static getTileAtPoint(seed: number, x: number, y: number) {

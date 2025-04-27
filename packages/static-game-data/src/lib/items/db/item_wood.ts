@@ -9,8 +9,8 @@ const item_wood: DBItem = {
   icon: 'wood.png',
   rarity: DBItemRarity.common,
   spawnSettings: {
-    minHeight: 0.2,
-    maxHeight: 0.4,
+    minHeight: 0.25,
+    maxHeight: 0.8,
     chance: 0.3,
   },
   is_building: false,

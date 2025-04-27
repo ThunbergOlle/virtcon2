@@ -15,7 +15,6 @@ export const createResourceSystem = (world: World) => {
       const id = enterEntities[i];
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
 
-      // The name is important so we can check what type of resource we collided with just based off the name.
       sprite.setName(`resource-${get_item_by_id(Resource.itemId[id])?.name}`);
     }
     return state;
