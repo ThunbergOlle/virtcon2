@@ -149,8 +149,12 @@ export default class Game extends Scene implements SceneStates {
       this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
       this.state.gameObjectGroups[GameObjectGroups.BUILDING] ?? [],
     );
-    // this is commented out since we don't want to collide with resources. This may change in the future.
-    // this.physics.add.collider(this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [], this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? []);
+
+    this.physics.add.collider(
+      this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
+      this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? [],
+    );
+
     this.physics.add.collider(
       this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
       this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? [],

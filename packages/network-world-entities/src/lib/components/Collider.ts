@@ -1,8 +1,8 @@
 import { defineComponent, Types } from '@virtcon2/bytenetc';
 
 export const Collider = defineComponent('collider', {
-  sizeWidth: Types.i32,
-  sizeHeight: Types.i32,
+  sizeWidth: Types.ui32,
+  sizeHeight: Types.ui32,
   offsetX: Types.f32,
   offsetY: Types.f32,
   scale: Types.f32,

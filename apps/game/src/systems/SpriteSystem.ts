@@ -32,7 +32,7 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 
       sprite.setDataEnabled();
       sprite.setData('entityId', id);
-      sprite.depth = Sprite.depth[id];
+      sprite.setDepth(Sprite.depth[id] + Position.y[id]);
 
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {
@@ -91,6 +91,7 @@ export const createMovingSpriteSystem = (world: World) => {
       if (sprite && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
         sprite.setPosition(Position.x[id], Position.y[id]);
         sprite.setRotation(Sprite.rotation[id] * (Math.PI / 180));
+        sprite.setDepth(Sprite.depth[id] + Position.y[id]);
       }
     }
 
@@ -99,6 +100,7 @@ export const createMovingSpriteSystem = (world: World) => {
       const sprite = state.spritesById[id] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       if (sprite && sprite.body) {
         sprite.body.setVelocity(Velocity.x[id], Velocity.y[id]);
+        sprite.setDepth(Sprite.depth[id] + Position.y[id]);
       }
     }
     return state;
