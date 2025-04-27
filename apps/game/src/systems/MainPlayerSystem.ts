@@ -52,14 +52,12 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       const id = enterEntities[i];
       console.log(debugEntity(world, id));
 
-      const texture = state.spritesById[id];
-      if (texture && texture.body) {
-        /* Follow the main character */
-        scene.cameras.main.startFollow(texture);
+      const sprite = state.spritesById[id];
+      if (sprite && sprite.body) {
+        scene.cameras.main.startFollow(sprite);
         scene.cameras.main.setZoom(5);
       }
-      /* Add event listeners */
-      /* Event listener for inventory event */
+
       scene.input.keyboard?.on('keydown-E', () => {
         events.notify('onInventoryButtonPressed');
       });
@@ -68,6 +66,7 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
         events.notify('onCrafterButtonPressed');
       });
     }
+
     const entities = mainPlayerQuery(world);
     for (let i = 0; i < entities.length; i++) {
       let xVel: number =
@@ -189,7 +188,6 @@ function attack(state: GameState, world: World, eid: number) {
   Position.x[tool] = Position.x[resourceTargetId];
   Position.y[tool] = Position.y[resourceTargetId] - 10;
 
-  state.spritesById[resourceTargetId].setTint(0xff0000);
   setTimeout(() => state.spritesById[resourceTargetId!].clearTint(), 100);
 
   addComponent(world, Velocity, tool);
