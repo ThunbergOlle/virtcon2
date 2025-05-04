@@ -1,5 +1,5 @@
-import { log, LogApp, LogLevel } from '@shared';
-import { User, World } from '@virtcon2/database-postgres';
+import { InvalidStateError, log, LogApp, LogLevel } from '@shared';
+import { User, World, WorldPlot } from '@virtcon2/database-postgres';
 import {
   ClientPacketWithSender,
   enqueuePacket,
@@ -10,17 +10,27 @@ import {
   SyncServerEntityPacket,
 } from '@virtcon2/network-packet';
 
-import { createNewPlayerEntity, Player, playerEntityComponents, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import {
+  createNewPlayerEntity,
+  Player,
+  playerEntityComponents,
+  SerializationID,
+  serializeConfig,
+  toPhaserPos,
+} from '@virtcon2/network-world-entities';
 
 import { defineQuery, defineSerializer, serializeAllEntities } from '@virtcon2/bytenetc';
 import { RedisClientType } from 'redis';
-import { doesWorldExist, initializeWorld } from '../../ecs/entityWorld';
+import { doesWorldExist, getWorldBounds, initializeWorld } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
 
 const playerQuery = defineQuery(...playerEntityComponents);
 
 export default async function requestJoinPacket(packet: ClientPacketWithSender<RequestJoinPacketData>, client: RedisClientType) {
   await ensureWorldIsRunning(packet.world_id);
+  const plot = await WorldPlot.findOne({ where: { worldId: packet.world_id }, order: { startX: 'ASC', startY: 'ASC' } });
+
+  if (!plot) throw new InvalidStateError(`World ${packet.world_id} does not have a plot assigned to it.`);
 
   const serializeWorld = serializeAllEntities(packet.world_id);
 
@@ -53,11 +63,16 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   const existingPlayer = allPlayerEid.find((eid) => Player.userId[eid] === user.id);
   if (existingPlayer !== undefined) throw new Error(`Player entity already exists for user ${user.id}`);
 
-  const startingPosition: [number, number] = [0, 0];
+  const worldBounds = await getWorldBounds(packet.world_id);
+  const centerX = Math.floor((worldBounds.startX + worldBounds.endX) / 2);
+  const centerY = Math.floor((worldBounds.startY + worldBounds.endY) / 2);
+
+  const { x, y } = toPhaserPos({ x: centerX, y: centerY });
+
   const joinedPlayerEntity = createNewPlayerEntity(packet.world_id, {
     userId: user.id,
     name: user.display_name,
-    position: startingPosition,
+    position: [x, y],
   });
 
   const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);

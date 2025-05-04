@@ -1,12 +1,23 @@
 import { loadWorldFromDb } from './loaders';
 import { log, LogApp, LogLevel } from '@shared';
 import { createWorld, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
-import { allComponents, createNewBuildingEntity } from '@virtcon2/network-world-entities';
+import * as DB from '@virtcon2/database-postgres';
+import { allComponents, createNewBuildingEntity, createNewWorldBorderTile } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
 
 const worlds = [];
 const systems: { [key: string]: System<void>[] } = {};
+export const worldData: {
+  [key: string]: {
+    bounds: {
+      startX: number;
+      endX: number;
+      startY: number;
+      endY: number;
+    };
+  };
+} = {};
 
 const newEntityWorld = (world: World) => {
   if (worlds.includes(world)) throw new Error(`World with id ${world} already exists`);
@@ -33,11 +44,47 @@ export const deleteEntityWorld = (world: World) => {
   deleteWorld(world);
 };
 
+export type WorldBounds = {
+  startX: number;
+  endX: number;
+  startY: number;
+  endY: number;
+};
+export const getWorldBounds = async (worldId: string): Promise<WorldBounds> => {
+  const bounds: WorldBounds = await DB.AppDataSource.manager
+    .query(
+      `
+SELECT
+ MIN ( "startX" ) AS "startX",
+ MAX ( "endX" ) AS "endX",
+ MIN ( "startY" ) AS "startY",
+ MAX ( "endY" ) AS "endY"
+FROM
+	world_plot
+WHERE
+	"worldId" = '${worldId}'`,
+    )
+    .then((row) => row[0]);
+
+  return bounds;
+};
+
+const initialiseWorldBounds = async (world: World, bounds: WorldBounds) => {
+  for (let i = bounds.startX; i <= bounds.endX; i++) createNewWorldBorderTile(world, { x: i, y: bounds.startY });
+  for (let i = bounds.startY; i <= bounds.endY; i++) createNewWorldBorderTile(world, { x: bounds.startX, y: i });
+  for (let i = bounds.startX; i <= bounds.endX; i++) createNewWorldBorderTile(world, { x: i, y: bounds.endY });
+  for (let i = bounds.startY; i <= bounds.endY; i++) createNewWorldBorderTile(world, { x: bounds.endX, y: i });
+};
+
 export const initializeWorld = async (dbWorldId: string) => {
   const { worldBuildings, world: dbWorld } = await loadWorldFromDb(dbWorldId);
 
   const world = newEntityWorld(dbWorldId);
   setupSystems(world, dbWorld.seed);
+
+  const bounds = await getWorldBounds(dbWorld.id);
+  await initialiseWorldBounds(world, bounds);
+  worldData[world] = { bounds };
 
   for (const worldBuilding of worldBuildings) {
     createNewBuildingEntity(world, {

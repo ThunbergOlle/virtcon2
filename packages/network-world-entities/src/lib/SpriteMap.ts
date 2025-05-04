@@ -211,6 +211,11 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureName: 'unknown',
     variants: ['sprites/misc/unknown.png'],
   },
+  cloud: {
+    textureId: 999,
+    textureName: 'cloud',
+    variants: ['sprites/items/glass.png'],
+  },
 };
 
 export const AllTextureMaps = {

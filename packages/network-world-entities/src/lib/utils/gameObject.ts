@@ -5,4 +5,5 @@ export enum GameObjectGroups {
   TERRAIN = 3,
   BUILDING_NO_COLLIDE = 4,
   ITEM = 5,
+  BORDER = 6,
 }

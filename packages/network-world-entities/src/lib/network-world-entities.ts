@@ -18,6 +18,7 @@ export * from './entities/Building';
 export * from './entities/Player';
 export * from './entities/Resource';
 export * from './entities/Tile';
+export * from './entities/WorldBorder';
 
 export * from './serializeConfig';
 export * from './utils/coordinates';

@@ -9,6 +9,7 @@ import { World } from './world/World';
 import { WorldBuilding } from './world_building/WorldBuilding';
 import { WorldBuildingInventory } from './world_building_inventory/WorldBuildingInventory';
 import { WorldConnectionPoint } from './world_connection_point/WorldConnectionPoint';
+import { WorldPlot } from './world_plot/WorldPlot';
 
 export default [
   User,
@@ -22,4 +23,5 @@ export default [
   WorldBuildingInventory,
   BuildingProcessingRequirement,
   WorldConnectionPoint,
+  WorldPlot,
 ];

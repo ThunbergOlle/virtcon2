@@ -3,6 +3,7 @@ import { defineQuery, defineSerializer, defineSystem, Entity, removeEntity, Worl
 import * as DB from '@virtcon2/database-postgres';
 import { syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { createTile, fromPhaserPos, Player, Position, SerializationID, serializeConfig, Tile } from '@virtcon2/network-world-entities';
+import { worldData } from '../ecs/entityWorld';
 import { redisClient } from '../redis';
 
 const tileQuery = defineQuery(Tile, Position);
@@ -21,8 +22,14 @@ export const createTileSystem = (world: World, seed: number) =>
       const playerEid = playerEntities[i];
       const { x, y } = fromPhaserPos({ x: Position.x[playerEid], y: Position.y[playerEid] });
 
-      const [minX, maxX] = [x - renderDistance, x + renderDistance];
-      const [minY, maxY] = [y - renderDistance, y + renderDistance];
+      const [minX, maxX] = [
+        Math.max(x - renderDistance, worldData[world].bounds.startX),
+        Math.min(x + renderDistance, worldData[world].bounds.endX),
+      ];
+      const [minY, maxY] = [
+        Math.max(y - renderDistance, worldData[world].bounds.startY),
+        Math.min(y + renderDistance, worldData[world].bounds.endY),
+      ];
 
       newEntities = generateTilesInArea({ minX, minY, maxX, maxY }, tileEntities, world, seed);
 

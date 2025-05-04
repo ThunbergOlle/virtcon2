@@ -143,6 +143,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.TERRAIN]: this.physics.add.staticGroup(),
       [GameObjectGroups.BUILDING_NO_COLLIDE]: this.physics.add.staticGroup(),
       [GameObjectGroups.ITEM]: this.physics.add.staticGroup(),
+      [GameObjectGroups.BORDER]: this.physics.add.staticGroup(),
     };
 
     this.physics.add.collider(
@@ -158,6 +159,11 @@ export default class Game extends Scene implements SceneStates {
     this.physics.add.collider(
       this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
       this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? [],
+    );
+
+    this.physics.add.collider(
+      this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
+      this.state.gameObjectGroups[GameObjectGroups.BORDER] ?? [],
     );
 
     events.subscribe('joinWorld', (worldId) => {

@@ -5,6 +5,7 @@ import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, BeforeInsert, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { AppDataSource } from '../../data-source';
 import { WorldBuilding } from '../world_building/WorldBuilding';
+import { WorldPlot } from '../world_plot/WorldPlot';
 
 @ObjectType()
 @Entity()
@@ -63,6 +64,10 @@ export class World extends BaseEntity {
         world.seed = Math.floor(Math.random() * 1000000000);
 
         await transaction.save(world);
+
+        const startPlot = WorldPlot.create({ worldId: worldId, startX: 0, startY: 0, endX: 0, endY: 0 });
+
+        await transaction.save(startPlot);
 
         return resolve(world);
       });
