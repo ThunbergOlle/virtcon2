@@ -29,6 +29,7 @@ import { createMovingSpriteSystem, createSpriteRegisterySystem } from '../system
 import { createTagSystem } from '../systems/TagSystem';
 import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
+import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
 
 export interface GameState {
   dt: number;
@@ -77,6 +78,7 @@ export default class Game extends Scene implements SceneStates {
   public playerSystem?: System<GameState>;
   public connectionSystem?: System<GameState>;
   public itemSystem?: System<GameState>;
+  public worldBorderSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -192,6 +194,7 @@ export default class Game extends Scene implements SceneStates {
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId, this);
       this.connectionSystem = createConnectionSystem(this.state.world, this);
       this.itemSystem = createItemSystem(this.state.world, this);
+      this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
 
       this.isInitialized = true;
     });
@@ -212,6 +215,7 @@ export default class Game extends Scene implements SceneStates {
       !this.tagSystem ||
       !this.itemSystem ||
       !this.connectionSystem ||
+      !this.worldBorderSystem ||
       !this.isInitialized
     )
       return;
@@ -236,6 +240,8 @@ export default class Game extends Scene implements SceneStates {
 
     newState = this.connectionSystem(newState);
     newState = this.itemSystem(newState);
+
+    newState = this.worldBorderSystem(newState);
 
     this.state = newState;
 

@@ -12,6 +12,7 @@ export * from './components/Tile';
 export * from './components/ConnectionPoint';
 export * from './components/Range';
 export * from './components/Item';
+export * from './components/WorldBorder';
 
 /* Entities */
 export * from './entities/Building';

@@ -7,11 +7,13 @@ import {
   Player,
   playerEntityComponents,
   resourceEntityComponents,
+  worldBorderEntityComponents,
   worldBuildingEntityComponents,
 } from './network-world-entities';
 
 export enum SerializationID {
   WORLD = 'world',
+  WORLD_BORDER = 'world-border',
   PLAYER_MOVEMENT = 'player-movement',
   BUILDING_FULL_SERVER = 'building-full-server',
   PLAYER_FULL_SERVER = 'player-full-server',
@@ -28,4 +30,5 @@ export const serializeConfig: { [key in SerializationID]: Component<any>[] } = {
   [SerializationID.RESOURCE]: resourceEntityComponents,
   [SerializationID.WORLD]: [],
   [SerializationID.ITEM]: itemEntityComponents,
+  [SerializationID.WORLD_BORDER]: worldBorderEntityComponents,
 };

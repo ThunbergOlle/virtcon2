@@ -37,4 +37,4 @@ export const WorldSettings = {
   height_map_texture_not_found_index: 0,
 };
 
-export const renderDistance = 8;
+export const renderDistance = 12;

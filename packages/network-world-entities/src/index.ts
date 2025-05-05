@@ -17,6 +17,7 @@ import {
   ConnectionPoint,
   Range,
   Item,
+  WorldBorder,
 } from './lib/network-world-entities';
 
 export const allComponents = [
@@ -34,4 +35,5 @@ export const allComponents = [
   ConnectionPoint,
   Range,
   Item,
+  WorldBorder,
 ];
