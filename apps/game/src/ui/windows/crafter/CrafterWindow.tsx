@@ -1,7 +1,7 @@
 import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
 import { UserInventoryItem } from '@virtcon2/database-postgres';
 import { DBItem, DBItemRecipe } from '@virtcon2/static-game-data';
-import Game from 'apps/game/src/scenes/Game';
+import Game from '../../../scenes/Game';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';

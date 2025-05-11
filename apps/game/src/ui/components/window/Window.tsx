@@ -55,7 +55,9 @@ export default function Window(props: {
             <h3 className="flex-1 pt-20 text-2xl">There were errors loading this window.</h3>
             <div className="flex-[4]">
               {filteredErrors.map((error) => (
-                <p className="flex-1">{error?.message}</p>
+                <p key={error?.message} className="flex-1">
+                  {error?.message}
+                </p>
               ))}
             </div>
           </div>

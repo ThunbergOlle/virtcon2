@@ -211,10 +211,10 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureName: 'unknown',
     variants: ['sprites/misc/unknown.png'],
   },
-  cloud: {
+  expand_plot: {
     textureId: 999,
-    textureName: 'cloud',
-    variants: ['sprites/items/glass.png'],
+    textureName: 'expand_plot',
+    variants: ['sprites/misc/expand_plot.png'],
   },
 };
 
@@ -223,7 +223,7 @@ export const AllTextureMaps = {
   ...ResourceTextureMap,
   ...MiscTextureMap,
   ...TileTextureMap,
-};
+} as const;
 
 export const getTextureNameFromTextureId = (textureId: number): string | null => {
   const allTextureMaps = Object.keys(AllTextureMaps) as string[];

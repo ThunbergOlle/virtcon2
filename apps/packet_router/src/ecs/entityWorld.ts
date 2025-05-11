@@ -6,11 +6,12 @@ import {
   allComponents,
   createNewBuildingEntity,
   createNewWorldBorderTile,
-  WorldBorder,
+  tileSize,
   WorldBorderSide,
 } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
+import { WorldPlot } from '@virtcon2/database-postgres';
 
 const worlds = [];
 const systems: { [key: string]: System<void>[] } = {};
@@ -76,12 +77,37 @@ WHERE
 };
 
 const initialiseWorldBounds = async (world: World, bounds: WorldBounds) => {
-  for (let i = bounds.startX; i <= bounds.endX; i++) createNewWorldBorderTile(world, { x: i, y: bounds.startY, side: WorldBorderSide.TOP });
-  for (let i = bounds.startY; i <= bounds.endY; i++)
-    createNewWorldBorderTile(world, { x: bounds.startX, y: i, side: WorldBorderSide.LEFT });
-  for (let i = bounds.startX; i <= bounds.endX; i++)
-    createNewWorldBorderTile(world, { x: i, y: bounds.endY, side: WorldBorderSide.BOTTOM });
-  for (let i = bounds.startY; i <= bounds.endY; i++) createNewWorldBorderTile(world, { x: bounds.endX, y: i, side: WorldBorderSide.RIGHT });
+  for (let i = bounds.startX; i < bounds.endX; i += tileSize + 1) {
+    createNewWorldBorderTile(world, {
+      x: i - 0.5 + tileSize / 2,
+      y: -1.5,
+      side: WorldBorderSide.TOP,
+    });
+  }
+
+  for (let i = bounds.startY; i < bounds.endY; i += tileSize + 1) {
+    createNewWorldBorderTile(world, {
+      x: -1.5,
+      y: i - 0.5 + tileSize / 2,
+      side: WorldBorderSide.LEFT,
+    });
+  }
+
+  for (let i = bounds.startX; i < bounds.endX; i += tileSize + 1) {
+    createNewWorldBorderTile(world, {
+      x: i - 0.5 + tileSize / 2,
+      y: bounds.endY + 0.5,
+      side: WorldBorderSide.BOTTOM,
+    });
+  }
+
+  for (let i = bounds.startY; i < bounds.endY; i += tileSize + 1) {
+    createNewWorldBorderTile(world, {
+      x: bounds.endX + 0.5,
+      y: i - 0.5 + tileSize / 2,
+      side: WorldBorderSide.RIGHT,
+    });
+  }
 };
 
 export const initializeWorld = async (dbWorldId: string) => {

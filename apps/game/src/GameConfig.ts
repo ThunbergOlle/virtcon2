@@ -5,7 +5,7 @@ import Preload from './scenes/Preload';
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.WEBGL,
   parent: 'phaser-container',
-  backgroundColor: '#93cbee',
+  backgroundColor: '#000000',
   pixelArt: true, // Prevent pixel art from becoming blurred when scaled.
   scale: {
     mode: Phaser.Scale.ScaleModes.RESIZE,
@@ -15,7 +15,7 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 0 },
+      gravity: { y: 0, x: 0 },
       debug: false,
     },
   },

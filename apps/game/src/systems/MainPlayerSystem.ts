@@ -177,7 +177,7 @@ function attack(state: GameState, world: World, eid: number) {
 
   sprite.anims.play(animationName, true);
 
-  const tool = addReservedEntity(world, 998);
+  const tool = addReservedEntity(world, 2998);
   addComponent(world, Sprite, tool);
 
   Sprite.texture[tool] = textureId;

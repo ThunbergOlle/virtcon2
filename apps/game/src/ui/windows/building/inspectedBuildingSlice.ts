@@ -1,6 +1,4 @@
-import Game from '../../../scenes/Game';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ClientPacket, InspectBuildingClientPacket, PacketType } from '@virtcon2/network-packet';
 
 interface InspectedBuildingState {
   inspectedWorldBuildingId: number | null;

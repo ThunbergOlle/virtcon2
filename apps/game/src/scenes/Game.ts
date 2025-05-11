@@ -1,4 +1,4 @@
-import { Scene, Tilemaps } from 'phaser';
+import { Scene } from 'phaser';
 import { SceneStates } from './interfaces';
 
 import { DBBuilding } from '@virtcon2/static-game-data';
@@ -16,7 +16,7 @@ import {
   World,
 } from '@virtcon2/bytenetc';
 import { DisconnectPacketData, PacketType, RemoveEntityPacket, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, createItem, GameObjectGroups, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { allComponents, GameObjectGroups, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -100,11 +100,11 @@ export default class Game extends Scene implements SceneStates {
   }
 
   disableKeys() {
-    this.input.keyboard.enabled = false;
+    if (this.input.keyboard) this.input.keyboard.enabled = false;
   }
 
   enableKeys() {
-    this.input.keyboard.enabled = true;
+    if (this.input.keyboard) this.input.keyboard.enabled = true;
   }
 
   create() {
@@ -176,8 +176,6 @@ export default class Game extends Scene implements SceneStates {
     events.subscribe('networkLoadWorld', ({ id, mainPlayerId }) => {
       Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
-
-      window.debugEntity = (eid: string) => console.log(debugEntity(this.state.world, parseInt(eid)));
 
       registerComponents(this.state.world, allComponents);
       console.log('Loading world data...');

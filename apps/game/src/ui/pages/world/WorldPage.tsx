@@ -10,6 +10,7 @@ import WorldBuildingWindow from '../../windows/building/WorldBuildingWindow';
 import CrafterWindow from '../../windows/crafter/CrafterWindow';
 import PlayerInventoryWindow from '../../windows/playerInventory/PlayerInventory';
 import { Hotbar } from '../../components/hotbar/Hotbar';
+import ExpandPlotWindow from '../../windows/plot/PlotWindow';
 
 function GamePage() {
   const { worldId } = useParams();
@@ -50,6 +51,7 @@ function GamePage() {
         <PlayerInventoryWindow />
         <CrafterWindow />
         <WorldBuildingWindow />
+        <ExpandPlotWindow />
       </div>
       <Hotbar />
     </>

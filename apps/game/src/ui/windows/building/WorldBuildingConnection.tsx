@@ -8,7 +8,7 @@ export const WorldBuildingConnection = ({ x, y }: { x: number; y: number }) => {
     const game = Game.getInstance();
     const world = game.state.world;
 
-    const eid = addReservedEntity(world, 999);
+    const eid = addReservedEntity(world, 2999);
 
     addComponent(world, ConnectionPoint, eid);
     ConnectionPoint.startX[eid] = x;

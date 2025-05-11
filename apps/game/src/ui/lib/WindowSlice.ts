@@ -7,6 +7,7 @@ export enum WindowType {
   VIEW_PLAYER_INVENTORY = 'view_player_inventory',
   VIEW_MENU = 'view_menu',
   VIEW_CRAFTER = 'view_crafter',
+  VIEW_EXPAND_PLOT_WINDOW = 'view_expand_plot_window',
 }
 
 interface WindowStack {
@@ -36,6 +37,10 @@ const initialState: WindowState = {
     },
     {
       type: WindowType.VIEW_CRAFTER,
+      open: false,
+    },
+    {
+      type: WindowType.VIEW_EXPAND_PLOT_WINDOW,
       open: false,
     },
   ],

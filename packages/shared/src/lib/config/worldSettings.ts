@@ -38,3 +38,5 @@ export const WorldSettings = {
 };
 
 export const renderDistance = 12;
+
+export const plotSize = 16;

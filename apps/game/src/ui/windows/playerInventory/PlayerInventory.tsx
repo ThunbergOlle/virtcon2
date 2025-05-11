@@ -155,7 +155,7 @@ export default function PlayerInventoryWindow() {
     if (!game.state.world) return;
 
     /* Create ghost building entity */
-    const ghostBuilding = addReservedEntity(game.state.world, 999);
+    const ghostBuilding = addReservedEntity(game.state.world, 2997);
     addComponent(game.state.world, GhostBuilding, ghostBuilding);
     addComponent(game.state.world, Sprite, ghostBuilding);
     addComponent(game.state.world, Position, ghostBuilding);
