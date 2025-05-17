@@ -18,6 +18,7 @@ import {
   Range,
   Item,
   WorldBorder,
+  GrowableTile,
 } from './lib/network-world-entities';
 
 export const allComponents = [
@@ -32,6 +33,7 @@ export const allComponents = [
   Tag,
   Velocity,
   Tile,
+  GrowableTile,
   ConnectionPoint,
   Range,
   Item,

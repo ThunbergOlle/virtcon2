@@ -1,18 +1,18 @@
 import { renderDistance, TileType, TILE_LEVEL } from '@shared';
 import { defineQuery, defineSerializer, defineSystem, Entity, removeEntity, World } from '@virtcon2/bytenetc';
 import * as DB from '@virtcon2/database-postgres';
-import { syncRemoveEntities, syncServerEntities } from '@virtcon2/network-packet';
 import { createTile, fromPhaserPos, Player, Position, SerializationID, serializeConfig, Tile } from '@virtcon2/network-world-entities';
 import { worldData } from '../ecs/entityWorld';
-import { redisClient } from '../redis';
+import { SyncEntities } from './types';
 
 const tileQuery = defineQuery(Tile, Position);
 const playerQuery = defineQuery(Player, Position);
 
 export const createTileSystem = (world: World, seed: number) =>
-  defineSystem(() => {
+  defineSystem<SyncEntities>(() => {
     const tileEntities = tileQuery(world);
     const playerEntities = playerQuery(world);
+
     if (!playerEntities.length) return;
 
     const removedEntities = [];
@@ -52,10 +52,16 @@ export const createTileSystem = (world: World, seed: number) =>
       }
     }
 
-    syncRemoveEntities(redisClient, world, world, removedEntities).then(() => {
-      const serializedTiles = defineSerializer(serializeConfig[SerializationID.TILE])(world, newEntities);
-      syncServerEntities(redisClient, world, world, serializedTiles, SerializationID.TILE);
-    });
+    const serializedTiles = defineSerializer(serializeConfig[SerializationID.TILE])(world, newEntities);
+    return {
+      removeEntities: removedEntities,
+      sync: [
+        {
+          data: serializedTiles,
+          serializationId: SerializationID.TILE,
+        },
+      ],
+    };
   });
 
 const generateTilesInArea = (
@@ -96,6 +102,8 @@ const generateTilesInArea = (
         variant: overlay.variant,
         rotation: overlay.rotation,
         dualGrid: true,
+        isFoundation: true,
+        seed,
       });
 
       if (midlevel) {

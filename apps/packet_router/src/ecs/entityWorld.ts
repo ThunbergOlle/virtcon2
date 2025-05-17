@@ -11,10 +11,10 @@ import {
 } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
-import { WorldPlot } from '@virtcon2/database-postgres';
+import { SyncEntities } from '../systems/types';
 
 const worlds = [];
-const systems: { [key: string]: System<void>[] } = {};
+const systems: { [key: string]: System<SyncEntities>[] } = {};
 export const worldData: {
   [key: string]: {
     bounds: {
@@ -132,9 +132,16 @@ export const initializeWorld = async (dbWorldId: string) => {
   }
 };
 
-export const tickSystems = (world: World) => {
-  if (!systems[world]) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
-  for (const system of systems[world]) {
-    system();
+export const tickSystems = (world: World): SyncEntities[] => {
+  if (!systems[world]) {
+    log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+    return [];
   }
+
+  const data: SyncEntities[] = [];
+  for (const system of systems[world]) {
+    data.push(system({ sync: [], removeEntities: [] }));
+  }
+
+  return data;
 };

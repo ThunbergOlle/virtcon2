@@ -23,6 +23,7 @@ export const createNewResourceEntity = (
   addComponent(world, Sprite, resource);
   Sprite.texture[resource] = AllTextureMaps[data.resourceName]?.textureId ?? 0;
   Sprite.variant[resource] = data.itemId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
+  Sprite.opacity[resource] = 1;
 
   addComponent(world, Collider, resource);
   Collider.sizeWidth[resource] = resourceInfo.width * 16;

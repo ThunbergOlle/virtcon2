@@ -297,7 +297,7 @@ export const removeEntity = (world: World, entity: Entity) => {
 export const clearEntities = (world: World) => {
   $store[world].$queryCache.clear();
   for (let i = 0; i < MAX_ENTITIES; i++) {
-    $store[world].$entityStore[i] = null;
+    removeEntity(world, i);
   }
 };
 
@@ -404,7 +404,7 @@ export const defineSystem = <State>(system: System<State>) => system;
 
 export const debugEntity = (world: World, entity: Entity) => ({
   components: $store[world].$entityStore[entity],
-  componentData: $store[world].$entityStore[entity].map((name) => {
+  componentData: $store[world].$entityStore[entity]?.map((name) => {
     const c = $store[world].$componentStore[name];
     const data = {};
     for (const key in c) {

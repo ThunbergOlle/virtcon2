@@ -10,8 +10,8 @@ const item_stone: DBItem = {
   rarity: DBItemRarity.common,
   spawnSettings: {
     minHeight: 0.15,
-    maxHeight: 0.8,
-    chance: 0.15,
+    maxHeight: 1,
+    chance: 0.3,
   },
   is_building: false,
 };

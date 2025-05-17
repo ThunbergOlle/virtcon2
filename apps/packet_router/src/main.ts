@@ -10,6 +10,8 @@ import {
   enqueuePacket,
   getAllPackets,
   ServerPacket,
+  syncRemoveEntities,
+  syncServerEntities,
 } from '@virtcon2/network-packet';
 import { Player } from '@virtcon2/network-world-entities';
 import cors from 'cors';
@@ -136,7 +138,13 @@ const tickInterval = setInterval(async () => {
   for (let i = 0; i < worlds.length; i++) {
     const world = worlds[i];
     await checkFinishedBuildings(world, tick);
-    tickSystems(world);
+    const systemsOutput = tickSystems(world);
+    for (const { sync, removeEntities } of systemsOutput) {
+      await syncRemoveEntities(redisClient, world, world, removeEntities);
+      for (const data of sync) {
+        await syncServerEntities(redisClient, world, world, data.data, data.serializationId);
+      }
+    }
 
     if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 

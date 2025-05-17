@@ -39,6 +39,25 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   user.currentlyInWorld = packet.world_id;
   await user.save();
 
+  const allPlayerEid = playerQuery(packet.world_id);
+  const existingPlayer = allPlayerEid.find((eid) => Player.userId[eid] === user.id);
+  if (existingPlayer !== undefined) throw new Error(`Player entity already exists for user ${user.id}`);
+
+  const worldBounds = await getWorldBounds(packet.world_id);
+  const centerX = Math.floor((worldBounds.startX + worldBounds.endX) / 2);
+  const centerY = Math.floor((worldBounds.startY + worldBounds.endY) / 2);
+
+  const { x, y } = toPhaserPos({ x: centerX, y: centerY });
+
+  const joinedPlayerEntity = createNewPlayerEntity(packet.world_id, {
+    userId: user.id,
+    name: user.display_name,
+    position: [x, y],
+  });
+
+  const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
+  const serializedPlayer = serialize(packet.world_id, [joinedPlayerEntity]);
+
   await enqueuePacket<LoadWorldPacketData>(client, packet.world_id, {
     packet_type: PacketType.LOAD_WORLD,
     target: packet.sender.socket_id,
@@ -58,25 +77,6 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
     },
     sender: SERVER_SENDER,
   });
-
-  const allPlayerEid = playerQuery(packet.world_id);
-  const existingPlayer = allPlayerEid.find((eid) => Player.userId[eid] === user.id);
-  if (existingPlayer !== undefined) throw new Error(`Player entity already exists for user ${user.id}`);
-
-  const worldBounds = await getWorldBounds(packet.world_id);
-  const centerX = Math.floor((worldBounds.startX + worldBounds.endX) / 2);
-  const centerY = Math.floor((worldBounds.startY + worldBounds.endY) / 2);
-
-  const { x, y } = toPhaserPos({ x: centerX, y: centerY });
-
-  const joinedPlayerEntity = createNewPlayerEntity(packet.world_id, {
-    userId: user.id,
-    name: user.display_name,
-    position: [x, y],
-  });
-
-  const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
-  const serializedPlayer = serialize(packet.world_id, [joinedPlayerEntity]);
   syncServerEntities(client, packet.world_id, packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
 
   return;

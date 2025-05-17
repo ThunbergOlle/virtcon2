@@ -50,7 +50,6 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     const enterEntities = mainPlayerQueryEnter(world);
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
-      console.log(debugEntity(world, id));
 
       const sprite = state.spritesById[id];
       if (sprite && sprite.body) {
