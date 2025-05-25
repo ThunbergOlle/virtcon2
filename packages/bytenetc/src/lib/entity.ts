@@ -43,7 +43,7 @@ type SchemaToComponent<S extends Schema> = {
   [K in keyof S]: S[K] extends Type ? TypeToTypedArray<S[K]> : S[K] extends ArrayType ? Array<TypeToTypedArray<S[K][0]>> : never;
 };
 
-type ComponentStore = Record<string, Component<any>>;
+type ComponentStore = Record<string, Component<Schema>>;
 
 export type World = string;
 
@@ -146,8 +146,16 @@ export const removeComponent = (world: World, component: Component<any>, entity:
 
   $store[world].$entityStore[entity] = $store[world].$entityStore[entity].filter((c) => c !== name);
 
-  for (const keyName in $store[world].$componentStore[name]) {
-    $store[world].$componentStore[name][keyName][entity] = 0;
+  // Schema-aware cleanup
+  const schema = component._schema;
+  for (const keyName in schema) {
+    const store = $store[world].$componentStore[name][keyName] as Record<Entity, AllArrayTypes | number>;
+    if (Array.isArray(schema[keyName])) {
+      const [type, length] = schema[keyName] as ArrayType;
+      store[entity] = chooseArray(type, length);
+    } else {
+      store[entity] = 0;
+    }
   }
 
   $store[world].$queryCache.clear();
@@ -168,26 +176,45 @@ export const Has =
 export const Changed = (component: Component<any>): QueryModifier => {
   const $changedCache = new Map<Entity, unknown[]>();
 
+  const cloneCacheValues = (values: unknown[]) => {
+    return values.map((v) => (ArrayBuffer.isView(v) ? (v as any).slice() : v));
+  };
+
   const modifier: QueryModifier = (entityId: Entity, world: World) => {
     if (!Has(component)(entityId, world)) return false;
 
     const name = decodeName(component);
-    const components = $store[world].$componentStore[name];
+    const { _schema: schema } = $store[world].$componentStore[name];
     const values = [];
-    for (const key in components) {
-      if (key === '_name') continue;
-      values.push(components[key][entityId]);
+    for (const key in schema) {
+      values.push($store[world].$componentStore[name][key][entityId]);
     }
 
     if (!$changedCache.has(entityId)) {
-      $changedCache.set(entityId, values);
+      $changedCache.set(entityId, cloneCacheValues(values));
       return true;
     }
 
     const prevValues = $changedCache.get(entityId);
-    const changed = !values.every((v, i) => v === prevValues[i]);
+    if (!prevValues) throw new Error(`No previous values found for entity ${entityId} in Changed modifier`);
 
-    if (changed) $changedCache.set(entityId, values);
+    const changed = !values.every((currentValue, i) => {
+      const prevValue = prevValues[i];
+      if (ArrayBuffer.isView(currentValue) && ArrayBuffer.isView(prevValue)) {
+        if (currentValue.byteLength !== prevValue.byteLength) return false;
+        for (let j = 0; j < currentValue.byteLength; j++) {
+          if ((currentValue as Uint8Array)[j] !== (prevValue as Uint8Array)[j]) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return currentValue === prevValue;
+    });
+
+    if (changed) {
+      $changedCache.set(entityId, cloneCacheValues(values));
+    }
 
     return changed;
   };
@@ -284,12 +311,13 @@ export const removeEntity = (world: World, entity: Entity) => {
       if (key === '_name') continue;
       if (key === '_schema') continue;
 
-      if (schema[key] instanceof Array) {
+      const store = $store[world].$componentStore[name][key] as Record<Entity, AllArrayTypes | number>;
+
+      if (Array.isArray(schema[key])) {
         const [type, length] = schema[key] as ArrayType;
-        const array = chooseArray(type, length);
-        $store[world].$componentStore[name][key][entity] = array;
+        store[entity] = chooseArray(type, length);
       } else {
-        $store[world].$componentStore[name][key][entity] = 0;
+        store[entity] = 0;
       }
     }
   }
@@ -322,24 +350,31 @@ export const serializeEntity = (world: World, entity: Entity): SerializedData =>
 };
 
 const deserializeArray = (world: World, name: string, key: string, value: AllArrayTypes, eid: Entity) => {
-  const deserializeInto = $store[world].$componentStore[name][key][eid];
-  if (deserializeInto instanceof Uint8Array) $store[world].$componentStore[name][key][eid] = new Uint8Array(value as Uint8Array);
-  else if (deserializeInto instanceof Uint16Array) $store[world].$componentStore[name][key][eid] = new Uint16Array(value as Uint16Array);
-  else if (deserializeInto instanceof Uint32Array) $store[world].$componentStore[name][key][eid] = new Uint32Array(value as Uint32Array);
-  else if (deserializeInto instanceof Int8Array) $store[world].$componentStore[name][key][eid] = new Int8Array(value as Int8Array);
-  else if (deserializeInto instanceof Int16Array) $store[world].$componentStore[name][key][eid] = new Int16Array(value as Int16Array);
-  else if (deserializeInto instanceof Int32Array) $store[world].$componentStore[name][key][eid] = new Int32Array(value as Int32Array);
-  else if (deserializeInto instanceof Float32Array) $store[world].$componentStore[name][key][eid] = new Float32Array(value as Float32Array);
-  else if (deserializeInto instanceof Float64Array) $store[world].$componentStore[name][key][eid] = new Float64Array(value as Float64Array);
-  else throw new Error(`Invalid array type for ${name}.${key}, type: ${deserializeInto.constructor.name}`);
+  const deserializeInto = $store[world].$componentStore[name][key][eid] as AllArrayTypes;
+  if (!deserializeInto) {
+    throw new Error(`Component ${name} with key ${key} does not exist for entity ${eid}`);
+  }
+
+  const store = $store[world].$componentStore[name][key] as Record<Entity, AllArrayTypes>;
+
+  if (deserializeInto instanceof Uint8Array) store[eid] = new Uint8Array(value as Uint8Array);
+  else if (deserializeInto instanceof Uint16Array) store[eid] = new Uint16Array(value as Uint16Array);
+  else if (deserializeInto instanceof Uint32Array) store[eid] = new Uint32Array(value as Uint32Array);
+  else if (deserializeInto instanceof Int8Array) store[eid] = new Int8Array(value as Int8Array);
+  else if (deserializeInto instanceof Int16Array) store[eid] = new Int16Array(value as Int16Array);
+  else if (deserializeInto instanceof Int32Array) store[eid] = new Int32Array(value as Int32Array);
+  else if (deserializeInto instanceof Float32Array) store[eid] = new Float32Array(value as Float32Array);
+  else if (deserializeInto instanceof Float64Array) store[eid] = new Float64Array(value as Float64Array);
+  else throw new Error(`Invalid array type for ${name}.${key}, type: ${typeof deserializeInto}, value: ${value}`);
 };
 
 export const deserializeEntity = (world: World, data: SerializedData) => {
   const eid = data[0][2] as number;
 
   for (const [name, key, value] of data.slice(1)) {
+    const store = $store[world].$componentStore[name][key] as Record<Entity, AllArrayTypes | number>;
     if (value instanceof Array) deserializeArray(world, name, key, value as AllArrayTypes, eid);
-    else $store[world].$componentStore[name][key][eid] = value;
+    else store[eid] = value;
   }
 
   const uniqueComponents = [...new Set(data.slice(1).map(([name]) => name))];
@@ -386,7 +421,7 @@ export const defineDeserializer = (components: Component<any>[]) => {
         if (!components.some((c) => decodeName(c) === name)) continue;
 
         if (value instanceof Array) deserializeArray(world, name, key, value as AllArrayTypes, eid);
-        else $store[world].$componentStore[name][key][eid] = value;
+        else $store[world].$componentStore[name][key][eid] = value as never;
         if (!$store[world].$entityStore[eid].includes(name)) {
           $store[world].$entityStore[eid].push(name);
         }
