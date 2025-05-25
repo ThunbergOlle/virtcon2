@@ -105,8 +105,11 @@ export const defineComponent = <S extends Schema>(name: string, schema: S): Comp
     if (schema[key] instanceof Array) {
       const [type, length] = schema[key] as ArrayType;
 
-      const array = chooseArray(type, length);
-      component[key] = new Array(MAX_ENTITIES).fill(array);
+      const arrays = new Array(MAX_ENTITIES);
+      for (let i = 0; i < MAX_ENTITIES; i++) {
+        arrays[i] = chooseArray(type, length);
+      }
+      component[key] = arrays;
       continue;
     }
 
