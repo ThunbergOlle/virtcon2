@@ -8,18 +8,21 @@ import {
   defineDeserializer,
   defineQuery,
   defineSerializer,
+  deleteWorld,
   deserializeEntity,
+  doesEntityExist,
   enterQuery,
   exitQuery,
   Not,
   registerComponents,
   removeComponent,
+  removeEntity,
   serializeEntity,
   Types,
 } from './entity';
 
 describe('defineComponent', () => {
-  it('should define a component successfully', () => {
+  test('a user can define a component successfully', () => {
     const Position = defineComponent('position', {
       x: Types.i32,
       y: Types.i32,
@@ -36,13 +39,13 @@ describe('addEntity', () => {
     clearEntities(world);
   });
 
-  it('should add an entity successfully', () => {
+  test('adds an entity', () => {
     const eid = addEntity(world);
 
     expect(eid).toEqual(0);
   });
 
-  it('should add multiple entities successfully', () => {
+  test('add multiple entities', () => {
     const eid1 = addEntity(world);
     const eid2 = addEntity(world);
 
@@ -50,12 +53,66 @@ describe('addEntity', () => {
     expect(eid2).toEqual(1);
   });
 
-  it('should throw an error when no more entities are available', () => {
-    for (let i = 0; i < 1000; i++) {
+  test('throw an error when no more entities are available', () => {
+    for (let i = 0; i < 3000; i++) {
       addEntity(world);
     }
 
     expect(() => addEntity(world)).toThrowError('No more entities');
+  });
+
+  test("don't share array property references between entities", () => {
+    const Vector = defineComponent('vector', {
+      value: [Types.i16, 3],
+    });
+    registerComponents(world, [Vector]);
+
+    const eid1 = addEntity(world);
+    const eid2 = addEntity(world);
+
+    addComponent(world, Vector, eid1);
+    addComponent(world, Vector, eid2);
+
+    Vector.value[eid1][0] = 100;
+    Vector.value[eid1][1] = 200;
+
+    expect(Vector.value[eid1][0]).toBe(100);
+    expect(Vector.value[eid2][0]).toBe(0);
+    expect(Vector.value[eid2][1]).toBe(0);
+  });
+});
+
+describe('removeEntity', () => {
+  const world = createWorld('test');
+
+  beforeEach(() => {
+    clearEntities(world);
+  });
+
+  test('completely clean up an entity', () => {
+    const Position = defineComponent('position', { x: Types.f32 });
+    const Data = defineComponent('data', { buffer: [Types.ui8, 2] });
+    registerComponents(world, [Position, Data]);
+
+    const eid = addEntity(world);
+    addComponent(world, Position, eid);
+    addComponent(world, Data, eid);
+    Position.x[eid] = 99;
+    Data.buffer[eid] = new Uint8Array([1, 1]);
+
+    removeEntity(world, eid);
+
+    expect(doesEntityExist(world, eid)).toBe(false);
+
+    // Now, reuse the same entity ID
+    const newEid = addEntity(world);
+    expect(newEid).toBe(eid); // Expect to reuse the lowest available ID
+
+    expect(doesEntityExist(world, newEid)).toBe(true);
+    const query = defineQuery(Position);
+    expect(query(world)).not.toContain(newEid);
+    expect(Position.x[newEid]).toBe(0);
+    expect(Data.buffer[newEid]).toEqual(new Uint8Array([0, 0]));
   });
 });
 
@@ -66,7 +123,7 @@ describe('addComponent', () => {
     clearEntities(world);
   });
 
-  it('should add a component to an entity successfully', () => {
+  test('add a component to an entity', () => {
     const Position = defineComponent('position', {
       x: Types.i32,
       y: Types.i32,
@@ -96,7 +153,7 @@ describe('removeComponent', () => {
     clearEntities(world);
   });
 
-  it('should remove a component from an entity successfully', () => {
+  test('should remove a component from an entity successfully', () => {
     const Position = defineComponent('position', {
       x: Types.i32,
       y: Types.i32,
@@ -118,6 +175,26 @@ describe('removeComponent', () => {
 
     expect(Position.x[eid]).toEqual(0);
     expect(Position.y[eid]).toEqual(0);
+  });
+
+  test('correctly reset array properties', () => {
+    // This test targets the bug where array properties were set to `0` instead of a new array.
+    const Data = defineComponent('data', {
+      buffer: [Types.ui8, 4],
+    });
+    registerComponents(world, [Data]);
+    const eid = addEntity(world);
+    addComponent(world, Data, eid);
+
+    Data.buffer[eid] = new Uint8Array([1, 2, 3, 4]);
+    expect(Data.buffer[eid]).toEqual(new Uint8Array([1, 2, 3, 4]));
+
+    removeComponent(world, Data, eid);
+
+    // After removal, the property should be a zeroed-out array of the same type and length, NOT the number 0.
+    expect(Data.buffer[eid]).not.toBe(0);
+    expect(Data.buffer[eid]).toBeInstanceOf(Uint8Array);
+    expect(Data.buffer[eid]).toEqual(new Uint8Array([0, 0, 0, 0]));
   });
 });
 
@@ -358,7 +435,7 @@ describe('enter and exit queries', () => {
     clearEntities(world);
   });
 
-  it('should return entities that enter a query', () => {
+  test('return entities that enters a query', () => {
     const Position = defineComponent('position', {
       x: Types.i32,
       y: Types.i32,
@@ -409,6 +486,66 @@ describe('enter and exit queries', () => {
     expect(state.enter).toEqual([]);
     expect(state.exit).toEqual([eid1]);
     expect(state.query).toEqual([]);
+  });
+
+  test('correctly handle entity re-entry after component removal and addition', () => {
+    const Player = defineComponent('player', { id: Types.i32 });
+    registerComponents(world, [Player]);
+
+    const playerQuery = defineQuery(Player);
+    const enter = enterQuery(playerQuery);
+
+    const eid = addEntity(world);
+    addComponent(world, Player, eid);
+
+    expect(enter(world)).toEqual([eid]);
+    expect(enter(world)).toEqual([]);
+
+    removeComponent(world, Player, eid);
+    expect(enter(world)).toEqual([]);
+
+    addComponent(world, Player, eid);
+
+    expect(enter(world)).toEqual([eid]);
+  });
+});
+
+describe('deserialization', () => {
+  const world = createWorld('test');
+
+  beforeEach(() => {
+    clearEntities(world);
+  });
+
+  test('only deserialize components specified in the deserializer', () => {
+    const Position = defineComponent('position', { x: Types.i32, y: Types.i32 });
+    const Velocity = defineComponent('velocity', { dx: Types.i32, dy: Types.i32 });
+    registerComponents(world, [Position, Velocity]);
+
+    const eid = addEntity(world);
+    addComponent(world, Position, eid);
+    addComponent(world, Velocity, eid);
+
+    Position.x[eid] = 10;
+    Position.y[eid] = 10;
+    Velocity.dx[eid] = 1;
+    Velocity.dy[eid] = 1;
+
+    const serializePosition = defineSerializer([Position]);
+    const serializedData = serializePosition(world, [eid]);
+
+    Position.x[eid] = 99;
+    Position.y[eid] = 99;
+    Velocity.dx[eid] = 50;
+    Velocity.dy[eid] = 50;
+
+    const deserializePosition = defineDeserializer([Position]);
+    deserializePosition(world, serializedData);
+
+    expect(Position.x[eid]).toBe(10);
+    expect(Position.y[eid]).toBe(10);
+    expect(Velocity.dx[eid]).toBe(50); // This should remain unchanged
+    expect(Velocity.dy[eid]).toBe(50); // This should remain unchanged
   });
 });
 
@@ -496,5 +633,54 @@ describe('defineSerializer', () => {
     deserializeTag(world, serialized);
 
     expect(Tag.value[eid]).toEqual(encoder.encode('test'));
+  });
+});
+
+describe('Query modifications', () => {
+  let world: string;
+
+  beforeEach(() => {
+    world = createWorld(`test_${Math.random()}`);
+  });
+
+  afterEach(() => {
+    deleteWorld(world);
+  });
+
+  describe('Changed', () => {
+    test('detect in-place mutations of array properties', () => {
+      const PlayerData = defineComponent('playerData', {
+        inventory: [Types.ui16, 5],
+      });
+      registerComponents(world, [PlayerData]);
+
+      const query = defineQuery(Changed(PlayerData));
+      const eid = addEntity(world);
+      addComponent(world, PlayerData, eid);
+
+      expect(query(world)).toEqual([eid]);
+      expect(query(world)).toEqual([]);
+
+      PlayerData.inventory[eid][0] = 99;
+
+      expect(query(world)).toEqual([eid]);
+    });
+
+    test("don't detect a change if a value is set to itself", () => {
+      const Stats = defineComponent('stats', { score: Types.i32 });
+      registerComponents(world, [Stats]);
+
+      const query = defineQuery(Changed(Stats));
+      const eid = addEntity(world);
+      addComponent(world, Stats, eid);
+      Stats.score[eid] = 500;
+
+      query(world);
+      expect(query(world)).toEqual([]);
+
+      Stats.score[eid] = 500;
+
+      expect(query(world)).toEqual([]);
+    });
   });
 });
