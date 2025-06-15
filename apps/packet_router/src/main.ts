@@ -120,22 +120,24 @@ const tickInterval = setInterval(() => {
     const packets: Array<ServerPacket<unknown>> = [];
 
     for (const { sync, removeEntities } of systemsOutput) {
-      packets.push({
-        packet_type: PacketType.REMOVE_ENTITY,
-        target: world,
-        data: {
+      if (removeEntities.length)
+        packets.push({
           packet_type: PacketType.REMOVE_ENTITY,
-          entityIds: removeEntities,
-        },
-        sender: {
-          id: -1,
-          name: 'server_syncer',
-          socket_id: '',
-          world_id: '',
-        },
-      });
+          target: world,
+          data: {
+            packet_type: PacketType.REMOVE_ENTITY,
+            entityIds: removeEntities,
+          },
+          sender: {
+            id: -1,
+            name: 'server_syncer',
+            socket_id: '',
+            world_id: '',
+          },
+        });
 
       for (const data of sync) {
+        if (!data.data.length) continue;
         packets.push({
           packet_type: PacketType.SYNC_SERVER_ENTITY,
           target: world,
