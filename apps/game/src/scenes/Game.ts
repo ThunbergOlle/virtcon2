@@ -169,7 +169,7 @@ export default class Game extends Scene implements SceneStates {
     );
 
     events.subscribe('joinWorld', (worldId) => {
-      //this.physics.world.createDebugGraphic();
+      this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 

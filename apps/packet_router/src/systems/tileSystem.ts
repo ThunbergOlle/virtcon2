@@ -32,15 +32,6 @@ export const createTileSystem = (world: World, seed: number) =>
       ];
 
       newEntities = generateTilesInArea({ minX, minY, maxX, maxY }, tileEntities, world, seed);
-
-      for (let j = 0; j < tileEntities.length; j++) {
-        const tileEid = tileEntities[j];
-        const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
-
-        if (tileX >= minX && tileX <= maxX && tileY >= minY && tileY <= maxY) {
-          continue;
-        }
-      }
     }
 
     for (let i = 0; i < tileEntities.length; i++) {
@@ -90,6 +81,8 @@ const generateTilesInArea = (
           variant: 0,
           rotation: 0,
           dualGrid: true,
+          seed,
+          isFoundation: true,
         });
 
         newEntities.push(foundationTile);
@@ -102,7 +95,7 @@ const generateTilesInArea = (
         variant: overlay.variant,
         rotation: overlay.rotation,
         dualGrid: true,
-        isFoundation: true,
+        isFoundation: overlay.tileType === foundation,
         seed,
       });
 

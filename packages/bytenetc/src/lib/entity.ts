@@ -146,7 +146,6 @@ export const removeComponent = (world: World, component: Component<any>, entity:
 
   $store[world].$entityStore[entity] = $store[world].$entityStore[entity].filter((c) => c !== name);
 
-  // Schema-aware cleanup
   const schema = component._schema;
   for (const keyName in schema) {
     const store = $store[world].$componentStore[name][keyName] as Record<Entity, AllArrayTypes | number>;

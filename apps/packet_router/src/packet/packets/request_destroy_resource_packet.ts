@@ -1,8 +1,8 @@
 import { defineSerializer } from '@virtcon2/bytenetc';
-import { ClientPacketWithSender, RequestDestroyResourcePacket, syncServerEntities } from '@virtcon2/network-packet';
+import { ClientPacketWithSender, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 import { createItem, Position, Resource, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
 import { clone } from 'ramda';
-import { redisClient } from '../../redis';
+import { syncServerEntities } from '../enqueue';
 
 export default async function request_destroy_resource_packet(packet: ClientPacketWithSender<RequestDestroyResourcePacket>) {
   const receivedItemId = Resource.itemId[packet.data.resourceEntityId];
@@ -15,5 +15,5 @@ export default async function request_destroy_resource_packet(packet: ClientPack
   const itemEid = createItem({ world: packet.world_id, itemId: receivedItemId, x, y, droppedFromX: resourceX, droppedFromY: resourceY });
   const serialized = defineSerializer(serializeConfig[SerializationID.ITEM])(packet.world_id, [itemEid]);
 
-  syncServerEntities(redisClient, packet.world_id, packet.world_id, serialized, SerializationID.ITEM);
+  await syncServerEntities(packet.world_id, serialized, SerializationID.ITEM);
 }

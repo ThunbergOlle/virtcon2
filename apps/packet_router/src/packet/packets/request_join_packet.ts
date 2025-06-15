@@ -2,11 +2,9 @@ import { InvalidStateError, log, LogApp, LogLevel } from '@shared';
 import { User, World, WorldPlot } from '@virtcon2/database-postgres';
 import {
   ClientPacketWithSender,
-  enqueuePacket,
   LoadWorldPacketData,
   PacketType,
   RequestJoinPacketData,
-  syncServerEntities,
   SyncServerEntityPacket,
 } from '@virtcon2/network-packet';
 
@@ -20,13 +18,13 @@ import {
 } from '@virtcon2/network-world-entities';
 
 import { defineQuery, defineSerializer, serializeAllEntities } from '@virtcon2/bytenetc';
-import { RedisClientType } from 'redis';
 import { doesWorldExist, getWorldBounds, initializeWorld } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
+import { enqueuePacket, syncServerEntities } from '../enqueue';
 
 const playerQuery = defineQuery(...playerEntityComponents);
 
-export default async function requestJoinPacket(packet: ClientPacketWithSender<RequestJoinPacketData>, client: RedisClientType) {
+export default async function requestJoinPacket(packet: ClientPacketWithSender<RequestJoinPacketData>) {
   await ensureWorldIsRunning(packet.world_id);
   const plot = await WorldPlot.findOne({ where: { worldId: packet.world_id }, order: { startX: 'ASC', startY: 'ASC' } });
 
@@ -58,7 +56,7 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
   const serializedPlayer = serialize(packet.world_id, [joinedPlayerEntity]);
 
-  await enqueuePacket<LoadWorldPacketData>(client, packet.world_id, {
+  await enqueuePacket<LoadWorldPacketData>({
     packet_type: PacketType.LOAD_WORLD,
     target: packet.sender.socket_id,
     data: {
@@ -68,7 +66,7 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
     sender: SERVER_SENDER,
   });
 
-  await enqueuePacket<SyncServerEntityPacket>(client, packet.world_id, {
+  await enqueuePacket<SyncServerEntityPacket>({
     packet_type: PacketType.SYNC_SERVER_ENTITY,
     target: packet.data.socket_id,
     data: {
@@ -77,13 +75,12 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
     },
     sender: SERVER_SENDER,
   });
-  syncServerEntities(client, packet.world_id, packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
+  await syncServerEntities(packet.world_id, serializedPlayer, SerializationID.PLAYER_FULL_SERVER);
 
   return;
 }
 
 const ensureWorldIsRunning = async (worldId: string) => {
-  /* Check if world is currently running in Redis */
   let dbWorld = await World.findOne({ where: { id: worldId } });
   if (!dbWorld) dbWorld = await World.GenerateNewWorld(worldId);
 

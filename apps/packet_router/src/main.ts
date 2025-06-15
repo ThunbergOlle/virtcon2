@@ -2,31 +2,19 @@ import { LogApp, LogLevel, TPS, log } from '@shared';
 import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
 import { groupBy } from 'ramda';
-import {
-  ClientPacket,
-  DisconnectPacketData,
-  PacketType,
-  RequestJoinPacketData,
-  enqueuePacket,
-  getAllPackets,
-  ServerPacket,
-  syncRemoveEntities,
-  syncServerEntities,
-} from '@virtcon2/network-packet';
+import { ClientPacket, PacketType, RequestJoinPacketData, ServerPacket } from '@virtcon2/network-packet';
 import { Player } from '@virtcon2/network-world-entities';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import * as express from 'express';
-import * as http from 'http';
 import { cwd } from 'process';
 import 'reflect-metadata';
-import * as socketio from 'socket.io';
 import { IsNull, Not } from 'typeorm';
 import { deleteEntityWorld, tickSystems } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import { redisClient } from './redis';
-import checkFinishedBuildings from './worldBuilding/checkFinishedBuildings';
+import { app, io, server } from './app';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -36,21 +24,12 @@ AppDataSource.initialize().then(() => {
 let tick = 0;
 const worlds: string[] = [];
 
-const app = express.default();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.get('/', (_req, res) => {
   res.send({ uptime: process.uptime(), tick });
-});
-
-const server = http.createServer(app);
-const io = new socketio.Server(server, {
-  cors: {
-    origin: 'http://localhost:4200',
-    methods: ['GET', 'POST'],
-  },
 });
 
 io.on('connection', (socket) => {
@@ -76,13 +55,14 @@ io.on('connection', (socket) => {
     if (eid === undefined) return log(`Player entity not found for user ${user.id}`, LogLevel.WARN, LogApp.SERVER);
 
     removeEntity(entityWorld, eid);
-
-    enqueuePacket<DisconnectPacketData>(redisClient, wasInWorld, {
-      packet_type: PacketType.DISCONNECT,
-      target: wasInWorld,
-      sender: SERVER_SENDER,
-      data: { eid },
-    });
+    io.sockets.to(wasInWorld).emit('packets', [
+      {
+        packet_type: PacketType.DISCONNECT,
+        target: wasInWorld,
+        sender: SERVER_SENDER,
+        data: { eid },
+      },
+    ]);
 
     if (playersEid.length - 1 === 0) deleteEntityWorld(entityWorld);
   });
@@ -106,18 +86,15 @@ io.on('connection', (socket) => {
       return;
     }
 
-    return handleClientPacket(
-      {
-        ...packetJson,
-        sender: {
-          id: user.id,
-          name: user.display_name,
-          socket_id: socket.id,
-          world_id: packetJson.world_id,
-        },
+    return handleClientPacket({
+      ...packetJson,
+      sender: {
+        id: user.id,
+        name: user.display_name,
+        socket_id: socket.id,
+        world_id: packetJson.world_id,
       },
-      redisClient,
-    );
+    });
   });
 });
 
@@ -133,22 +110,51 @@ server.listen(4000, () => {
   log('Server started on port 4000', LogLevel.INFO, LogApp.SERVER);
 });
 
-const tickInterval = setInterval(async () => {
+const tickInterval = setInterval(() => {
   tick++;
   for (let i = 0; i < worlds.length; i++) {
     const world = worlds[i];
-    await checkFinishedBuildings(world, tick);
+    //await checkFinishedBuildings(world, tick); TODO: ENABLE THIS
     const systemsOutput = tickSystems(world);
+
+    const packets: Array<ServerPacket<unknown>> = [];
+
     for (const { sync, removeEntities } of systemsOutput) {
-      await syncRemoveEntities(redisClient, world, world, removeEntities);
+      packets.push({
+        packet_type: PacketType.REMOVE_ENTITY,
+        target: world,
+        data: {
+          packet_type: PacketType.REMOVE_ENTITY,
+          entityIds: removeEntities,
+        },
+        sender: {
+          id: -1,
+          name: 'server_syncer',
+          socket_id: '',
+          world_id: '',
+        },
+      });
+
       for (const data of sync) {
-        await syncServerEntities(redisClient, world, world, data.data, data.serializationId);
+        packets.push({
+          packet_type: PacketType.SYNC_SERVER_ENTITY,
+          target: world,
+          data: {
+            serializationId: data.serializationId,
+            data: data.data,
+          },
+          sender: {
+            id: -1,
+            name: 'server_syncer',
+            socket_id: '',
+            world_id: '',
+          },
+        });
       }
     }
 
     if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
-    const packets = await getAllPackets(redisClient, world);
     if (!packets.length) continue;
 
     const groupedByTarget = groupBy((packet: ServerPacket<unknown>) => packet.target)(packets);
