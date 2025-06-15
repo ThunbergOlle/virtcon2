@@ -177,6 +177,8 @@ export default class Game extends Scene implements SceneStates {
       Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
 
+      window.debugEntity = (entityId) => console.log(debugEntity(this.state.world, entityId));
+
       registerComponents(this.state.world, allComponents);
       console.log('Loading world data...');
 
@@ -262,6 +264,7 @@ const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) =>
         break;
       case PacketType.REMOVE_ENTITY:
         (packet as ServerPacket<RemoveEntityPacket>).data.entityIds.forEach((eid) => {
+          console.log(`Removing entity with id ${eid}`);
           removeEntity(world, eid);
         });
         break;
@@ -285,6 +288,7 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
+    console.log(`Deserializing ${data.map((e) => e[0][2]).join(', ')} with serialization ID ${serializationId}`);
     deserialize(world, data);
   }
 };
