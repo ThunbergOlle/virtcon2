@@ -15,12 +15,6 @@ import { World as DBWorld } from '@virtcon2/database-postgres';
 import { shouldServerKeep } from './tileSystem';
 import { SyncEntities } from './types';
 
-const resourceQuery = defineQuery(Resource, Position);
-const tileQuery = defineQuery(GrowableTile, Position);
-const tileQueryEnter = enterQuery(tileQuery);
-const playerQuery = defineQuery(Player, Position);
-const buildingQuery = defineQuery(Building, Position);
-
 const getResourceForPosition = (hash: number): { resource: DBItem; spawnChance: number } => {
   const resource = all_spawnable_db_items[Math.abs(hash % all_spawnable_db_items.length)];
   const isolatedChance = resource.spawnSettings.chance * 0.5;
@@ -35,6 +29,12 @@ const shouldGenerateResource = (hash: number): { shouldSpawn: boolean; resource:
 };
 
 export const createResourceSystem = (world: World, seed: number) => {
+  const resourceQuery = defineQuery(Resource, Position);
+  const tileQuery = defineQuery(GrowableTile, Position);
+  const tileQueryEnter = enterQuery(tileQuery);
+  const playerQuery = defineQuery(Player, Position);
+  const buildingQuery = defineQuery(Building, Position);
+
   return defineSystem<SyncEntities>((_) => {
     const resourceEntities = resourceQuery(world);
     const tileEnterEntities = tileQueryEnter(world);
@@ -49,6 +49,9 @@ export const createResourceSystem = (world: World, seed: number) => {
       const { x, y } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
 
       const { shouldSpawn, resource } = shouldGenerateResource(GrowableTile.hash[tileEid]);
+      console.log(
+        `Entering tile at (${x}, ${y}) with hash: ${GrowableTile.hash[tileEid]}, shouldSpawn: ${shouldSpawn}, resource: ${resource.name}`,
+      );
 
       if (!shouldSpawn) continue;
 

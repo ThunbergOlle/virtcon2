@@ -15,6 +15,7 @@ import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import { redisClient } from './redis';
 import { app, io, server } from './app';
+import { debugWorld } from './debug';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -112,6 +113,7 @@ server.listen(4000, () => {
 
 const tickInterval = setInterval(() => {
   tick++;
+  const startTime = Date.now();
   for (let i = 0; i < worlds.length; i++) {
     const world = worlds[i];
     //await checkFinishedBuildings(world, tick); TODO: ENABLE THIS
@@ -155,6 +157,10 @@ const tickInterval = setInterval(() => {
       }
     }
 
+    if (tick % 60 === 0) {
+      //debugWorld(world);
+    }
+
     if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     if (!packets.length) continue;
@@ -164,6 +170,10 @@ const tickInterval = setInterval(() => {
     for (const target in groupedByTarget) {
       const packets = groupedByTarget[target];
       io.sockets.to(target).emit('packets', packets);
+    }
+    const endTime = Date.now();
+    if (endTime - startTime > 1000 / TPS) {
+      log(`Tick for world ${world} took too long: ${endTime - startTime}ms`, LogLevel.WARN, LogApp.SERVER);
     }
   }
 }, 1000 / TPS);

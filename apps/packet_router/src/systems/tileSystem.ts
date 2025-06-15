@@ -1,16 +1,28 @@
 import { renderDistance, TileType, TILE_LEVEL } from '@shared';
 import { defineQuery, defineSerializer, defineSystem, Entity, removeEntity, World } from '@virtcon2/bytenetc';
 import * as DB from '@virtcon2/database-postgres';
-import { createTile, fromPhaserPos, Player, Position, SerializationID, serializeConfig, Tile } from '@virtcon2/network-world-entities';
+import {
+  createTile,
+  fromPhaserPos,
+  GrowableTile,
+  Player,
+  Position,
+  SerializationID,
+  serializeConfig,
+  Tile,
+} from '@virtcon2/network-world-entities';
+import { clone } from 'ramda';
 import { worldData } from '../ecs/entityWorld';
 import { SyncEntities } from './types';
 
-const tileQuery = defineQuery(Tile, Position);
-const playerQuery = defineQuery(Player, Position);
+export const createTileSystem = (world: World, seed: number) => {
+  const tileQuery = defineQuery(Tile, Position);
+  const growableTileQuery = defineQuery(GrowableTile, Position);
+  const playerQuery = defineQuery(Player, Position);
 
-export const createTileSystem = (world: World, seed: number) =>
-  defineSystem<SyncEntities>(() => {
+  return defineSystem<SyncEntities>(() => {
     const tileEntities = tileQuery(world);
+    const growableTileEntities = growableTileQuery(world);
     const playerEntities = playerQuery(world);
 
     if (!playerEntities.length) return { removeEntities: [], sync: [] };
@@ -31,7 +43,13 @@ export const createTileSystem = (world: World, seed: number) =>
         Math.min(y + renderDistance, worldData[world].bounds.endY),
       ];
 
-      newEntities = generateTilesInArea({ minX, minY, maxX, maxY }, tileEntities, world, seed);
+      newEntities = generateTilesInArea({ minX, minY, maxX, maxY }, growableTileEntities, world, seed);
+      for (const newEntity of newEntities) {
+        if (GrowableTile.hash[newEntity]) {
+          const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[newEntity], y: Position.y[newEntity] });
+          console.log(`Creating new tile entity at (${tileX}, ${tileY}) with hash: ${GrowableTile.hash[newEntity]}`);
+        }
+      }
     }
 
     for (let i = 0; i < tileEntities.length; i++) {
@@ -54,6 +72,7 @@ export const createTileSystem = (world: World, seed: number) =>
       ],
     };
   });
+};
 
 const generateTilesInArea = (
   { minX, minY, maxX, maxY }: { minX: number; minY: number; maxX: number; maxY: number },
@@ -88,17 +107,6 @@ const generateTilesInArea = (
         newEntities.push(foundationTile);
       }
 
-      const overlayTileEntityId = createTile(world, {
-        x: j,
-        y: k,
-        height: TILE_LEVEL[overlay.tileType],
-        variant: overlay.variant,
-        rotation: overlay.rotation,
-        dualGrid: true,
-        isFoundation: overlay.tileType === foundation,
-        seed,
-      });
-
       if (midlevel) {
         const midlevelTileEntitiyId = createTile(world, {
           x: j,
@@ -110,6 +118,17 @@ const generateTilesInArea = (
         });
         newEntities.push(midlevelTileEntitiyId);
       }
+
+      const overlayTileEntityId = createTile(world, {
+        x: j,
+        y: k,
+        height: TILE_LEVEL[overlay.tileType],
+        variant: overlay.variant,
+        rotation: overlay.rotation,
+        dualGrid: true,
+        isFoundation: foundation === overlay.tileType,
+        seed,
+      });
 
       newEntities.push(overlayTileEntityId);
     }
@@ -227,12 +246,12 @@ const isVariant = (variant: SimplifiedVariant, surroundingTileHeights: Simplifie
   variant.every((row, i) => row.every((bool, j) => bool === surroundingTileHeights[i][j]));
 
 export const pickFoundationTile = (tiles: [[TileType, TileType], [TileType, TileType]]): TileType => {
-  const foundationTile = tiles.flat().sort((a, b) => TILE_LEVEL[a] - TILE_LEVEL[b])[0];
+  const foundationTile = clone(tiles.flat().sort((a, b) => TILE_LEVEL[a] - TILE_LEVEL[b])[0]);
   return foundationTile;
 };
 
 export const pickOverlayTile = (tiles: [[TileType, TileType], [TileType, TileType]]): TileType => {
-  const overlayTile = tiles.flat().sort((a, b) => TILE_LEVEL[b] - TILE_LEVEL[a])[0];
+  const overlayTile = clone(tiles.flat().sort((a, b) => TILE_LEVEL[b] - TILE_LEVEL[a])[0]);
   return overlayTile;
 };
 

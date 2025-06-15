@@ -9,7 +9,18 @@ const spriteQueryExit = exitQuery(spriteQuery);
 
 export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) => {
   return defineSystem<GameState>((state) => {
+    const exitEntities = spriteQueryExit(world);
+    for (let i = 0; i < exitEntities.length; i++) {
+      const id = exitEntities[i];
+      const sprite = state.spritesById[id];
+      if (sprite) {
+        sprite.destroy();
+        delete state.spritesById[id];
+      }
+    }
+
     const enterEntities = spriteQueryEnter(world);
+
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       const texId = Sprite.texture[id];
@@ -63,15 +74,7 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 
       state.spritesById[id] = sprite;
     }
-    const exitEntities = spriteQueryExit(world);
-    for (let i = 0; i < exitEntities.length; i++) {
-      const id = exitEntities[i];
-      const sprite = state.spritesById[id];
-      if (sprite) {
-        sprite.destroy();
-        delete state.spritesById[id];
-      }
-    }
+
     return state;
   });
 };

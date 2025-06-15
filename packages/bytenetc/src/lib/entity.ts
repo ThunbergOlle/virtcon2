@@ -49,8 +49,10 @@ export type World = string;
 
 type WorldStore = {
   $entityStore: Array<string[]>;
+  $entityFingerprint: Map<Entity, symbol>;
   $componentStore: ComponentStore;
   $queryCache: Map<any, any>;
+  $entityBuffer: number;
 };
 
 const $store: { [key: World]: WorldStore } = {};
@@ -58,8 +60,10 @@ const $store: { [key: World]: WorldStore } = {};
 export const createWorld = (id: World) => {
   $store[id] = {
     $entityStore: new Array(MAX_ENTITIES).fill(null),
+    $entityFingerprint: new Map<Entity, symbol>(),
     $componentStore: {},
     $queryCache: new Map(),
+    $entityBuffer: 0,
   };
   return id;
 };
@@ -134,7 +138,6 @@ export const addComponent = (world: World, component: Component<any>, entity: En
   }
 
   $store[world].$entityStore[entity].push(decodeName(component));
-
   $store[world].$queryCache.clear();
 };
 
@@ -245,33 +248,53 @@ export const defineQuery = (...components: (Component<any> | QueryModifier)[]): 
 
     $store[world].$queryCache.set($cacheEntry, entities);
 
-    return entities;
+    return [...entities];
   };
 };
 
 export const enterQuery = (query: QueryReturn) => {
-  let prevResult = [];
+  let prevResult: Entity[] = [];
+  let prevFingerprints: symbol[] = [];
   return (world: World) => {
     const entities = query(world);
+    const newFingerprints = entities.map((e) => $store[world].$entityFingerprint.get(e));
 
-    const newEntities = entities.filter((e) => !prevResult.includes(e));
+    const newEntities = entities.filter((e) => {
+      const fingerprint = $store[world].$entityFingerprint.get(e);
+      if (!fingerprint) throw new Error(`Entity ${e} does not have a fingerprint`);
+
+      const prevFingerprint = prevFingerprints[prevResult.indexOf(e)];
+      if (!prevFingerprint) return true;
+      return fingerprint !== prevFingerprint;
+    });
 
     prevResult = entities;
+    prevFingerprints = newFingerprints;
 
-    return newEntities;
+    return [...newEntities];
   };
 };
 
 export const exitQuery = (query: QueryReturn) => {
   let prevResult = [];
+  let prevFingerprints: symbol[] = [];
   return (world: World) => {
     const entities = query(world);
+    const newFingerprints = entities.map((e) => $store[world].$entityFingerprint.get(e));
 
-    const removedEntities = prevResult.filter((e) => !entities.includes(e));
+    const removedEntities = prevResult.filter((prevEid) => {
+      if (!entities.includes(prevEid)) return true;
+      const fingerprint = prevFingerprints[prevResult.indexOf(prevEid)];
+
+      if (!newFingerprints.includes(fingerprint)) {
+        return true;
+      }
+    });
 
     prevResult = entities;
+    prevFingerprints = newFingerprints;
 
-    return removedEntities;
+    return [...removedEntities];
   };
 };
 
@@ -280,6 +303,7 @@ export const addEntity = (world: World) => {
   for (let i = 0; i < MAX_ENTITIES; i++) {
     if ($store[world].$entityStore[i] === null) {
       $store[world].$entityStore[i] = [];
+      $store[world].$entityFingerprint.set(i, Symbol(`entity-${i}`));
       return i;
     }
   }
@@ -291,17 +315,20 @@ export const addReservedEntity = (world: World, entity: Entity) => {
   if ($store[world].$entityStore[entity]) throw new Error(`Cannot reserve entity ${entity}, already exists`);
   $store[world].$queryCache.clear();
   $store[world].$entityStore[entity] = [];
+  $store[world].$entityFingerprint.set(entity, Symbol(`reserved-entity-${entity}`));
   return entity;
 };
 
 export const dangerouslyAddEntity = (world: World, entity: Entity) => {
   $store[world].$queryCache.clear();
   $store[world].$entityStore[entity] = [];
+  $store[world].$entityFingerprint.set(entity, Symbol(`dangerous-entity-${entity}`));
 };
 
 export const removeEntity = (world: World, entity: Entity) => {
   $store[world].$queryCache.clear();
   $store[world].$entityStore[entity] = null;
+  $store[world].$entityFingerprint.delete(entity);
 
   for (const name in $store[world].$componentStore) {
     const schema = $store[world].$componentStore[name]._schema;
@@ -369,6 +396,9 @@ const deserializeArray = (world: World, name: string, key: string, value: AllArr
 
 export const deserializeEntity = (world: World, data: SerializedData) => {
   const eid = data[0][2] as number;
+  if (!$store[world].$entityFingerprint.has(eid)) {
+    $store[world].$entityFingerprint.set(eid, Symbol(`deserialized-entity-${eid}`));
+  }
 
   for (const [name, key, value] of data.slice(1)) {
     const store = $store[world].$componentStore[name][key] as Record<Entity, AllArrayTypes | number>;

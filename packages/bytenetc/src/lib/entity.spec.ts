@@ -488,6 +488,56 @@ describe('enter and exit queries', () => {
     expect(state.query).toEqual([]);
   });
 
+  test('return entities that enters a query, but doesnt query other stuff', () => {
+    const Position = defineComponent('position', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    const Velocity = defineComponent('velocity', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    registerComponents(world, [Position, Velocity]);
+
+    const query = defineQuery(Position);
+    const newPlayersEnterQuery = enterQuery(query);
+    const gameLoop = () => ({
+      enter: newPlayersEnterQuery(world),
+    });
+
+    let state = gameLoop();
+    expect(state.enter).toEqual([]);
+
+    const eid1 = addEntity(world);
+    const eid2 = addEntity(world);
+
+    addComponent(world, Position, eid1);
+    addComponent(world, Velocity, eid1);
+
+    addComponent(world, Position, eid2);
+
+    state = gameLoop();
+    expect(state.enter).toEqual([eid1, eid2]);
+
+    state = gameLoop();
+    expect(state.enter).toEqual([]);
+
+    removeComponent(world, Position, eid1);
+    removeComponent(world, Position, eid2);
+
+    state = gameLoop();
+    expect(state.enter).toEqual([]);
+
+    addComponent(world, Position, eid1);
+    addComponent(world, Velocity, eid1);
+
+    addComponent(world, Position, eid2);
+    state = gameLoop();
+    expect(state.enter).toEqual([eid1, eid2]);
+  });
+
   test('correctly handle entity re-entry after component removal and addition', () => {
     const Player = defineComponent('player', { id: Types.i32 });
     registerComponents(world, [Player]);
@@ -507,6 +557,64 @@ describe('enter and exit queries', () => {
     addComponent(world, Player, eid);
 
     expect(enter(world)).toEqual([eid]);
+  });
+
+  test('return recycles entities having been removed and re-added within the same tick', () => {
+    const Position = defineComponent('position', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    registerComponents(world, [Position]);
+
+    const query = defineQuery(Position);
+    const enter = enterQuery(query);
+
+    const eid1 = addEntity(world);
+    addComponent(world, Position, eid1);
+
+    expect(enter(world)).toEqual([eid1]);
+
+    removeEntity(world, eid1);
+    const eid2 = addEntity(world);
+    addComponent(world, Position, eid2);
+
+    expect(eid2).toEqual(eid1);
+    expect(enter(world)).toEqual([eid2]);
+    expect(enter(world)).toEqual([]);
+
+    removeEntity(world, eid2);
+    const eid3 = addEntity(world);
+    addComponent(world, Position, eid3);
+
+    const eid4 = addEntity(world);
+    addComponent(world, Position, eid4);
+
+    expect(eid3).toEqual(eid1);
+    expect(enter(world)).toEqual([eid3, eid4]);
+  });
+
+  test('same entitiy id exits and enters within the same tick', () => {
+    const Position = defineComponent('position', {
+      x: Types.i32,
+      y: Types.i32,
+    });
+
+    registerComponents(world, [Position]);
+
+    const query = defineQuery(Position);
+    const exit = exitQuery(query);
+
+    const eid1 = addEntity(world);
+    addComponent(world, Position, eid1);
+
+    expect(exit(world)).toEqual([]);
+
+    removeEntity(world, eid1);
+    const eid2 = addEntity(world);
+    addComponent(world, Position, eid2);
+
+    expect(exit(world)).toEqual([eid1]);
   });
 });
 
