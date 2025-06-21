@@ -69,7 +69,6 @@ export const createResourceSystem = (world: World, seed: number) => {
       });
 
       newEntities.push(resourceEntityId);
-      break;
     }
 
     for (let i = 0; i < resourceEntities.length; i++) {
