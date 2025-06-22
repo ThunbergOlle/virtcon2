@@ -193,16 +193,16 @@ export const removeComponent = <S extends Schema>(world: World, component: Defin
 export type QueryModifier = { (entity: Entity, world: World): boolean; noCache?: boolean };
 
 export const Not =
-  (component: Component<any>): QueryModifier =>
+  (component: DefinedComponent<any>): QueryModifier =>
   (entityId: Entity, world: World) =>
-    !$store[world].$entityStore[entityId].includes(decodeName(component));
+    !$store[world].$entityStore[entityId].includes(decodeName(component(world)));
 
 export const Has =
-  (component: Component<any>): QueryModifier =>
+  (component: DefinedComponent<any>): QueryModifier =>
   (entityId: Entity, world: World) =>
-    $store[world].$entityStore[entityId].includes(decodeName(component));
+    $store[world].$entityStore[entityId].includes(decodeName(component(world)));
 
-export const Changed = (component: Component<any>): QueryModifier => {
+export const Changed = (component: DefinedComponent<any>): QueryModifier => {
   const $changedCache = new Map<Entity, unknown[]>();
 
   const cloneCacheValues = (values: unknown[]) => {
@@ -212,7 +212,7 @@ export const Changed = (component: Component<any>): QueryModifier => {
   const modifier: QueryModifier = (entityId: Entity, world: World) => {
     if (!Has(component)(entityId, world)) return false;
 
-    const name = decodeName(component);
+    const name = decodeName(component(world));
     const { _schema: schema } = $store[world].$componentStore[name];
     const values = [];
     for (const key in schema) {
@@ -253,11 +253,14 @@ export const Changed = (component: Component<any>): QueryModifier => {
   return modifier;
 };
 
+const isQueryModified = (componentOrModifier: DefinedComponent<any> | QueryModifier): componentOrModifier is QueryModifier =>
+  (componentOrModifier as DefinedComponent<any>).original === undefined;
+
 type QueryReturn = (world: World) => Entity[];
-export const defineQuery = (...components: (Component<any> | QueryModifier)[]): QueryReturn => {
+export const defineQuery = (...components: (DefinedComponent<any> | QueryModifier)[]): QueryReturn => {
   const $cacheEntry = Symbol('queryCache');
 
-  const useCache = components.every((c) => typeof c !== 'function' && !c.noCache);
+  const useCache = components.every((c) => (c as DefinedComponent<any>).original || !(c as QueryModifier).noCache);
 
   return (world: World): Entity[] => {
     if (useCache && $store[world].$queryCache.has($cacheEntry)) return $store[world].$queryCache.get($cacheEntry);
@@ -267,7 +270,7 @@ export const defineQuery = (...components: (Component<any> | QueryModifier)[]): 
       if (!$store[world].$entityStore[i]) continue;
       if (
         components.every((componentOrModifier) =>
-          typeof componentOrModifier === 'function' ? componentOrModifier(i, world) : Has(componentOrModifier)(i, world),
+          isQueryModified(componentOrModifier) ? componentOrModifier(i, world) : Has(componentOrModifier)(i, world),
         )
       )
         entities.push(i);

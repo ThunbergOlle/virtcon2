@@ -114,7 +114,7 @@ describe('removeEntity', () => {
     expect(newEid).toBe(eid); // Expect to reuse the lowest available ID
 
     expect(doesEntityExist(world, newEid)).toBe(true);
-    const query = defineQuery(Position(world));
+    const query = defineQuery(Position);
     expect(query(world)).not.toContain(newEid);
     expect(Position(world).x[newEid]).toBe(0);
     expect(Data(world).buffer[newEid]).toEqual(new Uint8Array([0, 0]));
@@ -230,7 +230,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Position(world), Velocity(world));
+    const query = defineQuery(Position, Velocity);
 
     const entities = query(world);
 
@@ -258,7 +258,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Position(world));
+    const query = defineQuery(Position);
 
     const entities = query(world);
 
@@ -285,7 +285,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Not(Velocity(world)));
+    const query = defineQuery(Not(Velocity));
 
     const entities = query(world);
 
@@ -300,7 +300,7 @@ describe('query', () => {
 
     registerComponents(world, [Position]);
 
-    const query = defineQuery(Changed(Position(world)));
+    const query = defineQuery(Changed(Position));
 
     const eid1 = addEntity(world);
     const eid2 = addEntity(world);
@@ -350,7 +350,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Position(world), Not(Velocity(world)));
+    const query = defineQuery(Position, Not(Velocity));
 
     const entities = query(world);
 
@@ -453,7 +453,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position, Velocity]);
 
-    const query = defineQuery(Position(world), Velocity(world));
+    const query = defineQuery(Position, Velocity);
     const newPlayersEnterQuery = enterQuery(query);
     const newPlayersExitQuery = exitQuery(query);
     const gameLoop = () => ({
@@ -506,7 +506,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position, Velocity]);
 
-    const query = defineQuery(Position(world));
+    const query = defineQuery(Position);
     const newPlayersEnterQuery = enterQuery(query);
     const gameLoop = () => ({
       enter: newPlayersEnterQuery(world),
@@ -547,7 +547,7 @@ describe('enter and exit queries', () => {
     const Player = defineComponent('player', { id: Types.i32 });
     registerComponents(world, [Player]);
 
-    const playerQuery = defineQuery(Player(world));
+    const playerQuery = defineQuery(Player);
     const enter = enterQuery(playerQuery);
 
     const eid = addEntity(world);
@@ -572,7 +572,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position]);
 
-    const query = defineQuery(Position(world));
+    const query = defineQuery(Position);
     const enter = enterQuery(query);
 
     const eid1 = addEntity(world);
@@ -607,7 +607,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position]);
 
-    const query = defineQuery(Position(world));
+    const query = defineQuery(Position);
     const exit = exitQuery(query);
 
     const eid1 = addEntity(world);
@@ -767,7 +767,7 @@ describe('Query modifications', () => {
       });
       registerComponents(world, [PlayerData]);
 
-      const query = defineQuery(Changed(PlayerData(world)));
+      const query = defineQuery(Changed(PlayerData));
       const eid = addEntity(world);
       addComponent(world, PlayerData, eid);
 
@@ -783,7 +783,7 @@ describe('Query modifications', () => {
       const Stats = defineComponent('stats', { score: Types.i32 });
       registerComponents(world, [Stats]);
 
-      const query = defineQuery(Changed(Stats(world)));
+      const query = defineQuery(Changed(Stats));
       const eid = addEntity(world);
       addComponent(world, Stats, eid);
       Stats(world).score[eid] = 500;

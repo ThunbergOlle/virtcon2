@@ -6,7 +6,7 @@ import { select, WindowType } from '../ui/lib/WindowSlice';
 import { expandPlotVar } from '../ui/windows/plot/PlotWindow';
 
 export const createWorldBorderSystem = (world: World, scene: Phaser.Scene) => {
-  const worldBorderQuery = defineQuery(Sprite(world), WorldBorder(world), Position(world));
+  const worldBorderQuery = defineQuery(Sprite, WorldBorder, Position);
   const worldBorderQueryEnter = enterQuery(worldBorderQuery);
 
   return defineSystem<GameState>((state) => {

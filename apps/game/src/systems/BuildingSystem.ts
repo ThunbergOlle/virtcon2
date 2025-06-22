@@ -7,7 +7,7 @@ import { inspectBuilding } from '../ui/windows/building/inspectedBuildingSlice';
 import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
 
 export const createBuildingSystem = (world: World) => {
-  const buildingQuery = defineQuery(Building(world), Position(world), Collider(world));
+  const buildingQuery = defineQuery(Building, Position, Collider);
   const buildingQueryEnter = enterQuery(buildingQuery);
 
   return defineSystem<GameState>((state) => {

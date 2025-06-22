@@ -5,9 +5,9 @@ import { Item, MainPlayer, Position, Sprite, Velocity } from '@virtcon2/network-
 import { ClientPacket, PacketType, RequestPickupItemPacketData } from '@virtcon2/network-packet';
 
 export const createItemSystem = (world: World, scene: Scene) => {
-  const itemQuery = defineQuery(Item(world), Sprite(world), Position(world));
+  const itemQuery = defineQuery(Item, Sprite, Position);
   const itemEnterQuery = enterQuery(itemQuery);
-  const mainPlayerQuery = defineQuery(MainPlayer(world), Sprite(world));
+  const mainPlayerQuery = defineQuery(MainPlayer, Sprite);
 
   return defineSystem<GameState>((state) => {
     const enterEntities = itemEnterQuery(world);

@@ -4,7 +4,7 @@ import { GameState } from '../scenes/Game';
 import { setMainPlayerEntity } from './MainPlayerSystem';
 
 export const createPlayerSystem = (world: World, mainPlayerId: number, scene: Phaser.Scene) => {
-  const playerQuery = defineQuery(Player(world), Sprite(world), Velocity(world));
+  const playerQuery = defineQuery(Player, Sprite, Velocity);
   const playerQueryEnter = enterQuery(playerQuery);
 
   return defineSystem<GameState>((state) => {

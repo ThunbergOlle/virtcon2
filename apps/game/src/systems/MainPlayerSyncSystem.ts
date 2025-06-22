@@ -6,8 +6,8 @@ import { every } from '@shared';
 
 export const createMainPlayerSyncSystem = (world: World) => {
   const shouldUpdatePosition = every(50);
-  const mainPlayerVelocityQuery = defineQuery(MainPlayer(world), Changed(Velocity(world)), Position(world));
-  const mainPlayerQuery = defineQuery(MainPlayer(world), Position(world), Velocity(world));
+  const mainPlayerVelocityQuery = defineQuery(MainPlayer, Changed(Velocity), Position);
+  const mainPlayerQuery = defineQuery(MainPlayer, Position, Velocity);
   const serializeMovement = defineSerializer(getSerializeConfig(world)[SerializationID.PLAYER_MOVEMENT]);
 
   return defineSystem<GameState>((state) => {

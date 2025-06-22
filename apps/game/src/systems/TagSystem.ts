@@ -3,7 +3,7 @@ import { GameState } from '../scenes/Game';
 import { MainPlayer, Position, Tag } from '@virtcon2/network-world-entities';
 
 export const createTagSystem = (world: World, scene: Phaser.Scene) => {
-  const tagQuery = defineQuery(Tag(world), Not(MainPlayer(world)));
+  const tagQuery = defineQuery(Tag, Not(MainPlayer));
   const tagQueryEnter = enterQuery(tagQuery);
   const tagQueryExit = exitQuery(tagQuery);
 

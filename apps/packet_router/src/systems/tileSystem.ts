@@ -15,9 +15,9 @@ import { clone } from 'ramda';
 import { SyncEntities } from './types';
 
 export const createTileSystem = (world: World, seed: number) => {
-  const tileQuery = defineQuery(Tile(world), Position(world));
-  const growableTileQuery = defineQuery(GrowableTile(world), Position(world));
-  const playerQuery = defineQuery(Player(world), Position(world));
+  const tileQuery = defineQuery(Tile, Position);
+  const growableTileQuery = defineQuery(GrowableTile, Position);
+  const playerQuery = defineQuery(Player, Position);
 
   return defineSystem<SyncEntities>(({ worldData }) => {
     const tileEntities = tileQuery(world);

@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
     user.currentlyInWorld = null;
     await user.save();
 
-    const playerQuery = defineQuery(Player(world));
+    const playerQuery = defineQuery(Player);
     const playersEid = playerQuery(world);
 
     const eid = playersEid.find((eid) => Player(world).userId[eid] === user.id);
@@ -88,15 +88,20 @@ io.on('connection', (socket) => {
       return;
     }
 
-    return handleClientPacket({
-      ...packetJson,
-      sender: {
-        id: user.id,
-        name: user.display_name,
-        socket_id: socket.id,
-        world_id: packetJson.world_id,
-      },
-    });
+    try {
+      await handleClientPacket({
+        ...packetJson,
+        sender: {
+          id: user.id,
+          name: user.display_name,
+          socket_id: socket.id,
+          world_id: packetJson.world_id,
+        },
+      });
+    } catch (error) {
+      log(`Error handling packet: ${error}`, LogLevel.ERROR, LogApp.SERVER);
+      socket.emit('error', `Error handling packet: ${error}`);
+    }
   });
 });
 

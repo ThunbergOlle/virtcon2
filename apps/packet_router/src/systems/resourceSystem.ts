@@ -29,11 +29,11 @@ const shouldGenerateResource = (hash: number): { shouldSpawn: boolean; resource:
 };
 
 export const createResourceSystem = (world: World, seed: number) => {
-  const resourceQuery = defineQuery(Resource(world), Position(world));
-  const tileQuery = defineQuery(GrowableTile(world), Position(world));
+  const resourceQuery = defineQuery(Resource, Position);
+  const tileQuery = defineQuery(GrowableTile, Position);
   const tileQueryEnter = enterQuery(tileQuery);
-  const playerQuery = defineQuery(Player(world), Position(world));
-  const buildingQuery = defineQuery(Building(world), Position(world));
+  const playerQuery = defineQuery(Player, Position);
+  const buildingQuery = defineQuery(Building, Position);
 
   return defineSystem<SyncEntities>(({ worldData }) => {
     const resourceEntities = resourceQuery(world);

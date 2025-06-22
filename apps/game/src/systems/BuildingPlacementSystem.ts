@@ -4,7 +4,7 @@ import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
 import { defineQuery, defineSystem, Entity, exitQuery, World } from '@virtcon2/bytenetc';
 
 export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene) => {
-  const ghostBuildingQuery = defineQuery(GhostBuilding(world), Position(world), Collider(world), Sprite(world));
+  const ghostBuildingQuery = defineQuery(GhostBuilding, Position, Collider, Sprite);
   const ghostBuildingExitQuery = exitQuery(ghostBuildingQuery);
   return defineSystem<GameState>((state) => {
     const ghostBuildings = ghostBuildingQuery(world);

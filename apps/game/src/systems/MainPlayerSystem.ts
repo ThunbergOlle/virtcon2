@@ -24,7 +24,7 @@ import { damageResource } from './ResourceSystem';
 const speed = 750;
 
 export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
-  const mainPlayerQuery = defineQuery(MainPlayer(world), Position(world), Sprite(world), Player(world), Collider(world), Range(world));
+  const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider, Range);
   const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
   const keyboard = scene.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
@@ -93,7 +93,7 @@ const getTargetItemIds = (tool: ToolType) =>
 const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
 
 const findResourceInRange = (world: World, playerEid: Entity): Entity | null => {
-  const resourceQuery = defineQuery(Position(world), Resource(world));
+  const resourceQuery = defineQuery(Position, Resource);
   const resources = resourceQuery(world);
 
   let closestResourceEid: Entity | null = null;

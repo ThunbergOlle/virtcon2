@@ -3,6 +3,7 @@ import { events } from '../events/Events';
 import Game from '../scenes/Game';
 
 import { ServerPacket, PacketType, RequestJoinPacketData, ClientPacket } from '@virtcon2/network-packet';
+import { ErrorType } from '@shared';
 
 export class Network {
   socket: Socket;
@@ -32,6 +33,11 @@ export class Network {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         events.notify(('network' + event) as any, packet.data);
       }
+    });
+
+    socket.on('error', (error: string) => {
+      console.error('Error from server:', error);
+      events.notify('networkError', { message: error, type: ErrorType.NetworkError });
     });
   }
 

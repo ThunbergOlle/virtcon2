@@ -3,7 +3,7 @@ import { GameState } from '../scenes/Game';
 import { Sprite, Collider, GameObjectGroups } from '@virtcon2/network-world-entities';
 
 export const createColliderSystem = (world: World, scene: Phaser.Scene) => {
-  const colliderQuery = defineQuery(Sprite(world), Collider(world));
+  const colliderQuery = defineQuery(Sprite, Collider);
   const colliderQueryEnter = enterQuery(colliderQuery);
   return defineSystem<GameState>((state) => {
     const enterEntities = colliderQueryEnter(world);

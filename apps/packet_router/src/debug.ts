@@ -33,10 +33,10 @@ const worldToTile = (worldPos: number): number => {
 
 // Get all entity positions
 const getEntityPositions = (world: World): EntityPosition[] => {
-  const tileQuery = defineQuery(GrowableTile(world), Position(world));
-  const buildingQuery = defineQuery(Building(world), Position(world));
-  const resourceQuery = defineQuery(Resource(world), Position(world));
-  const playerQuery = defineQuery(Player(world), Position(world));
+  const tileQuery = defineQuery(GrowableTile, Position);
+  const buildingQuery = defineQuery(Building, Position);
+  const resourceQuery = defineQuery(Resource, Position);
+  const playerQuery = defineQuery(Player, Position);
 
   const positions: EntityPosition[] = [];
 

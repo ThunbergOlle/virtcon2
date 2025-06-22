@@ -128,13 +128,13 @@ Sand, Grass
         test('by 2 tiles', () => {
           const playerEid = addEntity(world);
           addComponent(world, Position, playerEid);
-          Position.x[playerEid] = 0;
-          Position.y[playerEid] = 0;
+          Position(world).x[playerEid] = 0;
+          Position(world).y[playerEid] = 0;
 
           const tile = addEntity(world);
           addComponent(world, Position, tile);
-          Position.x[tile] = renderDistance * tileSize + tileSize * 2;
-          Position.y[tile] = renderDistance * tileSize + tileSize * 2;
+          Position(world).x[tile] = renderDistance * tileSize + tileSize * 2;
+          Position(world).y[tile] = renderDistance * tileSize + tileSize * 2;
 
           expect(shouldServerKeep(world, [playerEid], tile)).toEqual(false);
         });
@@ -142,13 +142,13 @@ Sand, Grass
         test('by 1 tile', () => {
           const playerEid = addEntity(world);
           addComponent(world, Position, playerEid);
-          Position.x[playerEid] = 0;
-          Position.y[playerEid] = 0;
+          Position(world).x[playerEid] = 0;
+          Position(world).y[playerEid] = 0;
 
           const tile = addEntity(world);
           addComponent(world, Position, tile);
-          Position.x[tile] = renderDistance * tileSize + tileSize * 1;
-          Position.y[tile] = renderDistance * tileSize + tileSize * 1;
+          Position(world).x[tile] = renderDistance * tileSize + tileSize * 1;
+          Position(world).y[tile] = renderDistance * tileSize + tileSize * 1;
 
           expect(shouldServerKeep(world, [playerEid], tile)).toEqual(false);
         });
@@ -156,13 +156,13 @@ Sand, Grass
         test('by -1 tile', () => {
           const playerEid = addEntity(world);
           addComponent(world, Position, playerEid);
-          Position.x[playerEid] = 0;
-          Position.y[playerEid] = 0;
+          Position(world).x[playerEid] = 0;
+          Position(world).y[playerEid] = 0;
 
           const tile = addEntity(world);
           addComponent(world, Position, tile);
-          Position.x[tile] = -renderDistance * tileSize + tileSize * -1;
-          Position.y[tile] = -renderDistance * tileSize + tileSize * -1;
+          Position(world).x[tile] = -renderDistance * tileSize + tileSize * -1;
+          Position(world).y[tile] = -renderDistance * tileSize + tileSize * -1;
 
           expect(shouldServerKeep(world, [playerEid], tile)).toEqual(false);
         });
@@ -174,13 +174,13 @@ Sand, Grass
         test('by 1 tile', () => {
           const playerEid = addEntity(world);
           addComponent(world, Position, playerEid);
-          Position.x[playerEid] = 0;
-          Position.y[playerEid] = 0;
+          Position(world).x[playerEid] = 0;
+          Position(world).y[playerEid] = 0;
 
           const tile = addEntity(world);
           addComponent(world, Position, tile);
-          Position.x[tile] = renderDistance * tileSize + tileSize * -1;
-          Position.y[tile] = renderDistance * tileSize + tileSize * -1;
+          Position(world).x[tile] = renderDistance * tileSize + tileSize * -1;
+          Position(world).y[tile] = renderDistance * tileSize + tileSize * -1;
 
           expect(shouldServerKeep(world, [playerEid], tile)).toEqual(true);
         });
@@ -188,13 +188,13 @@ Sand, Grass
         test('by 2 tiles', () => {
           const playerEid = addEntity(world);
           addComponent(world, Position, playerEid);
-          Position.x[playerEid] = 0;
-          Position.y[playerEid] = 0;
+          Position(world).x[playerEid] = 0;
+          Position(world).y[playerEid] = 0;
 
           const tile = addEntity(world);
           addComponent(world, Position, tile);
-          Position.x[tile] = renderDistance * tileSize + tileSize * -2;
-          Position.y[tile] = renderDistance * tileSize + tileSize * -2;
+          Position(world).x[tile] = renderDistance * tileSize + tileSize * -2;
+          Position(world).y[tile] = renderDistance * tileSize + tileSize * -2;
 
           expect(shouldServerKeep(world, [playerEid], tile)).toEqual(true);
         });
@@ -233,8 +233,8 @@ describe('createTileSystem()', () => {
         expect(growableTiles.length).toEqual(renderDistance + 1);
 
         // player in the middle
-        Position.x[playerEid] = 5 * tileSize;
-        Position.y[playerEid] = 0;
+        Position(world).x[playerEid] = 5 * tileSize;
+        Position(world).y[playerEid] = 0;
 
         tileSystem({
           worldData: {
@@ -253,8 +253,8 @@ describe('createTileSystem()', () => {
         expect(newGrowableTiles.length).toEqual(9);
 
         // move player out of bounds
-        Position.x[playerEid] = 20 * tileSize;
-        Position.y[playerEid] = 0;
+        Position(world).x[playerEid] = 20 * tileSize;
+        Position(world).y[playerEid] = 0;
 
         tileSystem({
           worldData: {
@@ -273,8 +273,8 @@ describe('createTileSystem()', () => {
         expect(outOfBoundsGrowableTiles.length).toEqual(0);
 
         // move player back in bounds
-        Position.x[playerEid] = 5 * tileSize;
-        Position.y[playerEid] = 0;
+        Position(world).x[playerEid] = 5 * tileSize;
+        Position(world).y[playerEid] = 0;
 
         tileSystem({
           worldData: {

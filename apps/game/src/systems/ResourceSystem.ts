@@ -6,7 +6,7 @@ import Game, { GameState } from '../scenes/Game';
 import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 
 export const createResourceSystem = (world: World) => {
-  const resourceQuery = defineQuery(Resource(world), Sprite(world), Collider(world));
+  const resourceQuery = defineQuery(Resource, Sprite, Collider);
   const resourceEnterQuery = enterQuery(resourceQuery);
 
   return defineSystem<GameState>((state) => {

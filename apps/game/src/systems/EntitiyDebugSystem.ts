@@ -4,7 +4,7 @@ import { GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, Entity, exitQuery, World } from '@virtcon2/bytenetc';
 
 export const createDebugPositionSystem = (world: World, scene: Phaser.Scene) => {
-  const positionQuery = defineQuery(Position(world));
+  const positionQuery = defineQuery(Position);
   const positionQueryEnter = enterQuery(positionQuery);
   const positionQueryExit = exitQuery(positionQuery);
   const debugTexts: { [id: Entity]: Phaser.GameObjects.Text } = {};

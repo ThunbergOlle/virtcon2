@@ -24,7 +24,7 @@ import { enqueuePacket, syncServerEntities } from '../enqueue';
 
 export default async function requestJoinPacket(packet: ClientPacketWithSender<RequestJoinPacketData>) {
   await ensureWorldIsRunning(packet.world_id);
-  const playerQuery = defineQuery(...playerEntityComponents.map((c) => c(packet.world_id)));
+  const playerQuery = defineQuery(...playerEntityComponents);
   const plot = await WorldPlot.findOne({ where: { worldId: packet.world_id }, order: { startX: 'ASC', startY: 'ASC' } });
 
   if (!plot) throw new InvalidStateError(`World ${packet.world_id} does not have a plot assigned to it.`);

@@ -4,7 +4,7 @@ import { GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 
 export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) => {
-  const spriteQuery = defineQuery(Sprite(world), Position(world));
+  const spriteQuery = defineQuery(Sprite, Position);
   const spriteQueryEnter = enterQuery(spriteQuery);
   const spriteQueryExit = exitQuery(spriteQuery);
 
@@ -80,8 +80,8 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 };
 
 export const createMovingSpriteSystem = (world: World) => {
-  const movingSpriteQuery = defineQuery(Sprite(world), Position(world), Velocity(world));
-  const nonMovingSpriteQuery = defineQuery(Sprite(world), Position(world), Not(Velocity(world)), Not(Item(world)));
+  const movingSpriteQuery = defineQuery(Sprite, Position, Velocity);
+  const nonMovingSpriteQuery = defineQuery(Sprite, Position, Not(Velocity), Not(Item));
 
   return defineSystem<GameState>((state) => {
     const movingSpriteEntities = movingSpriteQuery(world);

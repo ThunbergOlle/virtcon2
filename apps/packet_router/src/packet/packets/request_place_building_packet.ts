@@ -94,7 +94,7 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
 }
 
 const deleteResource = (world: World, buildingId: Entity) => {
-  const resourceQuery = defineQuery(Resource(world), Position(world));
+  const resourceQuery = defineQuery(Resource, Position);
 
   const { x, y } = fromPhaserPos({ x: Position(world).x[buildingId], y: Position(world).y[buildingId] });
   const resourceEntities = resourceQuery(world);

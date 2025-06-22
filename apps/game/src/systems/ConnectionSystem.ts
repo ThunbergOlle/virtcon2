@@ -3,7 +3,7 @@ import { ConnectionPoint, fromPhaserPos, GameObjectGroups, toPhaserPos } from '@
 import Game, { GameState } from '../scenes/Game';
 
 export const createConnectionSystem = (world: World, game: Game) => {
-  const connectionPointQuery = defineQuery(ConnectionPoint(world));
+  const connectionPointQuery = defineQuery(ConnectionPoint);
   const connectionPointEnterQuery = enterQuery(connectionPointQuery);
   const connectionPointExitQuery = exitQuery(connectionPointQuery);
 
