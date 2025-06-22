@@ -12,7 +12,8 @@ import {
   Tile,
 } from '@virtcon2/network-world-entities';
 import { clone } from 'ramda';
-import { SyncEntities } from './types';
+import { PLOT_SIZE } from '../ecs/entityWorld';
+import { SyncEntities, WorldBounds } from './types';
 
 export const createTileSystem = (world: World, seed: number) => {
   const tileQuery = defineQuery(Tile, Position);
@@ -33,10 +34,10 @@ export const createTileSystem = (world: World, seed: number) => {
       const playerEid = playerEntities[i];
       const { x, y } = fromPhaserPos({ x: Position(world).x[playerEid], y: Position(world).y[playerEid] });
 
-      const [minX, maxX] = [Math.max(x - renderDistance, worldData.bounds.startX), Math.min(x + renderDistance, worldData.bounds.endX)];
-      const [minY, maxY] = [Math.max(y - renderDistance, worldData.bounds.startY), Math.min(y + renderDistance, worldData.bounds.endY)];
+      const [minX, maxX] = [x - renderDistance, x + renderDistance];
+      const [minY, maxY] = [y - renderDistance, y + renderDistance];
 
-      newEntities.push(...generateTilesInArea({ minX, minY, maxX, maxY }, growableTileEntities, world, seed));
+      newEntities.push(...generateTilesInArea({ minX, minY, maxX, maxY }, worldData.bounds, growableTileEntities, world, seed));
     }
 
     for (let i = 0; i < tileEntities.length; i++) {
@@ -64,6 +65,7 @@ export const createTileSystem = (world: World, seed: number) => {
 
 const generateTilesInArea = (
   { minX, minY, maxX, maxY }: { minX: number; minY: number; maxX: number; maxY: number },
+  worldBounds: WorldBounds[],
   existingEntities: Entity[],
   world: World,
   seed: number,
@@ -71,6 +73,13 @@ const generateTilesInArea = (
   const newEntities: Entity[] = [];
   for (let j = minX; j <= maxX; j++) {
     for (let k = minY; k <= maxY; k++) {
+      const isWithinBounds = worldBounds.some(({ x, y }) => {
+        const [minX, maxX] = [x, x + PLOT_SIZE];
+        const [minY, maxY] = [y, y + PLOT_SIZE];
+        return j >= minX && j <= maxX && k >= minY && k <= maxY;
+      });
+
+      if (!isWithinBounds) continue;
       if (getTileOnPosition(existingEntities, j, k, world)) continue;
 
       const heights: [[TileType, TileType], [TileType, TileType]] = [

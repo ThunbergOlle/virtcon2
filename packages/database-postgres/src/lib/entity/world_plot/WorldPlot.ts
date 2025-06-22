@@ -17,17 +17,9 @@ export class WorldPlot extends BaseEntity {
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })
-  startX: number;
+  x: number;
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })
-  startY: number;
-
-  @Field(() => Int)
-  @Column({ type: 'int', default: 0 })
-  endX: number;
-
-  @Field(() => Int)
-  @Column({ type: 'int', default: 0 })
-  endY: number;
+  y: number;
 }

@@ -65,7 +65,7 @@ export class World extends BaseEntity {
 
         await transaction.save(world);
 
-        const startPlot = WorldPlot.create({ worldId: worldId, startX: 0, startY: 0, endX: 16, endY: 16 });
+        const startPlot = WorldPlot.create({ worldId: worldId, x: 0, y: 0 });
 
         await transaction.save(startPlot);
 

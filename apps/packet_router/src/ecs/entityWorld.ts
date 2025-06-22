@@ -11,7 +11,7 @@ import {
 } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
-import { SyncEntities, WorldData } from '../systems/types';
+import { SyncEntities, WorldBounds, WorldData } from '../systems/types';
 
 const worlds = [];
 const systems: { [key: string]: System<SyncEntities>[] } = {};
@@ -44,62 +44,56 @@ export const deleteEntityWorld = (world: World) => {
   deleteWorld(world);
 };
 
-export type WorldBounds = {
-  startX: number;
-  endX: number;
-  startY: number;
-  endY: number;
-};
-export const getWorldBounds = async (worldId: string): Promise<WorldBounds> => {
-  const bounds: WorldBounds = await DB.AppDataSource.manager
-    .query(
-      `
+export const PLOT_SIZE = 16;
+
+export const getWorldBounds = async (worldId: string): Promise<WorldBounds[]> => {
+  const bounds: WorldBounds[] = await DB.AppDataSource.manager.query(
+    `
 SELECT
- MIN ( "startX" ) AS "startX",
- MAX ( "endX" ) AS "endX",
- MIN ( "startY" ) AS "startY",
- MAX ( "endY" ) AS "endY"
+  x, y
 FROM
 	world_plot
 WHERE
 	"worldId" = '${worldId}'`,
-    )
-    .then((row) => row[0]);
+  );
 
   return bounds;
 };
 
-const initialiseWorldBounds = async (world: World, bounds: WorldBounds) => {
-  for (let i = bounds.startX; i < bounds.endX; i += tileSize + 1) {
-    createNewWorldBorderTile(world, {
-      x: i - 0.5 + tileSize / 2,
-      y: -1.5,
-      side: WorldBorderSide.TOP,
-    });
-  }
-
-  for (let i = bounds.startY; i < bounds.endY; i += tileSize + 1) {
-    createNewWorldBorderTile(world, {
-      x: -1.5,
-      y: i - 0.5 + tileSize / 2,
-      side: WorldBorderSide.LEFT,
-    });
-  }
-
-  for (let i = bounds.startX; i < bounds.endX; i += tileSize + 1) {
-    createNewWorldBorderTile(world, {
-      x: i - 0.5 + tileSize / 2,
-      y: bounds.endY + 0.5,
-      side: WorldBorderSide.BOTTOM,
-    });
-  }
-
-  for (let i = bounds.startY; i < bounds.endY; i += tileSize + 1) {
-    createNewWorldBorderTile(world, {
-      x: bounds.endX + 0.5,
-      y: i - 0.5 + tileSize / 2,
-      side: WorldBorderSide.RIGHT,
-    });
+const initialiseWorldBounds = async (world: World, bounds: WorldBounds[]) => {
+  for (const bound of bounds) {
+    const left = bounds.find((b) => b.y === bound.y && b.x === bound.x - PLOT_SIZE);
+    const right = bounds.find((b) => b.y === bound.y && b.x === bound.x + PLOT_SIZE);
+    const top = bounds.find((b) => b.x === bound.x && b.y === bound.y - PLOT_SIZE);
+    const bottom = bounds.find((b) => b.x === bound.x && b.y === bound.y + PLOT_SIZE);
+    if (!left) {
+      createNewWorldBorderTile(world, {
+        x: bound.x - 1.5,
+        y: bound.y - 0.5 + tileSize / 2,
+        side: WorldBorderSide.LEFT,
+      });
+    }
+    if (!right) {
+      createNewWorldBorderTile(world, {
+        x: bound.x + 0.5 + tileSize,
+        y: bound.y - 0.5 + tileSize / 2,
+        side: WorldBorderSide.RIGHT,
+      });
+    }
+    if (!top) {
+      createNewWorldBorderTile(world, {
+        x: bound.x - 0.5 + tileSize / 2,
+        y: bound.y - 1.5,
+        side: WorldBorderSide.TOP,
+      });
+    }
+    if (!bottom) {
+      createNewWorldBorderTile(world, {
+        x: bound.x - 0.5 + tileSize / 2,
+        y: bound.y + 0.5 + tileSize,
+        side: WorldBorderSide.BOTTOM,
+      });
+    }
   }
 };
 

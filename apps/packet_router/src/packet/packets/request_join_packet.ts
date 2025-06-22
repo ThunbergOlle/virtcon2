@@ -18,14 +18,14 @@ import {
 } from '@virtcon2/network-world-entities';
 
 import { defineQuery, defineSerializer, serializeAllEntities } from '@virtcon2/bytenetc';
-import { doesWorldExist, getWorldBounds, initializeWorld } from '../../ecs/entityWorld';
+import { doesWorldExist, getWorldBounds, initializeWorld, PLOT_SIZE } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
 import { enqueuePacket, syncServerEntities } from '../enqueue';
 
 export default async function requestJoinPacket(packet: ClientPacketWithSender<RequestJoinPacketData>) {
   await ensureWorldIsRunning(packet.world_id);
   const playerQuery = defineQuery(...playerEntityComponents);
-  const plot = await WorldPlot.findOne({ where: { worldId: packet.world_id }, order: { startX: 'ASC', startY: 'ASC' } });
+  const plot = await WorldPlot.findOne({ where: { worldId: packet.world_id }, order: { x: 'ASC', y: 'ASC' } });
 
   if (!plot) throw new InvalidStateError(`World ${packet.world_id} does not have a plot assigned to it.`);
 
@@ -41,8 +41,8 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   if (existingPlayer !== undefined) throw new Error(`Player entity already exists for user ${user.id}`);
 
   const worldBounds = await getWorldBounds(packet.world_id);
-  const centerX = Math.floor((worldBounds.startX + worldBounds.endX) / 2);
-  const centerY = Math.floor((worldBounds.startY + worldBounds.endY) / 2);
+  const centerX = Math.floor((worldBounds[0].x + PLOT_SIZE) / 2);
+  const centerY = Math.floor((worldBounds[0].y + PLOT_SIZE) / 2);
 
   const { x, y } = toPhaserPos({ x: centerX, y: centerY });
 
