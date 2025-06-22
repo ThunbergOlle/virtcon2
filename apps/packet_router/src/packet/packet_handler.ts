@@ -12,7 +12,6 @@ import {
   RequestPlaceBuildingPacketData,
   SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
-import { RedisClientType } from 'redis';
 import syncClientEntityPacket from './enqueue';
 import { requestCreateConnectionPoint } from './packets/requestCreateConnectionPoint';
 import requestPickupItemPacket from './packets/requestPickupItemPacket';

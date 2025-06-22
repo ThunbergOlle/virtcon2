@@ -9,7 +9,7 @@ import { DBWorldBuilding } from '@virtcon2/static-game-data';
 @ObjectType()
 @Entity()
 export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   @Field(() => Int)
   id: number;
 

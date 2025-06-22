@@ -25,7 +25,7 @@ const shouldGenerateResource = (hash: number): { shouldSpawn: boolean; resource:
   const { resource, spawnChance } = getResourceForPosition(hash);
   const pseudoRandom = Math.abs(hash % 10000) / 10000;
 
-  return { shouldSpawn: pseudoRandom > spawnChance, resource };
+  return { shouldSpawn: pseudoRandom < spawnChance, resource };
 };
 
 export const createResourceSystem = (world: World, seed: number) => {
@@ -35,7 +35,7 @@ export const createResourceSystem = (world: World, seed: number) => {
   const playerQuery = defineQuery(Player, Position);
   const buildingQuery = defineQuery(Building, Position);
 
-  return defineSystem<SyncEntities>((_) => {
+  return defineSystem<SyncEntities>(({ worldData }) => {
     const resourceEntities = resourceQuery(world);
     const tileEnterEntities = tileQueryEnter(world);
     const playerEntities = playerQuery(world);
@@ -49,10 +49,6 @@ export const createResourceSystem = (world: World, seed: number) => {
       const { x, y } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
 
       const { shouldSpawn, resource } = shouldGenerateResource(GrowableTile.hash[tileEid]);
-      console.log(
-        `Entering tile at (${x}, ${y}) with hash: ${GrowableTile.hash[tileEid]}, shouldSpawn: ${shouldSpawn}, resource: ${resource.name}`,
-      );
-
       if (!shouldSpawn) continue;
 
       const height = DBWorld.getHeightAtPoint(seed, x, y);
@@ -82,6 +78,7 @@ export const createResourceSystem = (world: World, seed: number) => {
 
     const serializedResources = defineSerializer(serializeConfig[SerializationID.RESOURCE])(world, newEntities);
     return {
+      worldData,
       sync: [
         {
           data: serializedResources,

@@ -5,7 +5,7 @@ import { World } from '../world/World';
 @ObjectType()
 @Entity()
 export class WorldPlot extends BaseEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   @Field(() => Int)
   id: number;
 

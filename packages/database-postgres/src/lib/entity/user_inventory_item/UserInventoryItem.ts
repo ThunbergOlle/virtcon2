@@ -15,7 +15,7 @@ export const publishUserInventoryUpdate = async function (userId: number) {
 @ObjectType()
 @Entity()
 export class UserInventoryItem extends BaseEntity implements DBUserInventoryItem {
-  @PrimaryGeneratedColumn({ type: 'int' })
+  @PrimaryGeneratedColumn('increment', { type: 'int' })
   @Field(() => Int, { nullable: false })
   id: number;
 

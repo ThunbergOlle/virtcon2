@@ -2,7 +2,7 @@ import { debugEntity, defineQuery, defineSystem, enterQuery, exitQuery, Not, Wor
 import { GameState } from '../scenes/Game';
 import { MainPlayer, Position, Tag } from '@virtcon2/network-world-entities';
 
-const tagQuery = defineQuery(Position, Tag, Not(MainPlayer));
+const tagQuery = defineQuery(Tag, Not(MainPlayer));
 const tagQueryEnter = enterQuery(tagQuery);
 const tagQueryExit = exitQuery(tagQuery);
 
@@ -12,25 +12,34 @@ export const createTagSystem = (world: World, scene: Phaser.Scene) => {
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
-      console.log(debugEntity(world, id));
+      const playerSprite = state.spritesById[id];
+      if (!playerSprite) continue;
 
       const encodedTag = Tag.value[id];
       const tag = new TextDecoder().decode(encodedTag);
 
-      const gameObject = scene.add.text(Position.x[id], Position.y[id], tag, {
-        fontSize: '8px',
-        stroke: '#000',
-        resolution: 5,
-        align: 'center',
-      });
+      const gameObject = scene.add
+        .text(Position.x[id], Position.y[id], tag, {
+          fontSize: '28px',
+          backgroundColor: '#808080',
+          color: '#ffffff',
+          padding: { x: 10, y: 5 },
+          align: 'center',
+        })
+        .setAlpha(0.8)
+        .setScale(0.1)
+        .setOrigin(0.5, 0.5)
+        .setDepth(Number.MAX_SAFE_INTEGER);
+
       state.tagGameObjectById[id] = gameObject;
     }
 
     const entities = tagQuery(world);
     for (let i = 0; i < entities.length; i++) {
       const id = entities[i];
-      const gameObject = state.tagGameObjectById[id];
-      gameObject.setPosition(Position.x[id] - 8, Position.y[id] - 16);
+      const follow = state.spritesById[id];
+      const tag = state.tagGameObjectById[id];
+      tag.setPosition(follow.x, follow.y - 12);
     }
 
     const exitEntities = tagQueryExit(world);

@@ -30,6 +30,7 @@ import { createTagSystem } from '../systems/TagSystem';
 import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
+import { createDebugPositionSystem } from '../systems/EntitiyDebugSystem';
 
 export interface GameState {
   dt: number;
@@ -48,6 +49,7 @@ export interface GameState {
 }
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
+  public debugMode = false;
 
   public state: GameState = {
     dt: 0,
@@ -79,6 +81,7 @@ export default class Game extends Scene implements SceneStates {
   public connectionSystem?: System<GameState>;
   public itemSystem?: System<GameState>;
   public worldBorderSystem?: System<GameState>;
+  public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
 
@@ -169,7 +172,7 @@ export default class Game extends Scene implements SceneStates {
     );
 
     events.subscribe('joinWorld', (worldId) => {
-      this.physics.world.createDebugGraphic();
+      if (this.debugMode) this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 
@@ -195,6 +198,8 @@ export default class Game extends Scene implements SceneStates {
       this.connectionSystem = createConnectionSystem(this.state.world, this);
       this.itemSystem = createItemSystem(this.state.world, this);
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
+
+      if (this.debugMode) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
       this.isInitialized = true;
     });
@@ -243,6 +248,10 @@ export default class Game extends Scene implements SceneStates {
 
     newState = this.worldBorderSystem(newState);
 
+    if (this.debugPositionSystem) {
+      newState = this.debugPositionSystem(newState);
+    }
+
     this.state = newState;
 
     Game.network.readReceivedPackets(length);
@@ -264,7 +273,6 @@ const receiveServerPackets = (world: World, packets: ServerPacket<unknown>[]) =>
         break;
       case PacketType.REMOVE_ENTITY:
         (packet as ServerPacket<RemoveEntityPacket>).data.entityIds.forEach((eid) => {
-          console.log(`Removing entity with id ${eid}`);
           removeEntity(world, eid);
         });
         break;
@@ -288,7 +296,6 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
     }
   } else {
     const deserialize = defineDeserializer(serializeConfig[serializationId]);
-    console.log(`Deserializing ${data.map((e) => e[0][2]).join(', ')} with serialization ID ${serializationId}`);
     deserialize(world, data);
   }
 };

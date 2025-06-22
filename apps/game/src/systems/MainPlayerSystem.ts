@@ -1,15 +1,5 @@
 import { every } from '@shared';
-import {
-  addComponent,
-  addReservedEntity,
-  debugEntity,
-  defineQuery,
-  defineSystem,
-  enterQuery,
-  Entity,
-  removeEntity,
-  World,
-} from '@virtcon2/bytenetc';
+import { addComponent, addReservedEntity, defineQuery, defineSystem, enterQuery, Entity, removeEntity, World } from '@virtcon2/bytenetc';
 import {
   Collider,
   GameObjectGroups,

@@ -11,19 +11,12 @@ import {
 } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
-import { SyncEntities } from '../systems/types';
+import { SyncEntities, WorldData } from '../systems/types';
 
 const worlds = [];
 const systems: { [key: string]: System<SyncEntities>[] } = {};
 export const worldData: {
-  [key: string]: {
-    bounds: {
-      startX: number;
-      endX: number;
-      startY: number;
-      endY: number;
-    };
-  };
+  [key: string]: WorldData;
 } = {};
 
 const newEntityWorld = (world: World) => {
@@ -140,7 +133,7 @@ export const tickSystems = (world: World): SyncEntities[] => {
 
   const data: SyncEntities[] = [];
   for (const system of systems[world]) {
-    data.push(system({ sync: [], removeEntities: [] }));
+    data.push(system({ worldData: worldData[world], sync: [], removeEntities: [] }));
   }
 
   return data;

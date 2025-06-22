@@ -3,9 +3,6 @@ import { createPubSub } from '@graphql-yoga/subscription';
 import { Redis } from 'ioredis';
 
 const redisUrl = process.env.REDIS_URL;
-if (!redisUrl) {
-  throw new Error('REDIS_URL env variable is not defined');
-}
 
 export const enum Topic {
   BUILDING_UPDATE = 'BUILDING_UPDATE',

@@ -12,7 +12,6 @@ import {
   Tile,
 } from '@virtcon2/network-world-entities';
 import { clone } from 'ramda';
-import { worldData } from '../ecs/entityWorld';
 import { SyncEntities } from './types';
 
 export const createTileSystem = (world: World, seed: number) => {
@@ -20,36 +19,24 @@ export const createTileSystem = (world: World, seed: number) => {
   const growableTileQuery = defineQuery(GrowableTile, Position);
   const playerQuery = defineQuery(Player, Position);
 
-  return defineSystem<SyncEntities>(() => {
+  return defineSystem<SyncEntities>(({ worldData }) => {
     const tileEntities = tileQuery(world);
     const growableTileEntities = growableTileQuery(world);
     const playerEntities = playerQuery(world);
 
-    if (!playerEntities.length) return { removeEntities: [], sync: [] };
+    if (!playerEntities.length) return { removeEntities: [], sync: [], worldData };
 
     const removedEntities = [];
-    let newEntities: Entity[] = [];
+    const newEntities: Entity[] = [];
 
     for (let i = 0; i < playerEntities.length; i++) {
       const playerEid = playerEntities[i];
       const { x, y } = fromPhaserPos({ x: Position.x[playerEid], y: Position.y[playerEid] });
 
-      const [minX, maxX] = [
-        Math.max(x - renderDistance, worldData[world].bounds.startX),
-        Math.min(x + renderDistance, worldData[world].bounds.endX),
-      ];
-      const [minY, maxY] = [
-        Math.max(y - renderDistance, worldData[world].bounds.startY),
-        Math.min(y + renderDistance, worldData[world].bounds.endY),
-      ];
+      const [minX, maxX] = [Math.max(x - renderDistance, worldData.bounds.startX), Math.min(x + renderDistance, worldData.bounds.endX)];
+      const [minY, maxY] = [Math.max(y - renderDistance, worldData.bounds.startY), Math.min(y + renderDistance, worldData.bounds.endY)];
 
-      newEntities = generateTilesInArea({ minX, minY, maxX, maxY }, growableTileEntities, world, seed);
-      for (const newEntity of newEntities) {
-        if (GrowableTile.hash[newEntity]) {
-          const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[newEntity], y: Position.y[newEntity] });
-          console.log(`Creating new tile entity at (${tileX}, ${tileY}) with hash: ${GrowableTile.hash[newEntity]}`);
-        }
-      }
+      newEntities.push(...generateTilesInArea({ minX, minY, maxX, maxY }, growableTileEntities, world, seed));
     }
 
     for (let i = 0; i < tileEntities.length; i++) {
@@ -63,6 +50,7 @@ export const createTileSystem = (world: World, seed: number) => {
 
     const serializedTiles = defineSerializer(serializeConfig[SerializationID.TILE])(world, newEntities);
     return {
+      worldData,
       removeEntities: removedEntities,
       sync: [
         {
@@ -90,7 +78,7 @@ const generateTilesInArea = (
         [DB.World.getTileAtPoint(seed, j, k + 1), DB.World.getTileAtPoint(seed, j + 1, k + 1)],
       ];
 
-      const { overlay, foundation, midlevel } = pickTiles(heights);
+      const { overlay, foundation } = pickTiles(heights);
 
       if (overlay.tileType !== foundation) {
         const foundationTile = createTile(world, {
@@ -105,18 +93,6 @@ const generateTilesInArea = (
         });
 
         newEntities.push(foundationTile);
-      }
-
-      if (midlevel) {
-        const midlevelTileEntitiyId = createTile(world, {
-          x: j,
-          y: k,
-          height: TILE_LEVEL[midlevel.tileType],
-          variant: midlevel.variant,
-          rotation: midlevel.rotation,
-          dualGrid: true,
-        });
-        newEntities.push(midlevelTileEntitiyId);
       }
 
       const overlayTileEntityId = createTile(world, {
@@ -265,7 +241,6 @@ export const pickTiles = (
   tiles: [[TileType, TileType], [TileType, TileType]],
 ): {
   overlay: { variant: number; rotation: number; tileType: TileType };
-  midlevel?: { variant: number; rotation: number; tileType: TileType };
   foundation: TileType;
 } => {
   const foundation = pickFoundationTile(tiles);
@@ -307,21 +282,9 @@ export const pickTiles = (
 
   const overlay = pickTilesFromTop(tiles);
 
-  // replace overlay tiles with middle layer
-  const middleTile = pickMiddleTile(tiles);
-  const allMiddle = middleTile ? tiles.flat().map((tile) => (tile === overlay.tileType ? middleTile : tile)) : tiles.flat();
-  const middle = pickTilesFromTop([
-    [allMiddle[0], allMiddle[1]],
-    [allMiddle[2], allMiddle[3]],
-  ]);
-
   return {
     overlay: {
       ...overlay,
-      rotation: 0,
-    },
-    midlevel: {
-      ...middle,
       rotation: 0,
     },
     foundation,

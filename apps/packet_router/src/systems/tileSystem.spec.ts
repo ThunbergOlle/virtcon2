@@ -1,7 +1,7 @@
 import { TILE_TYPE, TileType, renderDistance } from '@shared';
-import { clearEntities, createWorld, registerComponents, addEntity, addComponent } from '@virtcon2/bytenetc';
-import { Position, tileSize } from '@virtcon2/network-world-entities';
-import { pickTiles, pickFoundationTile, shouldServerKeep } from './tileSystem';
+import { clearEntities, createWorld, registerComponents, addEntity, addComponent, defineQuery } from '@virtcon2/bytenetc';
+import { createNewPlayerEntity, Position, tileSize, allComponents, createTile, Tile, GrowableTile } from '@virtcon2/network-world-entities';
+import { pickTiles, pickFoundationTile, shouldServerKeep, createTileSystem } from './tileSystem';
 
 describe('TileSystem', () => {
   describe('pickFoundationTile', () => {
@@ -30,7 +30,7 @@ Sand, Sand
         ];
 
         expect(pickTiles(surroundingTiles)).toEqual({
-          overlay: { variant: 6, rotation: 0, tileType: TILE_TYPE.SAND },
+          overlay: { variant: 0, rotation: 0, tileType: TILE_TYPE.SAND },
           foundation: TILE_TYPE.SAND,
         });
       });
@@ -198,6 +198,99 @@ Sand, Grass
 
           expect(shouldServerKeep([playerEid], tile)).toEqual(true);
         });
+      });
+    });
+  });
+});
+
+describe('createTileSystem()', () => {
+  describe('manage tile entities', () => {
+    describe('around a player', () => {
+      test('spawning / despawning player is out of bounds', () => {
+        const world = createWorld('test');
+        registerComponents(world, allComponents);
+
+        const playerEid = createNewPlayerEntity(world, { userId: 1, name: 'TestPlayer', position: [0, 0] });
+
+        const tileSystem = createTileSystem(world, 1);
+
+        const growableTileQuery = defineQuery(Position, GrowableTile);
+
+        tileSystem({
+          worldData: {
+            bounds: {
+              startX: 0,
+              endX: 10,
+              startY: 0,
+              endY: 0,
+            },
+          },
+          removeEntities: [],
+          sync: [],
+        });
+
+        const growableTiles = growableTileQuery(world);
+        expect(growableTiles.length).toEqual(renderDistance + 1);
+
+        // player in the middle
+        Position.x[playerEid] = 5 * tileSize;
+        Position.y[playerEid] = 0;
+
+        tileSystem({
+          worldData: {
+            bounds: {
+              startX: 0,
+              endX: 10,
+              startY: 0,
+              endY: 0,
+            },
+          },
+          removeEntities: [],
+          sync: [],
+        });
+
+        const newGrowableTiles = growableTileQuery(world);
+        expect(newGrowableTiles.length).toEqual(9);
+
+        // move player out of bounds
+        Position.x[playerEid] = 20 * tileSize;
+        Position.y[playerEid] = 0;
+
+        tileSystem({
+          worldData: {
+            bounds: {
+              startX: 0,
+              endX: 10,
+              startY: 0,
+              endY: 0,
+            },
+          },
+          removeEntities: [],
+          sync: [],
+        });
+
+        const outOfBoundsGrowableTiles = growableTileQuery(world);
+        expect(outOfBoundsGrowableTiles.length).toEqual(0);
+
+        // move player back in bounds
+        Position.x[playerEid] = 5 * tileSize;
+        Position.y[playerEid] = 0;
+
+        tileSystem({
+          worldData: {
+            bounds: {
+              startX: 0,
+              endX: 10,
+              startY: 0,
+              endY: 0,
+            },
+          },
+          removeEntities: [],
+          sync: [],
+        });
+
+        const backInBoundsGrowableTiles = growableTileQuery(world);
+        expect(backInBoundsGrowableTiles.length).toEqual(9);
       });
     });
   });
