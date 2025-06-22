@@ -15,29 +15,30 @@ export const playerEntityComponents = [Position, Sprite, Player, Collider, Tag, 
 export const createNewPlayerEntity = (world: World, newPlayer: CreateNewPlayerEntity) => {
   const player = addEntity(world);
 
-  for (const component of playerEntityComponents) {
-    addComponent(world, component, player);
-  }
+  addComponent(world, Player, player);
+  Player(world).userId[player] = newPlayer.userId;
 
-  Player.userId[player] = newPlayer.userId;
+  addComponent(world, Position, player);
+  Position(world).x[player] = newPlayer.position[0];
+  Position(world).y[player] = newPlayer.position[1];
 
-  Position.x[player] = newPlayer.position[0];
-  Position.y[player] = newPlayer.position[1];
+  addComponent(world, Sprite, player);
+  Sprite(world).texture[player] = MiscTextureMap['player_character']?.textureId ?? 0;
+  Sprite(world).dynamicBody[player] = 1;
+  Sprite(world).variant[player] = 0;
 
-  Sprite.texture[player] = MiscTextureMap['player_character']?.textureId ?? 0;
-  Sprite.dynamicBody[player] = 1;
-  Sprite.variant[player] = 0;
+  addComponent(world, Collider, player);
+  Collider(world).static[player] = 1;
+  Collider(world).group[player] = GameObjectGroups.PLAYER;
+  Collider(world).sizeWidth[player] = 8;
+  Collider(world).offsetX[player] = 28;
+  Collider(world).sizeHeight[player] = 12;
+  Collider(world).offsetY[player] = 28;
 
-  Collider.static[player] = 1;
-  Collider.group[player] = GameObjectGroups.PLAYER;
+  addComponent(world, Tag, player);
+  Tag(world).value[player] = encoder.encode(newPlayer.name);
 
-  Collider.sizeWidth[player] = 8;
-  Collider.offsetX[player] = 28;
-
-  Collider.sizeHeight[player] = 12;
-  Collider.offsetY[player] = 28;
-
-  Tag.value[player] = encoder.encode(newPlayer.name);
+  addComponent(world, Velocity, player);
 
   return player;
 };

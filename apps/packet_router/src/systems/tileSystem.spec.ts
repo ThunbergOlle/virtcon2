@@ -136,7 +136,7 @@ Sand, Grass
           Position.x[tile] = renderDistance * tileSize + tileSize * 2;
           Position.y[tile] = renderDistance * tileSize + tileSize * 2;
 
-          expect(shouldServerKeep([playerEid], tile)).toEqual(false);
+          expect(shouldServerKeep(world, [playerEid], tile)).toEqual(false);
         });
 
         test('by 1 tile', () => {
@@ -150,7 +150,7 @@ Sand, Grass
           Position.x[tile] = renderDistance * tileSize + tileSize * 1;
           Position.y[tile] = renderDistance * tileSize + tileSize * 1;
 
-          expect(shouldServerKeep([playerEid], tile)).toEqual(false);
+          expect(shouldServerKeep(world, [playerEid], tile)).toEqual(false);
         });
 
         test('by -1 tile', () => {
@@ -164,7 +164,7 @@ Sand, Grass
           Position.x[tile] = -renderDistance * tileSize + tileSize * -1;
           Position.y[tile] = -renderDistance * tileSize + tileSize * -1;
 
-          expect(shouldServerKeep([playerEid], tile)).toEqual(false);
+          expect(shouldServerKeep(world, [playerEid], tile)).toEqual(false);
         });
       });
     });
@@ -182,7 +182,7 @@ Sand, Grass
           Position.x[tile] = renderDistance * tileSize + tileSize * -1;
           Position.y[tile] = renderDistance * tileSize + tileSize * -1;
 
-          expect(shouldServerKeep([playerEid], tile)).toEqual(true);
+          expect(shouldServerKeep(world, [playerEid], tile)).toEqual(true);
         });
 
         test('by 2 tiles', () => {
@@ -196,7 +196,7 @@ Sand, Grass
           Position.x[tile] = renderDistance * tileSize + tileSize * -2;
           Position.y[tile] = renderDistance * tileSize + tileSize * -2;
 
-          expect(shouldServerKeep([playerEid], tile)).toEqual(true);
+          expect(shouldServerKeep(world, [playerEid], tile)).toEqual(true);
         });
       });
     });

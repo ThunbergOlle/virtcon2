@@ -3,7 +3,6 @@ import { addComponent, addReservedEntity, defineQuery, defineSystem, enterQuery,
 import {
   Collider,
   GameObjectGroups,
-  getVariantName,
   ItemTextureMap,
   MainPlayer,
   MainPlayerAction,
@@ -23,10 +22,11 @@ import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
 import { damageResource } from './ResourceSystem';
 
 const speed = 750;
-const mainPlayerQuery = defineQuery(MainPlayer, Position, Sprite, Player, Collider, Range);
-const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
 export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursors: Phaser.Types.Input.Keyboard.CursorKeys) => {
+  const mainPlayerQuery = defineQuery(MainPlayer(world), Position(world), Sprite(world), Player(world), Collider(world), Range(world));
+  const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
+
   const keyboard = scene.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
   const [keyW, keyA, keyS, keyD, keySpace] = [
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -71,8 +71,8 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
         xVel = xVel / 1.5;
       }
 
-      Velocity.x[entities[i]] = xVel * speed;
-      Velocity.y[entities[i]] = yVel * speed;
+      Velocity(world).x[entities[i]] = xVel * speed;
+      Velocity(world).y[entities[i]] = yVel * speed;
 
       if (keyboard.checkDown(keySpace)) {
         attack(state, world, entities[i]);
@@ -92,8 +92,8 @@ const getTargetItemIds = (tool: ToolType) =>
 
 const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
 
-const resourceQuery = defineQuery(Position, Resource);
 const findResourceInRange = (world: World, playerEid: Entity): Entity | null => {
+  const resourceQuery = defineQuery(Position(world), Resource(world));
   const resources = resourceQuery(world);
 
   let closestResourceEid: Entity | null = null;
@@ -101,13 +101,13 @@ const findResourceInRange = (world: World, playerEid: Entity): Entity | null => 
 
   for (let i = 0; i < resources.length; i++) {
     const resource = resources[i];
-    const resourceX = Position.x[resource];
-    const resourceY = Position.y[resource];
-    const playerX = Position.x[playerEid];
-    const playerY = Position.y[playerEid];
+    const resourceX = Position(world).x[resource];
+    const resourceY = Position(world).y[resource];
+    const playerX = Position(world).x[playerEid];
+    const playerY = Position(world).y[playerEid];
 
     const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
-    if (distance < Range.radius[playerEid] && distance < cloestDistance) {
+    if (distance < Range(world).radius[playerEid] && distance < cloestDistance) {
       cloestDistance = distance;
       closestResourceEid = resource;
     }
@@ -130,7 +130,7 @@ const highlightTargets = (state: GameState, world: World, eid: number) => {
 
   const resourceId = findResourceInRange(world, eid);
   if (resourceId !== null) {
-    const canDamage = targetItemsIds.includes(Resource.itemId[resourceId]);
+    const canDamage = targetItemsIds.includes(Resource(world).itemId[resourceId]);
 
     const sprite = state.spritesById[resourceId];
     if (highlightedSprite) highlightedSprite.resetPipeline();
@@ -143,7 +143,7 @@ const highlightTargets = (state: GameState, world: World, eid: number) => {
 };
 
 function attack(state: GameState, world: World, eid: number) {
-  if (MainPlayer.action[eid] !== MainPlayerAction.IDLE) return;
+  if (MainPlayer(world).action[eid] !== MainPlayerAction.IDLE) return;
 
   const selectedItem = currentItem(store.getState());
   if (!selectedItem) return;
@@ -157,9 +157,9 @@ function attack(state: GameState, world: World, eid: number) {
   if (resourceTargetId === null) return;
 
   const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
-  if (!targetItemsIds.includes(Resource.itemId[resourceTargetId!])) return;
+  if (!targetItemsIds.includes(Resource(world).itemId[resourceTargetId!])) return;
 
-  MainPlayer.action[eid] = MainPlayerAction.ATTACKING;
+  MainPlayer(world).action[eid] = MainPlayerAction.ATTACKING;
 
   const sprite = state.spritesById[eid];
   const animationName = `player_character_0_anim_cut`;
@@ -169,24 +169,24 @@ function attack(state: GameState, world: World, eid: number) {
   const tool = addReservedEntity(world, 2998);
   addComponent(world, Sprite, tool);
 
-  Sprite.texture[tool] = textureId;
-  Sprite.dynamicBody[tool] = 1;
-  Sprite.variant[tool] = 0;
+  Sprite(world).texture[tool] = textureId;
+  Sprite(world).dynamicBody[tool] = 1;
+  Sprite(world).variant[tool] = 0;
 
   addComponent(world, Position, tool);
-  Position.x[tool] = Position.x[resourceTargetId];
-  Position.y[tool] = Position.y[resourceTargetId] - 10;
+  Position(world).x[tool] = Position(world).x[resourceTargetId];
+  Position(world).y[tool] = Position(world).y[resourceTargetId] - 10;
 
   setTimeout(() => state.spritesById[resourceTargetId!].clearTint(), 100);
 
   addComponent(world, Velocity, tool);
-  Velocity.x[tool] = 0;
-  Velocity.y[tool] = -10;
+  Velocity(world).x[tool] = 0;
+  Velocity(world).y[tool] = -10;
 
   setTimeout(() => {
     removeEntity(world, tool);
-    MainPlayer.action[eid] = MainPlayerAction.IDLE;
-    damageResource(state, resourceTargetId!, selectedTool.damage);
+    MainPlayer(world).action[eid] = MainPlayerAction.IDLE;
+    damageResource(world, state, resourceTargetId!, selectedTool.damage);
   }, 500);
 }
 
@@ -195,16 +195,16 @@ export const setMainPlayerEntity = (world: World, eid: number) => {
 
   /* Add collider to entity */
   addComponent(world, Collider, eid);
-  Collider.offsetX[eid] = 0;
-  Collider.offsetY[eid] = 0;
-  Collider.sizeWidth[eid] = 16;
-  Collider.sizeHeight[eid] = 16;
-  Collider.group[eid] = GameObjectGroups.PLAYER;
+  Collider(world).offsetX[eid] = 0;
+  Collider(world).offsetY[eid] = 0;
+  Collider(world).sizeWidth[eid] = 16;
+  Collider(world).sizeHeight[eid] = 16;
+  Collider(world).group[eid] = GameObjectGroups.PLAYER;
 
   addComponent(world, Velocity, eid);
-  Velocity.x[eid] = 0;
-  Velocity.y[eid] = 0;
+  Velocity(world).x[eid] = 0;
+  Velocity(world).y[eid] = 0;
 
   addComponent(world, Range, eid);
-  Range.radius[eid] = 32;
+  Range(world).radius[eid] = 32;
 };

@@ -3,11 +3,10 @@ import { Position } from '@virtcon2/network-world-entities';
 import { GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, Entity, exitQuery, World } from '@virtcon2/bytenetc';
 
-const positionQuery = defineQuery(Position);
-const positionQueryEnter = enterQuery(positionQuery);
-const positionQueryExit = exitQuery(positionQuery);
-
 export const createDebugPositionSystem = (world: World, scene: Phaser.Scene) => {
+  const positionQuery = defineQuery(Position(world));
+  const positionQueryEnter = enterQuery(positionQuery);
+  const positionQueryExit = exitQuery(positionQuery);
   const debugTexts: { [id: Entity]: Phaser.GameObjects.Text } = {};
   return defineSystem<GameState>((state) => {
     const exitEntities = positionQueryExit(world);
@@ -23,7 +22,7 @@ export const createDebugPositionSystem = (world: World, scene: Phaser.Scene) => 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
       debugTexts[id] = scene.add
-        .text(Position.x[id], Position.y[id], id.toString(), {
+        .text(Position(world).x[id], Position(world).y[id], id.toString(), {
           fontSize: '28px',
           color: '#ffffff',
           align: 'center',

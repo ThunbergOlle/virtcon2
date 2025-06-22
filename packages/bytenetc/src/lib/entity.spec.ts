@@ -28,7 +28,7 @@ describe('defineComponent', () => {
       y: Types.i32,
     });
 
-    expect(Position._name).toEqual(new TextEncoder().encode('position'));
+    expect(Position.original._name).toEqual(new TextEncoder().encode('position'));
   });
 });
 
@@ -62,6 +62,8 @@ describe('addEntity', () => {
   });
 
   test("don't share array property references between entities", () => {
+    const world = createWorld('test');
+
     const Vector = defineComponent('vector', {
       value: [Types.i16, 3],
     });
@@ -73,20 +75,21 @@ describe('addEntity', () => {
     addComponent(world, Vector, eid1);
     addComponent(world, Vector, eid2);
 
-    Vector.value[eid1][0] = 100;
-    Vector.value[eid1][1] = 200;
+    Vector(world).value[eid1][0] = 100;
+    Vector(world).value[eid1][1] = 200;
 
-    expect(Vector.value[eid1][0]).toBe(100);
-    expect(Vector.value[eid2][0]).toBe(0);
-    expect(Vector.value[eid2][1]).toBe(0);
+    expect(Vector(world).value[eid1][0]).toBe(100);
+    expect(Vector(world).value[eid2][0]).toBe(0);
+    expect(Vector(world).value[eid2][1]).toBe(0);
   });
 });
 
 describe('removeEntity', () => {
-  const world = createWorld('test');
+  let world = createWorld('test');
 
   beforeEach(() => {
-    clearEntities(world);
+    deleteWorld(world);
+    world = createWorld('test');
   });
 
   test('completely clean up an entity', () => {
@@ -95,10 +98,12 @@ describe('removeEntity', () => {
     registerComponents(world, [Position, Data]);
 
     const eid = addEntity(world);
+
     addComponent(world, Position, eid);
     addComponent(world, Data, eid);
-    Position.x[eid] = 99;
-    Data.buffer[eid] = new Uint8Array([1, 1]);
+
+    Position(world).x[eid] = 99;
+    Data(world).buffer[eid] = new Uint8Array([1, 1]);
 
     removeEntity(world, eid);
 
@@ -109,10 +114,10 @@ describe('removeEntity', () => {
     expect(newEid).toBe(eid); // Expect to reuse the lowest available ID
 
     expect(doesEntityExist(world, newEid)).toBe(true);
-    const query = defineQuery(Position);
+    const query = defineQuery(Position(world));
     expect(query(world)).not.toContain(newEid);
-    expect(Position.x[newEid]).toBe(0);
-    expect(Data.buffer[newEid]).toEqual(new Uint8Array([0, 0]));
+    expect(Position(world).x[newEid]).toBe(0);
+    expect(Data(world).buffer[newEid]).toEqual(new Uint8Array([0, 0]));
   });
 });
 
@@ -136,13 +141,13 @@ describe('addComponent', () => {
 
     addComponent(world, Position, eid);
 
-    Position.x[eid] = 10;
-    Position.y[eid] = 20;
-    Position.x[eid] += 10;
+    Position(world).x[eid] = 10;
+    Position(world).y[eid] = 20;
+    Position(world).x[eid] += 10;
 
-    Position.arrayTest[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    Position(world).arrayTest[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-    expect(Position.x[eid]).toEqual(20);
+    expect(Position(world).x[eid]).toEqual(20);
   });
 });
 
@@ -165,16 +170,16 @@ describe('removeComponent', () => {
 
     addComponent(world, Position, eid);
 
-    Position.x[eid] = 10;
-    Position.y[eid] = 20;
+    Position(world).x[eid] = 10;
+    Position(world).y[eid] = 20;
 
-    expect(Position.x[eid]).toEqual(10);
-    expect(Position.y[eid]).toEqual(20);
+    expect(Position(world).x[eid]).toEqual(10);
+    expect(Position(world).y[eid]).toEqual(20);
 
     removeComponent(world, Position, eid);
 
-    expect(Position.x[eid]).toEqual(0);
-    expect(Position.y[eid]).toEqual(0);
+    expect(Position(world).x[eid]).toEqual(0);
+    expect(Position(world).y[eid]).toEqual(0);
   });
 
   test('correctly reset array properties', () => {
@@ -186,15 +191,15 @@ describe('removeComponent', () => {
     const eid = addEntity(world);
     addComponent(world, Data, eid);
 
-    Data.buffer[eid] = new Uint8Array([1, 2, 3, 4]);
-    expect(Data.buffer[eid]).toEqual(new Uint8Array([1, 2, 3, 4]));
+    Data(world).buffer[eid] = new Uint8Array([1, 2, 3, 4]);
+    expect(Data(world).buffer[eid]).toEqual(new Uint8Array([1, 2, 3, 4]));
 
     removeComponent(world, Data, eid);
 
     // After removal, the property should be a zeroed-out array of the same type and length, NOT the number 0.
-    expect(Data.buffer[eid]).not.toBe(0);
-    expect(Data.buffer[eid]).toBeInstanceOf(Uint8Array);
-    expect(Data.buffer[eid]).toEqual(new Uint8Array([0, 0, 0, 0]));
+    expect(Data(world).buffer[eid]).not.toBe(0);
+    expect(Data(world).buffer[eid]).toBeInstanceOf(Uint8Array);
+    expect(Data(world).buffer[eid]).toEqual(new Uint8Array([0, 0, 0, 0]));
   });
 });
 
@@ -225,7 +230,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Position, Velocity);
+    const query = defineQuery(Position(world), Velocity(world));
 
     const entities = query(world);
 
@@ -253,7 +258,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Position);
+    const query = defineQuery(Position(world));
 
     const entities = query(world);
 
@@ -280,7 +285,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Not(Velocity));
+    const query = defineQuery(Not(Velocity(world)));
 
     const entities = query(world);
 
@@ -295,34 +300,34 @@ describe('query', () => {
 
     registerComponents(world, [Position]);
 
-    const query = defineQuery(Changed(Position));
+    const query = defineQuery(Changed(Position(world)));
 
     const eid1 = addEntity(world);
     const eid2 = addEntity(world);
 
     addComponent(world, Position, eid1);
 
-    Position.x[eid1] = 10;
-    Position.y[eid1] = 20;
+    Position(world).x[eid1] = 10;
+    Position(world).y[eid1] = 20;
 
     expect(query(world)).toEqual([eid1]);
 
     addComponent(world, Position, eid2);
 
-    Position.x[eid2] = 20;
-    Position.y[eid2] = 30;
+    Position(world).x[eid2] = 20;
+    Position(world).y[eid2] = 30;
 
     expect(query(world)).toEqual([eid2]);
 
-    Position.x[eid2] = 10;
-    Position.y[eid2] = 30;
+    Position(world).x[eid2] = 10;
+    Position(world).y[eid2] = 30;
 
     expect(query(world)).toEqual([eid2]);
 
     expect(query(world)).toEqual([]);
     expect(query(world)).toEqual([]);
 
-    Position.x[eid2] = 20;
+    Position(world).x[eid2] = 20;
     expect(query(world)).toEqual([eid2]);
   });
 
@@ -345,7 +350,7 @@ describe('query', () => {
 
     addComponent(world, Position, eid2);
 
-    const query = defineQuery(Position, Not(Velocity));
+    const query = defineQuery(Position(world), Not(Velocity(world)));
 
     const entities = query(world);
 
@@ -378,11 +383,11 @@ describe('serializeEntity', () => {
     addComponent(world, Position, eid);
     addComponent(world, Velocity, eid);
 
-    Position.x[eid] = 10;
-    Position.y[eid] = 20;
+    Position(world).x[eid] = 10;
+    Position(world).y[eid] = 20;
 
-    Velocity.x[eid] = 2;
-    Velocity.y[eid] = 255;
+    Velocity(world).x[eid] = 2;
+    Velocity(world).y[eid] = 255;
 
     const serialized = serializeEntity(world, eid);
 
@@ -394,11 +399,11 @@ describe('serializeEntity', () => {
       ['velocity', 'y', 255],
     ]);
 
-    Velocity.x[eid] = 20;
+    Velocity(world).x[eid] = 20;
 
     deserializeEntity(world, serialized);
 
-    expect(Velocity.x[eid]).toEqual(2);
+    expect(Velocity(world).x[eid]).toEqual(2);
   });
 
   it('should serialize an entity with an array successfully', () => {
@@ -411,7 +416,7 @@ describe('serializeEntity', () => {
 
     addComponent(world, Tag, eid);
 
-    Tag.value[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    Tag(world).value[eid] = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
     const serialized = serializeEntity(world, eid);
 
@@ -420,11 +425,11 @@ describe('serializeEntity', () => {
       ['tag', 'value', new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])],
     ]);
 
-    Tag.value[eid] = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
+    Tag(world).value[eid] = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
 
     deserializeEntity(world, serialized);
 
-    expect(Tag.value[eid]).toEqual(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+    expect(Tag(world).value[eid]).toEqual(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
   });
 });
 
@@ -448,7 +453,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position, Velocity]);
 
-    const query = defineQuery(Position, Velocity);
+    const query = defineQuery(Position(world), Velocity(world));
     const newPlayersEnterQuery = enterQuery(query);
     const newPlayersExitQuery = exitQuery(query);
     const gameLoop = () => ({
@@ -501,7 +506,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position, Velocity]);
 
-    const query = defineQuery(Position);
+    const query = defineQuery(Position(world));
     const newPlayersEnterQuery = enterQuery(query);
     const gameLoop = () => ({
       enter: newPlayersEnterQuery(world),
@@ -542,7 +547,7 @@ describe('enter and exit queries', () => {
     const Player = defineComponent('player', { id: Types.i32 });
     registerComponents(world, [Player]);
 
-    const playerQuery = defineQuery(Player);
+    const playerQuery = defineQuery(Player(world));
     const enter = enterQuery(playerQuery);
 
     const eid = addEntity(world);
@@ -567,7 +572,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position]);
 
-    const query = defineQuery(Position);
+    const query = defineQuery(Position(world));
     const enter = enterQuery(query);
 
     const eid1 = addEntity(world);
@@ -602,7 +607,7 @@ describe('enter and exit queries', () => {
 
     registerComponents(world, [Position]);
 
-    const query = defineQuery(Position);
+    const query = defineQuery(Position(world));
     const exit = exitQuery(query);
 
     const eid1 = addEntity(world);
@@ -634,26 +639,26 @@ describe('deserialization', () => {
     addComponent(world, Position, eid);
     addComponent(world, Velocity, eid);
 
-    Position.x[eid] = 10;
-    Position.y[eid] = 10;
-    Velocity.dx[eid] = 1;
-    Velocity.dy[eid] = 1;
+    Position(world).x[eid] = 10;
+    Position(world).y[eid] = 10;
+    Velocity(world).dx[eid] = 1;
+    Velocity(world).dy[eid] = 1;
 
-    const serializePosition = defineSerializer([Position]);
+    const serializePosition = defineSerializer([Position(world)]);
     const serializedData = serializePosition(world, [eid]);
 
-    Position.x[eid] = 99;
-    Position.y[eid] = 99;
-    Velocity.dx[eid] = 50;
-    Velocity.dy[eid] = 50;
+    Position(world).x[eid] = 99;
+    Position(world).y[eid] = 99;
+    Velocity(world).dx[eid] = 50;
+    Velocity(world).dy[eid] = 50;
 
-    const deserializePosition = defineDeserializer([Position]);
+    const deserializePosition = defineDeserializer([Position(world)]);
     deserializePosition(world, serializedData);
 
-    expect(Position.x[eid]).toBe(10);
-    expect(Position.y[eid]).toBe(10);
-    expect(Velocity.dx[eid]).toBe(50); // This should remain unchanged
-    expect(Velocity.dy[eid]).toBe(50); // This should remain unchanged
+    expect(Position(world).x[eid]).toBe(10);
+    expect(Position(world).y[eid]).toBe(10);
+    expect(Velocity(world).dx[eid]).toBe(50); // This should remain unchanged
+    expect(Velocity(world).dy[eid]).toBe(50); // This should remain unchanged
   });
 });
 
@@ -682,13 +687,13 @@ describe('defineSerializer', () => {
     addComponent(world, Position, eid);
     addComponent(world, Velocity, eid);
 
-    Position.x[eid] = 10;
-    Position.y[eid] = 20;
+    Position(world).x[eid] = 10;
+    Position(world).y[eid] = 20;
 
-    Velocity.x[eid] = 2;
-    Velocity.y[eid] = 255;
+    Velocity(world).x[eid] = 2;
+    Velocity(world).y[eid] = 255;
 
-    const serializePosition = defineSerializer([Position]);
+    const serializePosition = defineSerializer([Position(world)]);
 
     const serialized = serializePosition(world, [eid]);
 
@@ -698,17 +703,17 @@ describe('defineSerializer', () => {
       ['position', 'y', 20],
     ]);
 
-    const deserializePosition = defineDeserializer([Position]);
+    const deserializePosition = defineDeserializer([Position(world)]);
 
-    Position.x[eid] = 20;
-    Position.y[eid] = 30;
-    Velocity.x[eid] = 10;
+    Position(world).x[eid] = 20;
+    Position(world).y[eid] = 30;
+    Velocity(world).x[eid] = 10;
 
     deserializePosition(world, serialized);
 
-    expect(Position.x[eid]).toEqual(10);
-    expect(Position.y[eid]).toEqual(20);
-    expect(Velocity.x[eid]).toEqual(10);
+    expect(Position(world).x[eid]).toEqual(10);
+    expect(Position(world).y[eid]).toEqual(20);
+    expect(Velocity(world).x[eid]).toEqual(10);
   });
 
   it('should serialize an entity with an array successfully', () => {
@@ -723,9 +728,9 @@ describe('defineSerializer', () => {
 
     addComponent(world, Tag, eid);
 
-    Tag.value[eid] = encoder.encode('test');
+    Tag(world).value[eid] = encoder.encode('test');
 
-    const serializeTag = defineSerializer([Tag]);
+    const serializeTag = defineSerializer([Tag(world)]);
 
     const serialized = serializeTag(world, [eid]);
 
@@ -734,13 +739,13 @@ describe('defineSerializer', () => {
       ['tag', 'value', new Uint8Array([116, 101, 115, 116])],
     ]);
 
-    Tag.value[eid] = encoder.encode('test2');
+    Tag(world).value[eid] = encoder.encode('test2');
 
-    const deserializeTag = defineDeserializer([Tag]);
+    const deserializeTag = defineDeserializer([Tag(world)]);
 
     deserializeTag(world, serialized);
 
-    expect(Tag.value[eid]).toEqual(encoder.encode('test'));
+    expect(Tag(world).value[eid]).toEqual(encoder.encode('test'));
   });
 });
 
@@ -762,14 +767,14 @@ describe('Query modifications', () => {
       });
       registerComponents(world, [PlayerData]);
 
-      const query = defineQuery(Changed(PlayerData));
+      const query = defineQuery(Changed(PlayerData(world)));
       const eid = addEntity(world);
       addComponent(world, PlayerData, eid);
 
       expect(query(world)).toEqual([eid]);
       expect(query(world)).toEqual([]);
 
-      PlayerData.inventory[eid][0] = 99;
+      PlayerData(world).inventory[eid][0] = 99;
 
       expect(query(world)).toEqual([eid]);
     });
@@ -778,15 +783,15 @@ describe('Query modifications', () => {
       const Stats = defineComponent('stats', { score: Types.i32 });
       registerComponents(world, [Stats]);
 
-      const query = defineQuery(Changed(Stats));
+      const query = defineQuery(Changed(Stats(world)));
       const eid = addEntity(world);
       addComponent(world, Stats, eid);
-      Stats.score[eid] = 500;
+      Stats(world).score[eid] = 500;
 
       query(world);
       expect(query(world)).toEqual([]);
 
-      Stats.score[eid] = 500;
+      Stats(world).score[eid] = 500;
 
       expect(query(world)).toEqual([]);
     });

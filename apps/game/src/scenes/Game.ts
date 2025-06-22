@@ -16,7 +16,7 @@ import {
   World,
 } from '@virtcon2/bytenetc';
 import { DisconnectPacketData, PacketType, RemoveEntityPacket, ServerPacket, SyncServerEntityPacket } from '@virtcon2/network-packet';
-import { allComponents, GameObjectGroups, SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { allComponents, GameObjectGroups, SerializationID, getSerializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
@@ -295,7 +295,7 @@ const handleSyncServerEntityPacket = (world: World, packet: ServerPacket<SyncSer
       deserializeEntity(world, data[i]);
     }
   } else {
-    const deserialize = defineDeserializer(serializeConfig[serializationId]);
+    const deserialize = defineDeserializer(getSerializeConfig(world)[serializationId]);
     deserialize(world, data);
   }
 };

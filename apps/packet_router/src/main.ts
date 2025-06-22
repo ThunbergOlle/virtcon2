@@ -15,7 +15,6 @@ import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import { redisClient } from './redis';
 import { app, io, server } from './app';
-import { debugWorld } from './debug';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -40,22 +39,22 @@ io.on('connection', (socket) => {
     const user = await User.findOne({ where: { token: auth } });
     console.log('User disconnected:', user.display_name);
 
-    const entityWorld = user.currentlyInWorld;
-    if (!entityWorld) return log(`World ${user.currentlyInWorld} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+    const world = user.currentlyInWorld;
+    if (!world) return log(`World ${user.currentlyInWorld} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
 
     const wasInWorld = user.currentlyInWorld;
 
     user.currentlyInWorld = null;
     await user.save();
 
-    const playerQuery = defineQuery(Player);
-    const playersEid = playerQuery(entityWorld);
+    const playerQuery = defineQuery(Player(world));
+    const playersEid = playerQuery(world);
 
-    const eid = playersEid.find((eid) => Player.userId[eid] === user.id);
+    const eid = playersEid.find((eid) => Player(world).userId[eid] === user.id);
 
     if (eid === undefined) return log(`Player entity not found for user ${user.id}`, LogLevel.WARN, LogApp.SERVER);
 
-    removeEntity(entityWorld, eid);
+    removeEntity(world, eid);
     io.sockets.to(wasInWorld).emit('packets', [
       {
         packet_type: PacketType.DISCONNECT,
@@ -65,7 +64,9 @@ io.on('connection', (socket) => {
       },
     ]);
 
-    if (playersEid.length - 1 === 0) deleteEntityWorld(entityWorld);
+    socket.leave(wasInWorld);
+
+    if (playersEid.length - 1 === 0) deleteEntityWorld(world);
   });
 
   socket.on('packet', async (packetJson: ClientPacket<unknown>) => {
@@ -114,12 +115,17 @@ server.listen(4000, () => {
 const tickInterval = setInterval(() => {
   tick++;
   const startTime = Date.now();
+  const packets: Array<ServerPacket<unknown>> = [];
+
   for (let i = 0; i < worlds.length; i++) {
     const world = worlds[i];
+    if (!world) {
+      log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+      continue;
+    }
+
     //await checkFinishedBuildings(world, tick); TODO: ENABLE THIS
     const systemsOutput = tickSystems(world);
-
-    const packets: Array<ServerPacket<unknown>> = [];
 
     for (const { sync, removeEntities } of systemsOutput) {
       if (removeEntities.length)
@@ -160,21 +166,19 @@ const tickInterval = setInterval(() => {
     if (tick % 60 === 0) {
       //debugWorld(world);
     }
+  }
+  if (!packets.length) return;
 
-    if (!world) return log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+  const groupedByTarget = groupBy((packet: ServerPacket<unknown>) => packet.target)(packets);
 
-    if (!packets.length) continue;
+  for (const target in groupedByTarget) {
+    const packets = groupedByTarget[target];
+    io.sockets.to(target).emit('packets', packets);
+  }
 
-    const groupedByTarget = groupBy((packet: ServerPacket<unknown>) => packet.target)(packets);
-
-    for (const target in groupedByTarget) {
-      const packets = groupedByTarget[target];
-      io.sockets.to(target).emit('packets', packets);
-    }
-    const endTime = Date.now();
-    if (endTime - startTime > 1000 / TPS) {
-      log(`Tick for world ${world} took too long: ${endTime - startTime}ms`, LogLevel.WARN, LogApp.SERVER);
-    }
+  const endTime = Date.now();
+  if (endTime - startTime > 1000 / TPS) {
+    log(`Tick for worlds ${worlds} took too long: ${endTime - startTime}ms`, LogLevel.WARN, LogApp.SERVER);
   }
 }, 1000 / TPS);
 

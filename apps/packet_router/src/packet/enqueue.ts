@@ -8,7 +8,7 @@ import {
   SyncClientEntityPacket,
   SyncServerEntityPacket,
 } from '@virtcon2/network-packet';
-import { SerializationID, serializeConfig } from '@virtcon2/network-world-entities';
+import { getSerializeConfig, SerializationID } from '@virtcon2/network-world-entities';
 import { io } from '../app';
 
 export const enqueuePacket = async <T>(packet: ServerPacket<T>) => {
@@ -51,11 +51,11 @@ export const syncRemoveEntities = async (target: string, eids: number[]) => {
 };
 
 export default async function syncClientEntityPacket(packet: ClientPacketWithSender<SyncClientEntityPacket>) {
-  const deserialize = defineDeserializer(serializeConfig[packet.data.serializationId]);
-
-  const deserializedEnts = deserialize(packet.world_id, [packet.data.data]);
+  const world = packet.world_id;
+  const deserialize = defineDeserializer(getSerializeConfig(world)[packet.data.serializationId]);
+  const deserializedEnts = deserialize(world, [packet.data.data]);
 
   log(`Deserialized entities: ${deserializedEnts}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
 
-  await syncServerEntities(packet.world_id, [packet.data.data], packet.data.serializationId);
+  await syncServerEntities(world, [packet.data.data], packet.data.serializationId);
 }

@@ -5,10 +5,10 @@ import { store } from '../store';
 import { select, WindowType } from '../ui/lib/WindowSlice';
 import { expandPlotVar } from '../ui/windows/plot/PlotWindow';
 
-const worldBorderQuery = defineQuery(Sprite, WorldBorder, Position);
-const worldBorderQueryEnter = enterQuery(worldBorderQuery);
-
 export const createWorldBorderSystem = (world: World, scene: Phaser.Scene) => {
+  const worldBorderQuery = defineQuery(Sprite(world), WorldBorder(world), Position(world));
+  const worldBorderQueryEnter = enterQuery(worldBorderQuery);
+
   return defineSystem<GameState>((state) => {
     const enterEntities = worldBorderQueryEnter(world);
 
@@ -18,8 +18,8 @@ export const createWorldBorderSystem = (world: World, scene: Phaser.Scene) => {
       sprite.body?.gameObject?.on(Phaser.Input.Events.POINTER_OVER, () => scene.input.setDefaultCursor('pointer'));
       sprite.body?.gameObject?.on(Phaser.Input.Events.POINTER_OUT, () => scene.input.setDefaultCursor('default'));
       sprite.body?.gameObject?.on(Phaser.Input.Events.POINTER_DOWN, () => {
-        const { x, y } = fromPhaserPos({ x: Position.x[enterEntities[i]], y: Position.y[enterEntities[i]] });
-        expandPlotVar({ side: WorldBorder.side[enterEntities[i]], x, y });
+        const { x, y } = fromPhaserPos({ x: Position(world).x[enterEntities[i]], y: Position(world).y[enterEntities[i]] });
+        expandPlotVar({ side: WorldBorder(world).side[enterEntities[i]], x, y });
         store.dispatch(select(WindowType.VIEW_EXPAND_PLOT_WINDOW));
       });
     }

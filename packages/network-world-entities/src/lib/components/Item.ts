@@ -30,28 +30,28 @@ export const createItem = ({ world, itemId, x, y, droppedFromX, droppedFromY }: 
   }
 
   addComponent(world, Item, eid);
-  Item.itemId[eid] = itemId;
+  Item(world).itemId[eid] = itemId;
   if (droppedFromX && droppedFromY) {
-    Item.droppedFromX[eid] = droppedFromX;
-    Item.droppedFromY[eid] = droppedFromY;
+    Item(world).droppedFromX[eid] = droppedFromX;
+    Item(world).droppedFromY[eid] = droppedFromY;
   }
 
   addComponent(world, Position, eid);
-  Position.x[eid] = x;
-  Position.y[eid] = y;
+  Position(world).x[eid] = x;
+  Position(world).y[eid] = y;
 
   addComponent(world, Sprite, eid);
-  Sprite.texture[eid] = AllTextureMaps[item.name]?.textureId ?? 0;
-  Sprite.variant[eid] = itemId % (AllTextureMaps[item.name]?.variants.length ?? 0);
-  Sprite.width[eid] = 8;
-  Sprite.height[eid] = 8;
-  Sprite.dynamicBody[eid] = 1;
+  Sprite(world).texture[eid] = AllTextureMaps[item.name]?.textureId ?? 0;
+  Sprite(world).variant[eid] = itemId % (AllTextureMaps[item.name]?.variants.length ?? 0);
+  Sprite(world).width[eid] = 8;
+  Sprite(world).height[eid] = 8;
+  Sprite(world).dynamicBody[eid] = 1;
 
   addComponent(world, Collider, eid);
-  Collider.group[eid] = GameObjectGroups.ITEM;
-  Collider.static[eid] = 1;
-  Collider.sizeWidth[eid] = 8;
-  Collider.sizeHeight[eid] = 8;
+  Collider(world).group[eid] = GameObjectGroups.ITEM;
+  Collider(world).static[eid] = 1;
+  Collider(world).sizeWidth[eid] = 8;
+  Collider(world).sizeHeight[eid] = 8;
 
   return eid;
 };

@@ -99,18 +99,22 @@ export default function PlayerInventoryWindow() {
 
   function rotatePlaceBuildingIntent() {
     const game = Game.getInstance();
-    if (!game.state.world || !buildingBeingPlacedEntity.current) return;
-    Sprite.rotation[buildingBeingPlacedEntity.current] = (90 + Sprite.rotation[buildingBeingPlacedEntity.current]) % 360;
+    const world = game.state.world;
+    if (!world || !buildingBeingPlacedEntity.current) return;
+    Sprite(world).rotation[buildingBeingPlacedEntity.current] = (90 + Sprite(world).rotation[buildingBeingPlacedEntity.current]) % 360;
   }
 
   function placeBuilding(e: Phaser.Input.Pointer) {
+    const game = Game.getInstance();
+    const world = game.state.world;
+
     if (!buildingBeingPlaced.current || buildingBeingPlaced.current.quantity <= 0) {
       toast('You do not have any more of this building in your inventory', { type: 'error' });
       return cancelPlaceBuildingIntent();
     }
     if (
       !buildingBeingPlacedEntity.current ||
-      !GhostBuilding.placementIsValid[buildingBeingPlacedEntity.current] ||
+      !GhostBuilding(world).placementIsValid[buildingBeingPlacedEntity.current] ||
       !buildingBeingPlaced.current.item
     )
       return;
@@ -123,7 +127,7 @@ export default function PlayerInventoryWindow() {
     const packet: ClientPacket<RequestPlaceBuildingPacketData> = {
       data: {
         buildingItemId: buildingBeingPlaced.current.item.id,
-        rotation: Sprite.rotation[buildingBeingPlacedEntity.current],
+        rotation: Sprite(world).rotation[buildingBeingPlacedEntity.current],
         x,
         y,
       },
@@ -152,7 +156,8 @@ export default function PlayerInventoryWindow() {
     dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
 
     const game = Game.getInstance();
-    if (!game.state.world) return;
+    const world = game.state.world;
+    if (!world) return;
 
     /* Create ghost building entity */
     const ghostBuilding = addReservedEntity(game.state.world, 2997);
@@ -166,22 +171,22 @@ export default function PlayerInventoryWindow() {
 
     game.state.ghostBuildingById[ghostBuilding] = buildingSettings;
 
-    Sprite.texture[ghostBuilding] = ItemTextureMap[inventoryItem.item.name]?.textureId ?? 0;
-    Sprite.height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
-    Sprite.width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
-    Sprite.opacity[ghostBuilding] = 0.5;
-    Position.x[ghostBuilding] = 0;
-    Position.y[ghostBuilding] = 0;
+    Sprite(world).texture[ghostBuilding] = ItemTextureMap[inventoryItem.item.name]?.textureId ?? 0;
+    Sprite(world).height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
+    Sprite(world).width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
+    Sprite(world).opacity[ghostBuilding] = 0.5;
+    Position(world).x[ghostBuilding] = 0;
+    Position(world).y[ghostBuilding] = 0;
 
     buildingBeingPlacedEntity.current = ghostBuilding;
     buildingBeingPlaced.current = inventoryItem;
 
     // Event listeners
     game.input.on('pointerdown', placeBuilding);
-    game.input.keyboard.once('keydown-ESC', () => cancelPlaceBuildingIntent());
-    game.input.keyboard.once('keydown-Q', () => cancelPlaceBuildingIntent());
+    game.input.keyboard?.once('keydown-ESC', () => cancelPlaceBuildingIntent());
+    game.input.keyboard?.once('keydown-Q', () => cancelPlaceBuildingIntent());
     if (buildingSettings?.is_rotatable) {
-      game.input.keyboard.on('keydown-R', () => rotatePlaceBuildingIntent());
+      game.input.keyboard?.on('keydown-R', () => rotatePlaceBuildingIntent());
     }
   };
 

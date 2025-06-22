@@ -3,9 +3,9 @@ import { GameState } from '../scenes/Game';
 import { fromPhaserPos, tileSize, toPhaserPos } from '../ui/lib/coordinates';
 import { defineQuery, defineSystem, Entity, exitQuery, World } from '@virtcon2/bytenetc';
 
-const ghostBuildingQuery = defineQuery(GhostBuilding, Position, Collider, Sprite);
-const ghostBuildingExitQuery = exitQuery(ghostBuildingQuery);
 export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene) => {
+  const ghostBuildingQuery = defineQuery(GhostBuilding(world), Position(world), Collider(world), Sprite(world));
+  const ghostBuildingExitQuery = exitQuery(ghostBuildingQuery);
   return defineSystem<GameState>((state) => {
     const ghostBuildings = ghostBuildingQuery(world);
 
@@ -13,12 +13,12 @@ export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene)
       // check collisions
       const sprite = state.spritesById[ghostBuildings[i]] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       const ghostBuilding = ghostBuildings[i];
-      checkGhostBuildingCollisions(ghostBuilding, state, scene);
+      checkGhostBuildingCollisions(world, ghostBuilding, state, scene);
 
-      sprite.setTint(GhostBuilding.placementIsValid[ghostBuilding] ? 0x00ff00 : 0xff0000);
+      sprite.setTint(GhostBuilding(world).placementIsValid[ghostBuilding] ? 0x00ff00 : 0xff0000);
 
-      const width = Sprite.width[ghostBuilding];
-      const height = Sprite.height[ghostBuilding];
+      const width = Sprite(world).width[ghostBuilding];
+      const height = Sprite(world).height[ghostBuilding];
 
       // convert activePointer world coords to tile coords
       const { x, y } = toPhaserPos(fromPhaserPos({ x: scene.input.activePointer.worldX, y: scene.input.activePointer.worldY }));
@@ -30,8 +30,8 @@ export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene)
       const offsetX = ((inTilesWidth + 1) % 2) / 2;
       const offsetY = ((inTilesHeight + 1) % 2) / 2;
 
-      Position.x[ghostBuilding] = x + offsetX * tileSize;
-      Position.y[ghostBuilding] = y + offsetY * tileSize;
+      Position(world).x[ghostBuilding] = x + offsetX * tileSize;
+      Position(world).y[ghostBuilding] = y + offsetY * tileSize;
     }
 
     const exitEntities = ghostBuildingExitQuery(world);
@@ -46,9 +46,9 @@ export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene)
   });
 };
 
-const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: Phaser.Scene) => {
+const checkGhostBuildingCollisions = (world: World, entity: Entity, state: GameState, scene: Phaser.Scene) => {
   const sprite = state.spritesById[entity];
-  GhostBuilding.placementIsValid[entity] = 1;
+  GhostBuilding(world).placementIsValid[entity] = 1;
   if (!sprite) {
     console.error(`No sprite for entity ${entity}`);
     return;
@@ -61,7 +61,7 @@ const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: P
   }
 
   if (scene.physics.collide(sprite, state.gameObjectGroups[GameObjectGroups.BUILDING] || [])) {
-    GhostBuilding.placementIsValid[entity] = 0;
+    GhostBuilding(world).placementIsValid[entity] = 0;
   }
   const building = state.ghostBuildingById[entity];
   if (!building) {
@@ -70,13 +70,13 @@ const checkGhostBuildingCollisions = (entity: Entity, state: GameState, scene: P
   }
 
   if (building.items_to_be_placed_on && building.items_to_be_placed_on?.length) {
-    GhostBuilding.placementIsValid[entity] = 0;
+    GhostBuilding(world).placementIsValid[entity] = 0;
 
     scene.physics.collide(sprite, state.gameObjectGroups[GameObjectGroups.RESOURCE] || [], (_, collided) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       for (const item of building.items_to_be_placed_on!) {
         if (collided.name === `resource-${item.name}`) {
-          GhostBuilding.placementIsValid[entity] = 1;
+          GhostBuilding(world).placementIsValid[entity] = 1;
         }
       }
     });

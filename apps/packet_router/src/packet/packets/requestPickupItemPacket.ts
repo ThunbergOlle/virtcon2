@@ -6,7 +6,7 @@ import { Item } from '@virtcon2/network-world-entities';
 import { syncRemoveEntities } from '../enqueue';
 
 export default async function requestPickupItemPacket(packet: ClientPacketWithSender<RequestPickupItemPacketData>) {
-  const receivedItemId = Item.itemId[packet.data.itemEntityId];
+  const receivedItemId = Item(packet.sender.world_id).itemId[packet.data.itemEntityId];
 
   await syncRemoveEntities(packet.sender.world_id, [removeEntity(packet.sender.world_id, packet.data.itemEntityId)]);
 

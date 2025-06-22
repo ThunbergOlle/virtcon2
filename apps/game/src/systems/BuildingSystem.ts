@@ -6,10 +6,10 @@ import { select, WindowType } from '../ui/lib/WindowSlice';
 import { inspectBuilding } from '../ui/windows/building/inspectedBuildingSlice';
 import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
 
-const buildingQuery = defineQuery(Building, Position, Collider);
-const buildingQueryEnter = enterQuery(buildingQuery);
-
 export const createBuildingSystem = (world: World) => {
+  const buildingQuery = defineQuery(Building(world), Position(world), Collider(world));
+  const buildingQueryEnter = enterQuery(buildingQuery);
+
   return defineSystem<GameState>((state) => {
     const enterEntities = buildingQueryEnter(world);
 
@@ -17,7 +17,7 @@ export const createBuildingSystem = (world: World) => {
       const id = enterEntities[i];
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
       if (sprite) {
-        setupBuildingEventListeners(sprite, id, state);
+        setupBuildingEventListeners(world, sprite, id, state);
       }
     }
 
@@ -25,14 +25,14 @@ export const createBuildingSystem = (world: World) => {
   });
 };
 
-const setupBuildingEventListeners = (sprite: Types.Physics.Arcade.SpriteWithDynamicBody, eid: number, state: GameState) => {
+const setupBuildingEventListeners = (world: World, sprite: Types.Physics.Arcade.SpriteWithDynamicBody, eid: number, state: GameState) => {
   if (!sprite.body) {
     console.error(`No body for building ${eid}`);
     return;
   }
 
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
-    store.dispatch(inspectBuilding(Building.worldBuildingId[eid]));
+    store.dispatch(inspectBuilding(Building(world).worldBuildingId[eid]));
     store.dispatch(select(WindowType.VIEW_BUILDING));
   });
 };

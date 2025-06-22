@@ -10,10 +10,10 @@ import {
 
 import {
   createNewPlayerEntity,
+  getSerializeConfig,
   Player,
   playerEntityComponents,
   SerializationID,
-  serializeConfig,
   toPhaserPos,
 } from '@virtcon2/network-world-entities';
 
@@ -22,10 +22,9 @@ import { doesWorldExist, getWorldBounds, initializeWorld } from '../../ecs/entit
 import { SERVER_SENDER } from '../utils';
 import { enqueuePacket, syncServerEntities } from '../enqueue';
 
-const playerQuery = defineQuery(...playerEntityComponents);
-
 export default async function requestJoinPacket(packet: ClientPacketWithSender<RequestJoinPacketData>) {
   await ensureWorldIsRunning(packet.world_id);
+  const playerQuery = defineQuery(...playerEntityComponents.map((c) => c(packet.world_id)));
   const plot = await WorldPlot.findOne({ where: { worldId: packet.world_id }, order: { startX: 'ASC', startY: 'ASC' } });
 
   if (!plot) throw new InvalidStateError(`World ${packet.world_id} does not have a plot assigned to it.`);
@@ -38,7 +37,7 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   await user.save();
 
   const allPlayerEid = playerQuery(packet.world_id);
-  const existingPlayer = allPlayerEid.find((eid) => Player.userId[eid] === user.id);
+  const existingPlayer = allPlayerEid.find((eid) => Player(packet.world_id).userId[eid] === user.id);
   if (existingPlayer !== undefined) throw new Error(`Player entity already exists for user ${user.id}`);
 
   const worldBounds = await getWorldBounds(packet.world_id);
@@ -53,7 +52,7 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
     position: [x, y],
   });
 
-  const serialize = defineSerializer(serializeConfig[SerializationID.PLAYER_FULL_SERVER]);
+  const serialize = defineSerializer(getSerializeConfig(packet.world_id)[SerializationID.PLAYER_FULL_SERVER]);
   const serializedPlayer = serialize(packet.world_id, [joinedPlayerEntity]);
 
   await enqueuePacket<LoadWorldPacketData>({

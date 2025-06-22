@@ -8,16 +8,16 @@ import {
   Player,
   Position,
   SerializationID,
-  serializeConfig,
+  getSerializeConfig,
   Tile,
 } from '@virtcon2/network-world-entities';
 import { clone } from 'ramda';
 import { SyncEntities } from './types';
 
 export const createTileSystem = (world: World, seed: number) => {
-  const tileQuery = defineQuery(Tile, Position);
-  const growableTileQuery = defineQuery(GrowableTile, Position);
-  const playerQuery = defineQuery(Player, Position);
+  const tileQuery = defineQuery(Tile(world), Position(world));
+  const growableTileQuery = defineQuery(GrowableTile(world), Position(world));
+  const playerQuery = defineQuery(Player(world), Position(world));
 
   return defineSystem<SyncEntities>(({ worldData }) => {
     const tileEntities = tileQuery(world);
@@ -31,7 +31,7 @@ export const createTileSystem = (world: World, seed: number) => {
 
     for (let i = 0; i < playerEntities.length; i++) {
       const playerEid = playerEntities[i];
-      const { x, y } = fromPhaserPos({ x: Position.x[playerEid], y: Position.y[playerEid] });
+      const { x, y } = fromPhaserPos({ x: Position(world).x[playerEid], y: Position(world).y[playerEid] });
 
       const [minX, maxX] = [Math.max(x - renderDistance, worldData.bounds.startX), Math.min(x + renderDistance, worldData.bounds.endX)];
       const [minY, maxY] = [Math.max(y - renderDistance, worldData.bounds.startY), Math.min(y + renderDistance, worldData.bounds.endY)];
@@ -42,13 +42,13 @@ export const createTileSystem = (world: World, seed: number) => {
     for (let i = 0; i < tileEntities.length; i++) {
       const tileEid = tileEntities[i];
 
-      if (!shouldServerKeep(playerEntities, tileEid)) {
+      if (!shouldServerKeep(world, playerEntities, tileEid)) {
         removedEntities.push(tileEid);
         removeEntity(world, tileEid);
       }
     }
 
-    const serializedTiles = defineSerializer(serializeConfig[SerializationID.TILE])(world, newEntities);
+    const serializedTiles = defineSerializer(getSerializeConfig(world)[SerializationID.TILE])(world, newEntities);
     return {
       worldData,
       removeEntities: removedEntities,
@@ -71,7 +71,7 @@ const generateTilesInArea = (
   const newEntities: Entity[] = [];
   for (let j = minX; j <= maxX; j++) {
     for (let k = minY; k <= maxY; k++) {
-      if (getTileOnPosition(existingEntities, j, k)) continue;
+      if (getTileOnPosition(existingEntities, j, k, world)) continue;
 
       const heights: [[TileType, TileType], [TileType, TileType]] = [
         [DB.World.getTileAtPoint(seed, j, k), DB.World.getTileAtPoint(seed, j + 1, k)],
@@ -113,10 +113,10 @@ const generateTilesInArea = (
   return newEntities;
 };
 
-const getTileOnPosition = (tiles: Entity[], x: number, y: number) => {
+const getTileOnPosition = (tiles: Entity[], x: number, y: number, world: World) => {
   for (let i = 0; i < tiles.length; i++) {
     const tileEid = tiles[i];
-    const { x: tileX, y: tileY } = fromPhaserPos({ x: Position.x[tileEid], y: Position.y[tileEid] });
+    const { x: tileX, y: tileY } = fromPhaserPos({ x: Position(world).x[tileEid], y: Position(world).y[tileEid] });
 
     if (tileX === x && tileY === y) {
       return tileEid;
@@ -124,15 +124,15 @@ const getTileOnPosition = (tiles: Entity[], x: number, y: number) => {
   }
 };
 
-export const shouldServerKeep = (players: Entity[], entity: Entity): boolean => {
+export const shouldServerKeep = (world: World, players: Entity[], entity: Entity): boolean => {
   for (let i = 0; i < players.length; i++) {
     const playerEid = players[i];
-    const { x, y } = fromPhaserPos({ x: Position.x[playerEid], y: Position.y[playerEid] });
+    const { x, y } = fromPhaserPos({ x: Position(world).x[playerEid], y: Position(world).y[playerEid] });
 
     const [minX, maxX] = [x - renderDistance, x + renderDistance];
     const [minY, maxY] = [y - renderDistance, y + renderDistance];
 
-    const { x: entityX, y: entityY } = fromPhaserPos({ x: Position.x[entity], y: Position.y[entity] });
+    const { x: entityX, y: entityY } = fromPhaserPos({ x: Position(world).x[entity], y: Position(world).y[entity] });
     if (entityX >= minX && entityX <= maxX && entityY >= minY && entityY <= maxY) {
       return true;
     }

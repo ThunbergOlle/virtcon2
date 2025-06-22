@@ -3,11 +3,11 @@ import { Position, Sprite, Velocity, getTextureFromTextureId, getVariantName, It
 import { GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 
-const spriteQuery = defineQuery(Sprite, Position);
-const spriteQueryEnter = enterQuery(spriteQuery);
-const spriteQueryExit = exitQuery(spriteQuery);
-
 export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) => {
+  const spriteQuery = defineQuery(Sprite(world), Position(world));
+  const spriteQueryEnter = enterQuery(spriteQuery);
+  const spriteQueryExit = exitQuery(spriteQuery);
+
   return defineSystem<GameState>((state) => {
     const exitEntities = spriteQueryExit(world);
     for (let i = 0; i < exitEntities.length; i++) {
@@ -23,27 +23,27 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
 
     for (let i = 0; i < enterEntities.length; i++) {
       const id = enterEntities[i];
-      const texId = Sprite.texture[id];
+      const texId = Sprite(world).texture[id];
       const texture = getTextureFromTextureId(texId);
       if (!texture) {
         console.error('Texture not found for id: ' + texId);
         continue;
       }
 
-      const textureName = getVariantName(texture, Sprite.variant[id] || 0);
+      const textureName = getVariantName(texture, Sprite(world).variant[id] || 0);
 
       if (!scene.textures.exists(textureName)) {
         console.error('Texture not found: ' + textureName);
         continue;
       }
 
-      const sprite = Sprite.dynamicBody[id]
-        ? scene.physics.add.sprite(Position.x[id], Position.y[id], textureName)
-        : scene.add.sprite(Position.x[id], Position.y[id], textureName);
+      const sprite = Sprite(world).dynamicBody[id]
+        ? scene.physics.add.sprite(Position(world).x[id], Position(world).y[id], textureName)
+        : scene.add.sprite(Position(world).x[id], Position(world).y[id], textureName);
 
       sprite.setDataEnabled();
       sprite.setData('entityId', id);
-      sprite.setDepth(Sprite.depth[id] + Position.y[id]);
+      sprite.setDepth(Sprite(world).depth[id] + Position(world).y[id]);
 
       if (texture.animations) {
         for (let i = 0; i < texture.animations.length; i++) {
@@ -64,12 +64,12 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
         }
       }
 
-      if (Sprite.height[id] && Sprite.width[id]) {
-        sprite.setDisplaySize(Sprite.width[id], Sprite.height[id]);
+      if (Sprite(world).height[id] && Sprite(world).width[id]) {
+        sprite.setDisplaySize(Sprite(world).width[id], Sprite(world).height[id]);
       }
 
-      if (Sprite.opacity[id]) {
-        sprite.setAlpha(Sprite.opacity[id]);
+      if (Sprite(world).opacity[id]) {
+        sprite.setAlpha(Sprite(world).opacity[id]);
       }
 
       state.spritesById[id] = sprite;
@@ -79,10 +79,10 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
   });
 };
 
-const movingSpriteQuery = defineQuery(Sprite, Position, Velocity);
-const nonMovingSpriteQuery = defineQuery(Sprite, Position, Not(Velocity), Not(Item));
-
 export const createMovingSpriteSystem = (world: World) => {
+  const movingSpriteQuery = defineQuery(Sprite(world), Position(world), Velocity(world));
+  const nonMovingSpriteQuery = defineQuery(Sprite(world), Position(world), Not(Velocity(world)), Not(Item(world)));
+
   return defineSystem<GameState>((state) => {
     const movingSpriteEntities = movingSpriteQuery(world);
     const nonMovingSpriteEntities = nonMovingSpriteQuery(world);
@@ -94,10 +94,10 @@ export const createMovingSpriteSystem = (world: World) => {
       if (sprite) {
         const activeTweens = sprite.scene.tweens.getTweensOf(sprite);
 
-        if (activeTweens.length === 0 && Velocity.x[id] === 0 && Velocity.y[id] === 0) {
-          sprite.setPosition(Position.x[id], Position.y[id]);
-          sprite.setRotation(Sprite.rotation[id] * (Math.PI / 180));
-          sprite.setDepth(Sprite.depth[id] + Position.y[id]);
+        if (activeTweens.length === 0 && Velocity(world).x[id] === 0 && Velocity(world).y[id] === 0) {
+          sprite.setPosition(Position(world).x[id], Position(world).y[id]);
+          sprite.setRotation(Sprite(world).rotation[id] * (Math.PI / 180));
+          sprite.setDepth(Sprite(world).depth[id] + Position(world).y[id]);
         }
       }
     }
@@ -106,8 +106,8 @@ export const createMovingSpriteSystem = (world: World) => {
       const id = movingSpriteEntities[i];
       const sprite = state.spritesById[id] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       if (sprite && sprite.body) {
-        sprite.body.setVelocity(Velocity.x[id], Velocity.y[id]);
-        sprite.setDepth(Sprite.depth[id] + Position.y[id]);
+        sprite.body.setVelocity(Velocity(world).x[id], Velocity(world).y[id]);
+        sprite.setDepth(Sprite(world).depth[id] + Position(world).y[id]);
       }
     }
     return state;

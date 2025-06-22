@@ -1,12 +1,6 @@
 import { defineQuery, World } from '@virtcon2/bytenetc';
 import { GrowableTile, Position, Building, Resource, Player, Tile } from '@virtcon2/network-world-entities';
 
-const tileQuery = defineQuery(GrowableTile, Position);
-const buildingQuery = defineQuery(Building, Position);
-const resourceQuery = defineQuery(Resource, Position);
-const playerQuery = defineQuery(Player, Position);
-const allTileQuery = defineQuery(Tile, Position); // For all tiles, not just growable ones
-
 interface EntityPosition {
   x: number;
   y: number;
@@ -39,14 +33,19 @@ const worldToTile = (worldPos: number): number => {
 
 // Get all entity positions
 const getEntityPositions = (world: World): EntityPosition[] => {
+  const tileQuery = defineQuery(GrowableTile(world), Position(world));
+  const buildingQuery = defineQuery(Building(world), Position(world));
+  const resourceQuery = defineQuery(Resource(world), Position(world));
+  const playerQuery = defineQuery(Player(world), Position(world));
+
   const positions: EntityPosition[] = [];
 
   // Get growable tiles
   const tiles = tileQuery(world);
   for (const entity of tiles) {
     positions.push({
-      x: worldToTile(Position.x[entity]),
-      y: worldToTile(Position.y[entity]),
+      x: worldToTile(Position(world).x[entity]),
+      y: worldToTile(Position(world).y[entity]),
       type: 'tile',
       entity,
     });
@@ -56,8 +55,8 @@ const getEntityPositions = (world: World): EntityPosition[] => {
   const buildings = buildingQuery(world);
   for (const entity of buildings) {
     positions.push({
-      x: worldToTile(Position.x[entity]),
-      y: worldToTile(Position.y[entity]),
+      x: worldToTile(Position(world).x[entity]),
+      y: worldToTile(Position(world).y[entity]),
       type: 'building',
       entity,
     });
@@ -67,8 +66,8 @@ const getEntityPositions = (world: World): EntityPosition[] => {
   const resources = resourceQuery(world);
   for (const entity of resources) {
     positions.push({
-      x: worldToTile(Position.x[entity]),
-      y: worldToTile(Position.y[entity]),
+      x: worldToTile(Position(world).x[entity]),
+      y: worldToTile(Position(world).y[entity]),
       type: 'resource',
       entity,
     });
@@ -78,8 +77,8 @@ const getEntityPositions = (world: World): EntityPosition[] => {
   const players = playerQuery(world);
   for (const entity of players) {
     positions.push({
-      x: worldToTile(Position.x[entity]),
-      y: worldToTile(Position.y[entity]),
+      x: worldToTile(Position(world).x[entity]),
+      y: worldToTile(Position(world).y[entity]),
       type: 'player',
       entity,
     });

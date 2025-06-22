@@ -17,34 +17,34 @@ export const createNewResourceEntity = (
   const resourceInfo = Resources[data.resourceName];
 
   addComponent(world, Position, resource);
-  Position.x[resource] = x;
-  Position.y[resource] = y;
+  Position(world).x[resource] = x;
+  Position(world).y[resource] = y;
 
   addComponent(world, Sprite, resource);
-  Sprite.texture[resource] = AllTextureMaps[data.resourceName]?.textureId ?? 0;
-  Sprite.variant[resource] = data.itemId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
-  Sprite.opacity[resource] = 1;
+  Sprite(world).texture[resource] = AllTextureMaps[data.resourceName]?.textureId ?? 0;
+  Sprite(world).variant[resource] = data.itemId % (AllTextureMaps[data.resourceName]?.variants.length ?? 0);
+  Sprite(world).opacity[resource] = 1;
 
   addComponent(world, Collider, resource);
-  Collider.sizeWidth[resource] = resourceInfo.width * 16;
-  Collider.sizeHeight[resource] = resourceInfo.height * 16;
-  Collider.offsetX[resource] = 0;
-  Collider.offsetY[resource] = 0;
+  Collider(world).sizeWidth[resource] = resourceInfo.width * 16;
+  Collider(world).sizeHeight[resource] = resourceInfo.height * 16;
+  Collider(world).offsetX[resource] = 0;
+  Collider(world).offsetY[resource] = 0;
 
   if (resourceInfo.spriteHeight && resourceInfo.spriteHeight !== resourceInfo.height) {
-    Collider.offsetY[resource] = (-(resourceInfo.height - resourceInfo.spriteHeight) * 16) / 2;
+    Collider(world).offsetY[resource] = (-(resourceInfo.height - resourceInfo.spriteHeight) * 16) / 2;
   }
   if (resourceInfo.spriteWidth && resourceInfo.spriteWidth !== resourceInfo.width) {
-    Collider.offsetX[resource] = (-(resourceInfo.width - resourceInfo.spriteWidth) * 16) / 2;
+    Collider(world).offsetX[resource] = (-(resourceInfo.width - resourceInfo.spriteWidth) * 16) / 2;
   }
 
-  Collider.static[resource] = 1;
-  Collider.group[resource] = GameObjectGroups.RESOURCE;
+  Collider(world).static[resource] = 1;
+  Collider(world).group[resource] = GameObjectGroups.RESOURCE;
 
   addComponent(world, Resource, resource);
-  Resource.health[resource] = 5;
-  Resource.itemId[resource] = data.itemId;
-  Resource.worldBuildingId[resource] = data.worldBuildingId;
+  Resource(world).health[resource] = 5;
+  Resource(world).itemId[resource] = data.itemId;
+  Resource(world).worldBuildingId[resource] = data.worldBuildingId;
 
   return resource;
 };

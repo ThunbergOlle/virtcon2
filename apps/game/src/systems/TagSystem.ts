@@ -1,12 +1,12 @@
-import { debugEntity, defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
+import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 import { GameState } from '../scenes/Game';
 import { MainPlayer, Position, Tag } from '@virtcon2/network-world-entities';
 
-const tagQuery = defineQuery(Tag, Not(MainPlayer));
-const tagQueryEnter = enterQuery(tagQuery);
-const tagQueryExit = exitQuery(tagQuery);
-
 export const createTagSystem = (world: World, scene: Phaser.Scene) => {
+  const tagQuery = defineQuery(Tag(world), Not(MainPlayer(world)));
+  const tagQueryEnter = enterQuery(tagQuery);
+  const tagQueryExit = exitQuery(tagQuery);
+
   return defineSystem<GameState>((state) => {
     const enterEntities = tagQueryEnter(world);
 
@@ -15,11 +15,11 @@ export const createTagSystem = (world: World, scene: Phaser.Scene) => {
       const playerSprite = state.spritesById[id];
       if (!playerSprite) continue;
 
-      const encodedTag = Tag.value[id];
+      const encodedTag = Tag(world).value[id];
       const tag = new TextDecoder().decode(encodedTag);
 
       const gameObject = scene.add
-        .text(Position.x[id], Position.y[id], tag, {
+        .text(Position(world).x[id], Position(world).y[id], tag, {
           fontSize: '28px',
           backgroundColor: '#808080',
           color: '#ffffff',

@@ -5,9 +5,10 @@ import { Types } from 'phaser';
 import Game, { GameState } from '../scenes/Game';
 import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 
-const resourceQuery = defineQuery(Resource, Sprite, Collider);
-const resourceEnterQuery = enterQuery(resourceQuery);
 export const createResourceSystem = (world: World) => {
+  const resourceQuery = defineQuery(Resource(world), Sprite(world), Collider(world));
+  const resourceEnterQuery = enterQuery(resourceQuery);
+
   return defineSystem<GameState>((state) => {
     const enterEntities = resourceEnterQuery(world);
 
@@ -15,15 +16,15 @@ export const createResourceSystem = (world: World) => {
       const id = enterEntities[i];
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
 
-      sprite.setName(`resource-${get_item_by_id(Resource.itemId[id])?.name}`);
+      sprite.setName(`resource-${get_item_by_id(Resource(world).itemId[id])?.name}`);
     }
     return state;
   });
 };
 
-export const damageResource = (state: GameState, eid: number, damage: number) => {
-  Resource.health[eid] -= damage;
-  if (Resource.health[eid] <= 0) {
+export const damageResource = (world: World, state: GameState, eid: number, damage: number) => {
+  Resource(world).health[eid] -= damage;
+  if (Resource(world).health[eid] <= 0) {
     const destroyResourcePacket: ClientPacket<RequestDestroyResourcePacket> = {
       data: {
         resourceEntityId: eid,
@@ -34,6 +35,6 @@ export const damageResource = (state: GameState, eid: number, damage: number) =>
 
     Game.network.sendPacket(destroyResourcePacket);
 
-    Resource.health[eid] = 5;
+    Resource(world).health[eid] = 5;
   }
 };

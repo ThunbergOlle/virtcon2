@@ -26,34 +26,34 @@ export const createTile = (world: World, options: CreateTileOptions) => {
   const tileType = getLayer(options.height);
   const texture = TileTextureMap[tileType]?.textureId;
 
-  Sprite.texture[eid] = texture!;
-  Sprite.dynamicBody[eid] = 0;
-  Sprite.opacity[eid] = 1;
-  Sprite.depth[eid] = options.depth ?? tileDepth + options.height * 5;
-  Sprite.variant[eid] = options.variant ?? 0;
-  Sprite.rotation[eid] = options.rotation ?? 0;
+  Sprite(world).texture[eid] = texture!;
+  Sprite(world).dynamicBody[eid] = 0;
+  Sprite(world).opacity[eid] = 1;
+  Sprite(world).depth[eid] = options.depth ?? tileDepth + options.height * 5;
+  Sprite(world).variant[eid] = options.variant ?? 0;
+  Sprite(world).rotation[eid] = options.rotation ?? 0;
 
   addComponent(world, Position, eid);
   const { x: phaserX, y: phaserY } = toPhaserPos({ x: options.x, y: options.y });
 
   if (options.dualGrid) {
-    Position.x[eid] = phaserX - tileSize / 2;
-    Position.y[eid] = phaserY - tileSize / 2;
+    Position(world).x[eid] = phaserX - tileSize / 2;
+    Position(world).y[eid] = phaserY - tileSize / 2;
   } else {
-    Position.x[eid] = phaserX;
-    Position.y[eid] = phaserY;
+    Position(world).x[eid] = phaserX;
+    Position(world).y[eid] = phaserY;
   }
 
   const encoder = new TextEncoder();
 
   addComponent(world, Tile, eid);
-  Tile.height[eid] = options.height;
-  Tile.type[eid] = encoder.encode(tileType);
+  Tile(world).height[eid] = options.height;
+  Tile(world).type[eid] = encoder.encode(tileType);
 
   if (options.isFoundation) {
     if (!options.seed) throw new Error('Seed is required for foundation tiles');
     addComponent(world, GrowableTile, eid);
-    GrowableTile.hash[eid] = hashPosition(options.x, options.y, options.seed);
+    GrowableTile(world).hash[eid] = hashPosition(options.x, options.y, options.seed);
   }
 
   return eid;

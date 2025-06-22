@@ -1,3 +1,4 @@
+import { clone } from 'ramda';
 export type Entity = number;
 
 export const Types = {
@@ -97,7 +98,8 @@ const chooseArray = <T extends Type>(type: T, length: number): TypeToTypedArray<
   }
 };
 
-export const defineComponent = <S extends Schema>(name: string, schema: S): Component<S> => {
+export type DefinedComponent<S extends Schema> = ((world: World) => Component<S>) & { original: Component<S> };
+export const defineComponent = <S extends Schema>(name: string, schema: S): DefinedComponent<S> => {
   const nameUint8 = new TextEncoder().encode(name);
 
   const component: any = {
@@ -121,35 +123,60 @@ export const defineComponent = <S extends Schema>(name: string, schema: S): Comp
     component[key] = array;
   }
 
-  return component;
+  const getComponent = Object.assign(
+    (world: World) => {
+      if (!$store[world]) {
+        throw new Error(`World ${world} does not exist`);
+      }
+      if (!$store[world].$componentStore[name]) {
+        throw new Error(`Component ${name} does not exist in world ${world}`);
+      }
+      return $store[world].$componentStore[name] as Component<S>;
+    },
+    {
+      original: component as Component<S>,
+    },
+  );
+
+  return getComponent;
 };
 
-export const registerComponents = (world: World, components: Component<any>[]) => {
+export const registerComponents = (world: World, components: DefinedComponent<any>[]) => {
   for (const component of components) {
-    const name = decodeName(component);
-    $store[world].$componentStore[name] = component;
+    const name = decodeName(component.original);
+    $store[world].$componentStore[name] = clone(component.original);
   }
 };
 
-export const addComponent = (world: World, component: Component<any>, entity: Entity) => {
+export const getComponent = <S extends Schema>(world: World, component: Component<S>): Component<S> => {
   const name = decodeName(component);
+  if (!$store[world].$componentStore[name]) {
+    throw new Error(`Component ${name} does not exist in world ${world}`);
+  }
+  return $store[world].$componentStore[name] as Component<S>;
+};
+
+export const addComponent = <S extends Schema>(world: World, component: DefinedComponent<S>, entity: Entity): Component<S> => {
+  const name = decodeName(component.original);
   if (!$store[world].$componentStore[name]) {
     throw new Error(`Component ${name} does not exist`);
   }
 
-  $store[world].$entityStore[entity].push(decodeName(component));
+  $store[world].$entityStore[entity].push(name);
   $store[world].$queryCache.clear();
+
+  return $store[world].$componentStore[name] as Component<S>;
 };
 
-export const removeComponent = (world: World, component: Component<any>, entity: Entity) => {
-  const name = decodeName(component);
+export const removeComponent = <S extends Schema>(world: World, component: DefinedComponent<S>, entity: Entity) => {
+  const name = decodeName(component.original);
   if (!$store[world].$componentStore[name]) {
     throw new Error(`Component ${name} does not exist`);
   }
 
   $store[world].$entityStore[entity] = $store[world].$entityStore[entity].filter((c) => c !== name);
 
-  const schema = component._schema;
+  const schema = component.original._schema;
   for (const keyName in schema) {
     const store = $store[world].$componentStore[name][keyName] as Record<Entity, AllArrayTypes | number>;
     if (Array.isArray(schema[keyName])) {
@@ -441,6 +468,7 @@ export const defineSerializer = (components: Component<any>[]) => {
 
 export const defineDeserializer = (components: Component<any>[]) => {
   return (world: World, data: SerializedData[]) => {
+    if (!world || !$store[world]) throw new Error(`World ${world} does not exist or is not initialized`);
     const deserializedEnts = [];
     for (const entity of data) {
       const eid = entity[0][2] as number;

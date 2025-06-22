@@ -4,11 +4,11 @@ import { Scene } from 'phaser';
 import { Item, MainPlayer, Position, Sprite, Velocity } from '@virtcon2/network-world-entities';
 import { ClientPacket, PacketType, RequestPickupItemPacketData } from '@virtcon2/network-packet';
 
-const itemQuery = defineQuery(Item, Sprite, Position);
-const itemEnterQuery = enterQuery(itemQuery);
-const mainPlayerQuery = defineQuery(MainPlayer, Sprite);
-
 export const createItemSystem = (world: World, scene: Scene) => {
+  const itemQuery = defineQuery(Item(world), Sprite(world), Position(world));
+  const itemEnterQuery = enterQuery(itemQuery);
+  const mainPlayerQuery = defineQuery(MainPlayer(world), Sprite(world));
+
   return defineSystem<GameState>((state) => {
     const enterEntities = itemEnterQuery(world);
     const entities = itemQuery(world);
@@ -17,11 +17,11 @@ export const createItemSystem = (world: World, scene: Scene) => {
     for (const entity of enterEntities) {
       const itemSprite = state.spritesById[entity] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-      const endX = Position.x[entity];
-      const endY = Position.y[entity];
+      const endX = Position(world).x[entity];
+      const endY = Position(world).y[entity];
 
-      const startX = Item.droppedFromX[entity];
-      const startY = Item.droppedFromY[entity];
+      const startX = Item(world).droppedFromX[entity];
+      const startY = Item(world).droppedFromY[entity];
 
       itemSprite.setPosition(startX, startY);
       itemSprite.body.enable = false;
@@ -33,9 +33,9 @@ export const createItemSystem = (world: World, scene: Scene) => {
         duration: 200,
         ease: 'Quad.easeOut',
         onUpdate: () => {
-          Velocity.x[entity] = itemSprite.body.velocity.x;
-          Velocity.y[entity] = itemSprite.body.velocity.y;
-          console.log(`Item ${entity} velocity: ${Velocity.x[entity]}, ${Velocity.y[entity]}`);
+          Velocity(world).x[entity] = itemSprite.body.velocity.x;
+          Velocity(world).y[entity] = itemSprite.body.velocity.y;
+          console.log(`Item ${entity} velocity: ${Velocity(world).x[entity]}, ${Velocity(world).y[entity]}`);
         },
         onComplete: () => {
           scene.tweens.add({
