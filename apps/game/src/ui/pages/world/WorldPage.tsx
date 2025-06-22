@@ -11,6 +11,7 @@ import CrafterWindow from '../../windows/crafter/CrafterWindow';
 import PlayerInventoryWindow from '../../windows/playerInventory/PlayerInventory';
 import { Hotbar } from '../../components/hotbar/Hotbar';
 import ExpandPlotWindow from '../../windows/plot/PlotWindow';
+import { deleteWorld } from '@virtcon2/bytenetc';
 
 function GamePage() {
   const { worldId } = useParams();
@@ -37,9 +38,10 @@ function GamePage() {
   useEffect(() => {
     return () => {
       if (game) {
-        console.log('Destroying game');
+        const worldId = Game.worldId;
         Game.destroy();
         game.destroy(false);
+        deleteWorld(worldId);
 
         document.getElementById('phaser-application')?.remove();
       }
