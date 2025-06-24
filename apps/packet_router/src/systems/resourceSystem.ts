@@ -30,7 +30,7 @@ const getResourceForPosition = (x: number, y: number, seed: number): { resource:
   const resource = resourceType;
 
   const clusterRadius = 8;
-  const falloffFactor = Math.max(0, 1 - distance / clusterRadius);
+  const falloffFactor = Math.max(0, 1 - (distance / clusterRadius) * 2);
 
   const smoothFalloff = Math.pow(falloffFactor, 0.5);
 
@@ -120,7 +120,7 @@ const getNearestClusterInfo = (
   resourceType: DBItem;
   distance: number;
 } | null => {
-  const searchRadius = 12;
+  const searchRadius = 10;
   let nearestCluster = null;
   let minDistance = Infinity;
 
