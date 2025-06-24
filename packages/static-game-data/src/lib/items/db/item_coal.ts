@@ -12,7 +12,7 @@ const item_coal: DBItem = {
   spawnSettings: {
     minHeight: 0.2,
     maxHeight: 0.9,
-    chance: 0.2,
+    chance: 0.15,
   },
 };
 export default item_coal;

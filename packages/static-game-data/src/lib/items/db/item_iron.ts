@@ -11,7 +11,7 @@ const item_iron_ore: DBItem = {
   spawnSettings: {
     minHeight: 0.5,
     maxHeight: 0.9,
-    chance: 0.1,
+    chance: 0.12,
   },
   is_building: false,
 };
