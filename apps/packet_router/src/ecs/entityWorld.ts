@@ -1,5 +1,5 @@
 import { loadWorldFromDb } from './loaders';
-import { log, LogApp, LogLevel } from '@shared';
+import { log, LogApp, LogLevel, plotSize } from '@shared';
 import { createWorld, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
 import * as DB from '@virtcon2/database-postgres';
 import {
@@ -44,8 +44,6 @@ export const deleteEntityWorld = (world: World) => {
   deleteWorld(world);
 };
 
-export const PLOT_SIZE = 16;
-
 export const getWorldBounds = async (worldId: string): Promise<WorldBounds[]> => {
   const bounds: WorldBounds[] = await DB.AppDataSource.manager.query(
     `
@@ -62,10 +60,10 @@ WHERE
 
 const initialiseWorldBounds = async (world: World, bounds: WorldBounds[]) => {
   for (const bound of bounds) {
-    const left = bounds.find((b) => b.y === bound.y && b.x === bound.x - PLOT_SIZE);
-    const right = bounds.find((b) => b.y === bound.y && b.x === bound.x + PLOT_SIZE);
-    const top = bounds.find((b) => b.x === bound.x && b.y === bound.y - PLOT_SIZE);
-    const bottom = bounds.find((b) => b.x === bound.x && b.y === bound.y + PLOT_SIZE);
+    const left = bounds.find((b) => b.y === bound.y && b.x === bound.x - plotSize);
+    const right = bounds.find((b) => b.y === bound.y && b.x === bound.x + plotSize);
+    const top = bounds.find((b) => b.x === bound.x && b.y === bound.y - plotSize);
+    const bottom = bounds.find((b) => b.x === bound.x && b.y === bound.y + plotSize);
     if (!left) {
       createNewWorldBorderTile(world, {
         x: bound.x - 1.5,

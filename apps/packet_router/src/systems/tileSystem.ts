@@ -1,4 +1,4 @@
-import { renderDistance, TileType, TILE_LEVEL } from '@shared';
+import { plotSize, renderDistance, TileType, TILE_LEVEL } from '@shared';
 import { defineQuery, defineSerializer, defineSystem, Entity, removeEntity, World } from '@virtcon2/bytenetc';
 import * as DB from '@virtcon2/database-postgres';
 import {
@@ -12,7 +12,6 @@ import {
   Tile,
 } from '@virtcon2/network-world-entities';
 import { clone } from 'ramda';
-import { PLOT_SIZE } from '../ecs/entityWorld';
 import { SyncEntities, WorldBounds } from './types';
 
 export const createTileSystem = (world: World, seed: number) => {
@@ -74,8 +73,8 @@ const generateTilesInArea = (
   for (let j = minX; j <= maxX; j++) {
     for (let k = minY; k <= maxY; k++) {
       const isWithinBounds = worldBounds.some(({ x, y }) => {
-        const [minX, maxX] = [x, x + PLOT_SIZE];
-        const [minY, maxY] = [y, y + PLOT_SIZE];
+        const [minX, maxX] = [x, x + plotSize];
+        const [minY, maxY] = [y, y + plotSize];
         return j >= minX && j <= maxX && k >= minY && k <= maxY;
       });
 

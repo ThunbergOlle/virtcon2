@@ -1,4 +1,4 @@
-import { InvalidStateError, log, LogApp, LogLevel } from '@shared';
+import { InvalidStateError, log, LogApp, LogLevel, plotSize } from '@shared';
 import { User, World, WorldPlot } from '@virtcon2/database-postgres';
 import {
   ClientPacketWithSender,
@@ -18,7 +18,7 @@ import {
 } from '@virtcon2/network-world-entities';
 
 import { defineQuery, defineSerializer, serializeAllEntities } from '@virtcon2/bytenetc';
-import { doesWorldExist, getWorldBounds, initializeWorld, PLOT_SIZE } from '../../ecs/entityWorld';
+import { doesWorldExist, getWorldBounds, initializeWorld } from '../../ecs/entityWorld';
 import { SERVER_SENDER } from '../utils';
 import { enqueuePacket, syncServerEntities } from '../enqueue';
 
@@ -41,8 +41,8 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   if (existingPlayer !== undefined) throw new Error(`Player entity already exists for user ${user.id}`);
 
   const worldBounds = await getWorldBounds(packet.world_id);
-  const centerX = Math.floor((worldBounds[0].x + PLOT_SIZE) / 2);
-  const centerY = Math.floor((worldBounds[0].y + PLOT_SIZE) / 2);
+  const centerX = Math.floor((worldBounds[0].x + plotSize) / 2);
+  const centerY = Math.floor((worldBounds[0].y + plotSize) / 2);
 
   const { x, y } = toPhaserPos({ x: centerX, y: centerY });
 
