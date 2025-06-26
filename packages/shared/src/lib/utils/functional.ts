@@ -16,3 +16,11 @@ export const every = (x: number) => {
     return count % x === 0;
   };
 };
+
+export const debounce = <T extends (...args: any[]) => void>(func: T, wait: number): T => {
+  let timeout: NodeJS.Timeout | null = null;
+  return ((...args: any[]) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+};

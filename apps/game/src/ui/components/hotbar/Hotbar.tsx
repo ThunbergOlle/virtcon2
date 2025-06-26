@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { DBItem, DBUserInventoryItem } from '@virtcon2/static-game-data';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
+import { useTextureManager } from '../../../hooks/useGameTextures';
 import { useUser } from '../../context/user/UserContext';
 import { currentSlot, hotbarSlice, select } from './HotbarSlice';
 import { useHotkey } from './useHotkey';
@@ -19,6 +20,7 @@ const HOTBAR_ITEM_FRAGMENT = gql`
 `;
 
 const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) => {
+  const textures = useTextureManager();
   const dispatch = useAppDispatch();
   const selectedSlot = useAppSelector(currentSlot);
 
@@ -26,12 +28,12 @@ const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) =
     if (inventoryItem.item?.id) {
       dispatch(hotbarSlice.actions.set({ item: inventoryItem.item as DBItem, slot: inventoryItem.slot }));
     }
-  }, [inventoryItem.item?.id]);
+  }, [inventoryItem.item?.id, dispatch, inventoryItem.slot, inventoryItem.item]);
 
   const slot = inventoryItem.slot;
   useHotkey(slot + 1 + '', () => dispatch(select({ slot })));
 
-  if (!inventoryItem?.item) {
+  if (!inventoryItem?.item || !textures) {
     return (
       <div
         onClick={() => dispatch(select({ slot }))}
@@ -42,16 +44,14 @@ const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) =
     );
   }
 
-  const item = inventoryItem.item as DBItem;
-
   return (
     <div
       onClick={() => dispatch(select({ slot }))}
       className={`p-1 relative hover:cursor-pointer hover:bg-gray-700 rounded-lg ${selectedSlot === slot && 'bg-green-700'}`}
     >
       <img
-        src={`/assets/sprites/items/${item.name}.png`}
-        alt="wrench"
+        src={textures.getBase64((inventoryItem?.item?.name || '') + '_0')}
+        alt={inventoryItem.item?.name}
         className={`pixelart h-10 w-10 cursor-pointer`}
         draggable="false"
         unselectable="on"

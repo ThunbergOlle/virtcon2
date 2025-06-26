@@ -31,6 +31,9 @@ import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
 import { createDebugPositionSystem } from '../systems/EntitiyDebugSystem';
+import { makeVar } from '@apollo/client';
+
+export const isPreloaded = makeVar(false);
 
 export interface GameState {
   dt: number;
@@ -47,6 +50,7 @@ export interface GameState {
     [key in GameObjectGroups]: Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup | null;
   };
 }
+
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
   public debugMode = false;
@@ -100,6 +104,7 @@ export default class Game extends Scene implements SceneStates {
     }
     super('game');
     Game.instance = this;
+    return this;
   }
 
   disableKeys() {
@@ -205,7 +210,9 @@ export default class Game extends Scene implements SceneStates {
     });
   }
 
-  preload() {}
+  preload() {
+    isPreloaded(true);
+  }
   update(t: number, dt: number) {
     if (
       !this.spriteSystem ||

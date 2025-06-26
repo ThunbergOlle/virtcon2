@@ -8,7 +8,6 @@ export default class Preload extends Phaser.Scene implements SceneStates {
   }
 
   preload() {
-    console.log('preloading scene');
     this.load.glsl('outlineShader', '../../shaders/outlineShader.frag');
 
     /* Load all textures */
