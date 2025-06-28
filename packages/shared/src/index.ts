@@ -5,3 +5,11 @@ export * from './lib/config/urls';
 export * from './lib/config/worldSettings';
 export * from './lib/logger/logger';
 export * from './lib/utils/functional';
+
+export type WithRequired<Type, Key extends keyof Type> = Type & Required<Pick<Type, Key>>;
+
+export const quantityFormatter = new Intl.NumberFormat('en', {
+  minimumFractionDigits: 2,
+  notation: 'compact',
+  compactDisplay: 'short',
+});

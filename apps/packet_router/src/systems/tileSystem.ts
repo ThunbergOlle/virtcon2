@@ -1,6 +1,5 @@
 import { plotSize, renderDistance, TileType, TILE_LEVEL } from '@shared';
 import { defineQuery, defineSerializer, defineSystem, Entity, removeEntity, World } from '@virtcon2/bytenetc';
-import * as DB from '@virtcon2/database-postgres';
 import {
   createTile,
   fromPhaserPos,
@@ -11,6 +10,7 @@ import {
   getSerializeConfig,
   Tile,
 } from '@virtcon2/network-world-entities';
+import { getTileAtPoint } from '@virtcon2/static-game-data';
 import { clone } from 'ramda';
 import { SyncEntities, WorldBounds } from './types';
 
@@ -82,8 +82,8 @@ const generateTilesInArea = (
       if (getTileOnPosition(existingEntities, j, k, world)) continue;
 
       const heights: [[TileType, TileType], [TileType, TileType]] = [
-        [DB.World.getTileAtPoint(seed, j, k), DB.World.getTileAtPoint(seed, j + 1, k)],
-        [DB.World.getTileAtPoint(seed, j, k + 1), DB.World.getTileAtPoint(seed, j + 1, k + 1)],
+        [getTileAtPoint(seed, j, k), getTileAtPoint(seed, j + 1, k)],
+        [getTileAtPoint(seed, j, k + 1), getTileAtPoint(seed, j + 1, k + 1)],
       ];
 
       const { overlay, foundation } = pickTiles(heights);

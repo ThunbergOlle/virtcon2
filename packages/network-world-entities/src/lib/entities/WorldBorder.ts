@@ -20,8 +20,8 @@ export const createNewWorldBorderTile = (world: World, data: { x: number; y: num
   const { x, y } = toPhaserPos({ x: data.x, y: data.y });
 
   addComponent(world, Position, entity);
-  Position(world).x[entity] = x;
-  Position(world).y[entity] = y;
+  Position(world).x[entity] = x - 8;
+  Position(world).y[entity] = y - 8;
 
   addComponent(world, Sprite, entity);
   Sprite(world).texture[entity] = AllTextureMaps['expand_plot']?.textureId ?? 0;

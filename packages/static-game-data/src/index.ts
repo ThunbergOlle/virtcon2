@@ -89,3 +89,5 @@ export const get_building_by_id = (id: number) => {
 
 /* Player */
 export * from './lib/player/player_type';
+
+export * from './lib/worldGeneration';

@@ -66,29 +66,29 @@ const initialiseWorldBounds = async (world: World, bounds: WorldBounds[]) => {
     const bottom = bounds.find((b) => b.x === bound.x && b.y === bound.y + plotSize);
     if (!left) {
       createNewWorldBorderTile(world, {
-        x: bound.x - 1.5,
-        y: bound.y - 0.5 + tileSize / 2,
+        x: bound.x,
+        y: bound.y + tileSize / 2,
         side: WorldBorderSide.LEFT,
       });
     }
     if (!right) {
       createNewWorldBorderTile(world, {
-        x: bound.x + 0.5 + tileSize,
-        y: bound.y - 0.5 + tileSize / 2,
+        x: bound.x + tileSize,
+        y: bound.y + tileSize / 2,
         side: WorldBorderSide.RIGHT,
       });
     }
     if (!top) {
       createNewWorldBorderTile(world, {
-        x: bound.x - 0.5 + tileSize / 2,
-        y: bound.y - 1.5,
+        x: bound.x + tileSize / 2,
+        y: bound.y,
         side: WorldBorderSide.TOP,
       });
     }
     if (!bottom) {
       createNewWorldBorderTile(world, {
-        x: bound.x - 0.5 + tileSize / 2,
-        y: bound.y + 0.5 + tileSize,
+        x: bound.x + tileSize / 2,
+        y: bound.y + tileSize,
         side: WorldBorderSide.BOTTOM,
       });
     }

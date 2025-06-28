@@ -51,9 +51,10 @@ export interface GameState {
   };
 }
 
+const debugMode = makeVar(false);
+
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
-  public debugMode = false;
 
   public state: GameState = {
     dt: 0,
@@ -177,7 +178,7 @@ export default class Game extends Scene implements SceneStates {
     );
 
     events.subscribe('joinWorld', (worldId) => {
-      if (this.debugMode) this.physics.world.createDebugGraphic();
+      if (debugMode()) this.physics.world.createDebugGraphic();
       Game.network.join(worldId);
     });
 
@@ -204,7 +205,7 @@ export default class Game extends Scene implements SceneStates {
       this.itemSystem = createItemSystem(this.state.world, this);
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
 
-      if (this.debugMode) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
+      if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
       this.isInitialized = true;
     });

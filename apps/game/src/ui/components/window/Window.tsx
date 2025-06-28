@@ -14,6 +14,7 @@ export default function Window(props: {
   height: number;
   children: React.ReactNode;
   errors?: Array<Error | undefined>;
+  retry?: () => void;
   fullWindowLoading?: boolean;
   loading?: Array<boolean>;
 }) {
@@ -60,6 +61,17 @@ export default function Window(props: {
                 </p>
               ))}
             </div>
+
+            {props.retry && (
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  props.retry?.();
+                }}
+              >
+                Retry
+              </button>
+            )}
           </div>
         )}
         {!filteredErrors?.length && !props.fullWindowLoading && <div className="content h-full text-white">{props.children}</div>}
