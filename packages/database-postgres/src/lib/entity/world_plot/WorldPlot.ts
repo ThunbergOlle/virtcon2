@@ -11,7 +11,7 @@ export class WorldPlot extends BaseEntity {
 
   @Field(() => World)
   @ManyToOne(() => World, (world) => world.id)
-  world: World;
+  world?: World;
   @Column({ type: 'varchar' })
   worldId: string;
 
