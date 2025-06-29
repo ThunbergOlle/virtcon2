@@ -1,4 +1,4 @@
-import { LogApp, LogLevel, TPS, log } from '@shared';
+import { LogApp, LogLevel, TPS, log, INTERNAL_EVENTS } from '@shared';
 import { defineQuery, removeEntity } from '@virtcon2/bytenetc';
 import { AppDataSource, User } from '@virtcon2/database-postgres';
 import { groupBy } from 'ramda';
@@ -13,7 +13,6 @@ import { IsNull, Not } from 'typeorm';
 import { deleteEntityWorld, tickSystems } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
-import { redisClient } from './redis';
 import { app, io, server } from './app';
 
 dotenv.config({ path: `${cwd()}/.env` });
@@ -106,10 +105,6 @@ io.on('connection', (socket) => {
 });
 
 app.get('/worlds', async (_req, res) => {
-  const worlds = await redisClient.json.get('worlds', {
-    path: '$.*',
-  });
-
   res.send(worlds);
 });
 
