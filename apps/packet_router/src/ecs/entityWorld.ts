@@ -58,7 +58,7 @@ WHERE
   return bounds;
 };
 
-const initialiseWorldBounds = async (world: World, bounds: WorldBounds[]) => {
+export const initialiseWorldBounds = async (world: World, bounds: WorldBounds[]) => {
   for (const bound of bounds) {
     const left = bounds.find((b) => b.y === bound.y && b.x === bound.x - plotSize);
     const right = bounds.find((b) => b.y === bound.y && b.x === bound.x + plotSize);
@@ -93,6 +93,8 @@ const initialiseWorldBounds = async (world: World, bounds: WorldBounds[]) => {
       });
     }
   }
+
+  worldData[world] = { bounds };
 };
 
 export const initializeWorld = async (dbWorldId: string) => {
@@ -102,7 +104,6 @@ export const initializeWorld = async (dbWorldId: string) => {
 
   const bounds = await getWorldBounds(dbWorld.id);
   await initialiseWorldBounds(world, bounds);
-  worldData[world] = { bounds };
 
   setupSystems(world, dbWorld.seed);
 

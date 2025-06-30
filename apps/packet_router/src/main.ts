@@ -14,6 +14,7 @@ import { deleteEntityWorld, tickSystems } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import { app, io, server } from './app';
+import { onExpandPlotEvent } from './internal-events/expandPlot';
 
 dotenv.config({ path: `${cwd()}/.env` });
 AppDataSource.initialize().then(() => {
@@ -26,6 +27,23 @@ const worlds: string[] = [];
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+
+app.post('/internal/events', async (req, res) => {
+  const { event, world } = req.body;
+  if (!worlds.includes(world)) {
+    log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
+    return res.status(404).send({ error: 'World not found' });
+  }
+
+  log(`Received internal event: ${event} for world ${world}`, LogLevel.INFO, LogApp.SERVER);
+
+  switch (event) {
+    case INTERNAL_EVENTS.EXPAND_PLOT: {
+      await onExpandPlotEvent(world);
+      res.sendStatus(204);
+    }
+  }
+});
 
 app.get('/', (_req, res) => {
   res.send({ uptime: process.uptime(), tick });
@@ -136,12 +154,7 @@ const tickInterval = setInterval(() => {
             packet_type: PacketType.REMOVE_ENTITY,
             entityIds: removeEntities,
           },
-          sender: {
-            id: -1,
-            name: 'server_syncer',
-            socket_id: '',
-            world_id: '',
-          },
+          sender: SERVER_SENDER,
         });
 
       for (const data of sync) {
@@ -153,18 +166,9 @@ const tickInterval = setInterval(() => {
             serializationId: data.serializationId,
             data: data.data,
           },
-          sender: {
-            id: -1,
-            name: 'server_syncer',
-            socket_id: '',
-            world_id: '',
-          },
+          sender: SERVER_SENDER,
         });
       }
-    }
-
-    if (tick % 60 === 0) {
-      //debugWorld(world);
     }
   }
   if (!packets.length) return;
@@ -186,7 +190,6 @@ const tickInterval = setInterval(() => {
 process.on('SIGINT', async () => {
   console.log('Caught interrupt signal');
   clearInterval(tickInterval);
-  await redisClient.disconnect();
 
   for (const world of worlds) {
     const users = await User.find({ where: { currentlyInWorld: world } });

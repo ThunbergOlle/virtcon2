@@ -36,3 +36,14 @@ export class UserInventoryItemResolver implements ResolverInterface<UserInventor
     return inventoryItem.id;
   }
 }
+
+export const hasInInventory = async (userId: number, itemId: number, quantity: number): Promise<boolean> => {
+  const sql = `SELECT SUM(quantity) as total_quantity
+                FROM user_inventory_item
+                WHERE userId = $1 AND itemId = $2`;
+  const result = await UserInventoryItem.query(sql, [userId, itemId]);
+  console.log(`Checking inventory for user ${userId} for item ${itemId} with quantity ${quantity}`);
+  const totalQuantity = result[0]?.total_quantity || 0;
+
+  return totalQuantity >= quantity;
+};

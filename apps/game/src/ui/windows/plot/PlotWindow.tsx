@@ -1,4 +1,4 @@
-import { gql, makeVar, useQuery, useReactiveVar } from '@apollo/client';
+import { gql, makeVar, useMutation, useQuery, useReactiveVar } from '@apollo/client';
 import { WorldBorderSide } from '@virtcon2/network-world-entities';
 import { useTextureManager } from '../../../hooks/useGameTextures';
 import { useAppSelector } from '../../../hooks';
@@ -47,6 +47,8 @@ export default function ExpandPlotWindow() {
       y: realY,
     },
   });
+
+  const [expandPlot] = useMutation(expandPlotMutation);
 
   return (
     <Window
@@ -101,10 +103,15 @@ export default function ExpandPlotWindow() {
           <button
             disabled={!agreed || loading}
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => {
-              // Logic to handle the expansion of the plot
-              // This could be a mutation to update the world state
+            onClick={async () => {
               console.log(`Expanding plot at (${realX}, ${realY}) on side ${WorldBorderSide[side]}`);
+
+              await expandPlot({
+                variables: {
+                  x: realX,
+                  y: realY,
+                },
+              });
             }}
           >
             Sign expansion contract
@@ -136,3 +143,14 @@ const offsetToCorrectExpansionCoordinates = (side: WorldBorderSide, x: number, y
   }
   return { x, y };
 };
+
+const expandPlotMutation = gql`
+  mutation ExpandPlot($x: Int!, $y: Int!) {
+    expandPlot(x: $x, y: $y) {
+      count
+      item {
+        id
+      }
+    }
+  }
+`;
