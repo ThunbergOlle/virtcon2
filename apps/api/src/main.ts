@@ -14,6 +14,10 @@ import { WebSocketServer } from 'ws';
 import { FormatGraphQLErrorResponse } from './graphql/FormatGraphQLErrorResponse';
 import { ContextMiddleware, RequestContext } from './graphql/RequestContext';
 import { resolvers } from './resolvers/resolvers';
+import dotenv from 'dotenv';
+import { cwd } from 'node:process';
+
+dotenv.config({ path: `${cwd()}/.env` });
 
 log('Starting API', LogLevel.INFO, LogApp.API);
 

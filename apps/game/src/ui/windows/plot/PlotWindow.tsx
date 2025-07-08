@@ -5,7 +5,8 @@ import { useAppSelector } from '../../../hooks';
 import Window from '../../components/window/Window';
 import { isWindowOpen, WindowType } from '../../lib/WindowSlice';
 import { quantityFormatter } from '@shared';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useInventory } from '../../../hooks/useInventory';
 
 const EXPAND_PLOT_WINDOW_QUERY = gql`
   query ExpandPlotWindow($x: Int!, $y: Int!) {
@@ -24,6 +25,7 @@ export const expandPlotVar = makeVar<{ side: WorldBorderSide; x: number; y: numb
 
 export default function ExpandPlotWindow() {
   const textures = useTextureManager();
+  const { inventoryCount, loading: inventoryLoading } = useInventory();
   const isOpen = useAppSelector((state) => isWindowOpen(state, WindowType.VIEW_EXPAND_PLOT_WINDOW));
   const [agreed, setAgreed] = useState(false);
 
@@ -50,9 +52,14 @@ export default function ExpandPlotWindow() {
 
   const [expandPlot] = useMutation(expandPlotMutation);
 
+  const requirementSatisfied = useMemo(() => {
+    if (!data) return false;
+    return data.plotPrice.every((price) => inventoryCount(price.item.id) >= price.count);
+  }, [inventoryCount, data]);
+
   return (
     <Window
-      loading={[loading]}
+      loading={[loading, inventoryLoading]}
       errors={[error]}
       title="Expand plot"
       width={500}
@@ -66,42 +73,52 @@ export default function ExpandPlotWindow() {
         <div className="flex-1 p-4 justify-center">
           {!loading && !error && data?.plotPrice.length === 0 && <p>Wow, you're lucky. This plot is free!</p>}
           <div className="flex flex-col gap-2 max-w-md mx-auto">
-            <p className="text-sm text-gray-700 mb-2">
+            <p className="text-sm text-gray-200 mb-2">
               To expand your plot, you need to pay the following items. The cost is based on the number of plots you already own and
               potential value extraction from the expansion.
             </p>
-            {data?.plotPrice.map((price) => (
-              <div key={price.item.id} className="p-1 px-2 rounded bg-gray-800 flex flex-row items-center gap-2 justify-between">
-                <div className="flex-1 items-center flex flex-row gap-2 justify-start">
-                  <p>{price.item.display_name}</p>
-                  <img
-                    draggable="false"
-                    unselectable="on"
-                    src={textures?.getBase64(price.item.name + '_0')}
-                    alt={price.item.display_name}
-                    className="h-8 w-8 pixelart"
-                  />
+            {!inventoryLoading &&
+              data?.plotPrice.map((price) => (
+                <div key={price.item.id} className="p-1 px-2 rounded bg-gray-800 flex flex-row items-center gap-2 justify-between">
+                  <div className="flex-1 items-center flex flex-row gap-2 justify-start">
+                    <p>{price.item.display_name}</p>
+                    <img
+                      draggable="false"
+                      unselectable="on"
+                      src={textures?.getBase64(price.item.name + '_0')}
+                      alt={price.item.display_name}
+                      className="h-8 w-8 pixelart"
+                    />
+                  </div>
+                  <span className={`${inventoryCount(price.item.id) >= price.count ? 'text-green-400' : 'text-red-400'}`}>
+                    {quantityFormatter.format(inventoryCount(price.item.id))} / {quantityFormatter.format(price.count)}
+                  </span>
                 </div>
-                <span>{quantityFormatter.format(price.count)}</span>
-              </div>
-            ))}
+              ))}
           </div>
-          <p className="text-sm text-gray-500">
-            Click on the border tile to expand your plot. You will need to pay the required amount of items.
-          </p>
         </div>
 
         <div className="flex justify-center flex-col">
           <div>
+            {!requirementSatisfied && (
+              <p className="text-sm mb-2 text-red-400">
+                You do not have enough resources to expand this plot. Please check your inventory.
+              </p>
+            )}
             <label className="inline-flex items-center mb-2 gap-2">
-              <input type="checkbox" onClick={() => setAgreed((prev) => !prev)} className="form-checkbox h-6 w-6 text-green-600" />
+              <input
+                type="checkbox"
+                onClick={() => setAgreed((prev) => !prev)}
+                className="form-checkbox h-6 w-6 text-green-600"
+                disabled={!requirementSatisfied}
+              />
               <span className="ml-2 text-sm text-gray-200">
                 I agree to the terms of land expansion, including resource payment and future development guidelines.
               </span>
             </label>
           </div>
           <button
-            disabled={!agreed || loading}
+            disabled={!agreed || loading || !requirementSatisfied}
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={async () => {
               console.log(`Expanding plot at (${realX}, ${realY}) on side ${WorldBorderSide[side]}`);
@@ -147,10 +164,7 @@ const offsetToCorrectExpansionCoordinates = (side: WorldBorderSide, x: number, y
 const expandPlotMutation = gql`
   mutation ExpandPlot($x: Int!, $y: Int!) {
     expandPlot(x: $x, y: $y) {
-      count
-      item {
-        id
-      }
+      id
     }
   }
 `;

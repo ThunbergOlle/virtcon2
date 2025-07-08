@@ -34,7 +34,7 @@ export class PlotResolver {
     return await calculatePlotPrice(world.seed, x, y, priceMultiple);
   }
 
-  @Mutation(() => [ExpandPlotPrice], { nullable: true })
+  @Mutation(() => [WorldPlot], { nullable: true })
   async expandPlot(
     @Arg('x', () => Int, { nullable: false }) x: number,
     @Arg('y', () => Int, { nullable: false }) y: number,
@@ -43,6 +43,11 @@ export class PlotResolver {
     const inWorld = context.user?.currentlyInWorld;
     if (!inWorld) throw new InvalidStateError(`User ${context.user?.id} is not in a world.`);
     const world = await World.findOneOrFail({ where: { id: inWorld } });
+
+    const plotAlreadyExpanded = await WorldPlot.findOne({
+      where: { worldId: inWorld, x, y },
+    });
+    if (plotAlreadyExpanded) throw new InvalidStateError(`Plot at (${x}, ${y}) in world ${inWorld} is already expanded.`);
 
     const existingPlots = await WorldPlot.count({
       where: { worldId: inWorld },
