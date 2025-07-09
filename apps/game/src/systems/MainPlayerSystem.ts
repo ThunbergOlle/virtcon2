@@ -146,11 +146,11 @@ function attack(state: GameState, world: World, eid: number) {
   if (MainPlayer(world).action[eid] !== MainPlayerAction.IDLE) return;
 
   const selectedItem = currentItem(store.getState());
-  if (!selectedItem) return;
+  if (!selectedItem?.item) return;
   const selectedTool = currentTool(store.getState());
   if (!selectedTool) return;
 
-  const textureId = ItemTextureMap[selectedItem.name]?.textureId;
+  const textureId = ItemTextureMap[selectedItem.item.name]?.textureId;
   if (!textureId) throw new Error(`Texture not found for tool: ${selectedItem}`);
 
   const resourceTargetId = findResourceInRange(world, eid);

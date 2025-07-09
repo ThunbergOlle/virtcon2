@@ -4,10 +4,11 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { useTextureManager } from '../../../hooks/useGameTextures';
 import { useUser } from '../../context/user/UserContext';
-import { currentSlot, hotbarSlice, select } from './HotbarSlice';
+import { currentSlot, hotbarSlice, HOTBAR_SELECT_FRAGMENT, select } from './HotbarSlice';
 import { useHotkey } from './useHotkey';
 
 const HOTBAR_ITEM_FRAGMENT = gql`
+  ${HOTBAR_SELECT_FRAGMENT}
   fragment HotbarItemFragment on UserInventoryItem {
     id
     slot
@@ -16,6 +17,7 @@ const HOTBAR_ITEM_FRAGMENT = gql`
       id
       name
     }
+    ...HotbarSelectFragment
   }
 `;
 
@@ -26,9 +28,9 @@ const HotbarItem = ({ inventoryItem }: { inventoryItem: DBUserInventoryItem }) =
 
   useEffect(() => {
     if (inventoryItem.item?.id) {
-      dispatch(hotbarSlice.actions.set({ item: inventoryItem.item as DBItem, slot: inventoryItem.slot }));
+      dispatch(hotbarSlice.actions.set({ item: inventoryItem, slot: inventoryItem.slot }));
     }
-  }, [inventoryItem.item?.id, dispatch, inventoryItem.slot, inventoryItem.item]);
+  }, [inventoryItem.item?.id, dispatch, inventoryItem.slot, inventoryItem]);
 
   const slot = inventoryItem.slot;
   useHotkey(slot + 1 + '', () => dispatch(select({ slot })));
