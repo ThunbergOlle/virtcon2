@@ -7,14 +7,14 @@ import { toast } from 'react-toastify';
 import Game from '../../scenes/Game';
 
 const buildingBeingPlacedVar = makeVar<DBUserInventoryItem | null>(null);
-const buildingBeingPlacedEntitiyVar = makeVar<Entity | null>(null);
+const buildingBeingPlacedEntityVar = makeVar<Entity | null>(null);
 
-export const isTryingToPlaceBuilding = () => buildingBeingPlacedEntitiyVar() !== null;
+export const isTryingToPlaceBuilding = () => buildingBeingPlacedEntityVar() !== null;
 
 function rotatePlaceBuildingIntent() {
   const game = Game.getInstance();
   const world = game.state.world;
-  const buildingBeingPlacedEntity = buildingBeingPlacedEntitiyVar();
+  const buildingBeingPlacedEntity = buildingBeingPlacedEntityVar();
   if (!world || !buildingBeingPlacedEntity) return;
   Sprite(world).rotation[buildingBeingPlacedEntity] = (90 + Sprite(world).rotation[buildingBeingPlacedEntity]) % 360;
 }
@@ -27,11 +27,11 @@ export const cancelPlaceBuildingIntent = () => {
 
   buildingBeingPlacedVar(null);
 
-  const buildingBeingPlacedEntity = buildingBeingPlacedEntitiyVar();
+  const buildingBeingPlacedEntity = buildingBeingPlacedEntityVar();
 
   if (!game.state.world || !buildingBeingPlacedEntity) return;
   removeEntity(game.state.world, buildingBeingPlacedEntity);
-  buildingBeingPlacedEntitiyVar(null);
+  buildingBeingPlacedEntityVar(null);
 };
 
 function placeBuilding(e: Phaser.Input.Pointer) {
@@ -39,7 +39,7 @@ function placeBuilding(e: Phaser.Input.Pointer) {
   const world = game.state.world;
 
   const buildingBeingPlaced = buildingBeingPlacedVar();
-  const buildingBeingPlacedEntitiy = buildingBeingPlacedEntitiyVar();
+  const buildingBeingPlacedEntitiy = buildingBeingPlacedEntityVar();
 
   if (!buildingBeingPlaced || buildingBeingPlaced.quantity <= 0) {
     toast('You do not have any more of this building in your inventory', { type: 'error' });
@@ -69,14 +69,12 @@ function placeBuilding(e: Phaser.Input.Pointer) {
 export const START_PLACE_BUILDING_INTENT_FRAGMENT = gql`
   fragment StartPlaceBuildingIntentFragment on UserInventoryItem {
     id
-    quantity
     item {
       id
-      name
       is_building
+      name
       building {
         id
-        is_rotatable
       }
     }
   }
@@ -89,7 +87,7 @@ export function startPlaceBuildingIntent(inventoryItem: DBUserInventoryItem) {
   const world = game.state.world;
   if (!world) return;
 
-  if (buildingBeingPlacedEntitiyVar() || buildingBeingPlacedVar()) cancelPlaceBuildingIntent();
+  if (buildingBeingPlacedEntityVar() || buildingBeingPlacedVar()) cancelPlaceBuildingIntent();
 
   /* Create ghost building entity */
   const ghostBuilding = addReservedEntity(game.state.world, 2997);
@@ -110,7 +108,7 @@ export function startPlaceBuildingIntent(inventoryItem: DBUserInventoryItem) {
   Position(world).x[ghostBuilding] = 0;
   Position(world).y[ghostBuilding] = 0;
 
-  buildingBeingPlacedEntitiyVar(ghostBuilding);
+  buildingBeingPlacedEntityVar(ghostBuilding);
   buildingBeingPlacedVar(inventoryItem);
 
   // Event listeners
