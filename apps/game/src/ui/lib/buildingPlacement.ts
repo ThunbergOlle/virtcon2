@@ -3,6 +3,7 @@ import { addComponent, addReservedEntity, Entity, removeEntity } from '@virtcon2
 import { ClientPacket, PacketType, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 import { Collider, fromPhaserPos, GhostBuilding, ItemTextureMap, Position, Sprite } from '@virtcon2/network-world-entities';
 import { DBUserInventoryItem, get_building_by_id } from '@virtcon2/static-game-data';
+import { clone } from 'ramda';
 import { toast } from 'react-toastify';
 import Game from '../../scenes/Game';
 
@@ -40,6 +41,9 @@ function placeBuilding(e: Phaser.Input.Pointer) {
 
   const buildingBeingPlaced = buildingBeingPlacedVar();
   const buildingBeingPlacedEntitiy = buildingBeingPlacedEntityVar();
+
+  console.log(buildingBeingPlaced);
+  console.log(buildingBeingPlacedEntitiy);
 
   if (!buildingBeingPlaced || buildingBeingPlaced.quantity <= 0) {
     toast('You do not have any more of this building in your inventory', { type: 'error' });
@@ -109,7 +113,7 @@ export function startPlaceBuildingIntent(inventoryItem: DBUserInventoryItem) {
   Position(world).y[ghostBuilding] = 0;
 
   buildingBeingPlacedEntityVar(ghostBuilding);
-  buildingBeingPlacedVar(inventoryItem);
+  buildingBeingPlacedVar(clone(inventoryItem));
 
   // Event listeners
   game.input.on('pointerdown', placeBuilding);
