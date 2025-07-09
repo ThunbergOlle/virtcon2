@@ -97,7 +97,12 @@ export class PlotResolver {
   }
 }
 
-const calculatePlotPrice = async (worldSeed: number, plotX: number, plotY: number, priceMultiple: number): Promise<ExpandPlotPrice[]> => {
+export const calculatePlotPrice = async (
+  worldSeed: number,
+  plotX: number,
+  plotY: number,
+  priceMultiple: number,
+): Promise<ExpandPlotPrice[]> => {
   const resources: { [key: string]: number } = {};
   for (let x = plotX; x < plotX + plotSize; x++) {
     for (let y = plotY; y < plotY + plotSize; y++) {

@@ -1,5 +1,5 @@
-import { TILE_LEVEL, TILE_TYPE, WorldSettings, TileType } from '@shared';
-import { getHeightAtPoint } from '@virtcon2/static-game-data';
+import { plotSize, WorldSettings } from '@shared';
+import { DBItemName, ResourceNames, shouldGenerateResource } from '@virtcon2/static-game-data';
 import seedRandom from 'seedrandom';
 import { createNoise2D } from 'simplex-noise';
 import { Field, ObjectType } from 'type-graphql';
@@ -44,8 +44,28 @@ export class World extends BaseEntity {
   static async GenerateNewWorld(worldId: string): Promise<World> {
     return new Promise((resolve) => {
       AppDataSource.manager.transaction(async (transaction) => {
+        let seed = Math.floor(Math.random() * 1000000000);
+        for (;;) {
+          let hasTree = false;
+          let hasStone = false;
+          let hasCoal = false;
+
+          for (let x = 0; x < plotSize; x++) {
+            for (let y = 0; y < plotSize; y++) {
+              const { shouldSpawn, resource } = shouldGenerateResource(x, y, seed);
+              if (!shouldSpawn || !resource) continue;
+              if (resource.name === DBItemName.WOOD) hasTree = true;
+              else if (resource.name === DBItemName.STONE) hasStone = true;
+              else if (resource.name === DBItemName.COAL) hasCoal = true;
+            }
+          }
+          if (hasTree && hasStone && hasCoal) {
+            break;
+          }
+          seed = Math.floor(Math.random() * 1000000000);
+        }
         const world = World.create({ id: worldId });
-        world.seed = Math.floor(Math.random() * 1000000000);
+        world.seed = seed;
 
         await transaction.save(world);
 
