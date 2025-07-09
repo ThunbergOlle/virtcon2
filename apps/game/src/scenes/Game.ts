@@ -30,7 +30,6 @@ import { createTagSystem } from '../systems/TagSystem';
 import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
-import { createDebugPositionSystem } from '../systems/EntitiyDebugSystem';
 import { makeVar } from '@apollo/client';
 
 export const isPreloaded = makeVar(false);
@@ -51,7 +50,7 @@ export interface GameState {
   };
 }
 
-const debugMode = makeVar(false);
+export const debugMode = makeVar(true);
 
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
@@ -205,7 +204,7 @@ export default class Game extends Scene implements SceneStates {
       this.itemSystem = createItemSystem(this.state.world, this);
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
 
-      if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
+      //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
       this.isInitialized = true;
     });

@@ -1,6 +1,6 @@
 import { Building, Collider, Position } from '@virtcon2/network-world-entities';
 import { Types } from 'phaser';
-import { GameState } from '../scenes/Game';
+import Game, { debugMode, GameState } from '../scenes/Game';
 import { store } from '../store';
 import { select, WindowType } from '../ui/lib/WindowSlice';
 import { inspectBuilding } from '../ui/windows/building/inspectedBuildingSlice';
@@ -26,12 +26,17 @@ export const createBuildingSystem = (world: World) => {
 };
 
 const setupBuildingEventListeners = (world: World, sprite: Types.Physics.Arcade.SpriteWithDynamicBody, eid: number, state: GameState) => {
+  const game = Game.getInstance();
   if (!sprite.body) {
     console.error(`No body for building ${eid}`);
     return;
   }
 
+  sprite.setInteractive(game.input.makePixelPerfect());
+  if (debugMode() && sprite.body?.gameObject) game.input.enableDebug(sprite.body.gameObject);
+
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
+    console.log('Building clicked:', eid);
     store.dispatch(inspectBuilding(Building(world).worldBuildingId[eid]));
     store.dispatch(select(WindowType.VIEW_BUILDING));
   });

@@ -2,10 +2,12 @@ import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc
 import { Collider, Resource, Sprite } from '@virtcon2/network-world-entities';
 import { get_item_by_id } from '@virtcon2/static-game-data';
 import { Types } from 'phaser';
-import Game, { GameState } from '../scenes/Game';
+import Game, { debugMode, GameState } from '../scenes/Game';
 import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
 
 export const createResourceSystem = (world: World) => {
+  const game = Game.getInstance();
+
   const resourceQuery = defineQuery(Resource, Sprite, Collider);
   const resourceEnterQuery = enterQuery(resourceQuery);
 
@@ -17,6 +19,9 @@ export const createResourceSystem = (world: World) => {
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
 
       sprite.setName(`resource-${get_item_by_id(Resource(world).itemId[id])?.name}`);
+      sprite.disableInteractive();
+
+      if (debugMode() && sprite.body?.gameObject) game.input.enableDebug(sprite.body.gameObject);
     }
     return state;
   });

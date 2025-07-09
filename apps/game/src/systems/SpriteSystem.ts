@@ -1,12 +1,14 @@
 import { Position, Sprite, Velocity, getTextureFromTextureId, getVariantName, Item } from '@virtcon2/network-world-entities';
 
-import { GameState } from '../scenes/Game';
+import Game, { debugMode, GameState } from '../scenes/Game';
 import { defineQuery, defineSystem, enterQuery, exitQuery, Not, World } from '@virtcon2/bytenetc';
 
 export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) => {
   const spriteQuery = defineQuery(Sprite, Position);
   const spriteQueryEnter = enterQuery(spriteQuery);
   const spriteQueryExit = exitQuery(spriteQuery);
+
+  const game = Game.getInstance();
 
   return defineSystem<GameState>((state) => {
     const exitEntities = spriteQueryExit(world);
