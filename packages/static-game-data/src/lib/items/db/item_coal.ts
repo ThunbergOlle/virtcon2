@@ -1,3 +1,4 @@
+import { ResourceNames, Resources } from '../../resources/resources_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
 const item_coal: DBItem = {
@@ -9,10 +10,6 @@ const item_coal: DBItem = {
   rarity: DBItemRarity.common,
   stack_size: 256,
   is_building: false,
-  spawnSettings: {
-    minHeight: 0.2,
-    maxHeight: 0.9,
-    chance: 0.15,
-  },
+  resource: Resources[ResourceNames.COAL],
 };
 export default item_coal;

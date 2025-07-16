@@ -1,3 +1,4 @@
+import { ResourceNames, Resources } from '../../resources/resources_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
 const item_stone: DBItem = {
@@ -8,11 +9,7 @@ const item_stone: DBItem = {
   description: 'A stone.',
   icon: 'stone.png',
   rarity: DBItemRarity.common,
-  spawnSettings: {
-    minHeight: 0.15,
-    maxHeight: 0.45,
-    chance: 0.12,
-  },
+  resource: Resources[ResourceNames.STONE],
   is_building: false,
 };
 export default item_stone;

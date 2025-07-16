@@ -43,8 +43,8 @@ export const all_db_items = [
   stone_pickaxe,
 ];
 export const all_spawnable_db_items = all_db_items
-  .filter((i) => i.spawnSettings)
-  .sort((a, b) => a.spawnSettings!.minHeight - b.spawnSettings!.minHeight);
+  .filter((i) => i.resource?.spawnSettings)
+  .sort((a, b) => a.resource!.spawnSettings.minHeight - b.resource.spawnSettings.minHeight);
 export const get_item_by_id = (id: number) => {
   return all_db_items.find((item) => item.id === id);
 };

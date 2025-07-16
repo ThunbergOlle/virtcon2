@@ -1,3 +1,4 @@
+import { ResourceNames, Resources } from '../../resources/resources_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
 const item_iron_ore: DBItem = {
@@ -8,11 +9,7 @@ const item_iron_ore: DBItem = {
   icon: 'iron.png',
   rarity: DBItemRarity.common,
   stack_size: 256,
-  spawnSettings: {
-    minHeight: 0.5,
-    maxHeight: 0.9,
-    chance: 0.12,
-  },
+  resource: Resources[ResourceNames.IRON],
   is_building: false,
 };
 export default item_iron_ore;

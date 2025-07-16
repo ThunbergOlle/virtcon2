@@ -14,17 +14,17 @@ const getResourceForPosition = (
   x: number,
   y: number,
   seed: number,
-): { resource: WithRequired<DBItem, 'spawnSettings'>; spawnChance: number } => {
+): { resource: WithRequired<DBItem, 'resource'>; spawnChance: number } => {
   const clusterInfo = getNearestClusterInfo(x, y, seed);
   if (!clusterInfo) {
     // No cluster nearby, use isolated spawn chance
     const hash = hashPosition(x, y, seed);
-    const resource = all_spawnable_db_items[Math.abs(hash % all_spawnable_db_items.length)] as WithRequired<DBItem, 'spawnSettings'>;
-    if (!resource.spawnSettings) {
+    const resource = all_spawnable_db_items[Math.abs(hash % all_spawnable_db_items.length)] as WithRequired<DBItem, 'resource'>;
+    if (!resource.resource.spawnSettings) {
       throw new InvalidStateError(`Resource ${resource.name} does not have spawn settings defined.`);
     }
 
-    const isolatedChance = resource.spawnSettings.chance * 0.3; // Reduce isolated spawns
+    const isolatedChance = resource.resource.spawnSettings.chance * 0.3; // Reduce isolated spawns
     return { resource, spawnChance: isolatedChance };
   }
 
@@ -36,7 +36,7 @@ const getResourceForPosition = (
 
   const smoothFalloff = Math.pow(falloffFactor, 0.5);
 
-  const baseChance = resource.spawnSettings.chance;
+  const baseChance = resource.resource.spawnSettings.chance;
   const clusterChance = baseChance * (0.2 + smoothFalloff * 2.5);
 
   return { resource, spawnChance: Math.min(clusterChance, 0.8) }; // Cap at 80%
@@ -48,7 +48,7 @@ const getNearestClusterInfo = (
   seed: number,
 ): {
   center: { x: number; y: number };
-  resourceType: WithRequired<DBItem, 'spawnSettings'>;
+  resourceType: WithRequired<DBItem, 'resource'>;
   distance: number;
 } | null => {
   const searchRadius = 10;
@@ -68,7 +68,7 @@ const getNearestClusterInfo = (
           const centerHash = hashPosition(cx, cy, seed);
           const resourceType = all_spawnable_db_items[Math.abs(centerHash % all_spawnable_db_items.length)] as WithRequired<
             DBItem,
-            'spawnSettings'
+            'resource'
           >;
 
           nearestCluster = {
@@ -90,7 +90,7 @@ export const shouldGenerateResource = (x: number, y: number, seed: number): { sh
   const pseudoRandom = Math.abs(hash % 10000) / 10000;
 
   const height = getHeightAtPoint(seed, x, y);
-  const canSpawn = resource.spawnSettings.minHeight <= height && resource.spawnSettings.maxHeight >= height;
+  const canSpawn = resource.resource.spawnSettings.minHeight <= height && resource.resource.spawnSettings.maxHeight >= height;
 
   return { shouldSpawn: pseudoRandom < spawnChance && canSpawn, resource };
 };

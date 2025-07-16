@@ -1,5 +1,6 @@
 import { DBBuilding } from './building_type';
 import { DBItemRecipe } from '../items_recipe/item_recipe_type';
+import { ResourcesType } from '../resources/resources_type';
 
 export enum DBItemRarity {
   common = 'common',
@@ -36,7 +37,6 @@ export interface DBItem {
   icon: string;
   stack_size: number;
   rarity: DBItemRarity;
-  spawnSettings?: DBItemSpawnSettings;
   recipe?: DBItemRecipe[];
   is_building: boolean;
   building?: DBBuilding;
@@ -44,4 +44,5 @@ export interface DBItem {
   animations?: {
     idle: number[];
   };
+  resource?: ResourcesType;
 }
