@@ -57,7 +57,6 @@ export const createItemSystem = (world: World, scene: Scene) => {
         const mainPlayerSprite = state.spritesById[mainPlayerEntity] as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
         scene.physics.overlap(itemSprite, mainPlayerSprite, () => {
-          // optimistic deletion by hide
           itemSprite.destroy();
           const destroyResourcePacket: ClientPacket<RequestPickupItemPacketData> = {
             data: {
