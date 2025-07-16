@@ -7,10 +7,10 @@ import { addToInventory } from '../../shared/InventoryManagement';
 import { Item } from '../item/Item';
 import { User } from '../user/User';
 
-export const publishUserInventoryUpdate = async function (userId: number) {
+export const publishUserInventoryUpdate = createDebounceMap((userId: number) => {
   pubSub.publish(Topic.USER_INVENTORY_UPDATE, userId);
   log(`Publishing update for ${Topic.USER_INVENTORY_UPDATE}.${userId}`);
-};
+}, 200);
 
 @ObjectType()
 @Entity()
@@ -59,4 +59,21 @@ export class UserInventoryItem extends BaseEntity implements DBUserInventoryItem
 
     return await addToInventory(transaction, slots, itemId, quantity, slot);
   }
+}
+
+function createDebounceMap<T>(fn: (id: T) => void, delay: number) {
+  const timeouts = new Map<T, NodeJS.Timeout>();
+
+  return (id: T) => {
+    if (timeouts.has(id)) {
+      clearTimeout(timeouts.get(id));
+    }
+
+    const timeout = setTimeout(() => {
+      fn(id);
+      timeouts.delete(id);
+    }, delay);
+
+    timeouts.set(id, timeout);
+  };
 }
