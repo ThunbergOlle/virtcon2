@@ -10,7 +10,7 @@ import {
   SerializationID,
   getSerializeConfig,
 } from '@virtcon2/network-world-entities';
-import { getResourceNameFromItemName, shouldGenerateResource } from '@virtcon2/static-game-data';
+import { shouldGenerateResource } from '@virtcon2/static-game-data';
 import { shouldServerKeep } from './tileSystem';
 import { SyncEntities } from './types';
 
@@ -40,9 +40,8 @@ export const createResourceSystem = (world: World, seed: number) => {
       if (buildingEntities.some(buildingAtPosition(world, x, y))) continue;
 
       const resourceEntityId = createNewResourceEntity(world, {
-        resourceName: getResourceNameFromItemName(resource.name),
         pos: { x, y },
-        itemId: resource.id,
+        item: resource,
         worldBuildingId: 0,
       });
 

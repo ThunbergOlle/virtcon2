@@ -101,7 +101,7 @@ io.on('connection', (socket) => {
 
     if (!socket.rooms.has(packetJson.world_id) && packetJson.packet_type !== PacketType.REQUEST_JOIN) {
       log(`Player tried to send packet to world they are not in: ${packetJson.world_id}`, LogLevel.WARN, LogApp.SERVER);
-      socket.emit('error', 'You are not in this world!');
+      socket.emit('error', 'You are not in this world, please refresh!');
       return;
     }
 
@@ -142,7 +142,7 @@ const tickInterval = setInterval(() => {
       continue;
     }
 
-    //await checkFinishedBuildings(world, tick); TODO: ENABLE THIS
+    //await checkFinishedBuildings(world, tick);
     const systemsOutput = tickSystems(world);
 
     for (const { sync, removeEntities } of systemsOutput) {

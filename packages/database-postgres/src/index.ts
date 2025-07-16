@@ -21,3 +21,4 @@ export * from './lib/error/InventoryFullError';
 export * from './lib/shared/InventoryManagement';
 
 export * from './lib/pubsub';
+export * from './lib/taskQueue';
