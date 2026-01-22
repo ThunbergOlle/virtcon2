@@ -142,7 +142,6 @@ const tickInterval = setInterval(() => {
       continue;
     }
 
-    //await checkFinishedBuildings(world, tick);
     const systemsOutput = tickSystems(world);
 
     for (const { sync, removeEntities } of systemsOutput) {
