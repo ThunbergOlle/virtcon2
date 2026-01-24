@@ -11,6 +11,7 @@ import {
 } from '@virtcon2/network-world-entities';
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
+import { createBuildingProcessingSystem } from '../systems/buildingProcessingSystem';
 import { SyncEntities, WorldBounds, WorldData } from '../systems/types';
 
 const worlds = [];
@@ -31,7 +32,7 @@ const newEntityWorld = (world: World) => {
 };
 
 const setupSystems = (world: World, seed: number) => {
-  systems[world] = [createTileSystem(world, seed), createResourceSystem(world, seed)];
+  systems[world] = [createTileSystem(world, seed), createResourceSystem(world, seed), createBuildingProcessingSystem(world)];
 };
 
 export const doesWorldExist = (world: World) => worlds.includes(world);
