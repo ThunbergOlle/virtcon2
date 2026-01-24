@@ -1,5 +1,5 @@
 import { every } from '@shared';
-import { addComponent, addReservedEntity, defineQuery, defineSystem, enterQuery, Entity, removeEntity, World } from '@virtcon2/bytenetc';
+import { addComponent, defineQuery, defineSystem, enterQuery, Entity, World } from '@virtcon2/bytenetc';
 import {
   Collider,
   GameObjectGroups,
@@ -19,7 +19,7 @@ import { events } from '../events/Events';
 import { GameState } from '../scenes/Game';
 import { store } from '../store';
 import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
-import { damageResource } from './ResourceSystem';
+import { damageResource, shakeResourceSprite } from './ResourceSystem';
 
 const speed = 750;
 
@@ -166,25 +166,11 @@ function attack(state: GameState, world: World, eid: number) {
 
   sprite.anims.play(animationName, true);
 
-  const tool = addReservedEntity(world, 2998);
-  addComponent(world, Sprite, tool);
-
-  Sprite(world).texture[tool] = textureId;
-  Sprite(world).dynamicBody[tool] = 1;
-  Sprite(world).variant[tool] = 0;
-
-  addComponent(world, Position, tool);
-  Position(world).x[tool] = Position(world).x[resourceTargetId];
-  Position(world).y[tool] = Position(world).y[resourceTargetId] - 10;
-
-  setTimeout(() => state.spritesById[resourceTargetId!].clearTint(), 100);
-
-  addComponent(world, Velocity, tool);
-  Velocity(world).x[tool] = 0;
-  Velocity(world).y[tool] = -10;
+  setTimeout(() => {
+    shakeResourceSprite(state, resourceTargetId);
+  }, 300);
 
   setTimeout(() => {
-    removeEntity(world, tool);
     MainPlayer(world).action[eid] = MainPlayerAction.IDLE;
     damageResource(world, state, resourceTargetId!, selectedTool.damage);
   }, 500);

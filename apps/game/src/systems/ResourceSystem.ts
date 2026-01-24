@@ -1,6 +1,6 @@
 import { defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
 import { Collider, Resource, Sprite } from '@virtcon2/network-world-entities';
-import { get_item_by_id } from '@virtcon2/static-game-data';
+import { DBItemName, get_item_by_id } from '@virtcon2/static-game-data';
 import { Types } from 'phaser';
 import Game, { debugMode, GameState } from '../scenes/Game';
 import { ClientPacket, PacketType, RequestDestroyResourcePacket } from '@virtcon2/network-packet';
@@ -24,6 +24,27 @@ export const createResourceSystem = (world: World) => {
       if (debugMode() && sprite.body?.gameObject) game.input.enableDebug(sprite.body.gameObject);
     }
     return state;
+  });
+};
+
+export const shakeResourceSprite = (state: GameState, eid: number) => {
+  const sprite = state.spritesById[eid] as Types.Physics.Arcade.SpriteWithDynamicBody | undefined;
+  if (!sprite || !sprite.scene) return;
+
+  const baseAngle = sprite.angle;
+  const swayDirection = Math.random() > 0.5 ? 1 : -1;
+  const swayAmount = 3;
+
+  sprite.scene.tweens.add({
+    targets: sprite,
+    angle: baseAngle + swayDirection * swayAmount,
+    duration: 80,
+    yoyo: true,
+    repeat: 1,
+    ease: 'Sine.easeInOut',
+    onComplete: () => {
+      sprite.setAngle(baseAngle);
+    },
   });
 };
 
