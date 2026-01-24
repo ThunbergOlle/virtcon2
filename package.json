@@ -8,7 +8,9 @@
     "start-api": "nx run api:serve:development -- --inspect=true --port=7778",
     "start-game": "nx run game:serve:development -- --inspect=true",
     "redis": "docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "sprite-gen": "nx build sprite-gen && node dist/packages/sprite-gen/cli.js",
+    "compile-sprites": "bash tools/compile-sprites.sh"
   },
   "private": true,
   "dependencies": {
@@ -24,8 +26,10 @@
     "@types/ramda": "^0.30.2",
     "axios": "^1.0.0",
     "bootstrap": "^5.2.3",
+    "canvas": "^2.11.2",
     "chalk": "4",
     "class-validator": "^0.14.0",
+    "commander": "^14.0.2",
     "cors": "^2.8.5",
     "events-system": "^0.0.9",
     "express": "~4.18.1",
@@ -59,7 +63,8 @@
     "tslib": "^2.3.0",
     "type-graphql": "^2.0.0-rc.2",
     "typeorm": "^0.3.12",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@nx/cypress": "16.0.3",

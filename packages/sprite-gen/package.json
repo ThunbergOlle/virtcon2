@@ -1,0 +1,8 @@
+{
+  "name": "@virtcon2/sprite-gen",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "bin": {
+    "sprite-gen": "./cli.js"
+  }
+}
