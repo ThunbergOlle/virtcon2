@@ -226,6 +226,11 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
     textureName: 'expand_plot',
     variants: ['sprites/misc/expand_plot.png'],
   },
+  cursor_highlighter: {
+    textureId: 1001,
+    textureName: 'cursor_highlighter',
+    variants: ['sprites/misc/cursor_highlighter.png'],
+  },
 };
 
 export const AllTextureMaps = {

@@ -30,6 +30,7 @@ import { createTagSystem } from '../systems/TagSystem';
 import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
+import { createCursorHighlightSystem } from '../systems/CursorHighlightSystem';
 import { makeVar } from '@apollo/client';
 
 export const isPreloaded = makeVar(false);
@@ -85,6 +86,7 @@ export default class Game extends Scene implements SceneStates {
   public connectionSystem?: System<GameState>;
   public itemSystem?: System<GameState>;
   public worldBorderSystem?: System<GameState>;
+  public cursorHighlightSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
@@ -203,6 +205,7 @@ export default class Game extends Scene implements SceneStates {
       this.connectionSystem = createConnectionSystem(this.state.world, this);
       this.itemSystem = createItemSystem(this.state.world, this);
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
+      this.cursorHighlightSystem = createCursorHighlightSystem(this, this.state.world);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
@@ -228,6 +231,7 @@ export default class Game extends Scene implements SceneStates {
       !this.itemSystem ||
       !this.connectionSystem ||
       !this.worldBorderSystem ||
+      !this.cursorHighlightSystem ||
       !this.isInitialized
     )
       return;
@@ -254,6 +258,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.itemSystem(newState);
 
     newState = this.worldBorderSystem(newState);
+    newState = this.cursorHighlightSystem(newState);
 
     if (this.debugPositionSystem) {
       newState = this.debugPositionSystem(newState);

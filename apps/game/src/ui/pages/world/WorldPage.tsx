@@ -12,6 +12,7 @@ import PlayerInventoryWindow from '../../windows/playerInventory/PlayerInventory
 import { Hotbar } from '../../components/hotbar/Hotbar';
 import ExpandPlotWindow from '../../windows/plot/PlotWindow';
 import { deleteWorld } from '@virtcon2/bytenetc';
+import { ResourceTooltip } from '../../components/resourceTooltip/ResourceTooltip';
 
 function GamePage() {
   const { worldId } = useParams();
@@ -56,6 +57,7 @@ function GamePage() {
         <ExpandPlotWindow />
       </div>
       <Hotbar />
+      <ResourceTooltip />
     </>
   );
 }
