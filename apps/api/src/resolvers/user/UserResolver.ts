@@ -62,7 +62,9 @@ export class UserResolver {
     });
 
     await User.save(newUserEntity);
-    await World.GenerateNewWorld(newUserEntity.display_name);
+    await AppDataSource.manager.transaction(async (transaction) => {
+      await World.GenerateNewWorld(transaction, newUserEntity.display_name);
+    });
 
     await EmailService.sendConfirmationMail(options.email, confirmationCode);
 

@@ -10,7 +10,7 @@ import * as express from 'express';
 import { cwd } from 'process';
 import 'reflect-metadata';
 import { IsNull, Not } from 'typeorm';
-import { deleteEntityWorld, tickSystems } from './ecs/entityWorld';
+import { deleteEntityWorld, syncWorldState, tickSystems } from './ecs/entityWorld';
 import { handleClientPacket } from './packet/packet_handler';
 import { SERVER_SENDER } from './packet/utils';
 import { app, io, server } from './app';
@@ -140,6 +140,10 @@ const tickInterval = setInterval(() => {
     if (!world) {
       log(`World ${world} not found in entityWorld`, LogLevel.WARN, LogApp.SERVER);
       continue;
+    }
+
+    if (tick % (TPS * 60) === 0) {
+      syncWorldState(world);
     }
 
     const systemsOutput = tickSystems(world);

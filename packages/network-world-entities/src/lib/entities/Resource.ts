@@ -1,4 +1,4 @@
-import { DBItem, Resources } from '@virtcon2/static-game-data';
+import { DBItem, getItemByName, get_item_by_id, ResourceNames, Resources } from '@virtcon2/static-game-data';
 import { Collider, Position, Resource, Sprite } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
@@ -9,9 +9,16 @@ import { InvalidInputError } from '@shared';
 
 export const resourceEntityComponents = [Position, Sprite, Collider, Resource];
 
-export const createNewResourceEntity = (world: World, data: { pos: TileCoordinates; item: DBItem; worldBuildingId: number }): number => {
-  const { resource } = data.item;
-  if (!resource) throw new InvalidInputError(`Item ${data.item.id} does not have a resource associated with it.`);
+export const createNewResourceEntity = (
+  world: World,
+  data: { id: number; pos: TileCoordinates; resourceName: ResourceNames; quantity: number },
+): number => {
+  const resource = Resources[data.resourceName];
+  const item = getItemByName(resource.item);
+
+  if (!resource) throw new InvalidInputError(`Resource ${data.resourceName} does not exist.`);
+  if (!item) throw new InvalidInputError(`Item ${resource.item} for resource ${data.resourceName} does not exist.`);
+
   const { x, y } = toPhaserPos({ x: data.pos.x, y: data.pos.y });
   const resourceEid = addEntity(world);
   const resourceInfo = Resources[resource.name];
@@ -43,8 +50,9 @@ export const createNewResourceEntity = (world: World, data: { pos: TileCoordinat
 
   addComponent(world, Resource, resourceEid);
   Resource(world).health[resourceEid] = resource.full_health;
-  Resource(world).itemId[resourceEid] = data.item.id;
-  Resource(world).worldBuildingId[resourceEid] = data.worldBuildingId;
+  Resource(world).id[resourceEid] = data.id;
+  Resource(world).itemId[resourceEid] = item.id;
+  Resource(world).quantity[resourceEid] = data.quantity;
 
   return resourceEid;
 };

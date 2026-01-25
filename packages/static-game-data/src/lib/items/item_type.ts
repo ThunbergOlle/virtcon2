@@ -1,6 +1,7 @@
 import { DBBuilding } from './building_type';
 import { DBItemRecipe } from '../items_recipe/item_recipe_type';
 import { ResourcesType } from '../resources/resources_type';
+import { HarvestableType } from '../harvestable_type';
 
 export enum DBItemRarity {
   common = 'common',
@@ -45,4 +46,5 @@ export interface DBItem {
     idle: number[];
   };
   resource?: ResourcesType;
+  harvestable?: HarvestableType;
 }

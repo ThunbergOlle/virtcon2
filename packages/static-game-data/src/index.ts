@@ -27,6 +27,8 @@ export * from './lib/items/db/item_wood_axe';
 export * from './lib/items/db/item_wood_pickaxe';
 export * from './lib/items/db/item_stone_pickaxe';
 
+export * from './lib/harvestable_type';
+
 /* Tools */
 export * from './lib/items/tool_type';
 

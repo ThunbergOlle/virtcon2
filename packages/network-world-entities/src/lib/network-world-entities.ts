@@ -13,6 +13,7 @@ export * from './components/ConnectionPoint';
 export * from './components/Range';
 export * from './components/Item';
 export * from './components/WorldBorder';
+export * from './components/Harvestable';
 
 /* Entities */
 export * from './entities/Building';
@@ -20,6 +21,7 @@ export * from './entities/Player';
 export * from './entities/Resource';
 export * from './entities/Tile';
 export * from './entities/WorldBorder';
+export * from './entities/Harvestable';
 
 export * from './serializeConfig';
 export * from './utils/coordinates';

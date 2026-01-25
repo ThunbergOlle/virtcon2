@@ -1,5 +1,5 @@
 import { InvalidStateError, log, LogApp, LogLevel, plotSize } from '@shared';
-import { User, World, WorldPlot } from '@virtcon2/database-postgres';
+import { AppDataSource, User, World, WorldPlot } from '@virtcon2/database-postgres';
 import {
   ClientPacketWithSender,
   LoadWorldPacketData,
@@ -81,7 +81,13 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
 
 const ensureWorldIsRunning = async (worldId: string) => {
   let dbWorld = await World.findOne({ where: { id: worldId } });
-  if (!dbWorld) dbWorld = await World.GenerateNewWorld(worldId);
+  console.log(`Does world exist in DB: ${!!dbWorld}`);
+  if (!dbWorld) {
+    await AppDataSource.manager.transaction(async (transaction) => {
+      dbWorld = await World.GenerateNewWorld(transaction, worldId);
+    });
+  }
+  console.log(`Generated or found world in DB: ${dbWorld.id}`);
 
   if (!doesWorldExist(worldId)) {
     log(`World ${worldId} is not running. Starting up world...`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);

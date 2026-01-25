@@ -1,4 +1,4 @@
-import { DBItemName, ResourceNames } from '@virtcon2/static-game-data';
+import { DBItemName, HarvestableNames, ResourceNames } from '@virtcon2/static-game-data';
 
 export interface TextureMetaData {
   textureId: number; // for ECS
@@ -101,6 +101,16 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureId: 15,
     textureName: 'stone_pickaxe',
     variants: ['sprites/items/stone_pickaxe.png'],
+  },
+};
+
+export const HarvestableTextureMap: Record<HarvestableNames, TextureMetaData | null> = {
+  [HarvestableNames.WOOD]: {
+    textureId: 301,
+    textureName: 'harvestable_wood',
+    variants: ['sprites/harvestables/harvestable_wood.png'],
+    spriteSheetFrameWidth: 64,
+    spriteSheetFrameHeight: 96,
   },
 };
 
@@ -221,6 +231,7 @@ export const MiscTextureMap: Record<string, TextureMetaData | null> = {
 export const AllTextureMaps = {
   ...ItemTextureMap,
   ...ResourceTextureMap,
+  ...HarvestableTextureMap,
   ...MiscTextureMap,
   ...TileTextureMap,
 } as const;

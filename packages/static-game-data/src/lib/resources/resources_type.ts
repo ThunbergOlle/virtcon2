@@ -12,7 +12,8 @@ export interface ResourcesType {
   sprite: string;
   item: DBItemName;
   full_health: number;
-  infinite: boolean;
+  minDefaultQuantity: number;
+  maxDefaultQuantity: number;
   dropCount: number;
   layer: 'ground' | 'underground';
   spawnSettings: {
@@ -29,9 +30,10 @@ export interface ResourcesType {
 export const Resources: Record<ResourceNames, ResourcesType> = {
   [ResourceNames.WOOD]: {
     name: ResourceNames.WOOD,
-    infinite: false,
-    dropCount: 50,
     layer: 'ground',
+    minDefaultQuantity: 2000,
+    maxDefaultQuantity: 5000,
+    dropCount: 10,
     spawnSettings: {
       minHeight: 0.2,
       maxHeight: 0.8,
@@ -47,9 +49,10 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   },
   [ResourceNames.STONE]: {
     name: ResourceNames.STONE,
-    infinite: true,
-    dropCount: 1,
     layer: 'underground',
+    minDefaultQuantity: 2000,
+    maxDefaultQuantity: 5000,
+    dropCount: 8,
     spawnSettings: {
       minHeight: 0.15,
       maxHeight: 0.45,
@@ -65,15 +68,16 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   },
   [ResourceNames.COAL]: {
     name: ResourceNames.COAL,
-    infinite: true,
-    dropCount: 1,
     layer: 'underground',
+    minDefaultQuantity: 2000,
+    maxDefaultQuantity: 5000,
     spawnSettings: {
       minHeight: 0.2,
       maxHeight: 0.9,
       chance: 0.15,
     },
     item: DBItemName.COAL,
+    dropCount: 8,
     sprite: 'resource_coal',
     spriteHeight: 2,
     spriteWidth: 2,
@@ -83,9 +87,10 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   },
   [ResourceNames.IRON]: {
     name: ResourceNames.IRON,
-    infinite: true,
-    dropCount: 1,
     layer: 'underground',
+    dropCount: 8,
+    minDefaultQuantity: 2000,
+    maxDefaultQuantity: 5000,
     spawnSettings: {
       minHeight: 0.5,
       maxHeight: 0.9,

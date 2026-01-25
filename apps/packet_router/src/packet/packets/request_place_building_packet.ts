@@ -6,6 +6,7 @@ import {
   UserInventoryItem,
   WorldBuilding,
   WorldBuildingInventory,
+  WorldResource,
 } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 
@@ -67,6 +68,11 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
     inventoryItem.item = null;
     await inventoryItem.save();
   }
+
+  const resource = await WorldResource.findOne({ where: { world: { id: packet.world_id }, x: packet.data.x, y: packet.data.y } });
+
+  resource.worldBuildingId = worldBuilding.id;
+  await resource.save();
 
   /* Remove the item from players inventory */
   await AppDataSource.transaction(async (transaction) =>

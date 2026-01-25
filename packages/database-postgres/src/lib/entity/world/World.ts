@@ -1,12 +1,13 @@
-import { plotSize, WorldSettings } from '@shared';
-import { DBItemName, ResourceNames, shouldGenerateResource } from '@virtcon2/static-game-data';
+import { InvalidStateError, plotSize, WorldSettings } from '@shared';
+import { DBItemName, get_resource_by_item_name, ResourceNames, Resources, shouldGenerateResource } from '@virtcon2/static-game-data';
 import seedRandom from 'seedrandom';
 import { createNoise2D } from 'simplex-noise';
 import { Field, ObjectType } from 'type-graphql';
-import { BaseEntity, BeforeInsert, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { BaseEntity, BeforeInsert, Column, Entity, EntityManager, OneToMany, PrimaryColumn } from 'typeorm';
 import { AppDataSource } from '../../data-source';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { WorldPlot } from '../world_plot/WorldPlot';
+import { WorldResource } from '../world_resource/WorldResource';
 
 @ObjectType()
 @Entity()
@@ -41,40 +42,61 @@ export class World extends BaseEntity {
     return map;
   }
 
-  static async GenerateNewWorld(worldId: string): Promise<World> {
-    return new Promise((resolve) => {
-      AppDataSource.manager.transaction(async (transaction) => {
-        let seed = Math.floor(Math.random() * 1000000000);
-        for (;;) {
-          let hasTree = false;
-          let hasStone = false;
-          let hasCoal = false;
+  static async GenerateNewWorld(transaction: EntityManager, worldId: string): Promise<World> {
+    console.log(`Generating new world with id ${worldId}`);
+    let seed = Math.floor(Math.random() * 1000000000);
+    for (;;) {
+      let hasStone = false;
+      let hasCoal = false;
 
-          for (let x = 0; x < plotSize; x++) {
-            for (let y = 0; y < plotSize; y++) {
-              const { shouldSpawn, resource } = shouldGenerateResource(x, y, seed);
-              if (!shouldSpawn || !resource) continue;
-              if (resource.name === DBItemName.WOOD) hasTree = true;
-              else if (resource.name === DBItemName.STONE) hasStone = true;
-              else if (resource.name === DBItemName.COAL) hasCoal = true;
-            }
-          }
-          if (hasTree && hasStone && hasCoal) {
-            break;
-          }
-          seed = Math.floor(Math.random() * 1000000000);
+      for (let x = 0; x < plotSize; x++) {
+        for (let y = 0; y < plotSize; y++) {
+          const { shouldSpawn, resource } = shouldGenerateResource(x, y, seed);
+          if (!shouldSpawn || !resource) continue;
+          if (resource.name === DBItemName.STONE) hasStone = true;
+          else if (resource.name === DBItemName.COAL) hasCoal = true;
         }
-        const world = World.create({ id: worldId });
-        world.seed = seed;
+      }
+      if (hasStone && hasCoal) {
+        break;
+      }
+      seed = Math.floor(Math.random() * 1000000000);
+    }
 
-        await transaction.save(world);
+    console.log(`Selected seed ${seed} for world ${worldId}`);
 
-        const startPlot = WorldPlot.create({ worldId: worldId, x: 0, y: 0 });
+    const world = World.create({ id: worldId });
+    world.seed = seed;
 
-        await transaction.save(startPlot);
+    await transaction.save(world);
 
-        return resolve(world);
-      });
-    });
+    for (let x = 0; x < plotSize; x++)
+      for (let y = 0; y < plotSize; y++) {
+        const { shouldSpawn, resource } = shouldGenerateResource(x, y, seed);
+        if (!shouldSpawn) continue;
+        if (!resource) throw new InvalidStateError('Resource is undefined despite shouldSpawn being true');
+        const resourceData = Resources[resource.resource.name];
+        const quantity = Math.floor(
+          resource.resource.minDefaultQuantity +
+            Math.random() * (resource.resource.maxDefaultQuantity - resource.resource.maxDefaultQuantity + 1),
+        );
+
+        const worldResource = WorldResource.create({
+          worldId: worldId,
+          x: x,
+          y: y,
+          resourceName: resourceData.name,
+          quantity,
+        });
+        await transaction.save(worldResource);
+      }
+
+    const startPlot = WorldPlot.create({ worldId: worldId, x: 0, y: 0 });
+
+    await transaction.save(startPlot);
+
+    console.log(`Generated new world with id ${worldId} and seed ${seed}`);
+
+    return world;
   }
 }

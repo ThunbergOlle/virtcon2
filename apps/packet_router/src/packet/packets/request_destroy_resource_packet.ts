@@ -32,7 +32,11 @@ export default async function request_destroy_resource_packet(packet: ClientPack
     newItemIds.push(createItem({ world: packet.world_id, itemId: receivedItemId, x, y, droppedFromX: resourceX, droppedFromY: resourceY }));
   }
 
-  const serialized = defineSerializer(getSerializeConfig(world)[SerializationID.ITEM])(packet.world_id, newItemIds);
+  const itemSerialized = defineSerializer(getSerializeConfig(world)[SerializationID.ITEM])(packet.world_id, newItemIds);
 
-  await syncServerEntities(packet.world_id, serialized, SerializationID.ITEM);
+  Resource(world).quantity[resourceEid] -= 1;
+  const resourceSerialized = defineSerializer([Resource(world)])(packet.world_id, [resourceEid]);
+
+  await syncServerEntities(packet.world_id, itemSerialized, SerializationID.ITEM);
+  await syncServerEntities(packet.world_id, resourceSerialized, SerializationID.RESOURCE);
 }

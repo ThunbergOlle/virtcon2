@@ -14,6 +14,9 @@ import { shouldGenerateResource } from '@virtcon2/static-game-data';
 import { shouldServerKeep } from './tileSystem';
 import { SyncEntities } from './types';
 
+// 1.  Load all resources from the database
+// 2.  resource system is just for adding and removing the sprite component based on player proximity and tile
+
 export const createResourceSystem = (world: World, seed: number) => {
   const resourceQuery = defineQuery(Resource, Position);
   const tileQuery = defineQuery(GrowableTile, Position);
@@ -39,13 +42,15 @@ export const createResourceSystem = (world: World, seed: number) => {
 
       if (buildingEntities.some(buildingAtPosition(world, x, y))) continue;
 
-      const resourceEntityId = createNewResourceEntity(world, {
-        pos: { x, y },
-        item: resource,
-        worldBuildingId: 0,
-      });
-
-      newEntities.push(resourceEntityId);
+      // TODO: improve the resource spawning system, we need to store resources in teh database instead
+      //const resourceEntityId = createNewResourceEntity(world, {
+      //  pos: { x, y },
+      //  item: resource,
+      //  worldBuildingId: 0,
+      //  quantity: resourceCounts[x][y],
+      //});
+      //
+      //newEntities.push(resourceEntityId);
     }
 
     for (let i = 0; i < resourceEntities.length; i++) {

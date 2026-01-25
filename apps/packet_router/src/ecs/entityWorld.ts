@@ -1,11 +1,13 @@
 import { loadWorldFromDb } from './loaders';
 import { log, LogApp, LogLevel, plotSize } from '@shared';
-import { createWorld, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
+import { createWorld, defineQuery, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
 import * as DB from '@virtcon2/database-postgres';
 import {
   allComponents,
   createNewBuildingEntity,
+  createNewResourceEntity,
   createNewWorldBorderTile,
+  Resource,
   tileSize,
   WorldBorderSide,
 } from '@virtcon2/network-world-entities';
@@ -13,6 +15,7 @@ import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
 import { createBuildingProcessingSystem } from '../systems/buildingProcessingSystem';
 import { SyncEntities, WorldBounds, WorldData } from '../systems/types';
+import { AppDataSource, WorldResource } from '@virtcon2/database-postgres';
 
 const worlds = [];
 const systems: { [key: string]: System<SyncEntities>[] } = {};
@@ -32,7 +35,11 @@ const newEntityWorld = (world: World) => {
 };
 
 const setupSystems = (world: World, seed: number) => {
-  systems[world] = [createTileSystem(world, seed), createResourceSystem(world, seed), createBuildingProcessingSystem(world)];
+  systems[world] = [
+    createTileSystem(world, seed),
+    /** createResourceSystem(world, seed), */
+    createBuildingProcessingSystem(world),
+  ];
 };
 
 export const doesWorldExist = (world: World) => worlds.includes(world);
@@ -99,7 +106,7 @@ export const initialiseWorldBounds = async (world: World, bounds: WorldBounds[])
 };
 
 export const initializeWorld = async (dbWorldId: string) => {
-  const { worldBuildings, world: dbWorld } = await loadWorldFromDb(dbWorldId);
+  const { worldBuildings, worldResources, world: dbWorld } = await loadWorldFromDb(dbWorldId);
 
   const world = newEntityWorld(dbWorldId);
 
@@ -117,6 +124,18 @@ export const initializeWorld = async (dbWorldId: string) => {
       rotation: worldBuilding.rotation,
     });
   }
+
+  for (const worldResource of worldResources) {
+    createNewResourceEntity(world, {
+      id: worldResource.id,
+      resourceName: worldResource.resourceName,
+      pos: {
+        x: worldResource.x,
+        y: worldResource.y,
+      },
+      quantity: worldResource.quantity,
+    });
+  }
 };
 
 export const tickSystems = (world: World): SyncEntities[] => {
@@ -131,4 +150,33 @@ export const tickSystems = (world: World): SyncEntities[] => {
   }
 
   return data;
+};
+
+export const syncWorldState = async (world: World) => {
+  log(`Syncing world state for world ${world}`, LogLevel.INFO, LogApp.SERVER);
+  const resourceQuery = defineQuery(Resource);
+  const resourceEntities = resourceQuery(world);
+
+  await AppDataSource.transaction(async (transaction) => {
+    const dbResources = await transaction.find(WorldResource, {
+      where: { world: { id: world } },
+      select: ['id', 'quantity'],
+    });
+
+    for (let i = 0; i < resourceEntities.length; i++) {
+      const resourceEid = resourceEntities[i];
+      const resourceId = Resource(world).id[resourceEid];
+
+      const dbResource = dbResources.find((res) => res.id === resourceId);
+      if (!dbResource) {
+        log(`Resource with id ${resourceId} not found in database for world ${world}`, LogLevel.WARN, LogApp.SERVER);
+        continue;
+      }
+
+      if (dbResource.quantity !== Resource(world).quantity[resourceEid]) {
+        dbResource.quantity = Resource(world).quantity[resourceEid];
+        await dbResource.save();
+      }
+    }
+  });
 };
