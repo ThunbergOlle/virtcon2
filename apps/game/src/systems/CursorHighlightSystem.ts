@@ -44,6 +44,7 @@ export const createCursorHighlightSystem = (scene: Phaser.Scene, world: World) =
       if (entityTileCoords.x === tileCoords.x && entityTileCoords.y === tileCoords.y) {
         store.dispatch(
           setHoveredResource({
+            eid: eid,
             itemId: Resource(world).itemId[eid],
             quantity: Resource(world).quantity[eid],
             health: Resource(world).health[eid],

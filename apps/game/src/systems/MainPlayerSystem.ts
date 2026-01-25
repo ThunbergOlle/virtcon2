@@ -1,5 +1,5 @@
 import { every } from '@shared';
-import { addComponent, defineQuery, defineSystem, enterQuery, Entity, World } from '@virtcon2/bytenetc';
+import { addComponent, defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
 import {
   Collider,
   GameObjectGroups,
@@ -9,7 +9,6 @@ import {
   Player,
   Position,
   Range,
-  Resource,
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
@@ -19,6 +18,8 @@ import { events } from '../events/Events';
 import { GameState } from '../scenes/Game';
 import { store } from '../store';
 import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
+import { hoveredResource } from '../ui/components/resourceTooltip/ResourceTooltipSlice';
+import { isTryingToPlaceBuilding } from '../ui/lib/buildingPlacement';
 import { damageResource, shakeResourceSprite } from './ResourceSystem';
 
 const speed = 750;
@@ -28,12 +29,11 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
   const mainPlayerQueryEnter = enterQuery(mainPlayerQuery);
 
   const keyboard = scene.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
-  const [keyW, keyA, keyS, keyD, keySpace] = [
+  const [keyW, keyA, keyS, keyD] = [
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
   ];
 
   return defineSystem<GameState>((state) => {
@@ -53,6 +53,12 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       /* Event listener for crafter event */
       scene.input.keyboard?.on('keydown-C', () => {
         events.notify('onCrafterButtonPressed');
+      });
+
+      /* Event listener for mouse click to attack */
+      scene.input.on('pointerdown', () => {
+        if (isTryingToPlaceBuilding()) return;
+        attackClickedResource(state, world, id);
       });
     }
 
@@ -74,9 +80,6 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       Velocity(world).x[entities[i]] = xVel * speed;
       Velocity(world).y[entities[i]] = yVel * speed;
 
-      if (keyboard.checkDown(keySpace)) {
-        attack(state, world, entities[i]);
-      }
       highlightTargets(state, world, entities[i]);
     }
     return state;
@@ -92,34 +95,17 @@ const getTargetItemIds = (tool: ToolType) =>
 
 const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
 
-const findResourceInRange = (world: World, playerEid: Entity): Entity | null => {
-  const resourceQuery = defineQuery(Position, Resource);
-  const resources = resourceQuery(world);
-
-  let closestResourceEid: Entity | null = null;
-  let cloestDistance = Number.MAX_VALUE;
-
-  for (let i = 0; i < resources.length; i++) {
-    const resource = resources[i];
-    const resourceX = Position(world).x[resource];
-    const resourceY = Position(world).y[resource];
-    const playerX = Position(world).x[playerEid];
-    const playerY = Position(world).y[playerEid];
-
-    const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
-    if (distance < Range(world).radius[playerEid] && distance < cloestDistance) {
-      cloestDistance = distance;
-      closestResourceEid = resource;
-    }
-  }
-
-  return closestResourceEid;
-};
-
 const shouldUpdateHighlight = every(30);
 let highlightedSprite: Phaser.GameObjects.Sprite | null = null;
-const highlightTargets = (state: GameState, world: World, eid: number) => {
+const highlightTargets = (state: GameState, world: World, playerEid: number) => {
   if (!shouldUpdateHighlight()) return;
+
+  const hovered = hoveredResource(store.getState());
+  if (!hovered) {
+    highlightedSprite?.resetPipeline();
+    return;
+  }
+
   const selectedTool = currentTool(store.getState());
   if (!selectedTool) {
     highlightedSprite?.resetPipeline();
@@ -127,52 +113,78 @@ const highlightTargets = (state: GameState, world: World, eid: number) => {
   }
 
   const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
+  const canDamage = targetItemsIds.includes(hovered.itemId);
 
-  const resourceId = findResourceInRange(world, eid);
-  if (resourceId !== null) {
-    const canDamage = targetItemsIds.includes(Resource(world).itemId[resourceId]);
+  // Check if resource is in range
+  const resourceX = Position(world).x[hovered.eid];
+  const resourceY = Position(world).y[hovered.eid];
+  const playerX = Position(world).x[playerEid];
+  const playerY = Position(world).y[playerEid];
+  const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
+  const inRange = distance < Range(world).radius[playerEid];
 
-    const sprite = state.spritesById[resourceId];
-    if (highlightedSprite) highlightedSprite.resetPipeline();
-    sprite.setPipeline('outline');
-    highlightedSprite = sprite;
+  const sprite = state.spritesById[hovered.eid];
+  if (!sprite) {
+    highlightedSprite?.resetPipeline();
+    return;
+  }
 
-    if (canDamage) sprite.pipeline.set4f('uOutlineColor', 0, 1, 0, 1);
-    else sprite.pipeline.set4f('uOutlineColor', 1, 0, 0, 1);
-  } else highlightedSprite?.resetPipeline();
+  if (highlightedSprite) highlightedSprite.resetPipeline();
+  sprite.setPipeline('outline');
+  highlightedSprite = sprite;
+
+  // Green if in range AND can damage, red otherwise
+  if (inRange && canDamage) {
+    sprite.pipeline.set4f('uOutlineColor', 0, 1, 0, 1);
+  } else {
+    sprite.pipeline.set4f('uOutlineColor', 1, 0, 0, 1);
+  }
 };
 
-function attack(state: GameState, world: World, eid: number) {
-  if (MainPlayer(world).action[eid] !== MainPlayerAction.IDLE) return;
+function attackClickedResource(state: GameState, world: World, playerEid: number) {
+  // Check if player is idle
+  if (MainPlayer(world).action[playerEid] !== MainPlayerAction.IDLE) return;
 
+  // Get hovered resource from Redux
+  const hovered = hoveredResource(store.getState());
+  if (!hovered) return;
+
+  // Validate tool is selected
   const selectedItem = currentItem(store.getState());
   if (!selectedItem?.item) return;
   const selectedTool = currentTool(store.getState());
   if (!selectedTool) return;
 
   const textureId = ItemTextureMap[selectedItem.item.name]?.textureId;
-  if (!textureId) throw new Error(`Texture not found for tool: ${selectedItem}`);
+  if (!textureId) return;
 
-  const resourceTargetId = findResourceInRange(world, eid);
-  if (resourceTargetId === null) return;
+  // Validate resource is within range
+  const resourceX = Position(world).x[hovered.eid];
+  const resourceY = Position(world).y[hovered.eid];
+  const playerX = Position(world).x[playerEid];
+  const playerY = Position(world).y[playerEid];
+  const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
+  if (distance >= Range(world).radius[playerEid]) return;
 
+  // Validate tool can damage resource type
   const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
-  if (!targetItemsIds.includes(Resource(world).itemId[resourceTargetId!])) return;
+  if (!targetItemsIds.includes(hovered.itemId)) return;
 
-  MainPlayer(world).action[eid] = MainPlayerAction.ATTACKING;
+  // Execute attack
+  MainPlayer(world).action[playerEid] = MainPlayerAction.ATTACKING;
 
-  const sprite = state.spritesById[eid];
+  const sprite = state.spritesById[playerEid];
   const animationName = `player_character_0_anim_cut`;
 
   sprite.anims.play(animationName, true);
 
   setTimeout(() => {
-    shakeResourceSprite(state, resourceTargetId);
+    shakeResourceSprite(state, hovered.eid);
   }, 300);
 
   setTimeout(() => {
-    MainPlayer(world).action[eid] = MainPlayerAction.IDLE;
-    damageResource(world, state, resourceTargetId!, selectedTool.damage);
+    MainPlayer(world).action[playerEid] = MainPlayerAction.IDLE;
+    damageResource(world, state, hovered.eid, selectedTool.damage);
   }, 500);
 }
 

@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export type HoveredResource = {
+  eid: number;
   itemId: number;
   quantity: number;
   health: number;
