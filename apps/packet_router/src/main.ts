@@ -83,7 +83,11 @@ io.on('connection', (socket) => {
 
     socket.leave(wasInWorld);
 
-    if (playersEid.length - 1 === 0) deleteEntityWorld(world);
+    if (playersEid.length - 1 === 0) {
+      await syncWorldState(world);
+      worlds.splice(worlds.indexOf(world), 1);
+      deleteEntityWorld(world);
+    }
   });
 
   socket.on('packet', async (packetJson: ClientPacket<unknown>) => {
