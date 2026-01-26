@@ -1,9 +1,9 @@
-import { World, WorldBuilding, WorldResource } from '@virtcon2/database-postgres';
+import { World, WorldBuilding, WorldHarvestable, WorldResource } from '@virtcon2/database-postgres';
 import { Not } from 'typeorm';
 
 export const loadWorldFromDb = async (
   worldId: string,
-): Promise<{ worldBuildings: WorldBuilding[]; world: World; worldResources: WorldResource[] }> => {
+): Promise<{ worldBuildings: WorldBuilding[]; world: World; worldResources: WorldResource[]; worldHarvestables: WorldHarvestable[] }> => {
   const world = await World.findOne({ where: { id: worldId } });
   if (!world) {
     throw new Error(`World ${worldId} does not exist.`);
@@ -18,5 +18,9 @@ export const loadWorldFromDb = async (
     where: { world: { id: world.id }, worldBuilding: null, quantity: Not(0) },
   });
 
-  return { worldBuildings, world, worldResources };
+  const worldHarvestables = await WorldHarvestable.find({
+    where: { world: { id: world.id } },
+  });
+
+  return { worldBuildings, world, worldResources, worldHarvestables };
 };

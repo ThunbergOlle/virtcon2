@@ -10,6 +10,10 @@ export interface HarvestableType {
   item: DBItemName;
   full_health: number;
   defaultDropCount: number;
+  states: {
+    age: number;
+    sprite: string;
+  }[];
   layer: 'ground' | 'underground';
   spawnSettings: {
     minHeight: number;
@@ -27,6 +31,16 @@ export const Harvestable: Record<HarvestableNames, HarvestableType> = {
     name: HarvestableNames.WOOD,
     defaultDropCount: 10,
     layer: 'ground',
+    states: [
+      {
+        age: 0,
+        sprite: 'harvestable_wood',
+      },
+      {
+        age: 12_000,
+        sprite: 'harvestable_wood',
+      },
+    ],
     spawnSettings: {
       minHeight: 0.2,
       maxHeight: 0.8,

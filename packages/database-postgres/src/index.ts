@@ -14,6 +14,7 @@ export * from './lib/entity/world_connection_point/WorldConnectionPoint';
 export * from './lib/entity/world_building_inventory/WorldBuildingInventory';
 export * from './lib/entity/world_plot/WorldPlot';
 export * from './lib/entity/world_resource/WorldResource';
+export * from './lib/entity/world_harvestable/WorldHarvestable';
 
 /* Errors */
 export * from './lib/error/InventoryFullError';

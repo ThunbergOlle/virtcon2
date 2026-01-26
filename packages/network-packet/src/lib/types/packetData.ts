@@ -63,6 +63,10 @@ export interface RequestDestroyResourcePacket {
   resourceEntityId: number;
 }
 
+export interface RequestDestroyHarvestablePacket {
+  harvestableEntityId: number;
+}
+
 export interface RequestPickupItemPacketData {
   itemEntityId: number;
 }

@@ -1,5 +1,5 @@
-import { DBItem, Harvestable } from '@virtcon2/static-game-data';
-import { Collider, Position, Resource, Sprite } from '../network-world-entities';
+import { DBItem, Harvestable as HarvestableData } from '@virtcon2/static-game-data';
+import { Collider, Position, Sprite, Harvestable } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
 import { AllTextureMaps } from '../SpriteMap';
@@ -7,14 +7,16 @@ import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { InvalidInputError } from '@shared';
 
-export const HarvestableEntityComponents = [Position, Sprite, Collider, Resource];
+export const HarvestableEntityComponents = [Position, Sprite, Collider, Harvestable];
+export const harvestableEntityComponents = HarvestableEntityComponents;
 
-export const createNewHarvestableEntity = (world: World, data: { pos: TileCoordinates; item: DBItem }): number => {
+// age is defined in ticks
+export const createNewHarvestableEntity = (world: World, data: { id: number; pos: TileCoordinates; item: DBItem; age: number }): number => {
   const { harvestable } = data.item;
   if (!harvestable) throw new InvalidInputError(`Item ${data.item.id} does not have a resource associated with it.`);
   const { x, y } = toPhaserPos({ x: data.pos.x, y: data.pos.y });
   const harvestableEid = addEntity(world);
-  const harvestableInfo = Harvestable[harvestable.name];
+  const harvestableInfo = HarvestableData[harvestable.name];
 
   addComponent(world, Position, harvestableEid);
   Position(world).x[harvestableEid] = x;
@@ -41,9 +43,12 @@ export const createNewHarvestableEntity = (world: World, data: { pos: TileCoordi
   Collider(world).static[harvestableEid] = 1;
   Collider(world).group[harvestableEid] = GameObjectGroups.HARVESTABLE;
 
-  addComponent(world, Resource, harvestableEid);
-  Resource(world).health[harvestableEid] = harvestable.full_health;
-  Resource(world).itemId[harvestableEid] = data.item.id;
+  addComponent(world, Harvestable, harvestableEid);
+  Harvestable(world).id[harvestableEid] = data.id;
+  Harvestable(world).health[harvestableEid] = harvestable.full_health;
+  Harvestable(world).itemId[harvestableEid] = data.item.id;
+  Harvestable(world).dropCount[harvestableEid] = harvestable.defaultDropCount;
+  Harvestable(world).age[harvestableEid] = data.age;
 
   return harvestableEid;
 };

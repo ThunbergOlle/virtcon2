@@ -5,8 +5,10 @@ import * as DB from '@virtcon2/database-postgres';
 import {
   allComponents,
   createNewBuildingEntity,
+  createNewHarvestableEntity,
   createNewResourceEntity,
   createNewWorldBorderTile,
+  Harvestable,
   Resource,
   tileSize,
   WorldBorderSide,
@@ -15,7 +17,8 @@ import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
 import { createBuildingProcessingSystem } from '../systems/buildingProcessingSystem';
 import { SyncEntities, WorldBounds, WorldData } from '../systems/types';
-import { AppDataSource, WorldResource } from '@virtcon2/database-postgres';
+import { AppDataSource, WorldHarvestable, WorldResource } from '@virtcon2/database-postgres';
+import { getItemByName, Harvestable as HarvestableData } from '@virtcon2/static-game-data';
 
 const worlds = [];
 const systems: { [key: string]: System<SyncEntities>[] } = {};
@@ -106,7 +109,7 @@ export const initialiseWorldBounds = async (world: World, bounds: WorldBounds[])
 };
 
 export const initializeWorld = async (dbWorldId: string) => {
-  const { worldBuildings, worldResources, world: dbWorld } = await loadWorldFromDb(dbWorldId);
+  const { worldBuildings, worldResources, worldHarvestables, world: dbWorld } = await loadWorldFromDb(dbWorldId);
 
   const world = newEntityWorld(dbWorldId);
 
@@ -136,6 +139,25 @@ export const initializeWorld = async (dbWorldId: string) => {
       quantity: worldResource.quantity,
     });
   }
+
+  for (const worldHarvestable of worldHarvestables) {
+    const harvestableInfo = HarvestableData[worldHarvestable.harvestableName];
+    const item = getItemByName(harvestableInfo.item);
+    if (!item) {
+      log(`Item ${harvestableInfo.item} not found for harvestable ${worldHarvestable.harvestableName}`, LogLevel.WARN, LogApp.SERVER);
+      continue;
+    }
+
+    createNewHarvestableEntity(world, {
+      id: worldHarvestable.id,
+      pos: {
+        x: worldHarvestable.x,
+        y: worldHarvestable.y,
+      },
+      item,
+      age: worldHarvestable.age,
+    });
+  }
 };
 
 export const tickSystems = (world: World): SyncEntities[] => {
@@ -157,7 +179,11 @@ export const syncWorldState = async (world: World) => {
   const resourceQuery = defineQuery(Resource);
   const resourceEntities = resourceQuery(world);
 
+  const harvestableQuery = defineQuery(Harvestable);
+  const harvestableEntities = harvestableQuery(world);
+
   await AppDataSource.transaction(async (transaction) => {
+    // Sync resources
     const dbResources = await transaction.find(WorldResource, {
       where: { world: { id: world } },
       select: ['id', 'quantity'],
@@ -176,6 +202,24 @@ export const syncWorldState = async (world: World) => {
       if (dbResource.quantity !== Resource(world).quantity[resourceEid]) {
         dbResource.quantity = Resource(world).quantity[resourceEid];
         await dbResource.save();
+      }
+    }
+
+    // Sync harvestables - delete DB records where entity no longer exists in ECS (harvested)
+    const dbHarvestables = await transaction.find(WorldHarvestable, {
+      where: { world: { id: world } },
+      select: ['id'],
+    });
+
+    const ecsHarvestableIds = new Set<number>();
+    for (let i = 0; i < harvestableEntities.length; i++) {
+      ecsHarvestableIds.add(Harvestable(world).id[harvestableEntities[i]]);
+    }
+
+    for (const dbHarvestable of dbHarvestables) {
+      if (!ecsHarvestableIds.has(dbHarvestable.id)) {
+        await transaction.delete(WorldHarvestable, { id: dbHarvestable.id });
+        log(`Deleted harvested harvestable ${dbHarvestable.id} from database`, LogLevel.INFO, LogApp.SERVER);
       }
     }
   });

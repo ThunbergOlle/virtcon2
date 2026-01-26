@@ -1,10 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export type HoveredEntityType = 'resource' | 'harvestable';
+
 export type HoveredResource = {
   eid: number;
   itemId: number;
   quantity: number;
   health: number;
+  type: HoveredEntityType;
 } | null;
 
 type ResourceTooltipState = {

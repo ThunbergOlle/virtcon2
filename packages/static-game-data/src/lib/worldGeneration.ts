@@ -3,6 +3,7 @@ import { InvalidStateError, TileType, TILE_LEVEL, TILE_TYPE, WithRequired } from
 import { createNoise2D } from 'simplex-noise';
 import { all_spawnable_db_items } from '..';
 import { DBItem } from './items/item_type';
+import { Harvestable, HarvestableType } from './harvestable_type';
 
 export const getHeightAtPoint = (seed: number, x: number, y: number): number => {
   const randomGenerator = seedRandom(seed);
@@ -124,4 +125,30 @@ export const getTileAtPoint = (seed: number, x: number, y: number) => {
   }, TILE_TYPE.WATER as TileType);
 
   return tileType as TileType;
+};
+
+const allHarvestables = Object.values(Harvestable);
+
+export const shouldGenerateHarvestable = (
+  x: number,
+  y: number,
+  seed: number,
+): { shouldSpawn: boolean; harvestable: HarvestableType | null } => {
+  // Use a different offset for harvestable hash to avoid overlapping with resources
+  const hash = hashPosition(x, y, seed + 12345);
+  const pseudoRandom = Math.abs(hash % 10000) / 10000;
+
+  const height = getHeightAtPoint(seed, x, y);
+
+  // Find a harvestable that can spawn at this height
+  for (const harvestable of allHarvestables) {
+    const { spawnSettings } = harvestable;
+    const canSpawn = spawnSettings.minHeight <= height && spawnSettings.maxHeight >= height;
+
+    if (canSpawn && pseudoRandom < spawnSettings.chance) {
+      return { shouldSpawn: true, harvestable };
+    }
+  }
+
+  return { shouldSpawn: false, harvestable: null };
 };

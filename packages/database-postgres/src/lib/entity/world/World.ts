@@ -1,11 +1,20 @@
 import { InvalidStateError, plotSize, WorldSettings } from '@shared';
-import { DBItemName, get_resource_by_item_name, ResourceNames, Resources, shouldGenerateResource } from '@virtcon2/static-game-data';
+import {
+  DBItemName,
+  get_resource_by_item_name,
+  ResourceNames,
+  Resources,
+  shouldGenerateResource,
+  shouldGenerateHarvestable,
+  Harvestable as HarvestableData,
+} from '@virtcon2/static-game-data';
 import seedRandom from 'seedrandom';
 import { createNoise2D } from 'simplex-noise';
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, BeforeInsert, Column, Entity, EntityManager, OneToMany, PrimaryColumn } from 'typeorm';
 import { AppDataSource } from '../../data-source';
 import { WorldBuilding } from '../world_building/WorldBuilding';
+import { WorldHarvestable } from '../world_harvestable/WorldHarvestable';
 import { WorldPlot } from '../world_plot/WorldPlot';
 import { WorldResource } from '../world_resource/WorldResource';
 
@@ -89,6 +98,32 @@ export class World extends BaseEntity {
           quantity,
         });
         await transaction.save(worldResource);
+      }
+
+    // Generate harvestables (trees)
+    for (let x = 0; x < plotSize; x++)
+      for (let y = 0; y < plotSize; y++) {
+        const { shouldSpawn, harvestable } = shouldGenerateHarvestable(x, y, seed);
+        if (!shouldSpawn || !harvestable) continue;
+
+        // Skip if there's already a resource at this position
+        const existingResource = await transaction.findOne(WorldResource, {
+          where: { worldId, x, y },
+        });
+        if (existingResource) continue;
+
+        const harvestableInfo = HarvestableData[harvestable.name];
+        // Create harvestable with max age (12000 for WOOD - fully grown)
+        const maxAge = harvestableInfo.states[harvestableInfo.states.length - 1]?.age ?? 12000;
+
+        const worldHarvestable = WorldHarvestable.create({
+          worldId: worldId,
+          x: x,
+          y: y,
+          harvestableName: harvestable.name,
+          age: maxAge,
+        });
+        await transaction.save(worldHarvestable);
       }
 
     const startPlot = WorldPlot.create({ worldId: worldId, x: 0, y: 0 });

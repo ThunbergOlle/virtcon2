@@ -9,6 +9,7 @@ export enum PacketType {
   PLAYER_INVENTORY = 'playerInventory',
   REQUEST_JOIN = 'requestJoin',
   REQUEST_DESTROY_RESOURCE = 'requestDestroyResource',
+  REQUEST_DESTROY_HARVESTABLE = 'requestDestroyHarvestable',
   REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
   REQUEST_MOVE_INVENTORY_ITEM = 'requestMoveInventoryItem',
   REQUEST_WORLD_BUILDING_CHANGE_OUTPUT = 'requestWorldBuildingChangeOutput',

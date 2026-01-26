@@ -12,7 +12,7 @@ import {
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
-import { getItemByName, Resources, ToolType } from '@virtcon2/static-game-data';
+import { getItemByName, Harvestable as HarvestableData, Resources, ToolType } from '@virtcon2/static-game-data';
 import { memoizeWith } from 'ramda';
 import { events } from '../events/Events';
 import { GameState } from '../scenes/Game';
@@ -20,6 +20,7 @@ import { store } from '../store';
 import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
 import { hoveredResource } from '../ui/components/resourceTooltip/ResourceTooltipSlice';
 import { isTryingToPlaceBuilding } from '../ui/lib/buildingPlacement';
+import { damageHarvestable, shakeHarvestableSprite } from './HarvestableSystem';
 import { damageResource, shakeResourceSprite } from './ResourceSystem';
 
 const speed = 750;
@@ -95,6 +96,15 @@ const getTargetItemIds = (tool: ToolType) =>
 
 const getTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item, getTargetItemIds);
 
+const getHarvestableTargetItemIds = (tool: ToolType) =>
+  (tool.harvestableTargets ?? [])
+    .map((targetHarvestableName) => HarvestableData[targetHarvestableName].item)
+    .map(getItemByName)
+    .filter((item) => item)
+    .map((item) => item!.id);
+
+const getHarvestableTargetItemIdsMemoized = memoizeWith((tool: ToolType) => tool.item + '_harvestable', getHarvestableTargetItemIds);
+
 const shouldUpdateHighlight = every(30);
 let highlightedSprite: Phaser.GameObjects.Sprite | null = null;
 const highlightTargets = (state: GameState, world: World, playerEid: number) => {
@@ -112,15 +122,22 @@ const highlightTargets = (state: GameState, world: World, playerEid: number) => 
     return;
   }
 
-  const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
-  const canDamage = targetItemsIds.includes(hovered.itemId);
+  // Check if tool can damage the hovered entity based on its type
+  let canDamage = false;
+  if (hovered.type === 'resource') {
+    const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
+    canDamage = targetItemsIds.includes(hovered.itemId);
+  } else if (hovered.type === 'harvestable') {
+    const harvestableTargetItemIds = getHarvestableTargetItemIdsMemoized(selectedTool);
+    canDamage = harvestableTargetItemIds.includes(hovered.itemId);
+  }
 
-  // Check if resource is in range
-  const resourceX = Position(world).x[hovered.eid];
-  const resourceY = Position(world).y[hovered.eid];
+  // Check if entity is in range
+  const entityX = Position(world).x[hovered.eid];
+  const entityY = Position(world).y[hovered.eid];
   const playerX = Position(world).x[playerEid];
   const playerY = Position(world).y[playerEid];
-  const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
+  const distance = Phaser.Math.Distance.Between(playerX, playerY, entityX, entityY);
   const inRange = distance < Range(world).radius[playerEid];
 
   const sprite = state.spritesById[hovered.eid];
@@ -145,7 +162,7 @@ function attackClickedResource(state: GameState, world: World, playerEid: number
   // Check if player is idle
   if (MainPlayer(world).action[playerEid] !== MainPlayerAction.IDLE) return;
 
-  // Get hovered resource from Redux
+  // Get hovered entity from Redux
   const hovered = hoveredResource(store.getState());
   if (!hovered) return;
 
@@ -158,17 +175,25 @@ function attackClickedResource(state: GameState, world: World, playerEid: number
   const textureId = ItemTextureMap[selectedItem.item.name]?.textureId;
   if (!textureId) return;
 
-  // Validate resource is within range
-  const resourceX = Position(world).x[hovered.eid];
-  const resourceY = Position(world).y[hovered.eid];
+  // Validate entity is within range
+  const entityX = Position(world).x[hovered.eid];
+  const entityY = Position(world).y[hovered.eid];
   const playerX = Position(world).x[playerEid];
   const playerY = Position(world).y[playerEid];
-  const distance = Phaser.Math.Distance.Between(playerX, playerY, resourceX, resourceY);
+  const distance = Phaser.Math.Distance.Between(playerX, playerY, entityX, entityY);
   if (distance >= Range(world).radius[playerEid]) return;
 
-  // Validate tool can damage resource type
-  const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
-  if (!targetItemsIds.includes(hovered.itemId)) return;
+  // Validate tool can damage entity type
+  let canDamage = false;
+  if (hovered.type === 'resource') {
+    const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
+    canDamage = targetItemsIds.includes(hovered.itemId);
+  } else if (hovered.type === 'harvestable') {
+    const harvestableTargetItemIds = getHarvestableTargetItemIdsMemoized(selectedTool);
+    canDamage = harvestableTargetItemIds.includes(hovered.itemId);
+  }
+
+  if (!canDamage) return;
 
   // Execute attack
   MainPlayer(world).action[playerEid] = MainPlayerAction.ATTACKING;
@@ -178,13 +203,23 @@ function attackClickedResource(state: GameState, world: World, playerEid: number
 
   sprite.anims.play(animationName, true);
 
+  // Apply shake effect based on entity type
   setTimeout(() => {
-    shakeResourceSprite(state, hovered.eid);
+    if (hovered.type === 'resource') {
+      shakeResourceSprite(state, hovered.eid);
+    } else if (hovered.type === 'harvestable') {
+      shakeHarvestableSprite(state, hovered.eid);
+    }
   }, 300);
 
+  // Apply damage based on entity type
   setTimeout(() => {
     MainPlayer(world).action[playerEid] = MainPlayerAction.IDLE;
-    damageResource(world, state, hovered.eid, selectedTool.damage);
+    if (hovered.type === 'resource') {
+      damageResource(world, state, hovered.eid, selectedTool.damage);
+    } else if (hovered.type === 'harvestable') {
+      damageHarvestable(world, state, hovered.eid, selectedTool.damage);
+    }
   }, 500);
 }
 

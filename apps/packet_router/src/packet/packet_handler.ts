@@ -5,6 +5,7 @@ import {
   CreateConnectionPointPacket,
   PacketSender,
   PacketType,
+  RequestDestroyHarvestablePacket,
   RequestDestroyResourcePacket,
   RequestJoinPacketData,
   RequestMoveInventoryItemPacketData,
@@ -15,6 +16,7 @@ import {
 import syncClientEntityPacket from './enqueue';
 import { requestCreateConnectionPoint } from './packets/requestCreateConnectionPoint';
 import requestPickupItemPacket from './packets/requestPickupItemPacket';
+import request_destroy_harvestable_packet from './packets/request_destroy_harvestable_packet';
 import request_destroy_resource_packet from './packets/request_destroy_resource_packet';
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
@@ -30,6 +32,8 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return requestJoinPacket(packet as ClientPacketWithSender<RequestJoinPacketData>);
     case PacketType.REQUEST_DESTROY_RESOURCE:
       return request_destroy_resource_packet(packet as ClientPacketWithSender<RequestDestroyResourcePacket>);
+    case PacketType.REQUEST_DESTROY_HARVESTABLE:
+      return request_destroy_harvestable_packet(packet as ClientPacketWithSender<RequestDestroyHarvestablePacket>);
     case PacketType.REQUEST_PLACE_BUILDING:
       return requestPlaceBuildingPacket(packet as ClientPacketWithSender<RequestPlaceBuildingPacketData>);
     case PacketType.REQUEST_MOVE_INVENTORY_ITEM:

@@ -25,6 +25,7 @@ import { createMainPlayerSyncSystem } from '../systems/MainPlayerSyncSystem';
 import { createMainPlayerSystem } from '../systems/MainPlayerSystem';
 import { createPlayerSystem } from '../systems/PlayerSystem';
 import { createResourceSystem } from '../systems/ResourceSystem';
+import { createHarvestableSystem } from '../systems/HarvestableSystem';
 import { createMovingSpriteSystem, createSpriteRegisterySystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
 import { createConnectionSystem } from '../systems/ConnectionSystem';
@@ -71,6 +72,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.TERRAIN]: null,
       [GameObjectGroups.BUILDING_NO_COLLIDE]: null,
       [GameObjectGroups.ITEM]: null,
+      [GameObjectGroups.HARVESTABLE]: null,
     },
   };
   public spriteSystem?: System<GameState>;
@@ -87,6 +89,7 @@ export default class Game extends Scene implements SceneStates {
   public itemSystem?: System<GameState>;
   public worldBorderSystem?: System<GameState>;
   public cursorHighlightSystem?: System<GameState>;
+  public harvestableSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
@@ -156,6 +159,7 @@ export default class Game extends Scene implements SceneStates {
       [GameObjectGroups.BUILDING_NO_COLLIDE]: this.physics.add.staticGroup(),
       [GameObjectGroups.ITEM]: this.physics.add.staticGroup(),
       [GameObjectGroups.BORDER]: this.physics.add.staticGroup(),
+      [GameObjectGroups.HARVESTABLE]: this.physics.add.staticGroup(),
     };
 
     this.physics.add.collider(
@@ -176,6 +180,11 @@ export default class Game extends Scene implements SceneStates {
     this.physics.add.collider(
       this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
       this.state.gameObjectGroups[GameObjectGroups.BORDER] ?? [],
+    );
+
+    this.physics.add.collider(
+      this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
+      this.state.gameObjectGroups[GameObjectGroups.HARVESTABLE] ?? [],
     );
 
     events.subscribe('joinWorld', (worldId) => {
@@ -206,6 +215,7 @@ export default class Game extends Scene implements SceneStates {
       this.itemSystem = createItemSystem(this.state.world, this);
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
       this.cursorHighlightSystem = createCursorHighlightSystem(this, this.state.world);
+      this.harvestableSystem = createHarvestableSystem(this.state.world);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
@@ -232,6 +242,7 @@ export default class Game extends Scene implements SceneStates {
       !this.connectionSystem ||
       !this.worldBorderSystem ||
       !this.cursorHighlightSystem ||
+      !this.harvestableSystem ||
       !this.isInitialized
     )
       return;
@@ -249,6 +260,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.mainPlayerSyncSystem(newState);
 
     newState = this.resourceSystem(newState);
+    newState = this.harvestableSystem(newState);
     newState = this.buildingSystem(newState);
 
     newState = this.buildingPlacementSystem(newState);
