@@ -102,6 +102,11 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'stone_pickaxe',
     variants: ['sprites/items/stone_pickaxe.png'],
   },
+  [DBItemName.SAPLING]: {
+    textureId: 16,
+    textureName: 'sapling',
+    variants: ['sprites/items/sapling.png'],
+  },
 };
 
 export const HarvestableTextureMap: Record<HarvestableNames, TextureMetaData | null> = {

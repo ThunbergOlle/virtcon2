@@ -6,6 +6,7 @@ import item_stick from './lib/items/db/item_stick';
 import item_stone from './lib/items/db/item_stone';
 import { stone_pickaxe, stone_pickaxe_tool } from './lib/items/db/item_stone_pickaxe';
 import item_wood from './lib/items/db/item_wood';
+import item_sapling from './lib/items/db/item_sapling';
 import { wood_axe, wood_axe_tool } from './lib/items/db/item_wood_axe';
 import { wood_pickaxe, wood_pickaxe_tool } from './lib/items/db/item_wood_pickaxe';
 import { DBItemName } from './lib/items/item_type';
@@ -15,6 +16,7 @@ import { item_stick_recipe } from './lib/items_recipe/db/item_stick';
 import { wood_axe_recipe } from './lib/items_recipe/db/item_wood_axe';
 import { wood_pickaxe_recipe } from './lib/items_recipe/db/item_wood_pickaxe';
 import { stone_pickaxe_recipe } from './lib/items_recipe/db/item_stone_pickaxe';
+import { item_sapling_recipe } from './lib/items_recipe/db/item_sapling';
 import { ResourceNames, Resources } from './lib/resources/resources_type';
 
 /* Items */
@@ -26,6 +28,7 @@ export * from './lib/items/db/item_drill';
 export * from './lib/items/db/item_wood_axe';
 export * from './lib/items/db/item_wood_pickaxe';
 export * from './lib/items/db/item_stone_pickaxe';
+export * from './lib/items/db/item_sapling';
 
 export * from './lib/harvestable_type';
 
@@ -35,6 +38,7 @@ export * from './lib/items/tool_type';
 export const all_db_items = [
   item_wood,
   item_stick,
+  item_sapling,
   item_sawmill,
   item_drill,
   item_stone,
@@ -71,9 +75,11 @@ export * from './lib/items_recipe/db/item_drill';
 export * from './lib/items_recipe/db/item_wood_axe';
 export * from './lib/items_recipe/db/item_wood_pickaxe';
 export * from './lib/items_recipe/db/item_stone_pickaxe';
+export * from './lib/items_recipe/db/item_sapling';
 
 export const all_db_items_recipes = [
   ...item_stick_recipe,
+  ...item_sapling_recipe,
   ...item_sawmill_recipe,
   ...item_drill_recipe,
   ...wood_axe_recipe,

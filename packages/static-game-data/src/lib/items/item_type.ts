@@ -24,6 +24,7 @@ export enum DBItemName {
   WOOD_AXE = 'wood_axe',
   WOOD_PICKAXE = 'wood_pickaxe',
   STONE_PICKAXE = 'stone_pickaxe',
+  SAPLING = 'sapling',
 }
 export interface DBItemSpawnSettings {
   minHeight: number;
