@@ -1,3 +1,8 @@
+---
+name: ecs
+description: Use when working with the Entity Component System (ECS), including finding or modifying components, systems, worlds, debugging, or adding new components/systems.
+---
+
 # ECS Skill
 
 Use this skill when working with the Entity Component System (ECS), including:
