@@ -57,6 +57,7 @@ export interface CreateConnectionPointPacket {
 export interface LoadWorldPacketData {
   id: string;
   mainPlayerId: number;
+  seed: number;
 }
 
 export interface RequestDestroyResourcePacket {
@@ -86,4 +87,10 @@ export interface RequestMoveInventoryItemPacketData {
   toInventoryId: number;
   toInventorySlot: number;
   inventoryItem: ServerInventoryItem;
+}
+
+export interface RequestPlaceHarvestablePacketData {
+  itemId: number;
+  x: number;
+  y: number;
 }

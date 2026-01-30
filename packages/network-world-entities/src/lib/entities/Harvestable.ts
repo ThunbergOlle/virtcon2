@@ -1,4 +1,4 @@
-import { DBItem, Harvestable as HarvestableData } from '@virtcon2/static-game-data';
+import { DBItem, Harvestable as HarvestableData, HarvestableType } from '@virtcon2/static-game-data';
 import { Collider, Position, Sprite, Harvestable } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
@@ -6,6 +6,23 @@ import { AllTextureMaps } from '../SpriteMap';
 import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { InvalidInputError } from '@shared';
+
+/**
+ * Get the appropriate sprite name for a harvestable based on its age
+ */
+export const getSpriteForAge = (harvestableInfo: HarvestableType, age: number): string => {
+  // Sort states by age descending to find the highest age threshold that the current age meets
+  const sortedStates = [...harvestableInfo.states].sort((a, b) => b.age - a.age);
+
+  for (const state of sortedStates) {
+    if (age >= state.age) {
+      return state.sprite;
+    }
+  }
+
+  // Fallback to the first state or base sprite
+  return harvestableInfo.states[0]?.sprite ?? harvestableInfo.sprite;
+};
 
 export const HarvestableEntityComponents = [Position, Sprite, Collider, Harvestable];
 export const harvestableEntityComponents = HarvestableEntityComponents;
@@ -23,9 +40,16 @@ export const createNewHarvestableEntity = (world: World, data: { id: number; pos
   Position(world).y[harvestableEid] = y;
 
   addComponent(world, Sprite, harvestableEid);
-  Sprite(world).texture[harvestableEid] = AllTextureMaps[harvestable.name]?.textureId ?? 0;
-  Sprite(world).variant[harvestableEid] = (data.pos.x + data.pos.y) % (AllTextureMaps[harvestable.name]?.variants.length ?? 0);
+  const spriteName = getSpriteForAge(harvestableInfo, data.age);
+  const textureMetadata = AllTextureMaps[spriteName] ?? AllTextureMaps[harvestable.name];
+
+  Sprite(world).texture[harvestableEid] = textureMetadata?.textureId ?? 0;
+  Sprite(world).variant[harvestableEid] = (data.pos.x + data.pos.y) % (textureMetadata?.variants.length ?? 0);
   Sprite(world).opacity[harvestableEid] = 1;
+
+  // Always use the same sprite dimensions from harvestable settings, regardless of growth stage
+  Sprite(world).width[harvestableEid] = (harvestableInfo.spriteWidth ?? harvestableInfo.width ?? 1) * 16;
+  Sprite(world).height[harvestableEid] = (harvestableInfo.spriteHeight ?? harvestableInfo.height ?? 1) * 16;
 
   addComponent(world, Collider, harvestableEid);
   Collider(world).sizeWidth[harvestableEid] = harvestableInfo.width * 16;

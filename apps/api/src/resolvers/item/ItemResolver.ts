@@ -1,6 +1,8 @@
 import { AppDataSource, Building, Item, ItemRecipe, publishUserInventoryUpdate, UserInventoryItem } from '@virtcon2/database-postgres';
+import { get_item_by_id } from '@virtcon2/static-game-data';
 import { Arg, Ctx, FieldResolver, Int, Mutation, Query, Resolver, ResolverInterface, Root } from 'type-graphql';
 import { RequestContext } from '../../graphql/RequestContext';
+import { HarvestableGraphQL } from './HarvestableType';
 
 @Resolver(() => Item)
 export class ItemResolver implements ResolverInterface<Item> {
@@ -21,6 +23,22 @@ export class ItemResolver implements ResolverInterface<Item> {
   async building(@Root() item: Item): Promise<Building> {
     if (!item.buildingId) return null;
     return await Building.findOne({ where: { id: item.buildingId } });
+  }
+
+  @FieldResolver(() => HarvestableGraphQL, { nullable: true })
+  harvestable(@Root() item: Item): HarvestableGraphQL | null {
+    const staticItem = get_item_by_id(item.id);
+    if (!staticItem?.harvestable) return null;
+    return {
+      name: staticItem.harvestable.name,
+      sprite: staticItem.harvestable.sprite,
+      item: staticItem.harvestable.item,
+      full_health: staticItem.harvestable.full_health,
+      defaultDropCount: staticItem.harvestable.defaultDropCount,
+      layer: staticItem.harvestable.layer,
+      width: staticItem.harvestable.width,
+      height: staticItem.harvestable.height,
+    };
   }
 
   @Mutation(() => UserInventoryItem, { nullable: true })

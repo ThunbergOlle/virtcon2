@@ -10,6 +10,7 @@ import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../.
 import Window from '../../components/window/Window';
 import { useUser } from '../../context/user/UserContext';
 import { startPlaceBuildingIntent } from '../../lib/buildingPlacement';
+import { startPlaceHarvestableIntent } from '../../lib/harvestablePlacement';
 import { close, isWindowOpen, toggle, WindowType } from '../../lib/WindowSlice';
 
 const PLAYER_INVENTORY_FRAGMENT = gql`
@@ -25,6 +26,9 @@ const PLAYER_INVENTORY_FRAGMENT = gql`
       building {
         id
         is_rotatable
+      }
+      harvestable {
+        name
       }
     }
   }
@@ -83,11 +87,17 @@ export default function PlayerInventoryWindow() {
   }, [onInventoryButtonPressed]);
 
   const onItemWasClicked = (inventoryItem: DBUserInventoryItem) => {
-    if (!inventoryItem.item?.is_building) return;
+    if (inventoryItem.item?.is_building) {
+      dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
+      startPlaceBuildingIntent(inventoryItem);
+      return;
+    }
 
-    dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
-
-    startPlaceBuildingIntent(inventoryItem);
+    if (inventoryItem.item?.harvestable) {
+      dispatch(close(WindowType.VIEW_PLAYER_INVENTORY));
+      startPlaceHarvestableIntent(inventoryItem);
+      return;
+    }
   };
 
   const onInventoryDropItem = (item: InventoryItemType, slot: number, inventoryId: number) => {

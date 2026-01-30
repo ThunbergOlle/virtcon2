@@ -11,6 +11,7 @@ import {
   RequestMoveInventoryItemPacketData,
   RequestPickupItemPacketData,
   RequestPlaceBuildingPacketData,
+  RequestPlaceHarvestablePacketData,
   SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
 import syncClientEntityPacket from './enqueue';
@@ -21,6 +22,7 @@ import request_destroy_resource_packet from './packets/request_destroy_resource_
 import requestJoinPacket from './packets/request_join_packet';
 import request_move_inventory_item_packet from './packets/request_move_inventory_item_packet';
 import requestPlaceBuildingPacket from './packets/request_place_building_packet';
+import requestPlaceHarvestablePacket from './packets/request_place_harvestable_packet';
 
 interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
   sender?: PacketSender;
@@ -44,6 +46,8 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return requestCreateConnectionPoint(packet as ClientPacketWithSender<CreateConnectionPointPacket>);
     case PacketType.REQUEST_PICKUP_ITEM:
       return requestPickupItemPacket(packet as ClientPacketWithSender<RequestPickupItemPacketData>);
+    case PacketType.REQUEST_PLACE_HARVESTABLE:
+      return requestPlaceHarvestablePacket(packet as ClientPacketWithSender<RequestPlaceHarvestablePacketData>);
 
     default: {
       log(`Unknown packet type: ${packet.packet_type}`, LogLevel.ERROR);

@@ -55,12 +55,17 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   const serialize = defineSerializer(getSerializeConfig(packet.world_id)[SerializationID.PLAYER_FULL_SERVER]);
   const serializedPlayer = serialize(packet.world_id, [joinedPlayerEntity]);
 
+  // Load world to get the seed
+  const world = await World.findOne({ where: { id: packet.world_id } });
+  if (!world) throw new InvalidStateError(`World ${packet.world_id} not found`);
+
   await enqueuePacket<LoadWorldPacketData>({
     packet_type: PacketType.LOAD_WORLD,
     target: packet.sender.socket_id,
     data: {
       id: packet.world_id,
       mainPlayerId: user.id,
+      seed: world.seed,
     },
     sender: SERVER_SENDER,
   });

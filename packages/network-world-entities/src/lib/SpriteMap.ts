@@ -107,6 +107,16 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'sapling',
     variants: ['sprites/items/sapling.png'],
   },
+  [DBItemName.CARROT]: {
+    textureId: 17,
+    textureName: 'carrot',
+    variants: ['sprites/items/carrot.png'],
+  },
+  [DBItemName.CARROT_SEED]: {
+    textureId: 18,
+    textureName: 'carrot_seed',
+    variants: ['sprites/items/carrot_seed.png'],
+  },
 };
 
 export const HarvestableTextureMap: Record<HarvestableNames, TextureMetaData | null> = {
@@ -116,6 +126,44 @@ export const HarvestableTextureMap: Record<HarvestableNames, TextureMetaData | n
     variants: ['sprites/harvestables/harvestable_wood.png'],
     spriteSheetFrameWidth: 64,
     spriteSheetFrameHeight: 96,
+  },
+  [HarvestableNames.CARROT]: {
+    textureId: 303,
+    textureName: 'harvestable_carrot_3',
+    variants: ['sprites/harvestables/harvestable_carrot_3.png'],
+    spriteSheetFrameWidth: 32,
+    spriteSheetFrameHeight: 32,
+  },
+};
+
+export const HarvestableStageTextureMap: Record<string, TextureMetaData | null> = {
+  harvestable_wood_small: {
+    textureId: 302,
+    textureName: 'harvestable_wood_small',
+    variants: ['sprites/harvestables/harvestable_wood_small.png'],
+    spriteSheetFrameWidth: 64,
+    spriteSheetFrameHeight: 96,
+  },
+  harvestable_carrot_0: {
+    textureId: 304,
+    textureName: 'harvestable_carrot_0',
+    variants: ['sprites/harvestables/harvestable_carrot_0.png'],
+    spriteSheetFrameWidth: 32,
+    spriteSheetFrameHeight: 32,
+  },
+  harvestable_carrot_1: {
+    textureId: 305,
+    textureName: 'harvestable_carrot_1',
+    variants: ['sprites/harvestables/harvestable_carrot_1.png'],
+    spriteSheetFrameWidth: 32,
+    spriteSheetFrameHeight: 32,
+  },
+  harvestable_carrot_2: {
+    textureId: 306,
+    textureName: 'harvestable_carrot_2',
+    variants: ['sprites/harvestables/harvestable_carrot_2.png'],
+    spriteSheetFrameWidth: 32,
+    spriteSheetFrameHeight: 32,
   },
 };
 
@@ -242,6 +290,7 @@ export const AllTextureMaps = {
   ...ItemTextureMap,
   ...ResourceTextureMap,
   ...HarvestableTextureMap,
+  ...HarvestableStageTextureMap,
   ...MiscTextureMap,
   ...TileTextureMap,
 } as const;

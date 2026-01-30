@@ -1,11 +1,13 @@
 export * from './lib/network-world-entities';
 export * from './lib/SpriteMap';
 export * from './lib/utils/gameObject';
+export { getSpriteForAge } from './lib/entities/Harvestable';
 
 import {
   Building,
   Collider,
   GhostBuilding,
+  GhostHarvestable,
   MainPlayer,
   Player,
   Position,
@@ -26,6 +28,7 @@ export const allComponents = [
   Building,
   Collider,
   GhostBuilding,
+  GhostHarvestable,
   MainPlayer,
   Player,
   Position,

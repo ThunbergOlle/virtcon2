@@ -7,6 +7,8 @@ import item_stone from './lib/items/db/item_stone';
 import { stone_pickaxe, stone_pickaxe_tool } from './lib/items/db/item_stone_pickaxe';
 import item_wood from './lib/items/db/item_wood';
 import item_sapling from './lib/items/db/item_sapling';
+import item_carrot from './lib/items/db/item_carrot';
+import item_carrot_seed from './lib/items/db/item_carrot_seed';
 import { wood_axe, wood_axe_tool } from './lib/items/db/item_wood_axe';
 import { wood_pickaxe, wood_pickaxe_tool } from './lib/items/db/item_wood_pickaxe';
 import { DBItemName } from './lib/items/item_type';
@@ -29,6 +31,8 @@ export * from './lib/items/db/item_wood_axe';
 export * from './lib/items/db/item_wood_pickaxe';
 export * from './lib/items/db/item_stone_pickaxe';
 export * from './lib/items/db/item_sapling';
+export * from './lib/items/db/item_carrot';
+export * from './lib/items/db/item_carrot_seed';
 
 export * from './lib/harvestable_type';
 
@@ -39,6 +43,8 @@ export const all_db_items = [
   item_wood,
   item_stick,
   item_sapling,
+  item_carrot,
+  item_carrot_seed,
   item_sawmill,
   item_drill,
   item_stone,

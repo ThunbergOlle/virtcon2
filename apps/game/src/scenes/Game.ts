@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { SceneStates } from './interfaces';
 
-import { DBBuilding } from '@virtcon2/static-game-data';
+import { DBBuilding, HarvestableType } from '@virtcon2/static-game-data';
 import { events } from '../events/Events';
 
 import {
@@ -19,6 +19,7 @@ import { DisconnectPacketData, PacketType, RemoveEntityPacket, ServerPacket, Syn
 import { allComponents, GameObjectGroups, SerializationID, getSerializeConfig } from '@virtcon2/network-world-entities';
 import { Network } from '../networking/Network';
 import { createBuildingPlacementSystem } from '../systems/BuildingPlacementSystem';
+import { createHarvestablePlacementSystem } from '../systems/HarvestablePlacementSystem';
 import { createBuildingSystem } from '../systems/BuildingSystem';
 import { createColliderSystem } from '../systems/ColliderSystem';
 import { createMainPlayerSyncSystem } from '../systems/MainPlayerSyncSystem';
@@ -39,10 +40,12 @@ export const isPreloaded = makeVar(false);
 export interface GameState {
   dt: number;
   world: World;
+  worldSeed: number;
   spritesById: { [key: number]: Phaser.GameObjects.Sprite };
   playerById: { [key: number]: string };
   tagGameObjectById: { [key: number]: Phaser.GameObjects.Text };
   ghostBuildingById: { [key: number]: DBBuilding };
+  ghostHarvestableById: { [key: number]: HarvestableType };
   worldConnectionPointById: {
     [key: number]: { startPoint: Phaser.GameObjects.Arc; endPoint: Phaser.GameObjects.Arc; line: Phaser.GameObjects.Line };
   };
@@ -52,7 +55,7 @@ export interface GameState {
   };
 }
 
-export const debugMode = makeVar(false);
+export const debugMode = makeVar(true);
 
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
@@ -60,9 +63,11 @@ export default class Game extends Scene implements SceneStates {
   public state: GameState = {
     dt: 0,
     world: '',
+    worldSeed: 0,
     spritesById: {},
     playerById: {},
     ghostBuildingById: {},
+    ghostHarvestableById: {},
     tagGameObjectById: {},
     worldConnectionPointById: {},
     gameObjectGroups: {
@@ -82,6 +87,7 @@ export default class Game extends Scene implements SceneStates {
   public colliderSystem?: System<GameState>;
   public resourceSystem?: System<GameState>;
   public buildingPlacementSystem?: System<GameState>;
+  public harvestablePlacementSystem?: System<GameState>;
   public buildingSystem?: System<GameState>;
   public tagSystem?: System<GameState>;
   public playerSystem?: System<GameState>;
@@ -192,9 +198,10 @@ export default class Game extends Scene implements SceneStates {
       Game.network.join(worldId);
     });
 
-    events.subscribe('networkLoadWorld', ({ id, mainPlayerId }) => {
+    events.subscribe('networkLoadWorld', ({ id, mainPlayerId, seed }) => {
       Game.network.readReceivedPacketType(PacketType.LOAD_WORLD);
       this.state.world = createWorld(id);
+      this.state.worldSeed = seed;
 
       window.debugEntity = (entityId) => console.log(debugEntity(this.state.world, entityId));
 
@@ -208,6 +215,7 @@ export default class Game extends Scene implements SceneStates {
       this.colliderSystem = createColliderSystem(this.state.world, this);
       this.resourceSystem = createResourceSystem(this.state.world);
       this.buildingPlacementSystem = createBuildingPlacementSystem(this.state.world, this);
+      this.harvestablePlacementSystem = createHarvestablePlacementSystem(this.state.world, this);
       this.buildingSystem = createBuildingSystem(this.state.world);
       this.tagSystem = createTagSystem(this.state.world, this);
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId, this);
@@ -235,6 +243,7 @@ export default class Game extends Scene implements SceneStates {
       !this.mainPlayerSyncSystem ||
       !this.resourceSystem ||
       !this.buildingPlacementSystem ||
+      !this.harvestablePlacementSystem ||
       !this.buildingSystem ||
       !this.playerSystem ||
       !this.tagSystem ||
@@ -264,6 +273,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.buildingSystem(newState);
 
     newState = this.buildingPlacementSystem(newState);
+    newState = this.harvestablePlacementSystem(newState);
     newState = this.tagSystem(newState);
 
     newState = this.connectionSystem(newState);

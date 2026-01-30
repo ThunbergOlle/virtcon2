@@ -1,3 +1,4 @@
+import { Harvestable, HarvestableNames } from '../../harvestable_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
 const item_sapling: DBItem = {
@@ -9,6 +10,7 @@ const item_sapling: DBItem = {
   stack_size: 64,
   rarity: DBItemRarity.common,
   is_building: false,
+  harvestable: Harvestable[HarvestableNames.WOOD],
 };
 
 export default item_sapling;
