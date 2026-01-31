@@ -1,4 +1,3 @@
-import { Harvestable } from '../../harvestable_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
 const item_carrot: DBItem = {
@@ -10,7 +9,6 @@ const item_carrot: DBItem = {
   stack_size: 99,
   rarity: DBItemRarity.common,
   is_building: false,
-  harvestable: Harvestable.harvestable_carrot,
 };
 
 export default item_carrot;

@@ -10,14 +10,10 @@ import {
 } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestPlaceHarvestablePacketData } from '@virtcon2/network-packet';
 
-import {
-  createNewHarvestableEntity,
-  getSerializeConfig,
-  SerializationID,
-} from '@virtcon2/network-world-entities';
+import { createNewHarvestableEntity, getSerializeConfig, SerializationID } from '@virtcon2/network-world-entities';
 import { defineSerializer } from '@virtcon2/bytenetc';
 import { syncServerEntities } from '../enqueue';
-import { get_item_by_id, getTileAtPoint } from '@virtcon2/static-game-data';
+import { get_item_by_id, getTileAtPoint, getHarvestableByItem } from '@virtcon2/static-game-data';
 
 export default async function requestPlaceHarvestablePacket(packet: ClientPacketWithSender<RequestPlaceHarvestablePacketData>) {
   const player_id = packet.sender.id;
@@ -107,7 +103,7 @@ export default async function requestPlaceHarvestablePacket(packet: ClientPacket
   const harvestableEntityId = createNewHarvestableEntity(packet.world_id, {
     id: worldHarvestable.id,
     pos: { x: packet.data.x, y: packet.data.y },
-    item: item,
+    harvestable: getHarvestableByItem(item.name),
     age: 0,
   });
 

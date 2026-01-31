@@ -4,6 +4,7 @@ export const Harvestable = defineComponent('harvestable', {
   id: Types.ui32,
   health: Types.i32,
   itemId: Types.ui16,
+  dropItemId: Types.ui16,
   dropCount: Types.ui8,
   age: Types.i32,
 });

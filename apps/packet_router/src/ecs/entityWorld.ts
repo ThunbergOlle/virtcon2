@@ -156,7 +156,7 @@ export const initializeWorld = async (dbWorldId: string) => {
         x: worldHarvestable.x,
         y: worldHarvestable.y,
       },
-      item,
+      harvestable: harvestableInfo,
       age: worldHarvestable.age,
     });
   }

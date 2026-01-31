@@ -9,6 +9,7 @@ export interface HarvestableType {
   name: HarvestableNames;
   sprite: string;
   item: DBItemName;
+  dropItemName: DBItemName;
   full_health: number;
   defaultDropCount: number;
   states: {
@@ -48,7 +49,8 @@ export const Harvestable: Record<HarvestableNames, HarvestableType> = {
       maxHeight: 0.8,
       chance: 0.5,
     },
-    item: DBItemName.WOOD,
+    item: DBItemName.SAPLING,
+    dropItemName: DBItemName.WOOD,
     sprite: 'harvestable_wood',
     full_health: 5,
     height: 0.5,
@@ -84,7 +86,8 @@ export const Harvestable: Record<HarvestableNames, HarvestableType> = {
       maxHeight: 0.7,
       chance: 0.01,
     },
-    item: DBItemName.CARROT,
+    item: DBItemName.CARROT_SEED,
+    dropItemName: DBItemName.CARROT,
     sprite: 'harvestable_carrot_3',
     full_health: 1,
     height: 1,
@@ -93,4 +96,10 @@ export const Harvestable: Record<HarvestableNames, HarvestableType> = {
     spriteWidth: 1,
     collider: false,
   },
+};
+
+export const isHarvestableMature = (harvestableName: HarvestableNames, age: number): boolean => {
+  const harvestable = Harvestable[harvestableName];
+  const matureState = [...harvestable.states].sort((a, b) => b.age - a.age)[0];
+  return age >= matureState.age;
 };

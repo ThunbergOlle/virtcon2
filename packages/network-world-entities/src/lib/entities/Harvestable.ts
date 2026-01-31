@@ -1,4 +1,4 @@
-import { DBItem, Harvestable as HarvestableData, HarvestableType } from '@virtcon2/static-game-data';
+import { DBItem, getItemByName, Harvestable as HarvestableData, HarvestableType } from '@virtcon2/static-game-data';
 import { Collider, Position, Sprite, Harvestable } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
@@ -27,9 +27,11 @@ export const HarvestableEntityComponents = [Position, Sprite, Collider, Harvesta
 export const harvestableEntityComponents = HarvestableEntityComponents;
 
 // age is defined in ticks
-export const createNewHarvestableEntity = (world: World, data: { id: number; pos: TileCoordinates; item: DBItem; age: number }): number => {
-  const { harvestable } = data.item;
-  if (!harvestable) throw new InvalidInputError(`Item ${data.item.id} does not have a resource associated with it.`);
+export const createNewHarvestableEntity = (
+  world: World,
+  data: { id: number; pos: TileCoordinates; harvestable: HarvestableType; age: number },
+): number => {
+  const { harvestable } = data;
   const { x, y } = toPhaserPos({ x: data.pos.x, y: data.pos.y });
   const harvestableEid = addEntity(world);
   const harvestableInfo = HarvestableData[harvestable.name];
@@ -59,8 +61,9 @@ export const createNewHarvestableEntity = (world: World, data: { id: number; pos
   addComponent(world, Harvestable, harvestableEid);
   Harvestable(world).id[harvestableEid] = data.id;
   Harvestable(world).health[harvestableEid] = harvestable.full_health;
-  Harvestable(world).itemId[harvestableEid] = data.item.id;
+  Harvestable(world).itemId[harvestableEid] = getItemByName(harvestable.item).id;
   Harvestable(world).dropCount[harvestableEid] = harvestable.defaultDropCount;
+  Harvestable(world).dropItemId[harvestableEid] = getItemByName(harvestable.dropItemName).id;
   Harvestable(world).age[harvestableEid] = data.age;
 
   return harvestableEid;

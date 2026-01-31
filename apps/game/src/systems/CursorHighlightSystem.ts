@@ -77,6 +77,7 @@ export const createCursorHighlightSystem = (scene: Phaser.Scene, world: World) =
               quantity: 0, // Harvestables don't have quantity
               health: Harvestable(world).health[eid],
               type: 'harvestable',
+              dropCount: Harvestable(world).dropCount[eid],
             })
           );
           foundEntity = true;

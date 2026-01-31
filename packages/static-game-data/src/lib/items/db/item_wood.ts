@@ -1,4 +1,3 @@
-import { Harvestable, HarvestableNames } from '../../harvestable_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 
 const item_wood: DBItem = {
@@ -9,7 +8,6 @@ const item_wood: DBItem = {
   description: 'Wood is a natural resource that can be used to craft items.',
   icon: 'wood.png',
   rarity: DBItemRarity.common,
-  harvestable: Harvestable[HarvestableNames.WOOD],
   is_building: false,
 };
 export default item_wood;

@@ -30,10 +30,17 @@ export const ResourceTooltip = () => {
           </div>
         </div>
         <div className="border-t border-gray-700 pt-2 mt-2">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">Quantity:</span>
-            <span className="text-yellow-400 font-bold text-sm">{resource.quantity}</span>
-          </div>
+          {resource.type === 'resource' ? (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-300 text-sm">Quantity:</span>
+              <span className="text-yellow-400 font-bold text-sm">{resource.quantity}</span>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-300 text-sm">Drop Count:</span>
+              <span className="text-yellow-400 font-bold text-sm">{resource.dropCount}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center mt-1">
             <span className="text-gray-300 text-sm">Health:</span>
             <span className="text-green-400 font-bold text-sm">{resource.health}</span>

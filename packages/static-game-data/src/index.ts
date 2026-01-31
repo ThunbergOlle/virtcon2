@@ -11,7 +11,7 @@ import item_carrot from './lib/items/db/item_carrot';
 import item_carrot_seed from './lib/items/db/item_carrot_seed';
 import { wood_axe, wood_axe_tool } from './lib/items/db/item_wood_axe';
 import { wood_pickaxe, wood_pickaxe_tool } from './lib/items/db/item_wood_pickaxe';
-import { DBItemName } from './lib/items/item_type';
+import { DBItem, DBItemName } from './lib/items/item_type';
 import { item_drill_recipe } from './lib/items_recipe/db/item_drill';
 import { item_sawmill_recipe } from './lib/items_recipe/db/item_sawmill';
 import { item_stick_recipe } from './lib/items_recipe/db/item_stick';
@@ -20,6 +20,8 @@ import { wood_pickaxe_recipe } from './lib/items_recipe/db/item_wood_pickaxe';
 import { stone_pickaxe_recipe } from './lib/items_recipe/db/item_stone_pickaxe';
 import { item_sapling_recipe } from './lib/items_recipe/db/item_sapling';
 import { ResourceNames, Resources } from './lib/resources/resources_type';
+import { carrot_seed_recipe } from './lib/items_recipe/db/item_carrot_seeed';
+import { Harvestable, HarvestableType } from './lib/harvestable_type';
 
 /* Items */
 export * from './lib/items/item_type';
@@ -53,14 +55,14 @@ export const all_db_items = [
   wood_axe,
   wood_pickaxe,
   stone_pickaxe,
-];
+] as const;
 export const all_spawnable_db_items = all_db_items
   .filter((i) => i.resource?.spawnSettings)
   .sort((a, b) => a.resource!.spawnSettings.minHeight - b.resource.spawnSettings.minHeight);
 export const get_item_by_id = (id: number) => {
   return all_db_items.find((item) => item.id === id);
 };
-export const getItemByName = (name: DBItemName) => all_db_items.find((item) => item.name === name);
+export const getItemByName = (name: DBItemName): DBItem => all_db_items.find((item) => item.name === name);
 
 const allTools = [wood_axe_tool, wood_pickaxe_tool, stone_pickaxe_tool];
 export const get_tool_by_item_name = (itemName: DBItemName) => allTools.find((tool) => tool.item === itemName);
@@ -82,6 +84,7 @@ export * from './lib/items_recipe/db/item_wood_axe';
 export * from './lib/items_recipe/db/item_wood_pickaxe';
 export * from './lib/items_recipe/db/item_stone_pickaxe';
 export * from './lib/items_recipe/db/item_sapling';
+export * from './lib/items_recipe/db/item_carrot_seeed';
 
 export const all_db_items_recipes = [
   ...item_stick_recipe,
@@ -91,6 +94,7 @@ export const all_db_items_recipes = [
   ...wood_axe_recipe,
   ...wood_pickaxe_recipe,
   ...stone_pickaxe_recipe,
+  ...carrot_seed_recipe,
 ];
 
 /* Buildings */
@@ -100,6 +104,9 @@ export const all_db_buildings = [building_sawmill, building_drill];
 export const get_building_by_id = (id: number) => {
   return all_db_buildings.find((building) => building.id === id);
 };
+
+export const getHarvestableByItem = (itemName: DBItemName): HarvestableType =>
+  Object.values(Harvestable).find((resource) => resource.item === itemName);
 
 /* Player */
 export * from './lib/player/player_type';

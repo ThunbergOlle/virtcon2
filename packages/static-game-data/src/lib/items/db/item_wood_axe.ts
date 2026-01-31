@@ -20,5 +20,5 @@ export const wood_axe_tool: ToolType = {
   item: DBItemName.WOOD_AXE,
   damage: 1,
   targets: [ResourceNames.WOOD],
-  harvestableTargets: [HarvestableNames.WOOD],
+  harvestableTargets: [HarvestableNames.WOOD, HarvestableNames.CARROT],
 };

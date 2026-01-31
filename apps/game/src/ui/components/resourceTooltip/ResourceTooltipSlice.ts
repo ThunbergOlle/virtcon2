@@ -8,6 +8,7 @@ export type HoveredResource = {
   quantity: number;
   health: number;
   type: HoveredEntityType;
+  dropCount?: number; // Optional: only present for harvestables
 } | null;
 
 type ResourceTooltipState = {

@@ -58,7 +58,7 @@ export interface GameState {
   };
 }
 
-export const debugMode = makeVar(true);
+export const debugMode = makeVar(false);
 
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
