@@ -4,6 +4,7 @@ export * from './lib/utils/gameObject';
 export { getSpriteForAge } from './lib/entities/Harvestable';
 
 import {
+  Animation,
   Building,
   Collider,
   GhostBuilding,
@@ -25,6 +26,7 @@ import {
 } from './lib/network-world-entities';
 
 export const allComponents = [
+  Animation,
   Building,
   Collider,
   GhostBuilding,

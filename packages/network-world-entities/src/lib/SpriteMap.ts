@@ -68,8 +68,8 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
   },
   [DBItemName.BUILDING_DRILL]: {
     textureId: 10,
-    textureName: 'building_stone_drill',
-    variants: ['sprites/items/building_stone_drill.png'],
+    textureName: 'coal_powered_drill',
+    variants: ['sprites/items/coal_powered_drill.png'],
     animations: [
       {
         name: 'idle',
@@ -83,7 +83,6 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
         frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
         frameRate: 20,
         repeat: -1,
-        //playOnCreate: true,
       },
     ],
     spriteSheetFrameWidth: 16,

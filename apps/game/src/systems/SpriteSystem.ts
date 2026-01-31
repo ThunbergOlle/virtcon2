@@ -52,6 +52,8 @@ export const createSpriteRegisterySystem = (world: World, scene: Phaser.Scene) =
           const animation = texture.animations[i];
           const animationKey = textureName + '_anim_' + animation.name;
 
+          console.log(`Creating animation: ${animationKey} for texture: ${textureName}`);
+
           const existingAnimations = scene.anims.get(animationKey);
           if (!existingAnimations)
             scene.anims.create({

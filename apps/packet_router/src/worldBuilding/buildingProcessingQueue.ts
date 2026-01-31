@@ -1,5 +1,5 @@
 import { pMap } from '@shared';
-import { World } from '@virtcon2/bytenetc';
+import { defineQuery, World } from '@virtcon2/bytenetc';
 import {
   addToInventory,
   AppDataSource,
@@ -8,8 +8,13 @@ import {
   WorldBuilding,
   WorldResource,
 } from '@virtcon2/database-postgres';
+import { Animation, Building } from '@virtcon2/network-world-entities';
 import { DBBuilding, getItemByName, ResourceNames, Resources } from '@virtcon2/static-game-data';
 import { EntityManager, IsNull, Not } from 'typeorm';
+
+// Animation indices
+const ANIMATION_IDLE = 0;
+const ANIMATION_ACTIVE = 1;
 
 interface ProcessBuildingCommand {
   type: 'process_building';
@@ -23,6 +28,21 @@ interface TransferInventoriesCommand {
 }
 
 type ProcessingCommand = ProcessBuildingCommand | TransferInventoriesCommand;
+
+/**
+ * Updates the animation state for a building entity in the ECS world.
+ */
+function setBuildingAnimation(worldId: World, worldBuildingId: number, isActive: boolean): void {
+  const buildingQuery = defineQuery(Building, Animation);
+  const entities = buildingQuery(worldId);
+
+  for (const eid of entities) {
+    if (Building(worldId).worldBuildingId[eid] === worldBuildingId) {
+      Animation(worldId).animationIndex[eid] = isActive ? ANIMATION_ACTIVE : ANIMATION_IDLE;
+      break;
+    }
+  }
+}
 
 class BuildingProcessingQueue {
   private queue: ProcessingCommand[] = [];
@@ -94,6 +114,11 @@ class BuildingProcessingQueue {
       );
     });
 
+    // Simple extractors are always active
+    for (const worldBuilding of worldBuildings) {
+      setBuildingAnimation(worldId, worldBuilding.id, true);
+    }
+
     await pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
   }
 
@@ -116,6 +141,9 @@ class BuildingProcessingQueue {
       }
     }
 
+    // Track which buildings can process
+    const buildingActiveState = new Map<number, boolean>();
+
     await AppDataSource.manager.transaction(async (transaction: EntityManager) => {
       await pMap(
         worldBuildings,
@@ -126,11 +154,14 @@ class BuildingProcessingQueue {
             return inventory && inventory.quantity >= req.quantity;
           });
 
-          if (!requirementsMet) return;
-
           // Get the linked resource
           const resource = resourceByBuildingId.get(worldBuilding.id);
-          if (!resource || resource.quantity <= 0) return;
+          const hasResource = resource && resource.quantity > 0;
+
+          // Track active state for animation
+          buildingActiveState.set(worldBuilding.id, requirementsMet && hasResource);
+
+          if (!requirementsMet || !hasResource) return;
 
           // Get output item from resource type
           const resourceConfig = Resources[resource.resourceName as ResourceNames];
@@ -158,6 +189,11 @@ class BuildingProcessingQueue {
       );
     });
 
+    // Update animations based on active state
+    for (const [worldBuildingId, isActive] of buildingActiveState) {
+      setBuildingAnimation(worldId, worldBuildingId, isActive);
+    }
+
     await pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
   }
 
@@ -167,12 +203,18 @@ class BuildingProcessingQueue {
       relations: ['world_building_inventory'],
     });
 
+    // Track which buildings can process
+    const buildingActiveState = new Map<number, boolean>();
+
     await AppDataSource.manager.transaction(async (transaction: EntityManager) => {
       await pMap(worldBuildings, async (worldBuilding) => {
         const requirementsMet = building.processing_requirements.every((req) => {
           const inventory = worldBuilding.world_building_inventory.find((inv) => inv.itemId === req.item.id);
           return inventory && inventory.quantity >= req.quantity;
         });
+
+        // Track active state for animation
+        buildingActiveState.set(worldBuilding.id, requirementsMet);
 
         if (!requirementsMet) return;
 
@@ -183,6 +225,11 @@ class BuildingProcessingQueue {
         await addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
       });
     });
+
+    // Update animations based on active state
+    for (const [worldBuildingId, isActive] of buildingActiveState) {
+      setBuildingAnimation(worldId, worldBuildingId, isActive);
+    }
 
     await pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
   }

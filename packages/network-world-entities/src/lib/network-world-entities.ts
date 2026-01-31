@@ -15,6 +15,7 @@ export * from './components/Item';
 export * from './components/WorldBorder';
 export * from './components/Harvestable';
 export * from './components/GhostHarvestable';
+export * from './components/Animation';
 
 /* Entities */
 export * from './entities/Building';

@@ -36,6 +36,7 @@ import { createCursorHighlightSystem } from '../systems/CursorHighlightSystem';
 import { createSpriteTextureUpdateSystem } from '../systems/SpriteTextureUpdateSystem';
 import { createResourceSpriteManagementSystem } from '../systems/ResourceSpriteManagementSystem';
 import { createHarvestableSpriteManagementSystem } from '../systems/HarvestableSpriteManagementSystem';
+import { createAnimationSystem } from '../systems/AnimationSystem';
 import { makeVar } from '@apollo/client';
 
 export const isPreloaded = makeVar(false);
@@ -102,6 +103,7 @@ export default class Game extends Scene implements SceneStates {
   public spriteTextureUpdateSystem?: System<GameState>;
   public resourceSpriteManagementSystem?: System<GameState>;
   public harvestableSpriteManagementSystem?: System<GameState>;
+  public animationSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
@@ -228,6 +230,7 @@ export default class Game extends Scene implements SceneStates {
       this.spriteTextureUpdateSystem = createSpriteTextureUpdateSystem(this.state.world, this);
       this.resourceSpriteManagementSystem = createResourceSpriteManagementSystem(this.state.world);
       this.harvestableSpriteManagementSystem = createHarvestableSpriteManagementSystem(this.state.world);
+      this.animationSystem = createAnimationSystem(this.state.world);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
@@ -259,6 +262,7 @@ export default class Game extends Scene implements SceneStates {
       !this.spriteTextureUpdateSystem ||
       !this.resourceSpriteManagementSystem ||
       !this.harvestableSpriteManagementSystem ||
+      !this.animationSystem ||
       !this.isInitialized
     )
       return;
@@ -294,6 +298,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.worldBorderSystem(newState);
     newState = this.cursorHighlightSystem(newState);
     newState = this.spriteTextureUpdateSystem(newState);
+    newState = this.animationSystem(newState);
 
     if (this.debugPositionSystem) {
       newState = this.debugPositionSystem(newState);

@@ -1,6 +1,6 @@
 import { addComponent, addEntity, Entity, World } from '@virtcon2/bytenetc';
 import { get_building_by_id } from '@virtcon2/static-game-data';
-import { Building, Collider, Position, Sprite } from '../network-world-entities';
+import { Animation, Building, Collider, Position, Sprite } from '../network-world-entities';
 import { ItemTextureMap } from '../SpriteMap';
 import { tileSize, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -13,7 +13,7 @@ export interface NewBuildingEntity {
   buildingId: number;
 }
 
-export const worldBuildingEntityComponents = [Building, Sprite, Collider, Position];
+export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position];
 export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): Entity => {
   const metadata = get_building_by_id(data.buildingId);
   if (!metadata) throw new Error(`Building with id ${data.buildingId} not found`);
@@ -38,6 +38,11 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   const { x, y } = toPhaserPos(data);
   Position(world).x[building] = x + (((metadata.width + 1) % 2) / 2) * tileSize;
   Position(world).y[building] = y + (((metadata.height + 1) % 2) / 2) * tileSize;
+
+  // Add Animation component - starts with idle animation (index 0), playing
+  addComponent(world, Animation, building);
+  Animation(world).animationIndex[building] = 0; // idle
+  Animation(world).isPlaying[building] = 1;
 
   return building;
 };
