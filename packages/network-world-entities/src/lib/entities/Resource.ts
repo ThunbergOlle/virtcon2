@@ -1,4 +1,4 @@
-import { DBItem, getItemByName, get_item_by_id, ResourceNames, Resources } from '@virtcon2/static-game-data';
+import { getItemByName, ResourceNames, Resources } from '@virtcon2/static-game-data';
 import { Collider, Position, Resource, Sprite } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
@@ -38,8 +38,6 @@ export const createNewResourceEntity = (
   addComponent(world, Position, resourceEid);
   Position(world).x[resourceEid] = x;
   Position(world).y[resourceEid] = y;
-
-  addSpriteToResourceEntity(world, data, resourceEid);
 
   addComponent(world, Collider, resourceEid);
   Collider(world).sizeWidth[resourceEid] = resourceInfo.width * 16;

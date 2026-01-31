@@ -2,7 +2,6 @@ import { DBItem, Harvestable as HarvestableData, HarvestableType } from '@virtco
 import { Collider, Position, Sprite, Harvestable } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
-import { AllTextureMaps } from '../SpriteMap';
 import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { InvalidInputError } from '@shared';
@@ -38,18 +37,6 @@ export const createNewHarvestableEntity = (world: World, data: { id: number; pos
   addComponent(world, Position, harvestableEid);
   Position(world).x[harvestableEid] = x;
   Position(world).y[harvestableEid] = y;
-
-  addComponent(world, Sprite, harvestableEid);
-  const spriteName = getSpriteForAge(harvestableInfo, data.age);
-  const textureMetadata = AllTextureMaps[spriteName] ?? AllTextureMaps[harvestable.name];
-
-  Sprite(world).texture[harvestableEid] = textureMetadata?.textureId ?? 0;
-  Sprite(world).variant[harvestableEid] = (data.pos.x + data.pos.y) % (textureMetadata?.variants.length ?? 0);
-  Sprite(world).opacity[harvestableEid] = 1;
-
-  // Always use the same sprite dimensions from harvestable settings, regardless of growth stage
-  Sprite(world).width[harvestableEid] = (harvestableInfo.spriteWidth ?? harvestableInfo.width ?? 1) * 16;
-  Sprite(world).height[harvestableEid] = (harvestableInfo.spriteHeight ?? harvestableInfo.height ?? 1) * 16;
 
   if (harvestableInfo.collider) {
     addComponent(world, Collider, harvestableEid);

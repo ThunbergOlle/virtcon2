@@ -34,6 +34,8 @@ import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
 import { createCursorHighlightSystem } from '../systems/CursorHighlightSystem';
 import { createSpriteTextureUpdateSystem } from '../systems/SpriteTextureUpdateSystem';
+import { createResourceSpriteManagementSystem } from '../systems/ResourceSpriteManagementSystem';
+import { createHarvestableSpriteManagementSystem } from '../systems/HarvestableSpriteManagementSystem';
 import { makeVar } from '@apollo/client';
 
 export const isPreloaded = makeVar(false);
@@ -98,6 +100,8 @@ export default class Game extends Scene implements SceneStates {
   public cursorHighlightSystem?: System<GameState>;
   public harvestableSystem?: System<GameState>;
   public spriteTextureUpdateSystem?: System<GameState>;
+  public resourceSpriteManagementSystem?: System<GameState>;
+  public harvestableSpriteManagementSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
@@ -227,6 +231,8 @@ export default class Game extends Scene implements SceneStates {
       this.cursorHighlightSystem = createCursorHighlightSystem(this, this.state.world);
       this.harvestableSystem = createHarvestableSystem(this.state.world);
       this.spriteTextureUpdateSystem = createSpriteTextureUpdateSystem(this.state.world, this);
+      this.resourceSpriteManagementSystem = createResourceSpriteManagementSystem(this.state.world);
+      this.harvestableSpriteManagementSystem = createHarvestableSpriteManagementSystem(this.state.world);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
@@ -256,6 +262,8 @@ export default class Game extends Scene implements SceneStates {
       !this.cursorHighlightSystem ||
       !this.harvestableSystem ||
       !this.spriteTextureUpdateSystem ||
+      !this.resourceSpriteManagementSystem ||
+      !this.harvestableSpriteManagementSystem ||
       !this.isInitialized
     )
       return;
@@ -264,6 +272,11 @@ export default class Game extends Scene implements SceneStates {
     const [packets, length] = Game.network.getReceivedPackets();
     receiveServerPackets(this.state.world, packets);
 
+    // Add/remove sprite components based on render distance
+    newState = this.resourceSpriteManagementSystem(newState);
+    newState = this.harvestableSpriteManagementSystem(newState);
+
+    // Create/destroy Phaser sprites based on Sprite component presence
     newState = this.spriteRegisterySystem(newState);
     newState = this.colliderSystem(newState);
     newState = this.spriteSystem(newState);
