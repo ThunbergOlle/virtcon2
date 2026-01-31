@@ -25,6 +25,7 @@ export interface HarvestableType {
   height: number;
   spriteWidth?: number;
   spriteHeight?: number;
+  collider: boolean;
 }
 
 export const Harvestable: Record<HarvestableNames, HarvestableType> = {
@@ -54,6 +55,7 @@ export const Harvestable: Record<HarvestableNames, HarvestableType> = {
     width: 0.8,
     spriteHeight: 3,
     spriteWidth: 2,
+    collider: true,
   },
   [HarvestableNames.CARROT]: {
     name: HarvestableNames.CARROT,
@@ -87,7 +89,8 @@ export const Harvestable: Record<HarvestableNames, HarvestableType> = {
     full_health: 1,
     height: 1,
     width: 1,
-    spriteHeight: 1,
+    spriteHeight: 2,
     spriteWidth: 1,
+    collider: false,
   },
 };

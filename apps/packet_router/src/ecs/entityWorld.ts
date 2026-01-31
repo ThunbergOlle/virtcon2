@@ -16,6 +16,7 @@ import {
 import { createTileSystem } from '../systems/tileSystem';
 import { createResourceSystem } from '../systems/resourceSystem';
 import { createBuildingProcessingSystem } from '../systems/buildingProcessingSystem';
+import { createHarvestableGrowingSystem } from '../systems/harvestableGrowingSystem';
 import { SyncEntities, WorldBounds, WorldData } from '../systems/types';
 import { AppDataSource, WorldHarvestable, WorldResource } from '@virtcon2/database-postgres';
 import { getItemByName, Harvestable as HarvestableData } from '@virtcon2/static-game-data';
@@ -40,8 +41,9 @@ const newEntityWorld = (world: World) => {
 const setupSystems = (world: World, seed: number) => {
   systems[world] = [
     createTileSystem(world, seed),
-    /** createResourceSystem(world, seed), */
+    createResourceSystem(world, seed),
     createBuildingProcessingSystem(world),
+    createHarvestableGrowingSystem(world),
   ];
 };
 
@@ -206,20 +208,29 @@ export const syncWorldState = async (world: World) => {
     }
 
     // Sync harvestables - delete DB records where entity no longer exists in ECS (harvested)
+    // Also sync age changes for growing harvestables
     const dbHarvestables = await transaction.find(WorldHarvestable, {
       where: { world: { id: world } },
-      select: ['id'],
+      select: ['id', 'age'],
     });
 
-    const ecsHarvestableIds = new Set<number>();
+    const ecsHarvestableAges = new Map<number, number>();
     for (let i = 0; i < harvestableEntities.length; i++) {
-      ecsHarvestableIds.add(Harvestable(world).id[harvestableEntities[i]]);
+      const eid = harvestableEntities[i];
+      ecsHarvestableAges.set(Harvestable(world).id[eid], Harvestable(world).age[eid]);
     }
 
     for (const dbHarvestable of dbHarvestables) {
-      if (!ecsHarvestableIds.has(dbHarvestable.id)) {
+      const ecsAge = ecsHarvestableAges.get(dbHarvestable.id);
+
+      if (ecsAge === undefined) {
+        // Entity no longer exists in ECS (was harvested)
         await transaction.delete(WorldHarvestable, { id: dbHarvestable.id });
         log(`Deleted harvested harvestable ${dbHarvestable.id} from database`, LogLevel.INFO, LogApp.SERVER);
+      } else if (dbHarvestable.age !== ecsAge) {
+        // Age has changed, update it
+        await transaction.update(WorldHarvestable, { id: dbHarvestable.id }, { age: ecsAge });
+        log(`Updated harvestable ${dbHarvestable.id} age from ${dbHarvestable.age} to ${ecsAge}`, LogLevel.INFO, LogApp.SERVER);
       }
     }
   });

@@ -51,21 +51,23 @@ export const createNewHarvestableEntity = (world: World, data: { id: number; pos
   Sprite(world).width[harvestableEid] = (harvestableInfo.spriteWidth ?? harvestableInfo.width ?? 1) * 16;
   Sprite(world).height[harvestableEid] = (harvestableInfo.spriteHeight ?? harvestableInfo.height ?? 1) * 16;
 
-  addComponent(world, Collider, harvestableEid);
-  Collider(world).sizeWidth[harvestableEid] = harvestableInfo.width * 16;
-  Collider(world).sizeHeight[harvestableEid] = harvestableInfo.height * 16;
-  Collider(world).offsetX[harvestableEid] = 0;
-  Collider(world).offsetY[harvestableEid] = 0;
+  if (harvestableInfo.collider) {
+    addComponent(world, Collider, harvestableEid);
+    Collider(world).sizeWidth[harvestableEid] = harvestableInfo.width * 16;
+    Collider(world).sizeHeight[harvestableEid] = harvestableInfo.height * 16;
+    Collider(world).offsetX[harvestableEid] = 0;
+    Collider(world).offsetY[harvestableEid] = 0;
 
-  if (harvestableInfo.spriteHeight && harvestableInfo.spriteHeight !== harvestableInfo.height) {
-    Collider(world).offsetY[harvestableEid] = (-(harvestableInfo.height - harvestableInfo.spriteHeight) * 16) / 2;
-  }
-  if (harvestableInfo.spriteWidth && harvestableInfo.spriteWidth !== harvestableInfo.width) {
-    Collider(world).offsetX[harvestableEid] = (-(harvestableInfo.width - harvestableInfo.spriteWidth) * 16) / 2;
-  }
+    if (harvestableInfo.spriteHeight && harvestableInfo.spriteHeight !== harvestableInfo.height) {
+      Collider(world).offsetY[harvestableEid] = (-(harvestableInfo.height - harvestableInfo.spriteHeight) * 16) / 2;
+    }
+    if (harvestableInfo.spriteWidth && harvestableInfo.spriteWidth !== harvestableInfo.width) {
+      Collider(world).offsetX[harvestableEid] = (-(harvestableInfo.width - harvestableInfo.spriteWidth) * 16) / 2;
+    }
 
-  Collider(world).static[harvestableEid] = 1;
-  Collider(world).group[harvestableEid] = GameObjectGroups.HARVESTABLE;
+    Collider(world).static[harvestableEid] = 1;
+    Collider(world).group[harvestableEid] = GameObjectGroups.HARVESTABLE;
+  }
 
   addComponent(world, Harvestable, harvestableEid);
   Harvestable(world).id[harvestableEid] = data.id;

@@ -33,6 +33,7 @@ import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
 import { createCursorHighlightSystem } from '../systems/CursorHighlightSystem';
+import { createSpriteTextureUpdateSystem } from '../systems/SpriteTextureUpdateSystem';
 import { makeVar } from '@apollo/client';
 
 export const isPreloaded = makeVar(false);
@@ -96,6 +97,7 @@ export default class Game extends Scene implements SceneStates {
   public worldBorderSystem?: System<GameState>;
   public cursorHighlightSystem?: System<GameState>;
   public harvestableSystem?: System<GameState>;
+  public spriteTextureUpdateSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
@@ -224,6 +226,7 @@ export default class Game extends Scene implements SceneStates {
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
       this.cursorHighlightSystem = createCursorHighlightSystem(this, this.state.world);
       this.harvestableSystem = createHarvestableSystem(this.state.world);
+      this.spriteTextureUpdateSystem = createSpriteTextureUpdateSystem(this.state.world, this);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
@@ -252,6 +255,7 @@ export default class Game extends Scene implements SceneStates {
       !this.worldBorderSystem ||
       !this.cursorHighlightSystem ||
       !this.harvestableSystem ||
+      !this.spriteTextureUpdateSystem ||
       !this.isInitialized
     )
       return;
@@ -281,6 +285,7 @@ export default class Game extends Scene implements SceneStates {
 
     newState = this.worldBorderSystem(newState);
     newState = this.cursorHighlightSystem(newState);
+    newState = this.spriteTextureUpdateSystem(newState);
 
     if (this.debugPositionSystem) {
       newState = this.debugPositionSystem(newState);

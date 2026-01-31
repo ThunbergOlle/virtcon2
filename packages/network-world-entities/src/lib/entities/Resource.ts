@@ -9,6 +9,18 @@ import { InvalidInputError } from '@shared';
 
 export const resourceEntityComponents = [Position, Sprite, Collider, Resource];
 
+export const addSpriteToResourceEntity = (
+  world: World,
+  data: { pos: TileCoordinates; resourceName: ResourceNames },
+  resourceEid: number,
+) => {
+  const resource = Resources[data.resourceName];
+  addComponent(world, Sprite, resourceEid);
+  Sprite(world).texture[resourceEid] = AllTextureMaps[resource.name]?.textureId ?? 0;
+  Sprite(world).variant[resourceEid] = (data.pos.x + data.pos.y) % (AllTextureMaps[resource.name]?.variants.length ?? 0);
+  Sprite(world).opacity[resourceEid] = 1;
+};
+
 export const createNewResourceEntity = (
   world: World,
   data: { id: number; pos: TileCoordinates; resourceName: ResourceNames; quantity: number },
@@ -27,10 +39,7 @@ export const createNewResourceEntity = (
   Position(world).x[resourceEid] = x;
   Position(world).y[resourceEid] = y;
 
-  addComponent(world, Sprite, resourceEid);
-  Sprite(world).texture[resourceEid] = AllTextureMaps[resource.name]?.textureId ?? 0;
-  Sprite(world).variant[resourceEid] = (data.pos.x + data.pos.y) % (AllTextureMaps[resource.name]?.variants.length ?? 0);
-  Sprite(world).opacity[resourceEid] = 1;
+  addSpriteToResourceEntity(world, data, resourceEid);
 
   addComponent(world, Collider, resourceEid);
   Collider(world).sizeWidth[resourceEid] = resourceInfo.width * 16;

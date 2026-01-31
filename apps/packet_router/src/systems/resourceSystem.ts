@@ -1,16 +1,16 @@
-import { defineQuery, defineSerializer, defineSystem, enterQuery, removeEntity, World } from '@virtcon2/bytenetc';
+import { renderDistance } from '@shared';
+import { defineQuery, defineSerializer, defineSystem, Has, Not, removeComponent, World } from '@virtcon2/bytenetc';
 import {
-  Building,
-  createNewResourceEntity,
-  GrowableTile,
   fromPhaserPos,
   Player,
   Position,
   Resource,
   SerializationID,
   getSerializeConfig,
+  Sprite,
+  addSpriteToResourceEntity,
 } from '@virtcon2/network-world-entities';
-import { shouldGenerateResource } from '@virtcon2/static-game-data';
+import { get_item_by_id } from '@virtcon2/static-game-data';
 import { shouldServerKeep } from './tileSystem';
 import { SyncEntities } from './types';
 
@@ -18,48 +18,49 @@ import { SyncEntities } from './types';
 // 2.  resource system is just for adding and removing the sprite component based on player proximity and tile
 
 export const createResourceSystem = (world: World, seed: number) => {
-  const resourceQuery = defineQuery(Resource, Position);
-  const tileQuery = defineQuery(GrowableTile, Position);
-  const tileQueryEnter = enterQuery(tileQuery);
+  const resourceWithoutSpriteQuery = defineQuery(Resource, Position, Not(Sprite));
+  const fullResourceQuery = defineQuery(Resource, Position, Sprite);
   const playerQuery = defineQuery(Player, Position);
-  const buildingQuery = defineQuery(Building, Position);
 
   return defineSystem<SyncEntities>(({ worldData }) => {
-    const resourceEntities = resourceQuery(world);
-    const tileEnterEntities = tileQueryEnter(world);
+    const resourceEntitiesWithoutSprite = resourceWithoutSpriteQuery(world);
+    const fullResources = fullResourceQuery(world);
     const playerEntities = playerQuery(world);
-    const buildingEntities = buildingQuery(world);
 
-    const removedEntities = [];
     const newEntities = [];
 
-    for (let i = 0; i < tileEnterEntities.length; i++) {
-      const tileEid = tileEnterEntities[i];
-      const { x, y } = fromPhaserPos({ x: Position(world).x[tileEid], y: Position(world).y[tileEid] });
+    for (let i = 0; i < playerEntities.length; i++) {
+      const playerEid = playerEntities[i];
+      const { x, y } = fromPhaserPos({ x: Position(world).x[playerEid], y: Position(world).y[playerEid] });
 
-      const { shouldSpawn, resource } = shouldGenerateResource(x, y, seed);
-      if (!shouldSpawn) continue;
+      const [minX, maxX] = [x - renderDistance, x + renderDistance];
+      const [minY, maxY] = [y - renderDistance, y + renderDistance];
+      for (let tx = minX; tx <= maxX; tx++) {
+        for (let ty = minY; ty <= maxY; ty++) {
+          const resourceEntity = resourceEntitiesWithoutSprite.find((resourceEid) => {
+            const { x: resourceX, y: resourceY } = fromPhaserPos({
+              x: Position(world).x[resourceEid],
+              y: Position(world).y[resourceEid],
+            });
+            return resourceX === tx && resourceY === ty;
+          });
+          if (!resourceEntity) continue;
 
-      if (buildingEntities.some(buildingAtPosition(world, x, y))) continue;
+          const item = get_item_by_id(Resource(world).itemId[resourceEntity]);
 
-      // TODO: improve the resource spawning system, we need to store resources in teh database instead
-      //const resourceEntityId = createNewResourceEntity(world, {
-      //  pos: { x, y },
-      //  item: resource,
-      //  worldBuildingId: 0,
-      //  quantity: resourceCounts[x][y],
-      //});
-      //
-      //newEntities.push(resourceEntityId);
+          console.log(`Adding sprite to resource entity at (${tx}, ${ty}) for player at (${x}, ${y})`);
+          addSpriteToResourceEntity(world, { pos: { x: tx, y: ty }, resourceName: item.resource?.name }, resourceEntity);
+        }
+      }
     }
 
-    for (let i = 0; i < resourceEntities.length; i++) {
-      const resourceEid = resourceEntities[i];
+    for (let i = 0; i < fullResources.length; i++) {
+      const resourceEid = fullResources[i];
 
       if (shouldServerKeep(world, playerEntities, resourceEid)) continue;
 
-      removedEntities.push(resourceEid);
-      removeEntity(world, resourceEid);
+      console.log(`Removing sprite from resource entity id ${resourceEid} due to no players nearby`);
+      removeComponent(world, Sprite, resourceEid);
     }
 
     const serializedResources = defineSerializer(getSerializeConfig(world)[SerializationID.RESOURCE])(world, newEntities);
@@ -71,7 +72,7 @@ export const createResourceSystem = (world: World, seed: number) => {
           serializationId: SerializationID.RESOURCE,
         },
       ],
-      removeEntities: removedEntities,
+      removeEntities: [],
     };
   });
 };
