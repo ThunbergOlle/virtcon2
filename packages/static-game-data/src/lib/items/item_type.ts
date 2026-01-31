@@ -20,7 +20,7 @@ export enum DBItemName {
   IRON_ORE = 'iron_ore',
   BUILDING_FURNACE = 'building_furnace',
   BUILDING_SAWMILL = 'building_sawmill',
-  BUILDING_DRILL = 'building_stone_drill',
+  BUILDING_DRILL = 'building_coal_powered_drill',
   WOOD_AXE = 'wood_axe',
   WOOD_PICKAXE = 'wood_pickaxe',
   STONE_PICKAXE = 'stone_pickaxe',

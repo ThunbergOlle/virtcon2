@@ -10,8 +10,17 @@ import {
 } from '@virtcon2/database-postgres';
 import { ClientPacketWithSender, RequestPlaceHarvestablePacketData } from '@virtcon2/network-packet';
 
-import { createNewHarvestableEntity, getSerializeConfig, SerializationID } from '@virtcon2/network-world-entities';
-import { defineSerializer } from '@virtcon2/bytenetc';
+import {
+  Building,
+  createNewHarvestableEntity,
+  fromPhaserPos,
+  getSerializeConfig,
+  Harvestable,
+  Position,
+  Resource,
+  SerializationID,
+} from '@virtcon2/network-world-entities';
+import { defineQuery, defineSerializer } from '@virtcon2/bytenetc';
 import { syncServerEntities } from '../enqueue';
 import { get_item_by_id, getTileAtPoint, getHarvestableByItem } from '@virtcon2/static-game-data';
 
@@ -49,39 +58,52 @@ export default async function requestPlaceHarvestablePacket(packet: ClientPacket
     return;
   }
 
-  // Check if position is occupied by a building
-  const occupyingBuilding = await WorldBuilding.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });
-  if (occupyingBuilding) {
-    log(
-      `Player ${player_id} tried to place harvestable on occupied position (building) ${packet.data.x}, ${packet.data.y}`,
-      LogLevel.ERROR,
-      LogApp.PACKET_DATA_SERVER,
-    );
-    return;
+  const buildingQuery = defineQuery(Building, Position);
+  const buildingEntities = buildingQuery(world.id);
+  for (let i = 0; i < buildingEntities.length; i++) {
+    const buildingEid = buildingEntities[i];
+    const { x: buildingX, y: buildingY } = fromPhaserPos({ x: Position(world.id).x[buildingEid], y: Position(world.id).y[buildingEid] });
+    if (buildingX === packet.data.x && buildingY === packet.data.y) {
+      log(
+        `Player ${player_id} tried to place harvestable on occupied position (building entity) ${packet.data.x}, ${packet.data.y}`,
+        LogLevel.ERROR,
+        LogApp.PACKET_DATA_SERVER,
+      );
+      return;
+    }
   }
 
-  // Check if position is occupied by a resource
-  const occupyingResource = await WorldResource.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });
-  if (occupyingResource) {
-    log(
-      `Player ${player_id} tried to place harvestable on occupied position (resource) ${packet.data.x}, ${packet.data.y}`,
-      LogLevel.ERROR,
-      LogApp.PACKET_DATA_SERVER,
-    );
-    return;
+  const resourceQuery = defineQuery(Resource, Position);
+  const resourceEntities = resourceQuery(world.id);
+  for (let i = 0; i < resourceEntities.length; i++) {
+    const resourceEid = resourceEntities[i];
+    const { x: resourceX, y: resourceY } = fromPhaserPos({ x: Position(world.id).x[resourceEid], y: Position(world.id).y[resourceEid] });
+    if (resourceX === packet.data.x && resourceY === packet.data.y) {
+      log(
+        `Player ${player_id} tried to place harvestable on occupied position (resource entity) ${packet.data.x}, ${packet.data.y}`,
+        LogLevel.ERROR,
+        LogApp.PACKET_DATA_SERVER,
+      );
+      return;
+    }
   }
 
-  // Check if position is occupied by another harvestable
-  const occupyingHarvestable = await WorldHarvestable.findOne({
-    where: { x: packet.data.x, y: packet.data.y, worldId: packet.world_id },
-  });
-  if (occupyingHarvestable) {
-    log(
-      `Player ${player_id} tried to place harvestable on occupied position (harvestable) ${packet.data.x}, ${packet.data.y}`,
-      LogLevel.ERROR,
-      LogApp.PACKET_DATA_SERVER,
-    );
-    return;
+  const harvestableQuery = defineQuery(Harvestable, Position);
+  const harvestableEntities = harvestableQuery(world.id);
+  for (let i = 0; i < harvestableEntities.length; i++) {
+    const harvestableEid = harvestableEntities[i];
+    const { x: harvestableX, y: harvestableY } = fromPhaserPos({
+      x: Position(world.id).x[harvestableEid],
+      y: Position(world.id).y[harvestableEid],
+    });
+    if (harvestableX === packet.data.x && harvestableY === packet.data.y) {
+      log(
+        `Player ${player_id} tried to place harvestable on occupied position (harvestable entity) ${packet.data.x}, ${packet.data.y}`,
+        LogLevel.ERROR,
+        LogApp.PACKET_DATA_SERVER,
+      );
+      return;
+    }
   }
 
   // Create the harvestable in database

@@ -6,8 +6,9 @@ import {
   publishWorldBuildingUpdate,
   safelyMoveItemsBetweenInventories,
   WorldBuilding,
+  WorldResource,
 } from '@virtcon2/database-postgres';
-import { DBBuilding } from '@virtcon2/static-game-data';
+import { DBBuilding, getItemByName, ResourceNames, Resources } from '@virtcon2/static-game-data';
 import { EntityManager, IsNull, Not } from 'typeorm';
 
 interface ProcessBuildingCommand {
@@ -61,7 +62,14 @@ class BuildingProcessingQueue {
   }
 
   private async processBuilding(worldId: World, building: DBBuilding): Promise<void> {
-    if (!building.processing_requirements.length && (building.output_item || building.items_to_be_placed_on.length)) {
+    // Resource extractor with requirements (dynamic output based on resource)
+    if (
+      building.items_to_be_placed_on.length > 0 &&
+      building.processing_requirements.length > 0 &&
+      building.output_item === null
+    ) {
+      await this.processResourceExtractingBuildingWithRequirements(worldId, building);
+    } else if (!building.processing_requirements.length && (building.output_item || building.items_to_be_placed_on.length)) {
       await this.processResourceExtractingBuilding(worldId, building);
     } else if (building.processing_requirements.length) {
       await this.processBuildingWithRequirements(worldId, building);
@@ -81,6 +89,70 @@ class BuildingProcessingQueue {
           if (building.output_item?.id) {
             return addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
           }
+        },
+        { concurrency: 10 },
+      );
+    });
+
+    await pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
+  }
+
+  private async processResourceExtractingBuildingWithRequirements(worldId: World, building: DBBuilding): Promise<void> {
+    const worldBuildings = await WorldBuilding.find({
+      where: { building: { id: building.id }, world: { id: worldId } },
+      relations: ['world_building_inventory'],
+    });
+
+    // Get all world resources that have a linked building
+    const worldResources = await WorldResource.find({
+      where: { worldId: worldId, worldBuildingId: Not(IsNull()) },
+    });
+
+    // Create a map for quick lookup
+    const resourceByBuildingId = new Map<number, WorldResource>();
+    for (const resource of worldResources) {
+      if (resource.worldBuildingId) {
+        resourceByBuildingId.set(resource.worldBuildingId, resource);
+      }
+    }
+
+    await AppDataSource.manager.transaction(async (transaction: EntityManager) => {
+      await pMap(
+        worldBuildings,
+        async (worldBuilding) => {
+          // Check if processing requirements are met
+          const requirementsMet = building.processing_requirements.every((req) => {
+            const inventory = worldBuilding.world_building_inventory.find((inv) => inv.itemId === req.item.id);
+            return inventory && inventory.quantity >= req.quantity;
+          });
+
+          if (!requirementsMet) return;
+
+          // Get the linked resource
+          const resource = resourceByBuildingId.get(worldBuilding.id);
+          if (!resource || resource.quantity <= 0) return;
+
+          // Get output item from resource type
+          const resourceConfig = Resources[resource.resourceName as ResourceNames];
+          if (!resourceConfig) return;
+
+          const outputItem = getItemByName(resourceConfig.item);
+          if (!outputItem) return;
+
+          // Consume requirements
+          await pMap(building.processing_requirements, (requirement) =>
+            addToInventory(transaction, worldBuilding.world_building_inventory, requirement.item.id, -requirement.quantity),
+          );
+
+          // Coal bonus: when drilling coal, produce 4 instead of 2
+          const outputQuantity = resource.resourceName === ResourceNames.COAL ? 4 : (building.output_quantity ?? 2);
+
+          // Add output to inventory
+          await addToInventory(transaction, worldBuilding.world_building_inventory, outputItem.id, outputQuantity);
+
+          // Reduce resource quantity
+          resource.quantity = Math.max(0, resource.quantity - 1);
+          await transaction.save(resource);
         },
         { concurrency: 10 },
       );

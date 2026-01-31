@@ -181,11 +181,6 @@ export default class Game extends Scene implements SceneStates {
 
     this.physics.add.collider(
       this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
-      this.state.gameObjectGroups[GameObjectGroups.RESOURCE] ?? [],
-    );
-
-    this.physics.add.collider(
-      this.state.gameObjectGroups[GameObjectGroups.PLAYER] ?? [],
       this.state.gameObjectGroups[GameObjectGroups.TERRAIN] ?? [],
     );
 

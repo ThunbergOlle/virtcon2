@@ -50,9 +50,9 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   [ResourceNames.STONE]: {
     name: ResourceNames.STONE,
     layer: 'underground',
-    minDefaultQuantity: 2000,
-    maxDefaultQuantity: 5000,
-    dropCount: 8,
+    minDefaultQuantity: 20_000,
+    maxDefaultQuantity: 50_000,
+    dropCount: 1,
     spawnSettings: {
       minHeight: 0.15,
       maxHeight: 0.45,
@@ -69,15 +69,15 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   [ResourceNames.COAL]: {
     name: ResourceNames.COAL,
     layer: 'underground',
-    minDefaultQuantity: 2000,
-    maxDefaultQuantity: 5000,
+    minDefaultQuantity: 20_000,
+    maxDefaultQuantity: 50_000,
     spawnSettings: {
       minHeight: 0.2,
       maxHeight: 0.9,
       chance: 0.15,
     },
     item: DBItemName.COAL,
-    dropCount: 8,
+    dropCount: 1,
     sprite: 'resource_coal',
     spriteHeight: 2,
     spriteWidth: 2,
@@ -88,9 +88,9 @@ export const Resources: Record<ResourceNames, ResourcesType> = {
   [ResourceNames.IRON]: {
     name: ResourceNames.IRON,
     layer: 'underground',
-    dropCount: 8,
-    minDefaultQuantity: 2000,
-    maxDefaultQuantity: 5000,
+    dropCount: 1,
+    minDefaultQuantity: 20_000,
+    maxDefaultQuantity: 50_000,
     spawnSettings: {
       minHeight: 0.5,
       maxHeight: 0.9,

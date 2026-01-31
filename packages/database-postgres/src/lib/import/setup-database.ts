@@ -5,6 +5,7 @@ import { validate } from 'jsonschema';
 import { Item } from '../entity/item/Item';
 import { ItemRecipe } from '../entity/item_recipe/ItemRecipe';
 import { Building } from '../entity/building/Building';
+import { BuildingProcessingRequirement } from '../entity/building_processing_requirement/BuildingProcessingRequirement';
 import { AppDataSource } from '../data-source';
 export async function setupDatabase() {
   SetupItems();
@@ -42,6 +43,20 @@ async function SetupItems() {
     for (const item of building.items_to_be_placed_on) {
       await AppDataSource.query(
         `INSERT INTO building_items_to_be_placed_on_item ("buildingId", "itemId") VALUES ('${building.id}', '${item.id}') ON CONFLICT DO NOTHING;`,
+      );
+    }
+    // Insert processing requirements
+    for (let i = 0; i < building.processing_requirements.length; i++) {
+      const requirement = building.processing_requirements[i];
+      const requirementId = building.id * 100 + i; // Generate unique ID based on building ID and index
+      await BuildingProcessingRequirement.upsert(
+        {
+          id: requirementId,
+          item: { id: requirement.item.id } as Item,
+          quantity: requirement.quantity,
+          building: { id: building.id } as Building,
+        } as BuildingProcessingRequirement,
+        { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] },
       );
     }
   }

@@ -87,11 +87,11 @@ export class World extends BaseEntity {
         const resourceData = Resources[resource.resource.name];
         const quantity = Math.floor(
           resource.resource.minDefaultQuantity +
-            Math.random() * (resource.resource.maxDefaultQuantity - resource.resource.maxDefaultQuantity + 1),
+            Math.random() * (resource.resource.maxDefaultQuantity - resource.resource.minDefaultQuantity),
         );
 
         const worldResource = WorldResource.create({
-          worldId: worldId,
+          worldId: world.id,
           x: x,
           y: y,
           resourceName: resourceData.name,
