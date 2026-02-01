@@ -1,4 +1,4 @@
-import { DBItem, getItemByName, Harvestable as HarvestableData, HarvestableType } from '@virtcon2/static-game-data';
+import { DBItem, getItemByName, Harvestable as HarvestableData, HarvestableNames, HarvestableType } from '@virtcon2/static-game-data';
 import { Collider, Position, Sprite, Harvestable } from '../network-world-entities';
 
 import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
@@ -6,6 +6,26 @@ import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { InvalidInputError } from '@shared';
 import { AllTextureMaps, HarvestableStageTextureMap } from '../SpriteMap';
+
+export const addSpriteToHarvestableEntity = (
+  world: World,
+  data: { pos: TileCoordinates; harvestableName: HarvestableNames },
+  harvestableEid: number,
+) => {
+  const harvestable = HarvestableData[data.harvestableName];
+  if (!harvestable) throw new InvalidInputError(`Harvestable ${data.harvestableName} does not exist.`);
+
+  addComponent(world, Sprite, harvestableEid);
+
+  const spriteName = getSpriteForAge(harvestable, Harvestable(world).age[harvestableEid]);
+
+  console.log(`Adding sprite to harvestable entity ${harvestableEid} with sprite ${spriteName}`);
+
+  Sprite(world).texture[harvestableEid] = HarvestableStageTextureMap[spriteName as keyof typeof HarvestableStageTextureMap]?.textureId ?? 0;
+  Sprite(world).variant[harvestableEid] = (data.pos.x + data.pos.y) % (AllTextureMaps[harvestable.name]?.variants.length ?? 0);
+  Sprite(world).opacity[harvestableEid] = 1;
+  Sprite(world).depth[harvestableEid] = -16;
+};
 
 /**
  * Get the appropriate sprite name for a harvestable based on its age

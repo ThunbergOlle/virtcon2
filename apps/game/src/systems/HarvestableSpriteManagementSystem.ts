@@ -7,6 +7,7 @@ import {
   fromPhaserPos,
   AllTextureMaps,
   getSpriteForAge,
+  addSpriteToHarvestableEntity,
 } from '@virtcon2/network-world-entities';
 import { renderDistance } from '@shared';
 import { get_item_by_id, Harvestable as HarvestableData } from '@virtcon2/static-game-data';
@@ -44,16 +45,14 @@ export const createHarvestableSpriteManagementSystem = (world: World) => {
       if (dx <= renderDistance && dy <= renderDistance) {
         const item = get_item_by_id(Harvestable(world).itemId[harvestableEid]);
         if (item?.harvestable) {
-          const harvestableInfo = HarvestableData[item.harvestable.name];
-          const age = Harvestable(world).age[harvestableEid];
-          const spriteName = getSpriteForAge(harvestableInfo, age);
-          const textureMetadata = AllTextureMaps[spriteName] ?? AllTextureMaps[item.harvestable.name];
-
-          Sprite(world).texture[harvestableEid] = textureMetadata?.textureId ?? 0;
-          Sprite(world).variant[harvestableEid] = (harvestablePos.x + harvestablePos.y) % (textureMetadata?.variants.length ?? 0);
-          Sprite(world).opacity[harvestableEid] = 1;
-          Sprite(world).width[harvestableEid] = (harvestableInfo.spriteWidth ?? harvestableInfo.width ?? 1) * 16;
-          Sprite(world).height[harvestableEid] = (harvestableInfo.spriteHeight ?? harvestableInfo.height ?? 1) * 16;
+          addSpriteToHarvestableEntity(
+            world,
+            {
+              pos: { x: harvestablePos.x, y: harvestablePos.y },
+              harvestableName: item.harvestable.name,
+            },
+            harvestableEid,
+          );
         }
       }
     }
