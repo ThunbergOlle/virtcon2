@@ -1,5 +1,6 @@
 import { DBBuilding, WorldBuildingInventorySlotType } from '../building_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
+import item_stick from './item_stick';
 import item_wood from './item_wood';
 
 const BUILDING_ID = 3;
@@ -23,13 +24,18 @@ export const building_sawmill: DBBuilding = {
   width: 1,
   item: item_sawmill,
   processing_ticks: 100,
-  items_to_be_placed_on: [item_wood],
+  items_to_be_placed_on: [],
   is_rotatable: false,
   inventory_transfer_quantity_per_cycle: 5,
-  inventory_slots: [WorldBuildingInventorySlotType.OUTPUT, WorldBuildingInventorySlotType.OUTPUT, WorldBuildingInventorySlotType.OUTPUT],
-  output_item: item_wood,
+  inventory_slots: [WorldBuildingInventorySlotType.INPUT, WorldBuildingInventorySlotType.OUTPUT],
+  output_item: item_stick,
   can_collide: true,
   output_quantity: 2,
-  processing_requirements: [],
+  processing_requirements: [
+    {
+      item: item_wood,
+      quantity: 1,
+    },
+  ],
   fuel_requirements: [],
 };

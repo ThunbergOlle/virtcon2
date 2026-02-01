@@ -7,4 +7,5 @@ export enum GameObjectGroups {
   ITEM = 5,
   BORDER = 6,
   HARVESTABLE = 7,
+  HARVESTABLE_NO_COLLIDE = 8,
 }
