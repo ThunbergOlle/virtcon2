@@ -5,6 +5,7 @@ import { addComponent, addEntity, World } from '@virtcon2/bytenetc';
 import { TileCoordinates, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
 import { InvalidInputError } from '@shared';
+import { AllTextureMaps, HarvestableStageTextureMap } from '../SpriteMap';
 
 /**
  * Get the appropriate sprite name for a harvestable based on its age
@@ -65,6 +66,17 @@ export const createNewHarvestableEntity = (
   Harvestable(world).dropCount[harvestableEid] = harvestable.defaultDropCount;
   Harvestable(world).dropItemId[harvestableEid] = getItemByName(harvestable.dropItemName).id;
   Harvestable(world).age[harvestableEid] = data.age;
+
+  addComponent(world, Sprite, harvestableEid);
+  const spriteName = getSpriteForAge(harvestableInfo, data.age);
+
+  console.log(`Creating harvestable entity ${harvestableEid} with sprite ${spriteName}`);
+
+  Sprite(world).texture[harvestableEid] = HarvestableStageTextureMap[spriteName as keyof typeof HarvestableStageTextureMap]?.textureId ?? 0;
+  Sprite(world).variant[harvestableEid] = 0;
+  Sprite(world).opacity[harvestableEid] = 1;
+  Sprite(world).width[harvestableEid] = (harvestableInfo.spriteWidth ?? harvestableInfo.width ?? 1) * 16;
+  Sprite(world).height[harvestableEid] = (harvestableInfo.spriteHeight ?? harvestableInfo.height ?? 1) * 16;
 
   return harvestableEid;
 };

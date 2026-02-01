@@ -1,5 +1,12 @@
 import { defineQuery, defineSerializer, defineSystem, World } from '@virtcon2/bytenetc';
-import { Harvestable, Sprite, getSerializeConfig, SerializationID, AllTextureMaps, getSpriteForAge } from '@virtcon2/network-world-entities';
+import {
+  Harvestable,
+  Sprite,
+  getSerializeConfig,
+  SerializationID,
+  AllTextureMaps,
+  getSpriteForAge,
+} from '@virtcon2/network-world-entities';
 import { Harvestable as HarvestableData, get_item_by_id } from '@virtcon2/static-game-data';
 import { SyncEntities } from './types';
 
@@ -28,7 +35,7 @@ const getGrowthStateIndex = (harvestableInfo: (typeof HarvestableData)[keyof typ
 
 export const createHarvestableGrowingSystem = (world: World) => {
   let tickCounter = 0;
-  const harvestableQuery = defineQuery(Harvestable, Sprite);
+  const harvestableQuery = defineQuery(Harvestable);
 
   return defineSystem<SyncEntities>(({ worldData, sync, removeEntities }) => {
     tickCounter++;

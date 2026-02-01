@@ -49,10 +49,8 @@ export const createHarvestableSpriteManagementSystem = (world: World) => {
           const spriteName = getSpriteForAge(harvestableInfo, age);
           const textureMetadata = AllTextureMaps[spriteName] ?? AllTextureMaps[item.harvestable.name];
 
-          addComponent(world, Sprite, harvestableEid);
           Sprite(world).texture[harvestableEid] = textureMetadata?.textureId ?? 0;
-          Sprite(world).variant[harvestableEid] =
-            (harvestablePos.x + harvestablePos.y) % (textureMetadata?.variants.length ?? 0);
+          Sprite(world).variant[harvestableEid] = (harvestablePos.x + harvestablePos.y) % (textureMetadata?.variants.length ?? 0);
           Sprite(world).opacity[harvestableEid] = 1;
           Sprite(world).width[harvestableEid] = (harvestableInfo.spriteWidth ?? harvestableInfo.width ?? 1) * 16;
           Sprite(world).height[harvestableEid] = (harvestableInfo.spriteHeight ?? harvestableInfo.height ?? 1) * 16;
