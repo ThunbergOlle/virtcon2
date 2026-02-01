@@ -5,6 +5,12 @@ export interface DBBuildingProcessingRequirement {
   quantity: number;
 }
 
+export enum WorldBuildingInventorySlotType {
+  INPUT = 'input',
+  OUTPUT = 'output',
+  FUEL = 'fuel',
+}
+
 export interface DBBuilding {
   name: DBItemName;
   id: number;
@@ -15,7 +21,7 @@ export interface DBBuilding {
   output_quantity: number | null;
   processing_ticks: number;
   inventory_transfer_quantity_per_cycle?: number;
-  inventory_slots: number;
+  inventory_slots: WorldBuildingInventorySlotType[];
   width: number;
   height: number;
   can_collide: boolean;

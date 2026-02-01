@@ -1,5 +1,6 @@
 import { LogApp, LogLevel, log } from '@shared';
 import { UserInventoryItem, WorldBuilding, WorldBuildingInventory, safelyMoveItemsBetweenInventories } from '@virtcon2/database-postgres';
+import { WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { ClientPacketWithSender, InventoryType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
 
 export default async function request_move_inventory_item_packet(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
@@ -22,7 +23,41 @@ export default async function request_move_inventory_item_packet(packet: ClientP
   );
 }
 async function request_move_inventory_item_inside_building_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
-  console.log('request_move_inventory_item_inside_building_inventory', packet.data);
+  // Get the target building with its building type for slot validation
+  const targetBuilding = await WorldBuilding.findOne({
+    where: { id: packet.data.toInventoryId },
+    relations: ['building', 'world_building_inventory'],
+  });
+
+  if (!targetBuilding) {
+    log(`Building with id ${packet.data.toInventoryId} not found`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
+    return;
+  }
+
+  const processingRequirements = targetBuilding.building?.processing_requirements ?? [];
+  const toSlot = packet.data.toInventorySlot;
+
+  // Validate explicit slot placement
+  if (toSlot !== undefined) {
+    const targetSlot = targetBuilding.world_building_inventory.find((inv) => inv.slot === toSlot);
+    if (targetSlot) {
+      // Cannot manually place items in OUTPUT slots
+      if (targetSlot.slotType === WorldBuildingInventorySlotType.OUTPUT) {
+        log(`Cannot manually place items in OUTPUT slot ${toSlot}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+        return;
+      }
+
+      // FUEL slots only accept fuel items (items in processing_requirements)
+      if (targetSlot.slotType === WorldBuildingInventorySlotType.FUEL) {
+        const isFuel = processingRequirements.some((req) => req.item.id === packet.data.inventoryItem.item.id);
+        if (!isFuel) {
+          log(`Cannot place non-fuel item ${packet.data.inventoryItem.item.id} in FUEL slot ${toSlot}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+          return;
+        }
+      }
+    }
+  }
+
   await safelyMoveItemsBetweenInventories({
     fromId: packet.data.fromInventoryId,
     toId: packet.data.toInventoryId,
@@ -31,10 +66,9 @@ async function request_move_inventory_item_inside_building_inventory(packet: Cli
     fromType: 'building',
     toType: 'building',
     fromSlot: packet.data.fromInventorySlot,
-    toSlot: packet.data.toInventorySlot,
+    toSlot,
+    processingRequirements,
   });
-
-  // refreshBuildingCacheAndSendUpdate(packet.data.fromInventoryId, packet.world_id, redis);
 }
 async function request_move_inventory_item_inside_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
   await safelyMoveItemsBetweenInventories({
@@ -100,8 +134,11 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
     );
     return;
   }
-  // get the building
-  const building_to_drop_in = await WorldBuilding.findOne({ where: { id: packet.data.toInventoryId } });
+  // get the building with its building type for processing_requirements
+  const building_to_drop_in = await WorldBuilding.findOne({
+    where: { id: packet.data.toInventoryId },
+    relations: ['building', 'world_building_inventory'],
+  });
   if (!building_to_drop_in) {
     log(
       `Building with id ${packet.data.toInventoryId} not found. Cannot move item to inventory that is non-existant`,
@@ -109,6 +146,30 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
       LogApp.PACKET_DATA_SERVER,
     );
     return;
+  }
+
+  const processingRequirements = building_to_drop_in.building?.processing_requirements ?? [];
+  const toSlot = packet.data.toInventorySlot;
+
+  // Validate explicit slot placement
+  if (toSlot !== undefined) {
+    const targetSlot = building_to_drop_in.world_building_inventory.find((inv) => inv.slot === toSlot);
+    if (targetSlot) {
+      // Cannot manually place items in OUTPUT slots
+      if (targetSlot.slotType === WorldBuildingInventorySlotType.OUTPUT) {
+        log(`Cannot manually place items in OUTPUT slot ${toSlot}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+        return;
+      }
+
+      // FUEL slots only accept fuel items (items in processing_requirements)
+      if (targetSlot.slotType === WorldBuildingInventorySlotType.FUEL) {
+        const isFuel = processingRequirements.some((req) => req.item.id === packet.data.inventoryItem.item.id);
+        if (!isFuel) {
+          log(`Cannot place non-fuel item ${packet.data.inventoryItem.item.id} in FUEL slot ${toSlot}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+          return;
+        }
+      }
+    }
   }
 
   await safelyMoveItemsBetweenInventories({
@@ -119,6 +180,7 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
     fromType: 'user',
     toType: 'building',
     fromSlot: packet.data.fromInventorySlot,
-    toSlot: packet.data.toInventorySlot,
+    toSlot,
+    processingRequirements,
   });
 }

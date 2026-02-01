@@ -1,4 +1,4 @@
-import { DBBuilding } from '../building_type';
+import { DBBuilding, WorldBuildingInventorySlotType } from '../building_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 import item_wood from './item_wood';
 
@@ -26,7 +26,7 @@ export const building_sawmill: DBBuilding = {
   items_to_be_placed_on: [item_wood],
   is_rotatable: false,
   inventory_transfer_quantity_per_cycle: 5,
-  inventory_slots: 3,
+  inventory_slots: [WorldBuildingInventorySlotType.OUTPUT, WorldBuildingInventorySlotType.OUTPUT, WorldBuildingInventorySlotType.OUTPUT],
   output_item: item_wood,
   can_collide: true,
   output_quantity: 2,

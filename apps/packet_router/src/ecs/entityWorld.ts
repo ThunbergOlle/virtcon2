@@ -120,16 +120,6 @@ export const initializeWorld = async (dbWorldId: string) => {
 
   setupSystems(world, dbWorld.seed);
 
-  for (const worldBuilding of worldBuildings) {
-    createNewBuildingEntity(world, {
-      buildingId: worldBuilding.building.id,
-      worldBuildingId: worldBuilding.id,
-      x: worldBuilding.x,
-      y: worldBuilding.y,
-      rotation: worldBuilding.rotation,
-    });
-  }
-
   for (const worldResource of worldResources) {
     createNewResourceEntity(world, {
       id: worldResource.id,
@@ -139,6 +129,16 @@ export const initializeWorld = async (dbWorldId: string) => {
         y: worldResource.y,
       },
       quantity: worldResource.quantity,
+    });
+  }
+
+  for (const worldBuilding of worldBuildings) {
+    createNewBuildingEntity(world, {
+      buildingId: worldBuilding.building.id,
+      worldBuildingId: worldBuilding.id,
+      x: worldBuilding.x,
+      y: worldBuilding.y,
+      rotation: worldBuilding.rotation,
     });
   }
 

@@ -1,4 +1,5 @@
 import { LogLevel, log } from '@shared';
+import { WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, Entity, EntityManager, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { pubSub, Topic } from '../../pubsub';
@@ -38,6 +39,10 @@ export class WorldBuildingInventory extends BaseEntity {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @Field(() => String)
+  @Column({ type: 'varchar', default: 'output' })
+  slotType: WorldBuildingInventorySlotType;
 
   // @BeforeUpdate()
   // async updateDates() {

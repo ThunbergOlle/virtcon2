@@ -4,7 +4,7 @@ import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { TPS } from '@shared';
 import { BuildingProcessingRequirement } from '../building_processing_requirement/BuildingProcessingRequirement';
-import { DBBuilding, DBItemName } from '@virtcon2/static-game-data';
+import { DBBuilding, DBItemName, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 
 @ObjectType()
 @Entity()
@@ -38,9 +38,9 @@ export class Building extends BaseEntity implements DBBuilding {
   @Column({ type: 'int', nullable: false, default: 5 })
   inventory_transfer_quantity_per_cycle: number;
 
-  @Field(() => Int, { nullable: false, defaultValue: 5 })
-  @Column({ type: 'int', nullable: false, default: 5 })
-  inventory_slots: number;
+  @Field(() => [Int], { nullable: false, defaultValue: [] })
+  @Column({ type: 'simple-array', nullable: false, default: [] })
+  inventory_slots: WorldBuildingInventorySlotType[];
 
   @OneToMany(() => WorldBuilding, (i) => i.building)
   world_buildings: WorldBuilding[];

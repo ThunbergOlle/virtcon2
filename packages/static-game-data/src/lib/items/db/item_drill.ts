@@ -1,4 +1,4 @@
-import { DBBuilding } from '../building_type';
+import { DBBuilding, WorldBuildingInventorySlotType } from '../building_type';
 import { DBItem, DBItemName, DBItemRarity } from '../item_type';
 import item_coal from './item_coal';
 import item_iron_ore from './item_iron';
@@ -26,7 +26,7 @@ export const building_drill: DBBuilding = {
   item: item_drill,
   processing_ticks: 100,
   is_rotatable: false,
-  inventory_slots: 2,
+  inventory_slots: [WorldBuildingInventorySlotType.FUEL, WorldBuildingInventorySlotType.OUTPUT, WorldBuildingInventorySlotType.OUTPUT],
   items_to_be_placed_on: [item_stone, item_coal, item_iron_ore],
   processing_requirements: [{ item: item_coal, quantity: 2 }],
   output_item: null,

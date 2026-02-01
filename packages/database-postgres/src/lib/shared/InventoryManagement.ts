@@ -3,7 +3,13 @@ import { publishUserInventoryUpdate, UserInventoryItem } from '../entity/user_in
 import { publishWorldBuildingUpdate, WorldBuildingInventory } from '../entity/world_building_inventory/WorldBuildingInventory';
 import { EntityManager } from 'typeorm';
 import { AppDataSource } from '../data-source';
-import { all_db_items } from '@virtcon2/static-game-data';
+import { all_db_items, DBBuildingProcessingRequirement, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
+
+export enum InventoryOperationType {
+  PRODUCTION_OUTPUT, // Production output → OUTPUT slots only
+  TRANSFER_TO_BUILDING, // Transfers → FUEL (if fuel) or INPUT
+  FUEL_CONSUMPTION, // Remove fuel → FUEL slots only
+}
 
 export async function addToInventory(
   transaction: EntityManager,
@@ -54,6 +60,60 @@ export async function addToInventory(
 
   return quantity;
 }
+
+/**
+ * Adds items to a building inventory with slot type enforcement.
+ * - PRODUCTION_OUTPUT: Only uses OUTPUT slots
+ * - TRANSFER_TO_BUILDING: Uses FUEL slots for fuel items, INPUT slots otherwise
+ * - FUEL_CONSUMPTION: Only uses FUEL slots (for removing fuel)
+ */
+export async function addToBuildingInventory(options: {
+  transaction: EntityManager;
+  inventorySlots: WorldBuildingInventory[];
+  itemId: number;
+  quantity: number;
+  operationType: InventoryOperationType;
+  processingRequirements?: DBBuildingProcessingRequirement[];
+  slot?: number;
+}): Promise<number> {
+  const { transaction, inventorySlots, itemId, quantity, operationType, processingRequirements, slot } = options;
+
+  // Filter slots based on operation type
+  let allowedSlots: WorldBuildingInventory[];
+
+  switch (operationType) {
+    case InventoryOperationType.PRODUCTION_OUTPUT:
+      allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.OUTPUT);
+      break;
+
+    case InventoryOperationType.FUEL_CONSUMPTION:
+      allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.FUEL);
+      break;
+
+    case InventoryOperationType.TRANSFER_TO_BUILDING: {
+      // Check if item is a fuel (in processing_requirements)
+      const isFuel = processingRequirements?.some((req) => req.item.id === itemId) ?? false;
+      if (isFuel) {
+        allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.FUEL);
+      } else {
+        // Non-fuel items go to INPUT slots
+        allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.INPUT);
+      }
+      break;
+    }
+
+    default:
+      allowedSlots = inventorySlots;
+  }
+
+  if (allowedSlots.length === 0) {
+    log(`No valid slots for operation ${InventoryOperationType[operationType]} with item ${itemId}`, LogLevel.INFO);
+    return quantity;
+  }
+
+  return addToInventory(transaction, allowedSlots, itemId, quantity, slot);
+}
+
 async function createNewStack(
   transaction: EntityManager,
   empty_inventory_slots: (WorldBuildingInventory | UserInventoryItem)[],
@@ -141,21 +201,43 @@ export const safelyMoveItemsBetweenInventories = async (options: {
   itemId: number;
   quantity: number;
   log?: boolean;
+  processingRequirements?: DBBuildingProcessingRequirement[];
 }) => {
   const queryRunner = AppDataSource.createQueryRunner();
 
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
-  const { fromId, fromType, toId, toType, toSlot, fromSlot, itemId, quantity } = options;
+  const { fromId, fromType, toId, toType, toSlot, fromSlot, itemId, quantity, processingRequirements } = options;
 
   try {
     const from_quantity_left = await (fromType === 'user'
       ? UserInventoryItem.addToInventory(queryRunner.manager, fromId, itemId, -quantity, fromSlot)
       : WorldBuildingInventory.addToInventory(queryRunner.manager, fromId, itemId, -quantity, fromSlot));
-    const to_quantity_left = await (toType === 'user'
-      ? UserInventoryItem.addToInventory(queryRunner.manager, toId, itemId, quantity, toSlot)
-      : WorldBuildingInventory.addToInventory(queryRunner.manager, toId, itemId, quantity, toSlot));
+
+    // When transferring to a building without a specific slot, use slot-aware function
+    let to_quantity_left: number;
+    if (toType === 'building' && toSlot === undefined && processingRequirements !== undefined) {
+      // Fetch building inventory slots with slotType
+      const buildingInventorySlots = await queryRunner.manager.find(WorldBuildingInventory, {
+        where: { world_building: { id: toId } },
+        relations: ['item'],
+        order: { slot: 'ASC' },
+      });
+
+      to_quantity_left = await addToBuildingInventory({
+        transaction: queryRunner.manager,
+        inventorySlots: buildingInventorySlots,
+        itemId,
+        quantity,
+        operationType: InventoryOperationType.TRANSFER_TO_BUILDING,
+        processingRequirements,
+      });
+    } else if (toType === 'user') {
+      to_quantity_left = await UserInventoryItem.addToInventory(queryRunner.manager, toId, itemId, quantity, toSlot);
+    } else {
+      to_quantity_left = await WorldBuildingInventory.addToInventory(queryRunner.manager, toId, itemId, quantity, toSlot);
+    }
 
     options.log &&
       log(

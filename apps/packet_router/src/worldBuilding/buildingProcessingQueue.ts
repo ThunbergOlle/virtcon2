@@ -1,16 +1,18 @@
 import { pMap } from '@shared';
-import { defineQuery, World } from '@virtcon2/bytenetc';
+import { defineQuery, defineSerializer, Entity, World } from '@virtcon2/bytenetc';
 import {
-  addToInventory,
+  addToBuildingInventory,
   AppDataSource,
+  InventoryOperationType,
   publishWorldBuildingUpdate,
   safelyMoveItemsBetweenInventories,
   WorldBuilding,
   WorldResource,
 } from '@virtcon2/database-postgres';
-import { Animation, Building } from '@virtcon2/network-world-entities';
-import { DBBuilding, getItemByName, ResourceNames, Resources } from '@virtcon2/static-game-data';
+import { Animation, Building, getSerializeConfig, SerializationID } from '@virtcon2/network-world-entities';
+import { DBBuilding, getItemByName, ResourceNames, Resources, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { EntityManager, IsNull, Not } from 'typeorm';
+import { syncServerEntities } from '../packet/enqueue';
 
 // Animation indices
 const ANIMATION_IDLE = 0;
@@ -36,12 +38,23 @@ function setBuildingAnimation(worldId: World, worldBuildingId: number, isActive:
   const buildingQuery = defineQuery(Building, Animation);
   const entities = buildingQuery(worldId);
 
+  const updatedEntities: Entity[] = [];
+
   for (const eid of entities) {
     if (Building(worldId).worldBuildingId[eid] === worldBuildingId) {
+      const prevAnimationState = Animation(worldId).animationIndex[eid];
+      if (isActive && prevAnimationState === ANIMATION_ACTIVE) continue;
+      if (!isActive && prevAnimationState === ANIMATION_IDLE) continue;
+
       Animation(worldId).animationIndex[eid] = isActive ? ANIMATION_ACTIVE : ANIMATION_IDLE;
+      updatedEntities.push(eid);
       break;
     }
   }
+  const serialize = defineSerializer(getSerializeConfig(worldId)[SerializationID.BUILDING_FULL_SERVER]);
+  const serializedBuilding = serialize(worldId, updatedEntities);
+
+  syncServerEntities(worldId, serializedBuilding, SerializationID.BUILDING_FULL_SERVER);
 }
 
 class BuildingProcessingQueue {
@@ -83,11 +96,7 @@ class BuildingProcessingQueue {
 
   private async processBuilding(worldId: World, building: DBBuilding): Promise<void> {
     // Resource extractor with requirements (dynamic output based on resource)
-    if (
-      building.items_to_be_placed_on.length > 0 &&
-      building.processing_requirements.length > 0 &&
-      building.output_item === null
-    ) {
+    if (building.items_to_be_placed_on.length > 0 && building.processing_requirements.length > 0 && building.output_item === null) {
       await this.processResourceExtractingBuildingWithRequirements(worldId, building);
     } else if (!building.processing_requirements.length && (building.output_item || building.items_to_be_placed_on.length)) {
       await this.processResourceExtractingBuilding(worldId, building);
@@ -107,7 +116,13 @@ class BuildingProcessingQueue {
         worldBuildings,
         async (worldBuilding) => {
           if (building.output_item?.id) {
-            return addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
+            return addToBuildingInventory({
+              transaction,
+              inventorySlots: worldBuilding.world_building_inventory,
+              itemId: building.output_item.id,
+              quantity: building.output_quantity,
+              operationType: InventoryOperationType.PRODUCTION_OUTPUT,
+            });
           }
         },
         { concurrency: 10 },
@@ -170,16 +185,28 @@ class BuildingProcessingQueue {
           const outputItem = getItemByName(resourceConfig.item);
           if (!outputItem) return;
 
-          // Consume requirements
+          // Consume requirements (fuel)
           await pMap(building.processing_requirements, (requirement) =>
-            addToInventory(transaction, worldBuilding.world_building_inventory, requirement.item.id, -requirement.quantity),
+            addToBuildingInventory({
+              transaction,
+              inventorySlots: worldBuilding.world_building_inventory,
+              itemId: requirement.item.id,
+              quantity: -requirement.quantity,
+              operationType: InventoryOperationType.FUEL_CONSUMPTION,
+            }),
           );
 
           // Coal bonus: when drilling coal, produce 4 instead of 2
-          const outputQuantity = resource.resourceName === ResourceNames.COAL ? 4 : (building.output_quantity ?? 2);
+          const outputQuantity = resource.resourceName === ResourceNames.COAL ? 4 : building.output_quantity ?? 2;
 
-          // Add output to inventory
-          await addToInventory(transaction, worldBuilding.world_building_inventory, outputItem.id, outputQuantity);
+          // Add output to inventory (OUTPUT slots only)
+          await addToBuildingInventory({
+            transaction,
+            inventorySlots: worldBuilding.world_building_inventory,
+            itemId: outputItem.id,
+            quantity: outputQuantity,
+            operationType: InventoryOperationType.PRODUCTION_OUTPUT,
+          });
 
           // Reduce resource quantity
           resource.quantity = Math.max(0, resource.quantity - 1);
@@ -218,11 +245,25 @@ class BuildingProcessingQueue {
 
         if (!requirementsMet) return;
 
+        // Consume requirements (fuel)
         await pMap(building.processing_requirements, (requirement) =>
-          addToInventory(transaction, worldBuilding.world_building_inventory, requirement.item.id, -requirement.quantity),
+          addToBuildingInventory({
+            transaction,
+            inventorySlots: worldBuilding.world_building_inventory,
+            itemId: requirement.item.id,
+            quantity: -requirement.quantity,
+            operationType: InventoryOperationType.FUEL_CONSUMPTION,
+          }),
         );
 
-        await addToInventory(transaction, worldBuilding.world_building_inventory, building.output_item.id, building.output_quantity);
+        // Add output to inventory (OUTPUT slots only)
+        await addToBuildingInventory({
+          transaction,
+          inventorySlots: worldBuilding.world_building_inventory,
+          itemId: building.output_item.id,
+          quantity: building.output_quantity,
+          operationType: InventoryOperationType.PRODUCTION_OUTPUT,
+        });
       });
     });
 
@@ -241,14 +282,22 @@ class BuildingProcessingQueue {
         'building',
         'world_building_inventory',
         'output_world_building',
+        'output_world_building.building',
         'output_world_building.world_building_inventory',
         'output_world_building.world_building_inventory.item',
       ],
     });
 
     for (const worldBuilding of worldBuildings) {
-      const itemsToMove = worldBuilding.world_building_inventory.find((inv) => inv.itemId);
+      // Only transfer from OUTPUT slots
+      const itemsToMove = worldBuilding.world_building_inventory.find(
+        (inv) => inv.itemId && inv.slotType === WorldBuildingInventorySlotType.OUTPUT,
+      );
       if (!itemsToMove) continue;
+
+      // Get the target building's processing requirements for slot type determination
+      const targetBuilding = worldBuilding.output_world_building.building;
+      const processingRequirements = targetBuilding?.processing_requirements ?? [];
 
       await safelyMoveItemsBetweenInventories({
         fromId: worldBuilding.id,
@@ -257,6 +306,8 @@ class BuildingProcessingQueue {
         quantity: Math.min(itemsToMove.quantity, worldBuilding.building.inventory_transfer_quantity_per_cycle),
         fromType: 'building',
         toType: 'building',
+        fromSlot: itemsToMove.slot,
+        processingRequirements,
       });
     }
   }

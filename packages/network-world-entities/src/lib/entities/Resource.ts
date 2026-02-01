@@ -19,6 +19,7 @@ export const addSpriteToResourceEntity = (
   Sprite(world).texture[resourceEid] = AllTextureMaps[resource.name]?.textureId ?? 0;
   Sprite(world).variant[resourceEid] = (data.pos.x + data.pos.y) % (AllTextureMaps[resource.name]?.variants.length ?? 0);
   Sprite(world).opacity[resourceEid] = 1;
+  Sprite(world).depth[resourceEid] = -16;
 };
 
 export const createNewResourceEntity = (

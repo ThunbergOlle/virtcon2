@@ -60,11 +60,12 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
   await worldBuilding.save();
 
   // Create all the slots
-  for (let i = 0; i < item.building.inventory_slots; i++) {
+  for (let i = 0; i < item.building.inventory_slots.length; i++) {
     const inventoryItem = WorldBuildingInventory.create();
     inventoryItem.world_building = worldBuilding;
     inventoryItem.quantity = 0;
     inventoryItem.slot = i;
+    inventoryItem.slotType = item.building.inventory_slots[i];
     inventoryItem.item = null;
     await inventoryItem.save();
   }
