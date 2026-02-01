@@ -19,8 +19,6 @@ export const addSpriteToHarvestableEntity = (
 
   const spriteName = getSpriteForAge(harvestable, Harvestable(world).age[harvestableEid]);
 
-  console.log(`Adding sprite to harvestable entity ${harvestableEid} with sprite ${spriteName}`);
-
   Sprite(world).texture[harvestableEid] = HarvestableStageTextureMap[spriteName as keyof typeof HarvestableStageTextureMap]?.textureId ?? 0;
   Sprite(world).variant[harvestableEid] = (data.pos.x + data.pos.y) % (AllTextureMaps[harvestable.name]?.variants.length ?? 0);
   Sprite(world).opacity[harvestableEid] = 1;
