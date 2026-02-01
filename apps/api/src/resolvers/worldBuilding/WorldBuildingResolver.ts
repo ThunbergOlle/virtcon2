@@ -20,7 +20,10 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   @FieldResolver(() => Building, { nullable: true })
   async building(@Root() worldBuilding: WorldBuilding): Promise<Building> {
     if (!worldBuilding.buildingId) return null;
-    return Building.findOne({ where: { id: worldBuilding.buildingId } });
+    return Building.findOne({
+      where: { id: worldBuilding.buildingId },
+      relations: ['processing_requirements', 'processing_requirements.item', 'fuel_requirements', 'fuel_requirements.item'],
+    });
   }
 
   @FieldResolver(() => [WorldBuildingInventory], { nullable: true })

@@ -1,5 +1,5 @@
 import { every } from '@shared';
-import { addComponent, defineQuery, defineSystem, enterQuery, getComponent, Has, World } from '@virtcon2/bytenetc';
+import { addComponent, defineQuery, defineSystem, doesEntityExist, enterQuery, getComponent, Has, World } from '@virtcon2/bytenetc';
 import {
   Collider,
   GameObjectGroups,
@@ -202,6 +202,8 @@ export function attackClickedResource(state: GameState, world: World, eid: numbe
 
   // Apply shake effect based on entity type
   setTimeout(() => {
+    if (!doesEntityExist(world, eid)) return;
+
     if (Has(Resource)(eid, world)) {
       shakeResourceSprite(state, eid);
     } else if (Has(Harvestable)(eid, world)) {
@@ -211,6 +213,8 @@ export function attackClickedResource(state: GameState, world: World, eid: numbe
 
   // Apply damage based on entity type
   setTimeout(() => {
+    if (!doesEntityExist(world, eid)) return;
+
     MainPlayer(world).action[playerEid] = MainPlayerAction.IDLE;
     if (Has(Resource)(eid, world)) {
       damageResource(world, state, eid, selectedTool.damage);

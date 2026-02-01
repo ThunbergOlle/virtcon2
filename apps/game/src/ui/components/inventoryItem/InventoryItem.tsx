@@ -107,3 +107,46 @@ export function InventoryItemPlaceholder({
     </div>
   );
 }
+
+export function InventoryItemGhost({
+  ghostItem,
+  requiredQuantity,
+  slot,
+  inventoryId,
+  onDrop,
+}: {
+  ghostItem: { id: number; display_name: string; name: string };
+  requiredQuantity: number;
+  slot: number;
+  inventoryId: number;
+  onDrop: (item: InventoryItemType, slot: number, inventoryId: number) => void;
+}) {
+  const itemMetaData = useMemo(() => get_item_by_id(ghostItem.id), [ghostItem.id]);
+  const icon = useMemo(() => Game.getInstance().textures.getBase64((itemMetaData?.name || '') + '_0'), [itemMetaData]);
+
+  const [{ canDrop, isOver }, drop] = useDrop(
+    () => ({
+      accept: 'inventoryItem',
+      drop: (item: InventoryItemType) => onDrop(item, slot, inventoryId),
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+      }),
+    }),
+    [slot, inventoryId],
+  );
+
+  return (
+    <div
+      ref={drop}
+      className={`flex flex-col rounded-md text-center w-16 h-16 bg-[#282828] hover:border-[#4b4b4b] hover:bg-[#4b4b4b] ${
+        canDrop && isOver && '!bg-green-200'
+      }`}
+    >
+      <div className="flex flex-col my-auto opacity-50">
+        <img alt={ghostItem.display_name} className="flex-1 pixelart w-8 m-auto" src={icon} />
+        <p className="flex-1 text-gray-400">x{requiredQuantity}</p>
+      </div>
+    </div>
+  );
+}

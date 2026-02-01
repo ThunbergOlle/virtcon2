@@ -49,4 +49,5 @@ export interface DBWorldBuildingInventoryItem {
   slot: number;
   item: DBItem;
   quantity: number;
+  slotType: WorldBuildingInventorySlotType;
 }

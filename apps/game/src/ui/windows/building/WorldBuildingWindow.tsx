@@ -5,7 +5,7 @@ import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
-import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
+import InventoryItem, { InventoryItemPlaceholder, InventoryItemGhost, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { close, WindowType } from '../../lib/WindowSlice';
 import { WorldBuildingConnection } from './WorldBuildingConnection';
@@ -19,6 +19,24 @@ const WORLD_BUILDING_FRAGMENT = gql`
     building {
       id
       name
+      processing_requirements {
+        id
+        quantity
+        item {
+          id
+          display_name
+          name
+        }
+      }
+      fuel_requirements {
+        id
+        quantity
+        item {
+          id
+          display_name
+          name
+        }
+      }
     }
     world_building_inventory {
       slot
@@ -27,6 +45,7 @@ const WORLD_BUILDING_FRAGMENT = gql`
       item {
         id
         display_name
+        name
       }
     }
   }
@@ -108,23 +127,50 @@ export default function WorldBuildingWindow() {
   const fuelSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.FUEL);
   const outputSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.OUTPUT);
 
-  const renderInventorySlots = (slots: typeof inventorySorted) => {
-    return slots.map((item) => {
-      return item && item.item ? (
-        <InventoryItem
-          inventoryItem={item}
-          fromInventoryType={InventoryType.BUILDING}
-          fromInventorySlot={item.slot}
-          fromInventoryId={worldBuilding!.id}
-          onClick={function (): void {
-            throw new Error('Function not implemented.');
-          }}
-          slot={item.slot}
+  const renderInventorySlots = (
+    slots: typeof inventorySorted,
+    requirements: Array<{ item: { id: number; display_name: string; name: string }; quantity: number }> = [],
+  ) => {
+    return slots.map((slot, index) => {
+      // If slot has an item, show regular InventoryItem
+      if (slot && slot.item) {
+        return (
+          <InventoryItem
+            inventoryItem={slot}
+            fromInventoryType={InventoryType.BUILDING}
+            fromInventorySlot={slot.slot}
+            fromInventoryId={worldBuilding!.id}
+            onClick={() => {}}
+            slot={slot.slot}
+            onDrop={onInventoryDropItem}
+            key={slot.slot}
+          />
+        );
+      }
+
+      // If slot is empty and there's a requirement for this position, show ghost
+      const requirement = requirements[index];
+      if (requirement) {
+        return (
+          <InventoryItemGhost
+            ghostItem={requirement.item}
+            requiredQuantity={requirement.quantity}
+            slot={slot.slot}
+            inventoryId={worldBuilding!.id}
+            onDrop={onInventoryDropItem}
+            key={slot.slot}
+          />
+        );
+      }
+
+      // Otherwise show empty placeholder
+      return (
+        <InventoryItemPlaceholder
+          slot={slot.slot}
+          inventoryId={worldBuilding!.id}
           onDrop={onInventoryDropItem}
-          key={item.slot}
+          key={slot.slot}
         />
-      ) : (
-        <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding!.id} slot={item.slot} onDrop={onInventoryDropItem} />
       );
     });
   };
@@ -168,7 +214,9 @@ export default function WorldBuildingWindow() {
           {inputSlots.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               <p className="text-sm text-gray-300 font-semibold">Input</p>
-              <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(inputSlots)}</div>
+              <div className="flex flex-col gap-2">
+                {worldBuilding && renderInventorySlots(inputSlots, worldBuilding.building?.processing_requirements || [])}
+              </div>
             </div>
           )}
 
@@ -180,7 +228,9 @@ export default function WorldBuildingWindow() {
             {fuelSlots.length > 0 && (
               <div className="flex flex-col items-center gap-2">
                 <p className="text-sm text-orange-300 font-semibold">Fuel</p>
-                <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(fuelSlots)}</div>
+                <div className="flex flex-col gap-2">
+                  {worldBuilding && renderInventorySlots(fuelSlots, worldBuilding.building?.fuel_requirements || [])}
+                </div>
               </div>
             )}
           </div>

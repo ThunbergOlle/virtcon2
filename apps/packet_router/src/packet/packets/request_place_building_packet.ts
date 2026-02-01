@@ -72,8 +72,10 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
 
   const resource = await WorldResource.findOne({ where: { world: { id: packet.world_id }, x: packet.data.x, y: packet.data.y } });
 
-  resource.worldBuildingId = worldBuilding.id;
-  await resource.save();
+  if (resource) {
+    resource.worldBuildingId = worldBuilding.id;
+    await resource.save();
+  }
 
   /* Remove the item from players inventory */
   await AppDataSource.transaction(async (transaction) =>
