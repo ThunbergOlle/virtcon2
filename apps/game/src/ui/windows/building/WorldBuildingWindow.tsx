@@ -1,6 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
-import { DBWorldBuilding } from '@virtcon2/static-game-data';
+import { DBWorldBuilding, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';
 import { useAppSelector } from '../../../hooks';
@@ -23,6 +23,7 @@ const WORLD_BUILDING_FRAGMENT = gql`
     world_building_inventory {
       slot
       quantity
+      slotType
       item {
         id
         display_name
@@ -88,52 +89,87 @@ export default function WorldBuildingWindow() {
 
   const inventorySorted = sortBy(prop('slot'))(worldBuilding?.world_building_inventory ?? []);
 
+  // Group inventory by slot type
+  const inputSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.INPUT);
+  const fuelSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.FUEL);
+  const outputSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.OUTPUT);
+
+  const renderInventorySlots = (slots: typeof inventorySorted) => {
+    return slots.map((item) => {
+      return item && item.item ? (
+        <InventoryItem
+          inventoryItem={item}
+          fromInventoryType={InventoryType.BUILDING}
+          fromInventorySlot={item.slot}
+          fromInventoryId={worldBuilding!.id}
+          onClick={function (): void {
+            throw new Error('Function not implemented.');
+          }}
+          slot={item.slot}
+          onDrop={onInventoryDropItem}
+          key={item.slot}
+        />
+      ) : (
+        <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding!.id} slot={item.slot} onDrop={onInventoryDropItem} />
+      );
+    });
+  };
+
   return (
     <Window
       title="Building Viewer"
       fullWindowLoading={loading}
-      width={500}
-      height={500}
+      width={600}
+      height={400}
       defaultPosition={{ x: 40, y: 40 }}
       windowType={WindowType.VIEW_BUILDING}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex-1 flex flex-row">
-          <div className="flex-1">
-            <h2 className="text-2xl">Info</h2>
-            <p className="text-md">Name: {worldBuilding?.building?.name}</p>
-            <p className="text-md">ID (dev): {worldBuilding?.id}</p>
-            <p className="text-md">
-              Position: {worldBuilding?.x}, {worldBuilding?.y}
+      <div className="flex flex-col h-full gap-4">
+        {/* Info Section */}
+        <div className="border-b border-gray-600 pb-3">
+          <h2 className="text-xl mb-1">{worldBuilding?.building?.name}</h2>
+          <div className="flex gap-4 text-xs text-gray-400">
+            <p>ID: {worldBuilding?.id}</p>
+            <p>
+              Pos: {worldBuilding?.x}, {worldBuilding?.y}
             </p>
-            <p className="text-md">Rotation: {worldBuilding?.rotation}°</p>
+            <p>Rot: {worldBuilding?.rotation}°</p>
           </div>
         </div>
 
-        <div className="flex-[3]">
-          <h2 className="text-2xl">Inventory</h2>
-          <div className="flex flex-row flex-wrap gap-2">
-            {worldBuilding &&
-              inventorySorted.map((item) => {
-                return item && item.item ? (
-                  <InventoryItem
-                    inventoryItem={item}
-                    fromInventoryType={InventoryType.BUILDING}
-                    fromInventorySlot={item.slot}
-                    fromInventoryId={worldBuilding.id}
-                    onClick={function (): void {
-                      throw new Error('Function not implemented.');
-                    }}
-                    slot={item.slot}
-                    onDrop={onInventoryDropItem}
-                    key={item.slot}
-                  />
-                ) : (
-                  <InventoryItemPlaceholder key={item.slot} inventoryId={worldBuilding.id} slot={item.slot} onDrop={onInventoryDropItem} />
-                );
-              })}
+        {/* Minecraft-style Processing Layout */}
+        <div className="flex-1 flex items-center justify-center gap-6 px-4">
+          {/* Input Section - Left (only show if there are input slots) */}
+          {inputSlots.length > 0 && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-gray-300 font-semibold">Input</p>
+              <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(inputSlots)}</div>
+            </div>
+          )}
+
+          {/* Arrow + Fuel Section - Center */}
+          <div className="flex flex-col items-center gap-2">
+            {/* Arrow (only show if there are input slots) */}
+            {inputSlots.length > 0 && <div className="text-4xl text-gray-400">→</div>}
+            {/* Fuel */}
+            {fuelSlots.length > 0 && (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-orange-300 font-semibold">Fuel</p>
+                <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(fuelSlots)}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Arrow between fuel and output (when no input slots) */}
+          {inputSlots.length === 0 && fuelSlots.length > 0 && <div className="text-4xl text-gray-400">→</div>}
+
+          {/* Output Section - Right */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-gray-300 font-semibold">Output</p>
+            <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(outputSlots)}</div>
           </div>
         </div>
+
         <WorldBuildingConnection x={worldBuilding?.x ?? 0} y={worldBuilding?.y ?? 0} />
       </div>
     </Window>

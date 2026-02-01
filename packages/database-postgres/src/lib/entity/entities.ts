@@ -1,5 +1,6 @@
 import { Building } from './building/Building';
 import { BuildingProcessingRequirement } from './building_processing_requirement/BuildingProcessingRequirement';
+import { BuildingFuelRequirement } from './building_fuel_requirement/BuildingFuelRequirement';
 import { Item } from './item/Item';
 import { ItemRecipe } from './item_recipe/ItemRecipe';
 import { RequestLog } from './log/RequestLog';
@@ -24,6 +25,7 @@ export default [
   ItemRecipe,
   WorldBuildingInventory,
   BuildingProcessingRequirement,
+  BuildingFuelRequirement,
   WorldConnectionPoint,
   WorldPlot,
   WorldResource,

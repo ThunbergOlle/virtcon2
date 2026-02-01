@@ -3,12 +3,13 @@ import { publishUserInventoryUpdate, UserInventoryItem } from '../entity/user_in
 import { publishWorldBuildingUpdate, WorldBuildingInventory } from '../entity/world_building_inventory/WorldBuildingInventory';
 import { EntityManager } from 'typeorm';
 import { AppDataSource } from '../data-source';
-import { all_db_items, DBBuildingProcessingRequirement, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
+import { all_db_items, DBBuildingProcessingRequirement, DBBuildingFuelRequirement, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 
 export enum InventoryOperationType {
   PRODUCTION_OUTPUT, // Production output → OUTPUT slots only
   TRANSFER_TO_BUILDING, // Transfers → FUEL (if fuel) or INPUT
   FUEL_CONSUMPTION, // Remove fuel → FUEL slots only
+  INPUT_CONSUMPTION, // Remove materials → INPUT slots only
 }
 
 export async function addToInventory(
@@ -66,6 +67,7 @@ export async function addToInventory(
  * - PRODUCTION_OUTPUT: Only uses OUTPUT slots
  * - TRANSFER_TO_BUILDING: Uses FUEL slots for fuel items, INPUT slots otherwise
  * - FUEL_CONSUMPTION: Only uses FUEL slots (for removing fuel)
+ * - INPUT_CONSUMPTION: Only uses INPUT slots (for removing materials)
  */
 export async function addToBuildingInventory(options: {
   transaction: EntityManager;
@@ -74,9 +76,10 @@ export async function addToBuildingInventory(options: {
   quantity: number;
   operationType: InventoryOperationType;
   processingRequirements?: DBBuildingProcessingRequirement[];
+  fuelRequirements?: DBBuildingFuelRequirement[];
   slot?: number;
 }): Promise<number> {
-  const { transaction, inventorySlots, itemId, quantity, operationType, processingRequirements, slot } = options;
+  const { transaction, inventorySlots, itemId, quantity, operationType, processingRequirements, fuelRequirements, slot } = options;
 
   // Filter slots based on operation type
   let allowedSlots: WorldBuildingInventory[];
@@ -90,9 +93,13 @@ export async function addToBuildingInventory(options: {
       allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.FUEL);
       break;
 
+    case InventoryOperationType.INPUT_CONSUMPTION:
+      allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.INPUT);
+      break;
+
     case InventoryOperationType.TRANSFER_TO_BUILDING: {
-      // Check if item is a fuel (in processing_requirements)
-      const isFuel = processingRequirements?.some((req) => req.item.id === itemId) ?? false;
+      // Check if item is a fuel (in fuel_requirements)
+      const isFuel = fuelRequirements?.some((req) => req.item.id === itemId) ?? false;
       if (isFuel) {
         allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.FUEL);
       } else {
@@ -202,13 +209,14 @@ export const safelyMoveItemsBetweenInventories = async (options: {
   quantity: number;
   log?: boolean;
   processingRequirements?: DBBuildingProcessingRequirement[];
+  fuelRequirements?: DBBuildingFuelRequirement[];
 }) => {
   const queryRunner = AppDataSource.createQueryRunner();
 
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
-  const { fromId, fromType, toId, toType, toSlot, fromSlot, itemId, quantity, processingRequirements } = options;
+  const { fromId, fromType, toId, toType, toSlot, fromSlot, itemId, quantity, processingRequirements, fuelRequirements } = options;
 
   try {
     const from_quantity_left = await (fromType === 'user'
@@ -217,7 +225,7 @@ export const safelyMoveItemsBetweenInventories = async (options: {
 
     // When transferring to a building without a specific slot, use slot-aware function
     let to_quantity_left: number;
-    if (toType === 'building' && toSlot === undefined && processingRequirements !== undefined) {
+    if (toType === 'building' && toSlot === undefined && (processingRequirements !== undefined || fuelRequirements !== undefined)) {
       // Fetch building inventory slots with slotType
       const buildingInventorySlots = await queryRunner.manager.find(WorldBuildingInventory, {
         where: { world_building: { id: toId } },
@@ -232,6 +240,7 @@ export const safelyMoveItemsBetweenInventories = async (options: {
         quantity,
         operationType: InventoryOperationType.TRANSFER_TO_BUILDING,
         processingRequirements,
+        fuelRequirements,
       });
     } else if (toType === 'user') {
       to_quantity_left = await UserInventoryItem.addToInventory(queryRunner.manager, toId, itemId, quantity, toSlot);

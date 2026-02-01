@@ -4,6 +4,7 @@ import { Item } from '../item/Item';
 import { WorldBuilding } from '../world_building/WorldBuilding';
 import { TPS } from '@shared';
 import { BuildingProcessingRequirement } from '../building_processing_requirement/BuildingProcessingRequirement';
+import { BuildingFuelRequirement } from '../building_fuel_requirement/BuildingFuelRequirement';
 import { DBBuilding, DBItemName, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 
 @ObjectType()
@@ -59,6 +60,10 @@ export class Building extends BaseEntity implements DBBuilding {
   @OneToMany(() => BuildingProcessingRequirement, (i) => i.building, { nullable: true })
   @Field(() => [BuildingProcessingRequirement], { nullable: true, defaultValue: [] })
   processing_requirements: BuildingProcessingRequirement[];
+
+  @OneToMany(() => BuildingFuelRequirement, (i) => i.building, { nullable: true })
+  @Field(() => [BuildingFuelRequirement], { nullable: true, defaultValue: [] })
+  fuel_requirements: BuildingFuelRequirement[];
 
   // width and height in tiles
   @Field(() => Int, { nullable: false, defaultValue: 1 })

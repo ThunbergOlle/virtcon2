@@ -15,6 +15,8 @@ export * from './lib/entity/world_building_inventory/WorldBuildingInventory';
 export * from './lib/entity/world_plot/WorldPlot';
 export * from './lib/entity/world_resource/WorldResource';
 export * from './lib/entity/world_harvestable/WorldHarvestable';
+export * from './lib/entity/building_fuel_requirement/BuildingFuelRequirement';
+export * from './lib/entity/building_processing_requirement/BuildingProcessingRequirement';
 
 /* Errors */
 export * from './lib/error/InventoryFullError';

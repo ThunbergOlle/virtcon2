@@ -5,6 +5,11 @@ export interface DBBuildingProcessingRequirement {
   quantity: number;
 }
 
+export interface DBBuildingFuelRequirement {
+  item: DBItem;
+  quantity: number;
+}
+
 export enum WorldBuildingInventorySlotType {
   INPUT = 'input',
   OUTPUT = 'output',
@@ -26,6 +31,7 @@ export interface DBBuilding {
   height: number;
   can_collide: boolean;
   processing_requirements: DBBuildingProcessingRequirement[];
+  fuel_requirements: DBBuildingFuelRequirement[];
 }
 
 export interface DBWorldBuilding {

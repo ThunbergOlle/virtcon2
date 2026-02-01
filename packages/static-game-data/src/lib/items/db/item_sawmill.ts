@@ -31,4 +31,5 @@ export const building_sawmill: DBBuilding = {
   can_collide: true,
   output_quantity: 2,
   processing_requirements: [],
+  fuel_requirements: [],
 };

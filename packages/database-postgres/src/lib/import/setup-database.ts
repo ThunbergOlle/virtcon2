@@ -6,6 +6,7 @@ import { Item } from '../entity/item/Item';
 import { ItemRecipe } from '../entity/item_recipe/ItemRecipe';
 import { Building } from '../entity/building/Building';
 import { BuildingProcessingRequirement } from '../entity/building_processing_requirement/BuildingProcessingRequirement';
+import { BuildingFuelRequirement } from '../entity/building_fuel_requirement/BuildingFuelRequirement';
 import { AppDataSource } from '../data-source';
 export async function setupDatabase() {
   SetupItems();
@@ -56,6 +57,20 @@ async function SetupItems() {
           quantity: requirement.quantity,
           building: { id: building.id } as Building,
         } as BuildingProcessingRequirement,
+        { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] },
+      );
+    }
+    // Insert fuel requirements
+    for (let i = 0; i < building.fuel_requirements.length; i++) {
+      const requirement = building.fuel_requirements[i];
+      const requirementId = building.id * 1000 + i; // Different multiplier to avoid collisions
+      await BuildingFuelRequirement.upsert(
+        {
+          id: requirementId,
+          item: { id: requirement.item.id } as Item,
+          quantity: requirement.quantity,
+          building: { id: building.id } as Building,
+        } as BuildingFuelRequirement,
         { upsertType: 'on-conflict-do-update', conflictPaths: ['id'] },
       );
     }

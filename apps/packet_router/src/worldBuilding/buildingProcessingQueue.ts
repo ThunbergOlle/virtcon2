@@ -95,12 +95,14 @@ class BuildingProcessingQueue {
   }
 
   private async processBuilding(worldId: World, building: DBBuilding): Promise<void> {
+    const hasRequirements = building.processing_requirements.length > 0 || building.fuel_requirements.length > 0;
+
     // Resource extractor with requirements (dynamic output based on resource)
-    if (building.items_to_be_placed_on.length > 0 && building.processing_requirements.length > 0 && building.output_item === null) {
+    if (building.items_to_be_placed_on.length > 0 && hasRequirements && building.output_item === null) {
       await this.processResourceExtractingBuildingWithRequirements(worldId, building);
-    } else if (!building.processing_requirements.length && (building.output_item || building.items_to_be_placed_on.length)) {
+    } else if (!hasRequirements && (building.output_item || building.items_to_be_placed_on.length)) {
       await this.processResourceExtractingBuilding(worldId, building);
-    } else if (building.processing_requirements.length) {
+    } else if (hasRequirements) {
       await this.processBuildingWithRequirements(worldId, building);
     }
   }
@@ -140,7 +142,13 @@ class BuildingProcessingQueue {
   private async processResourceExtractingBuildingWithRequirements(worldId: World, building: DBBuilding): Promise<void> {
     const worldBuildings = await WorldBuilding.find({
       where: { building: { id: building.id }, world: { id: worldId } },
-      relations: ['world_building_inventory'],
+      relations: [
+        'world_building_inventory',
+        'building.fuel_requirements',
+        'building.fuel_requirements.item',
+        'building.processing_requirements',
+        'building.processing_requirements.item',
+      ],
     });
 
     // Get all world resources that have a linked building
@@ -163,11 +171,23 @@ class BuildingProcessingQueue {
       await pMap(
         worldBuildings,
         async (worldBuilding) => {
-          // Check if processing requirements are met
-          const requirementsMet = building.processing_requirements.every((req) => {
-            const inventory = worldBuilding.world_building_inventory.find((inv) => inv.itemId === req.item.id);
+          // Check if fuel requirements are met
+          const fuelRequirementsMet = building.fuel_requirements.every((req) => {
+            const inventory = worldBuilding.world_building_inventory
+              .filter((inventory) => inventory.slotType === WorldBuildingInventorySlotType.FUEL)
+              .find((inv) => inv.itemId === req.item.id);
             return inventory && inventory.quantity >= req.quantity;
           });
+
+          // Check if processing requirements are met
+          const processingRequirementsMet = building.processing_requirements.every((req) => {
+            const inventory = worldBuilding.world_building_inventory
+              .filter((inventory) => inventory.slotType === WorldBuildingInventorySlotType.INPUT)
+              .find((inv) => inv.itemId === req.item.id);
+            return inventory && inventory.quantity >= req.quantity;
+          });
+
+          const requirementsMet = fuelRequirementsMet && processingRequirementsMet;
 
           // Get the linked resource
           const resource = resourceByBuildingId.get(worldBuilding.id);
@@ -185,14 +205,25 @@ class BuildingProcessingQueue {
           const outputItem = getItemByName(resourceConfig.item);
           if (!outputItem) return;
 
-          // Consume requirements (fuel)
-          await pMap(building.processing_requirements, (requirement) =>
+          // Consume fuel requirements
+          await pMap(building.fuel_requirements, (requirement) =>
             addToBuildingInventory({
               transaction,
               inventorySlots: worldBuilding.world_building_inventory,
               itemId: requirement.item.id,
               quantity: -requirement.quantity,
               operationType: InventoryOperationType.FUEL_CONSUMPTION,
+            }),
+          );
+
+          // Consume processing requirements
+          await pMap(building.processing_requirements, (requirement) =>
+            addToBuildingInventory({
+              transaction,
+              inventorySlots: worldBuilding.world_building_inventory,
+              itemId: requirement.item.id,
+              quantity: -requirement.quantity,
+              operationType: InventoryOperationType.INPUT_CONSUMPTION,
             }),
           );
 
@@ -227,7 +258,13 @@ class BuildingProcessingQueue {
   private async processBuildingWithRequirements(worldId: World, building: DBBuilding): Promise<void> {
     const worldBuildings = await WorldBuilding.find({
       where: { building: { id: building.id }, world: { id: worldId } },
-      relations: ['world_building_inventory'],
+      relations: [
+        'world_building_inventory',
+        'building.fuel_requirements',
+        'building.fuel_requirements.item',
+        'building.processing_requirements',
+        'building.processing_requirements.item',
+      ],
     });
 
     // Track which buildings can process
@@ -235,24 +272,48 @@ class BuildingProcessingQueue {
 
     await AppDataSource.manager.transaction(async (transaction: EntityManager) => {
       await pMap(worldBuildings, async (worldBuilding) => {
-        const requirementsMet = building.processing_requirements.every((req) => {
-          const inventory = worldBuilding.world_building_inventory.find((inv) => inv.itemId === req.item.id);
+        // Check if fuel requirements are met
+        const fuelRequirementsMet = building.fuel_requirements.every((req) => {
+          const inventory = worldBuilding.world_building_inventory
+            .filter((inventory) => inventory.slotType === WorldBuildingInventorySlotType.FUEL)
+            .find((inv) => inv.itemId === req.item.id);
           return inventory && inventory.quantity >= req.quantity;
         });
+
+        // Check if processing requirements are met
+        const processingRequirementsMet = building.processing_requirements.every((req) => {
+          const inventory = worldBuilding.world_building_inventory
+            .filter((inventory) => inventory.slotType === WorldBuildingInventorySlotType.INPUT)
+            .find((inv) => inv.itemId === req.item.id);
+          return inventory && inventory.quantity >= req.quantity;
+        });
+
+        const requirementsMet = fuelRequirementsMet && processingRequirementsMet;
 
         // Track active state for animation
         buildingActiveState.set(worldBuilding.id, requirementsMet);
 
         if (!requirementsMet) return;
 
-        // Consume requirements (fuel)
-        await pMap(building.processing_requirements, (requirement) =>
+        // Consume fuel requirements
+        await pMap(building.fuel_requirements, (requirement) =>
           addToBuildingInventory({
             transaction,
             inventorySlots: worldBuilding.world_building_inventory,
             itemId: requirement.item.id,
             quantity: -requirement.quantity,
             operationType: InventoryOperationType.FUEL_CONSUMPTION,
+          }),
+        );
+
+        // Consume processing requirements
+        await pMap(building.processing_requirements, (requirement) =>
+          addToBuildingInventory({
+            transaction,
+            inventorySlots: worldBuilding.world_building_inventory,
+            itemId: requirement.item.id,
+            quantity: -requirement.quantity,
+            operationType: InventoryOperationType.INPUT_CONSUMPTION,
           }),
         );
 
@@ -283,6 +344,10 @@ class BuildingProcessingQueue {
         'world_building_inventory',
         'output_world_building',
         'output_world_building.building',
+        'output_world_building.building.fuel_requirements',
+        'output_world_building.building.fuel_requirements.item',
+        'output_world_building.building.processing_requirements',
+        'output_world_building.building.processing_requirements.item',
         'output_world_building.world_building_inventory',
         'output_world_building.world_building_inventory.item',
       ],
@@ -295,9 +360,10 @@ class BuildingProcessingQueue {
       );
       if (!itemsToMove) continue;
 
-      // Get the target building's processing requirements for slot type determination
+      // Get the target building's requirements for slot type determination
       const targetBuilding = worldBuilding.output_world_building.building;
       const processingRequirements = targetBuilding?.processing_requirements ?? [];
+      const fuelRequirements = targetBuilding?.fuel_requirements ?? [];
 
       await safelyMoveItemsBetweenInventories({
         fromId: worldBuilding.id,
@@ -308,6 +374,7 @@ class BuildingProcessingQueue {
         toType: 'building',
         fromSlot: itemsToMove.slot,
         processingRequirements,
+        fuelRequirements,
       });
     }
   }

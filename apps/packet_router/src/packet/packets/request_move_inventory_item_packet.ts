@@ -26,7 +26,7 @@ async function request_move_inventory_item_inside_building_inventory(packet: Cli
   // Get the target building with its building type for slot validation
   const targetBuilding = await WorldBuilding.findOne({
     where: { id: packet.data.toInventoryId },
-    relations: ['building', 'world_building_inventory'],
+    relations: ['building', 'building.fuel_requirements', 'building.fuel_requirements.item', 'building.processing_requirements', 'building.processing_requirements.item', 'world_building_inventory'],
   });
 
   if (!targetBuilding) {
@@ -35,6 +35,7 @@ async function request_move_inventory_item_inside_building_inventory(packet: Cli
   }
 
   const processingRequirements = targetBuilding.building?.processing_requirements ?? [];
+  const fuelRequirements = targetBuilding.building?.fuel_requirements ?? [];
   const toSlot = packet.data.toInventorySlot;
 
   // Validate explicit slot placement
@@ -47,9 +48,9 @@ async function request_move_inventory_item_inside_building_inventory(packet: Cli
         return;
       }
 
-      // FUEL slots only accept fuel items (items in processing_requirements)
+      // FUEL slots only accept fuel items (items in fuel_requirements)
       if (targetSlot.slotType === WorldBuildingInventorySlotType.FUEL) {
-        const isFuel = processingRequirements.some((req) => req.item.id === packet.data.inventoryItem.item.id);
+        const isFuel = fuelRequirements.some((req) => req.item.id === packet.data.inventoryItem.item.id);
         if (!isFuel) {
           log(`Cannot place non-fuel item ${packet.data.inventoryItem.item.id} in FUEL slot ${toSlot}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
           return;
@@ -68,6 +69,7 @@ async function request_move_inventory_item_inside_building_inventory(packet: Cli
     fromSlot: packet.data.fromInventorySlot,
     toSlot,
     processingRequirements,
+    fuelRequirements,
   });
 }
 async function request_move_inventory_item_inside_player_inventory(packet: ClientPacketWithSender<RequestMoveInventoryItemPacketData>) {
@@ -134,10 +136,10 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
     );
     return;
   }
-  // get the building with its building type for processing_requirements
+  // get the building with its building type for fuel and processing requirements
   const building_to_drop_in = await WorldBuilding.findOne({
     where: { id: packet.data.toInventoryId },
-    relations: ['building', 'world_building_inventory'],
+    relations: ['building', 'building.fuel_requirements', 'building.fuel_requirements.item', 'building.processing_requirements', 'building.processing_requirements.item', 'world_building_inventory'],
   });
   if (!building_to_drop_in) {
     log(
@@ -149,6 +151,7 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
   }
 
   const processingRequirements = building_to_drop_in.building?.processing_requirements ?? [];
+  const fuelRequirements = building_to_drop_in.building?.fuel_requirements ?? [];
   const toSlot = packet.data.toInventorySlot;
 
   // Validate explicit slot placement
@@ -161,9 +164,9 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
         return;
       }
 
-      // FUEL slots only accept fuel items (items in processing_requirements)
+      // FUEL slots only accept fuel items (items in fuel_requirements)
       if (targetSlot.slotType === WorldBuildingInventorySlotType.FUEL) {
-        const isFuel = processingRequirements.some((req) => req.item.id === packet.data.inventoryItem.item.id);
+        const isFuel = fuelRequirements.some((req) => req.item.id === packet.data.inventoryItem.item.id);
         if (!isFuel) {
           log(`Cannot place non-fuel item ${packet.data.inventoryItem.item.id} in FUEL slot ${toSlot}`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
           return;
@@ -182,5 +185,6 @@ async function request_move_inventory_item_to_building(packet: ClientPacketWithS
     fromSlot: packet.data.fromInventorySlot,
     toSlot,
     processingRequirements,
+    fuelRequirements,
   });
 }
