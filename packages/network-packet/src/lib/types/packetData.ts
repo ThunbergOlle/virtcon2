@@ -94,3 +94,7 @@ export interface RequestPlaceHarvestablePacketData {
   x: number;
   y: number;
 }
+
+export interface RequestPickupBuildingPacketData {
+  worldBuildingId: number;
+}

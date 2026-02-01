@@ -36,7 +36,6 @@ const setupBuildingEventListeners = (world: World, sprite: Types.Physics.Arcade.
   if (debugMode() && sprite.body?.gameObject) game.input.enableDebug(sprite.body.gameObject);
 
   sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
-    console.log('Building clicked:', eid);
     store.dispatch(inspectBuilding(Building(world).worldBuildingId[eid]));
     store.dispatch(select(WindowType.VIEW_BUILDING));
   });

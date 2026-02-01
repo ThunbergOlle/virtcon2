@@ -1,13 +1,13 @@
 import { gql, useQuery } from '@apollo/client';
-import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData } from '@virtcon2/network-packet';
+import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData, RequestPickupBuildingPacketData } from '@virtcon2/network-packet';
 import { DBWorldBuilding, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useEffect } from 'react';
-import { useAppSelector } from '../../../hooks';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
-import { WindowType } from '../../lib/WindowSlice';
+import { close, WindowType } from '../../lib/WindowSlice';
 import { WorldBuildingConnection } from './WorldBuildingConnection';
 
 const WORLD_BUILDING_FRAGMENT = gql`
@@ -51,6 +51,7 @@ const WORLD_BUILDING_SUBSCRIPTION = gql`
 `;
 
 export default function WorldBuildingWindow() {
+  const dispatch = useAppDispatch();
   const inspectedWorldBuilding = useAppSelector((state) => state.inspectedBuilding.inspectedWorldBuildingId);
 
   const { subscribeToMore, data, loading } = useQuery<{ worldBuilding: DBWorldBuilding }>(WORLD_BUILDING_QUERY, {
@@ -85,6 +86,19 @@ export default function WorldBuildingWindow() {
       packet_type: PacketType.REQUEST_MOVE_INVENTORY_ITEM,
     };
     Game.network.sendPacket(packet);
+  };
+
+  const onPickupBuilding = () => {
+    if (!worldBuilding) return;
+
+    const packet: ClientPacket<RequestPickupBuildingPacketData> = {
+      data: { worldBuildingId: worldBuilding.id },
+      packet_type: PacketType.REQUEST_PICKUP_BUILDING,
+    };
+    Game.network.sendPacket(packet);
+
+    // Close window after pickup request
+    dispatch(close(WindowType.VIEW_BUILDING));
   };
 
   const inventorySorted = sortBy(prop('slot'))(worldBuilding?.world_building_inventory ?? []);
@@ -127,13 +141,24 @@ export default function WorldBuildingWindow() {
       <div className="flex flex-col h-full gap-4">
         {/* Info Section */}
         <div className="border-b border-gray-600 pb-3">
-          <h2 className="text-xl mb-1">{worldBuilding?.building?.name}</h2>
-          <div className="flex gap-4 text-xs text-gray-400">
-            <p>ID: {worldBuilding?.id}</p>
-            <p>
-              Pos: {worldBuilding?.x}, {worldBuilding?.y}
-            </p>
-            <p>Rot: {worldBuilding?.rotation}°</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl mb-1">{worldBuilding?.building?.name}</h2>
+              <div className="flex gap-4 text-xs text-gray-400">
+                <p>ID: {worldBuilding?.id}</p>
+                <p>
+                  Pos: {worldBuilding?.x}, {worldBuilding?.y}
+                </p>
+                <p>Rot: {worldBuilding?.rotation}°</p>
+              </div>
+            </div>
+            <button
+              onClick={onPickupBuilding}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors text-sm font-medium"
+              title="Pick up this building and transfer all items to your inventory"
+            >
+              Pick Up Building
+            </button>
           </div>
         </div>
 

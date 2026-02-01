@@ -1,8 +1,9 @@
 import { Socket, io } from 'socket.io-client';
+import { toast } from 'react-toastify';
 import { events } from '../events/Events';
 import Game from '../scenes/Game';
 
-import { ServerPacket, PacketType, RequestJoinPacketData, ClientPacket } from '@virtcon2/network-packet';
+import { ServerPacket, PacketType, RequestJoinPacketData, ClientPacket, PickupBuildingErrorPacketData } from '@virtcon2/network-packet';
 import { ErrorType } from '@shared';
 
 export class Network {
@@ -29,6 +30,7 @@ export class Network {
 
       for (let i = 0; i < packets.length; i++) {
         const packet = packets[i];
+
         const event = packet.packet_type.charAt(0).toUpperCase() + packet.packet_type.slice(1);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         events.notify(('network' + event) as any, packet.data);

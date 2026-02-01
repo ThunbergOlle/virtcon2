@@ -4,6 +4,7 @@ import { get_item_by_id } from '@virtcon2/static-game-data';
 import { Types } from 'phaser';
 import Game, { debugMode, GameState } from '../scenes/Game';
 import { ClientPacket, PacketType, RequestDestroyHarvestablePacket } from '@virtcon2/network-packet';
+import { attackClickedResource } from './MainPlayerSystem';
 
 export const createHarvestableSystem = (world: World) => {
   const game = Game.getInstance();
@@ -19,9 +20,13 @@ export const createHarvestableSystem = (world: World) => {
       const sprite = state.spritesById[id] as Types.Physics.Arcade.SpriteWithDynamicBody;
 
       sprite.setName(`harvestable-${get_item_by_id(Harvestable(world).itemId[id])?.name}`);
-      sprite.disableInteractive();
 
       if (debugMode() && sprite.body?.gameObject) game.input.enableDebug(sprite.body.gameObject);
+
+      sprite.setInteractive(game.input.makePixelPerfect());
+      sprite.body.gameObject.on(Phaser.Input.Events.POINTER_DOWN, () => {
+        attackClickedResource(state, world, id);
+      });
     }
     return state;
   });

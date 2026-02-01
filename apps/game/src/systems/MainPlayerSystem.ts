@@ -1,14 +1,16 @@
 import { every } from '@shared';
-import { addComponent, defineQuery, defineSystem, enterQuery, World } from '@virtcon2/bytenetc';
+import { addComponent, defineQuery, defineSystem, enterQuery, getComponent, Has, World } from '@virtcon2/bytenetc';
 import {
   Collider,
   GameObjectGroups,
+  Harvestable,
   ItemTextureMap,
   MainPlayer,
   MainPlayerAction,
   Player,
   Position,
   Range,
+  Resource,
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
@@ -56,10 +58,8 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
         events.notify('onCrafterButtonPressed');
       });
 
-      /* Event listener for mouse click to attack */
       scene.input.on('pointerdown', () => {
         if (isTryingToPlaceBuilding()) return;
-        attackClickedResource(state, world, id);
       });
     }
 
@@ -158,13 +158,10 @@ const highlightTargets = (state: GameState, world: World, playerEid: number) => 
   }
 };
 
-function attackClickedResource(state: GameState, world: World, playerEid: number) {
-  // Check if player is idle
-  if (MainPlayer(world).action[playerEid] !== MainPlayerAction.IDLE) return;
-
-  // Get hovered entity from Redux
-  const hovered = hoveredResource(store.getState());
-  if (!hovered) return;
+export function attackClickedResource(state: GameState, world: World, eid: number) {
+  const mainPlayerEntities = defineQuery(MainPlayer)(world);
+  if (mainPlayerEntities.length === 0) return;
+  const playerEid = mainPlayerEntities[0];
 
   // Validate tool is selected
   const selectedItem = currentItem(store.getState());
@@ -176,8 +173,8 @@ function attackClickedResource(state: GameState, world: World, playerEid: number
   if (!textureId) return;
 
   // Validate entity is within range
-  const entityX = Position(world).x[hovered.eid];
-  const entityY = Position(world).y[hovered.eid];
+  const entityX = Position(world).x[eid];
+  const entityY = Position(world).y[eid];
   const playerX = Position(world).x[playerEid];
   const playerY = Position(world).y[playerEid];
   const distance = Phaser.Math.Distance.Between(playerX, playerY, entityX, entityY);
@@ -185,12 +182,12 @@ function attackClickedResource(state: GameState, world: World, playerEid: number
 
   // Validate tool can damage entity type
   let canDamage = false;
-  if (hovered.type === 'resource') {
+  if (Has(Resource)(eid, world)) {
     const targetItemsIds = getTargetItemIdsMemoized(selectedTool);
-    canDamage = targetItemsIds.includes(hovered.itemId);
-  } else if (hovered.type === 'harvestable') {
+    canDamage = targetItemsIds.includes(Resource(world).itemId[eid]);
+  } else if (Has(Harvestable)(eid, world)) {
     const harvestableTargetItemIds = getHarvestableTargetItemIdsMemoized(selectedTool);
-    canDamage = harvestableTargetItemIds.includes(hovered.itemId);
+    canDamage = harvestableTargetItemIds.includes(Harvestable(world).itemId[eid]);
   }
 
   if (!canDamage) return;
@@ -205,20 +202,20 @@ function attackClickedResource(state: GameState, world: World, playerEid: number
 
   // Apply shake effect based on entity type
   setTimeout(() => {
-    if (hovered.type === 'resource') {
-      shakeResourceSprite(state, hovered.eid);
-    } else if (hovered.type === 'harvestable') {
-      shakeHarvestableSprite(state, hovered.eid);
+    if (Has(Resource)(eid, world)) {
+      shakeResourceSprite(state, eid);
+    } else if (Has(Harvestable)(eid, world)) {
+      shakeHarvestableSprite(state, eid);
     }
   }, 300);
 
   // Apply damage based on entity type
   setTimeout(() => {
     MainPlayer(world).action[playerEid] = MainPlayerAction.IDLE;
-    if (hovered.type === 'resource') {
-      damageResource(world, state, hovered.eid, selectedTool.damage);
-    } else if (hovered.type === 'harvestable') {
-      damageHarvestable(world, state, hovered.eid, selectedTool.damage);
+    if (Has(Resource)(eid, world)) {
+      damageResource(world, state, eid, selectedTool.damage);
+    } else if (Has(Harvestable)(eid, world)) {
+      damageHarvestable(world, state, eid, selectedTool.damage);
     }
   }, 500);
 }

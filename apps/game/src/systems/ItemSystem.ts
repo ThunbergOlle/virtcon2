@@ -35,7 +35,6 @@ export const createItemSystem = (world: World, scene: Scene) => {
         onUpdate: () => {
           Velocity(world).x[entity] = itemSprite.body.velocity.x;
           Velocity(world).y[entity] = itemSprite.body.velocity.y;
-          console.log(`Item ${entity} velocity: ${Velocity(world).x[entity]}, ${Velocity(world).y[entity]}`);
         },
         onComplete: () => {
           scene.tweens.add({
