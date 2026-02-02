@@ -82,7 +82,11 @@ export const createConveyorSystem = (world: World) => {
       const conveyorEid = ConveyorItem(world).onConveyorEntity[itemEid];
 
       // Verify the conveyor still exists
-      if (!conveyorMap.has(`${Math.floor(Position(world).x[conveyorEid] / tileSize)},${Math.floor(Position(world).y[conveyorEid] / tileSize)}`)) {
+      if (
+        !conveyorMap.has(
+          `${Math.floor(Position(world).x[conveyorEid] / tileSize)},${Math.floor(Position(world).y[conveyorEid] / tileSize)}`,
+        )
+      ) {
         continue;
       }
 
@@ -105,8 +109,8 @@ export const createConveyorSystem = (world: World) => {
       const currentY = Position(world).y[itemEid];
 
       // Calculate new position
-      let newX = currentX + dirVec.x * speed;
-      let newY = currentY + dirVec.y * speed;
+      const newX = currentX + dirVec.x * speed;
+      const newY = currentY + dirVec.y * speed;
 
       // Check if new position is still on a conveyor
       const nextConveyorEid = findConveyorAt(newX, newY);

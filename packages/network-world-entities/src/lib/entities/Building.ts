@@ -28,6 +28,10 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   Sprite(world).rotation[building] = data.rotation;
   Sprite(world).variant[building] = 0;
 
+  if (metadata.name === DBItemName.BUILDING_CONVEYOR) {
+    Sprite(world).depth[building] = -25;
+  }
+
   addComponent(world, Collider, building);
   Collider(world).sizeWidth[building] = metadata.width * tileSize;
   Collider(world).sizeHeight[building] = metadata.height * tileSize;
