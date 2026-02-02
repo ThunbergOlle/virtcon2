@@ -14,10 +14,11 @@ import {
   Sprite,
   Velocity,
 } from '@virtcon2/network-world-entities';
+import { PacketType } from '@virtcon2/network-packet';
 import { getItemByName, Harvestable as HarvestableData, Resources, ToolType } from '@virtcon2/static-game-data';
 import { memoizeWith } from 'ramda';
 import { events } from '../events/Events';
-import { GameState } from '../scenes/Game';
+import Game, { GameState } from '../scenes/Game';
 import { store } from '../store';
 import { currentItem, currentTool } from '../ui/components/hotbar/HotbarSlice';
 import { hoveredResource } from '../ui/components/resourceTooltip/ResourceTooltipSlice';
@@ -56,6 +57,27 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
       /* Event listener for crafter event */
       scene.input.keyboard?.on('keydown-C', () => {
         events.notify('onCrafterButtonPressed');
+      });
+      /* Event listener for drop item */
+      scene.input.keyboard?.on('keydown-Q', () => {
+        if (isTryingToPlaceBuilding()) return;
+        const selectedItem = currentItem(store.getState());
+        if (!selectedItem?.item) return;
+
+        const pointer = scene.input.activePointer;
+        const worldPoint = pointer.positionToCamera(scene.cameras.main) as Phaser.Math.Vector2;
+
+        Game.network.sendPacket({
+          packet_type: PacketType.REQUEST_DROP_ITEM,
+          world_id: state.world,
+          data: {
+            itemId: selectedItem.item.id,
+            inventorySlot: selectedItem.slot,
+            x: worldPoint.x,
+            y: worldPoint.y,
+            quantity: 1,
+          },
+        });
       });
 
       scene.input.on('pointerdown', () => {

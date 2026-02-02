@@ -72,6 +72,14 @@ export interface RequestPickupItemPacketData {
   itemEntityId: number;
 }
 
+export interface RequestDropItemPacketData {
+  itemId: number;
+  inventorySlot: number;
+  x: number;
+  y: number;
+  quantity: number;
+}
+
 export interface RequestPlaceBuildingPacketData {
   buildingItemId: number;
   rotation: number;

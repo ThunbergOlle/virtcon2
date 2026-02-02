@@ -21,6 +21,7 @@ export enum PacketType {
 
   REQUEST_CREATE_CONNECTION_POINT = 'requestCreateConnectionPoint',
   REQUEST_PICKUP_ITEM = 'requestPickupItem',
+  REQUEST_DROP_ITEM = 'requestDropItem',
   REQUEST_PLACE_HARVESTABLE = 'requestPlaceHarvestable',
   REQUEST_PICKUP_BUILDING = 'requestPickupBuilding',
 }
