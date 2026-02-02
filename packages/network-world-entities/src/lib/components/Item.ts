@@ -3,6 +3,7 @@ import { get_item_by_id } from '@virtcon2/static-game-data';
 import { AllTextureMaps } from '../SpriteMap';
 import { GameObjectGroups } from '../utils/gameObject';
 import { Collider } from './Collider';
+import { ConveyorItem } from './ConveyorItem';
 import { Position } from './Position';
 import { Sprite } from './Sprite';
 
@@ -22,6 +23,7 @@ interface CreateItem {
 }
 
 export const itemEntityComponents = [Item, Position, Sprite, Collider];
+export const conveyorItemEntityComponents = [Item, ConveyorItem, Position, Sprite, Collider];
 export const createItem = ({ world, itemId, x, y, droppedFromX, droppedFromY }: CreateItem) => {
   const eid = addEntity(world);
   const item = get_item_by_id(itemId);

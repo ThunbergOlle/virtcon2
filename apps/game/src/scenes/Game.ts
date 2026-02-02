@@ -37,6 +37,7 @@ import { createSpriteTextureUpdateSystem } from '../systems/SpriteTextureUpdateS
 import { createResourceSpriteManagementSystem } from '../systems/ResourceSpriteManagementSystem';
 import { createHarvestableSpriteManagementSystem } from '../systems/HarvestableSpriteManagementSystem';
 import { createAnimationSystem } from '../systems/AnimationSystem';
+import { createConveyorItemInterpolationSystem } from '../systems/ConveyorItemInterpolationSystem';
 import { makeVar } from '@apollo/client';
 
 export const isPreloaded = makeVar(false);
@@ -104,6 +105,7 @@ export default class Game extends Scene implements SceneStates {
   public resourceSpriteManagementSystem?: System<GameState>;
   public harvestableSpriteManagementSystem?: System<GameState>;
   public animationSystem?: System<GameState>;
+  public conveyorItemInterpolationSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
   public static network: Network;
@@ -231,6 +233,7 @@ export default class Game extends Scene implements SceneStates {
       this.resourceSpriteManagementSystem = createResourceSpriteManagementSystem(this.state.world);
       this.harvestableSpriteManagementSystem = createHarvestableSpriteManagementSystem(this.state.world);
       this.animationSystem = createAnimationSystem(this.state.world);
+      this.conveyorItemInterpolationSystem = createConveyorItemInterpolationSystem(this.state.world);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
 
@@ -263,6 +266,7 @@ export default class Game extends Scene implements SceneStates {
       !this.resourceSpriteManagementSystem ||
       !this.harvestableSpriteManagementSystem ||
       !this.animationSystem ||
+      !this.conveyorItemInterpolationSystem ||
       !this.isInitialized
     )
       return;
@@ -299,6 +303,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.cursorHighlightSystem(newState);
     newState = this.spriteTextureUpdateSystem(newState);
     newState = this.animationSystem(newState);
+    newState = this.conveyorItemInterpolationSystem(newState);
 
     if (this.debugPositionSystem) {
       newState = this.debugPositionSystem(newState);

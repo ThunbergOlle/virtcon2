@@ -1,6 +1,6 @@
 import { addComponent, addEntity, Entity, World } from '@virtcon2/bytenetc';
-import { get_building_by_id } from '@virtcon2/static-game-data';
-import { Animation, Building, Collider, Position, Sprite } from '../network-world-entities';
+import { DBItemName, get_building_by_id } from '@virtcon2/static-game-data';
+import { Animation, Building, Collider, Conveyor, Position, Sprite } from '../network-world-entities';
 import { ItemTextureMap } from '../SpriteMap';
 import { tileSize, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -43,6 +43,13 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   addComponent(world, Animation, building);
   Animation(world).animationIndex[building] = 0; // idle
   Animation(world).isPlaying[building] = 1;
+
+  // Add Conveyor component if this is a conveyor building
+  if (metadata.name === DBItemName.BUILDING_CONVEYOR) {
+    addComponent(world, Conveyor, building);
+    Conveyor(world).direction[building] = Math.floor(data.rotation / 90) % 4;
+    Conveyor(world).speed[building] = 1.5; // pixels per tick
+  }
 
   return building;
 };

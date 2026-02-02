@@ -1,4 +1,5 @@
 import item_coal from './lib/items/db/item_coal';
+import { item_conveyor, building_conveyor } from './lib/items/db/item_conveyor';
 import { item_drill, building_drill } from './lib/items/db/item_drill';
 import item_iron_ore from './lib/items/db/item_iron';
 import { item_sawmill, building_sawmill } from './lib/items/db/item_sawmill';
@@ -21,6 +22,7 @@ import { stone_pickaxe_recipe } from './lib/items_recipe/db/item_stone_pickaxe';
 import { item_sapling_recipe } from './lib/items_recipe/db/item_sapling';
 import { ResourceNames, Resources } from './lib/resources/resources_type';
 import { carrot_seed_recipe } from './lib/items_recipe/db/item_carrot_seeed';
+import { item_conveyor_recipe } from './lib/items_recipe/db/item_conveyor';
 import { Harvestable, HarvestableType } from './lib/harvestable_type';
 
 /* Items */
@@ -35,6 +37,7 @@ export * from './lib/items/db/item_stone_pickaxe';
 export * from './lib/items/db/item_sapling';
 export * from './lib/items/db/item_carrot';
 export * from './lib/items/db/item_carrot_seed';
+export * from './lib/items/db/item_conveyor';
 
 export * from './lib/harvestable_type';
 
@@ -49,6 +52,7 @@ export const all_db_items = [
   item_carrot_seed,
   item_sawmill,
   item_drill,
+  item_conveyor,
   item_stone,
   item_coal,
   item_iron_ore,
@@ -85,12 +89,14 @@ export * from './lib/items_recipe/db/item_wood_pickaxe';
 export * from './lib/items_recipe/db/item_stone_pickaxe';
 export * from './lib/items_recipe/db/item_sapling';
 export * from './lib/items_recipe/db/item_carrot_seeed';
+export * from './lib/items_recipe/db/item_conveyor';
 
 export const all_db_items_recipes = [
   ...item_stick_recipe,
   ...item_sapling_recipe,
   ...item_sawmill_recipe,
   ...item_drill_recipe,
+  ...item_conveyor_recipe,
   ...wood_axe_recipe,
   ...wood_pickaxe_recipe,
   ...stone_pickaxe_recipe,
@@ -99,7 +105,7 @@ export const all_db_items_recipes = [
 
 /* Buildings */
 export * from './lib/items/building_type';
-export const all_db_buildings = [building_sawmill, building_drill];
+export const all_db_buildings = [building_sawmill, building_drill, building_conveyor];
 
 export const get_building_by_id = (id: number) => {
   return all_db_buildings.find((building) => building.id === id);

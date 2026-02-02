@@ -123,6 +123,22 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'carrot_seed',
     variants: ['sprites/items/carrot_seed.png'],
   },
+  [DBItemName.BUILDING_CONVEYOR]: {
+    textureId: 19,
+    textureName: 'building_conveyor',
+    variants: ['sprites/buildings/building_conveyor.png'],
+    animations: [
+      {
+        name: 'active',
+        frames: [0, 1, 2, 3, 4, 5, 6, 7],
+        frameRate: 12,
+        repeat: -1,
+        playOnCreate: true,
+      },
+    ],
+    spriteSheetFrameWidth: 16,
+    spriteSheetFrameHeight: 16,
+  },
 };
 
 export const HarvestableTextureMap: Record<HarvestableNames, TextureMetaData | null> = {

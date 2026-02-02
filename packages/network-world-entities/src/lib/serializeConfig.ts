@@ -3,6 +3,7 @@ import { Position } from './components/Position';
 import { Velocity } from './components/Velocity';
 import { tileEntityComponents } from './entities/Tile';
 import {
+  conveyorItemEntityComponents,
   harvestableEntityComponents,
   itemEntityComponents,
   Player,
@@ -22,6 +23,7 @@ export enum SerializationID {
   RESOURCE = 'resource',
   ITEM = 'item',
   HARVESTABLE = 'harvestable',
+  CONVEYOR_ITEM = 'conveyor-item',
 }
 
 export type SerializeConfig = {
@@ -37,4 +39,5 @@ export const getSerializeConfig = (world: World): SerializeConfig => ({
   [SerializationID.ITEM]: itemEntityComponents.map((c) => c(world)),
   [SerializationID.WORLD_BORDER]: worldBorderEntityComponents.map((c) => c(world)),
   [SerializationID.HARVESTABLE]: harvestableEntityComponents.map((c) => c(world)),
+  [SerializationID.CONVEYOR_ITEM]: conveyorItemEntityComponents.map((c) => c(world)),
 });

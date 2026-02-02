@@ -27,6 +27,7 @@ export enum DBItemName {
   SAPLING = 'sapling',
   CARROT = 'carrot',
   CARROT_SEED = 'carrot_seed',
+  BUILDING_CONVEYOR = 'building_conveyor',
 }
 export interface DBItemSpawnSettings {
   minHeight: number;
