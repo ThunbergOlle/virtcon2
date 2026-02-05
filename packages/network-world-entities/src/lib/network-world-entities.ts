@@ -29,3 +29,4 @@ export * from './entities/Harvestable';
 
 export * from './serializeConfig';
 export * from './utils/coordinates';
+export * from './utils/conveyor';

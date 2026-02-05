@@ -1,370 +1,333 @@
-import { addComponent, defineQuery, defineSerializer, defineSystem, Not, World } from '@virtcon2/bytenetc';
+import { addComponent, defineQuery, defineSerializer, defineSystem, enterQuery, Not, World } from '@virtcon2/bytenetc';
 import {
   Building,
   Collider,
   Conveyor,
   ConveyorItem,
+  ConveyorItemState,
+  CHECKPOINT_THRESHOLD,
+  DIRECTION_VECTORS,
+  distance,
   getSerializeConfig,
+  getLane,
+  getLanePosition,
+  isAhead,
+  isHorizontalDirection,
   Item,
+  MIN_ITEM_DISTANCE,
   Position,
+  posToTileKey,
   SerializationID,
   tileSize,
 } from '@virtcon2/network-world-entities';
 import { SyncEntities } from './types';
 
-// Direction vectors: 0=right, 1=down, 2=left, 3=up
-const DIRECTION_VECTORS = [
-  { x: 1, y: 0 }, // right
-  { x: 0, y: 1 }, // down
-  { x: -1, y: 0 }, // left
-  { x: 0, y: -1 }, // up
-];
+// ============ Types ============
+interface ItemOnConveyor {
+  eid: number;
+  x: number;
+  y: number;
+  conveyorEid: number;
+  lane: -1 | 1;
+  state: ConveyorItemState;
+}
 
-// Minimum distance between items on conveyor (item size)
-const MIN_ITEM_DISTANCE = 8;
+interface ConveyorData {
+  eid: number;
+  direction: number;
+  speed: number;
+  centerX: number;
+  centerY: number;
+  isHorizontal: boolean;
+}
 
-// Distance threshold to consider item "at checkpoint" (at its lane position)
-const CHECKPOINT_THRESHOLD = 1;
-
-// Maximum items per conveyor (one per lane)
-const MAX_ITEMS_PER_CONVEYOR = 2;
-
-// Lane offset from center (items go to center +/- this offset)
-const LANE_OFFSET = 4;
-
-// Helper to determine which "lane" an item is in (perpendicular to movement)
-// Returns -1 for left/upper lane, 1 for right/lower lane
-const getLane = (itemPos: number, conveyorCenter: number): number => {
-  // Always assign to a lane - no center lane
-  return itemPos < conveyorCenter ? -1 : 1;
+// ============ Helper Functions ============
+const buildConveyorMap = (world: World, conveyors: number[]): Map<string, number> => {
+  const map = new Map<string, number>();
+  for (const eid of conveyors) {
+    const key = posToTileKey(Position(world).x[eid], Position(world).y[eid]);
+    map.set(key, eid);
+  }
+  return map;
 };
 
-// Helper to get the target position for a lane
-const getLanePosition = (conveyorCenter: number, lane: number): number => {
-  return conveyorCenter + lane * LANE_OFFSET;
+const getConveyorData = (world: World, eid: number): ConveyorData => {
+  const direction = Conveyor(world).direction[eid];
+  return {
+    eid,
+    direction,
+    speed: Conveyor(world).speed[eid],
+    centerX: Position(world).x[eid],
+    centerY: Position(world).y[eid],
+    isHorizontal: isHorizontalDirection(direction),
+  };
 };
 
+const findConveyorAt = (conveyorMap: Map<string, number>, px: number, py: number): number | null => {
+  return conveyorMap.get(posToTileKey(px, py)) ?? null;
+};
+
+const checkCollisionInLane = (
+  item: ItemOnConveyor,
+  newX: number,
+  newY: number,
+  itemsInLane: ItemOnConveyor[],
+  dirVec: { x: number; y: number }
+): boolean => {
+  const newPos = { x: newX, y: newY };
+  for (const other of itemsInLane) {
+    if (other.eid === item.eid) continue;
+    const otherPos = { x: other.x, y: other.y };
+    if (distance(newPos, otherPos) < MIN_ITEM_DISTANCE && isAhead(newPos, otherPos, dirVec)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const hasRoomInLane = (
+  itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>,
+  conveyorEid: number,
+  lane: number
+): boolean => {
+  const laneMap = itemsByConveyorLane.get(conveyorEid);
+  if (!laneMap) return true;
+  const itemsInLane = laneMap.get(lane);
+  return !itemsInLane || itemsInLane.length === 0;
+};
+
+const addToItemsByConveyorLane = (
+  itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>,
+  conveyorEid: number,
+  lane: number,
+  item: ItemOnConveyor
+): void => {
+  if (!itemsByConveyorLane.has(conveyorEid)) {
+    itemsByConveyorLane.set(conveyorEid, new Map());
+  }
+  const laneMap = itemsByConveyorLane.get(conveyorEid)!;
+  if (!laneMap.has(lane)) {
+    laneMap.set(lane, []);
+  }
+  laneMap.get(lane)!.push(item);
+};
+
+// ============ State Handlers ============
+const processAligning = (
+  world: World,
+  item: ItemOnConveyor,
+  conveyor: ConveyorData,
+  changedEntities: number[]
+): void => {
+  const targetLanePos = getLanePosition(conveyor.isHorizontal ? conveyor.centerY : conveyor.centerX, item.lane);
+
+  const currentPerp = conveyor.isHorizontal ? item.y : item.x;
+  const distToTarget = Math.abs(currentPerp - targetLanePos);
+
+  if (distToTarget <= CHECKPOINT_THRESHOLD) {
+    // Reached checkpoint - snap to lane and transition to MOVING state
+    ConveyorItem(world).reachedCheckpoint[item.eid] = ConveyorItemState.MOVING;
+    if (conveyor.isHorizontal) {
+      Position(world).y[item.eid] = targetLanePos;
+    } else {
+      Position(world).x[item.eid] = targetLanePos;
+    }
+  } else {
+    // Move toward checkpoint
+    const moveAmount = Math.min(conveyor.speed, distToTarget);
+    const moveDir = currentPerp < targetLanePos ? 1 : -1;
+    if (conveyor.isHorizontal) {
+      Position(world).y[item.eid] = currentPerp + moveDir * moveAmount;
+    } else {
+      Position(world).x[item.eid] = currentPerp + moveDir * moveAmount;
+    }
+  }
+
+  if (!changedEntities.includes(item.eid)) {
+    changedEntities.push(item.eid);
+  }
+};
+
+const processMoving = (
+  world: World,
+  item: ItemOnConveyor,
+  conveyor: ConveyorData,
+  itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>,
+  conveyorMap: Map<string, number>,
+  changedEntities: number[]
+): void => {
+  const dirVec = DIRECTION_VECTORS[conveyor.direction];
+
+  // Calculate new position
+  const newX = item.x + dirVec.x * conveyor.speed;
+  const newY = item.y + dirVec.y * conveyor.speed;
+
+  // Check collision with items ahead on current conveyor in same lane
+  const laneMap = itemsByConveyorLane.get(item.conveyorEid);
+  const itemsInLane = laneMap?.get(item.lane) ?? [];
+  if (checkCollisionInLane(item, newX, newY, itemsInLane, dirVec)) {
+    return; // Blocked - don't move
+  }
+
+  // Check if moving past center of current conveyor
+  const distFromCenterAlongDir = (newX - conveyor.centerX) * dirVec.x + (newY - conveyor.centerY) * dirVec.y;
+  const isPastCenter = distFromCenterAlongDir > 0;
+
+  if (isPastCenter) {
+    // Check for next conveyor at edge of current tile
+    const edgeCheckX = conveyor.centerX + dirVec.x * (tileSize / 2 + 1);
+    const edgeCheckY = conveyor.centerY + dirVec.y * (tileSize / 2 + 1);
+    const nextConveyorEid = findConveyorAt(conveyorMap, edgeCheckX, edgeCheckY);
+
+    if (nextConveyorEid === null) {
+      // No connecting piece - stop at center
+      snapToCenter(world, item, conveyor, changedEntities);
+      return;
+    }
+
+    // Check if next conveyor has room in this lane
+    if (!hasRoomInLane(itemsByConveyorLane, nextConveyorEid, item.lane)) {
+      snapToCenter(world, item, conveyor, changedEntities);
+      return;
+    }
+  }
+
+  // Check if new position transitions to a new conveyor
+  const nextConveyorEid = findConveyorAt(conveyorMap, newX, newY);
+
+  if (nextConveyorEid !== null && nextConveyorEid !== item.conveyorEid) {
+    // Transitioning to new conveyor
+    const nextDirection = Conveyor(world).direction[nextConveyorEid];
+    const isNextHorizontal = isHorizontalDirection(nextDirection);
+    const isPerpendicular = conveyor.isHorizontal !== isNextHorizontal;
+
+    Position(world).x[item.eid] = newX;
+    Position(world).y[item.eid] = newY;
+    ConveyorItem(world).onConveyorEntity[item.eid] = nextConveyorEid;
+
+    if (isPerpendicular) {
+      ConveyorItem(world).reachedCheckpoint[item.eid] = ConveyorItemState.ALIGNING;
+    }
+  } else if (nextConveyorEid === item.conveyorEid) {
+    // Still on same conveyor - just move
+    Position(world).x[item.eid] = newX;
+    Position(world).y[item.eid] = newY;
+  }
+  // If nextConveyorEid is null, we already handled it above (stop at center)
+
+  if (!changedEntities.includes(item.eid)) {
+    changedEntities.push(item.eid);
+  }
+};
+
+const snapToCenter = (world: World, item: ItemOnConveyor, conveyor: ConveyorData, changedEntities: number[]): void => {
+  const stoppedX = conveyor.isHorizontal ? conveyor.centerX : item.x;
+  const stoppedY = conveyor.isHorizontal ? item.y : conveyor.centerY;
+
+  if (item.x !== stoppedX || item.y !== stoppedY) {
+    Position(world).x[item.eid] = stoppedX;
+    Position(world).y[item.eid] = stoppedY;
+    if (!changedEntities.includes(item.eid)) {
+      changedEntities.push(item.eid);
+    }
+  }
+};
+
+// ============ System Factory ============
 export const createConveyorSystem = (world: World) => {
   const conveyorQuery = defineQuery(Conveyor, Building, Position);
   const itemNotOnConveyorQuery = defineQuery(Item, Position, Not(ConveyorItem));
+  const newItemsQuery = enterQuery(itemNotOnConveyorQuery);
   const conveyorItemQuery = defineQuery(Item, ConveyorItem, Position);
 
   return defineSystem<SyncEntities>(({ worldData, sync, removeEntities }) => {
     const conveyorEntities = conveyorQuery(world);
-    const itemsNotOnConveyor = itemNotOnConveyorQuery(world);
+    const newItems = newItemsQuery(world);
     const conveyorItemEntities = conveyorItemQuery(world);
     const changedEntities: number[] = [];
 
-    // Build a lookup map of conveyor positions for fast collision detection
-    // Key: "tileX,tileY" -> conveyor entity
-    const conveyorMap = new Map<string, number>();
-    for (let i = 0; i < conveyorEntities.length; i++) {
-      const eid = conveyorEntities[i];
-      const x = Position(world).x[eid];
-      const y = Position(world).y[eid];
-      const tileX = Math.floor(x / tileSize);
-      const tileY = Math.floor(y / tileSize);
-      conveyorMap.set(`${tileX},${tileY}`, eid);
-    }
+    // Build lookup maps
+    const conveyorMap = buildConveyorMap(world, conveyorEntities);
+    const itemsByConveyorLane = new Map<number, Map<number, ItemOnConveyor[]>>();
 
-    // Helper: find conveyor at a pixel position
-    const findConveyorAt = (px: number, py: number): number | null => {
-      const tileX = Math.floor(px / tileSize);
-      const tileY = Math.floor(py / tileSize);
-      return conveyorMap.get(`${tileX},${tileY}`) ?? null;
-    };
-
-    // Build a map of items per conveyor for capacity checking (keyed by conveyor, then by lane)
-    const itemsByConveyorLane = new Map<number, Map<number, { eid: number; x: number; y: number }[]>>();
-    for (let i = 0; i < conveyorItemEntities.length; i++) {
-      const itemEid = conveyorItemEntities[i];
+    // Build items by conveyor and lane for collision/capacity checking
+    for (const itemEid of conveyorItemEntities) {
       const conveyorEid = ConveyorItem(world).onConveyorEntity[itemEid];
-      const lane = ConveyorItem(world).lane[itemEid];
+      const lane = ConveyorItem(world).lane[itemEid] as -1 | 1;
+      const state = ConveyorItem(world).reachedCheckpoint[itemEid] as ConveyorItemState;
 
-      if (!itemsByConveyorLane.has(conveyorEid)) {
-        itemsByConveyorLane.set(conveyorEid, new Map());
-      }
-      const laneMap = itemsByConveyorLane.get(conveyorEid)!;
-      if (!laneMap.has(lane)) {
-        laneMap.set(lane, []);
-      }
-      laneMap.get(lane)!.push({
-        eid: itemEid,
-        x: Position(world).x[itemEid],
-        y: Position(world).y[itemEid],
-      });
-    }
-
-    // Helper: check if a conveyor has room for an item in a specific lane
-    const hasRoomInLane = (conveyorEid: number, lane: number): boolean => {
-      const laneMap = itemsByConveyorLane.get(conveyorEid);
-      if (!laneMap) return true; // No items on this conveyor
-
-      const itemsInLane = laneMap.get(lane);
-      if (!itemsInLane || itemsInLane.length === 0) return true; // Lane is empty
-
-      // Lane has at least one item - no room
-      return false;
-    };
-
-    // Helper: get all items on a conveyor (both lanes)
-    const getItemsOnConveyor = (conveyorEid: number): { eid: number; x: number; y: number }[] => {
-      const laneMap = itemsByConveyorLane.get(conveyorEid);
-      if (!laneMap) return [];
-      const items: { eid: number; x: number; y: number }[] = [];
-      for (const laneItems of laneMap.values()) {
-        items.push(...laneItems);
-      }
-      return items;
-    };
-
-    // Step 1: Detect items entering conveyors (items without ConveyorItem component)
-    for (let i = 0; i < itemsNotOnConveyor.length; i++) {
-      const itemEid = itemsNotOnConveyor[i];
-
-      const itemX = Position(world).x[itemEid];
-      const itemY = Position(world).y[itemEid];
-      const conveyorEid = findConveyorAt(itemX, itemY);
-
-      if (conveyorEid !== null) {
-        // Determine which lane this item should go to based on entry position
-        const conveyorDir = Conveyor(world).direction[conveyorEid];
-        const conveyorIsHorizontal = conveyorDir === 0 || conveyorDir === 2;
-        const conveyorCenterX = Position(world).x[conveyorEid];
-        const conveyorCenterY = Position(world).y[conveyorEid];
-
-        const itemLane = conveyorIsHorizontal
-          ? getLane(itemY, conveyorCenterY)
-          : getLane(itemX, conveyorCenterX);
-
-        if (!hasRoomInLane(conveyorEid, itemLane)) {
-          // Lane is full - item can't enter
-          continue;
-        }
-
-        // Item is on a conveyor - add ConveyorItem component
-        addComponent(world, ConveyorItem, itemEid);
-        ConveyorItem(world).onConveyorEntity[itemEid] = conveyorEid;
-        ConveyorItem(world).reachedCheckpoint[itemEid] = 0; // Must reach lane position first
-        ConveyorItem(world).lane[itemEid] = itemLane; // Store the lane
-
-        // Make item dynamic (moveable)
-        Collider(world).static[itemEid] = 0;
-
-        // Add to itemsByConveyorLane so subsequent items in this tick see it
-        if (!itemsByConveyorLane.has(conveyorEid)) {
-          itemsByConveyorLane.set(conveyorEid, new Map());
-        }
-        const laneMap = itemsByConveyorLane.get(conveyorEid)!;
-        if (!laneMap.has(itemLane)) {
-          laneMap.set(itemLane, []);
-        }
-        laneMap.get(itemLane)!.push({ eid: itemEid, x: itemX, y: itemY });
-
-        changedEntities.push(itemEid);
-      }
-    }
-
-    // Step 2: Move items on conveyors and handle collisions
-    // Sort items by position along conveyor direction to handle stacking properly
-    const itemsOnConveyors: { eid: number; x: number; y: number; conveyorEid: number }[] = [];
-
-    for (let i = 0; i < conveyorItemEntities.length; i++) {
-      const itemEid = conveyorItemEntities[i];
-      const conveyorEid = ConveyorItem(world).onConveyorEntity[itemEid];
-
-      // Verify the conveyor still exists
-      if (
-        !conveyorMap.has(
-          `${Math.floor(Position(world).x[conveyorEid] / tileSize)},${Math.floor(Position(world).y[conveyorEid] / tileSize)}`,
-        )
-      ) {
-        continue;
-      }
-
-      itemsOnConveyors.push({
+      const item: ItemOnConveyor = {
         eid: itemEid,
         x: Position(world).x[itemEid],
         y: Position(world).y[itemEid],
         conveyorEid,
-      });
+        lane,
+        state,
+      };
+
+      addToItemsByConveyorLane(itemsByConveyorLane, conveyorEid, lane, item);
     }
 
-    // Process each item
-    for (const item of itemsOnConveyors) {
-      const { eid: itemEid, conveyorEid } = item;
-      const direction = Conveyor(world).direction[conveyorEid];
-      const speed = Conveyor(world).speed[conveyorEid];
-      const dirVec = DIRECTION_VECTORS[direction];
-      const reachedCheckpoint = ConveyorItem(world).reachedCheckpoint[itemEid];
+    // Step 1: Detect newly dropped items entering conveyors
+    for (const itemEid of newItems) {
+      const itemX = Position(world).x[itemEid];
+      const itemY = Position(world).y[itemEid];
+      const conveyorEid = findConveyorAt(conveyorMap, itemX, itemY);
 
-      const currentX = Position(world).x[itemEid];
-      const currentY = Position(world).y[itemEid];
-      const conveyorCenterX = Position(world).x[conveyorEid];
-      const conveyorCenterY = Position(world).y[conveyorEid];
+      if (conveyorEid === null) continue;
 
-      // Determine if item is horizontal or vertical moving
-      const isHorizontal = direction === 0 || direction === 2;
+      const conveyor = getConveyorData(world, conveyorEid);
+      const itemLane = conveyor.isHorizontal
+        ? getLane(itemY, conveyor.centerY)
+        : getLane(itemX, conveyor.centerX);
 
-      // Get the item's assigned lane
-      const itemLane = ConveyorItem(world).lane[itemEid];
+      if (!hasRoomInLane(itemsByConveyorLane, conveyorEid, itemLane)) continue;
 
-      // Phase 1: Move toward checkpoint (lane position on perpendicular axis)
-      if (reachedCheckpoint === 0) {
-        let targetX = currentX;
-        let targetY = currentY;
+      // Add ConveyorItem component
+      addComponent(world, ConveyorItem, itemEid);
+      ConveyorItem(world).onConveyorEntity[itemEid] = conveyorEid;
+      ConveyorItem(world).reachedCheckpoint[itemEid] = ConveyorItemState.ALIGNING;
+      ConveyorItem(world).lane[itemEid] = itemLane;
+      Collider(world).static[itemEid] = 0;
 
-        if (isHorizontal) {
-          // Moving horizontally - need to move to lane on Y axis
-          targetY = getLanePosition(conveyorCenterY, itemLane);
-        } else {
-          // Moving vertically - need to move to lane on X axis
-          targetX = getLanePosition(conveyorCenterX, itemLane);
-        }
+      // Add to tracking map
+      const newItem: ItemOnConveyor = {
+        eid: itemEid,
+        x: itemX,
+        y: itemY,
+        conveyorEid,
+        lane: itemLane,
+        state: ConveyorItemState.ALIGNING,
+      };
+      addToItemsByConveyorLane(itemsByConveyorLane, conveyorEid, itemLane, newItem);
+      changedEntities.push(itemEid);
+    }
 
-        const distToCheckpoint = Math.sqrt((currentX - targetX) ** 2 + (currentY - targetY) ** 2);
+    // Step 2: Process items already on conveyors
+    for (const [conveyorEid, laneMap] of itemsByConveyorLane) {
+      // Verify conveyor still exists
+      const conveyorKey = posToTileKey(Position(world).x[conveyorEid], Position(world).y[conveyorEid]);
+      if (!conveyorMap.has(conveyorKey)) continue;
 
-        if (distToCheckpoint <= CHECKPOINT_THRESHOLD) {
-          // Reached checkpoint - snap to lane and start moving in conveyor direction
-          ConveyorItem(world).reachedCheckpoint[itemEid] = 1;
-          Position(world).x[itemEid] = targetX;
-          Position(world).y[itemEid] = targetY;
+      const conveyor = getConveyorData(world, conveyorEid);
 
-          if (!changedEntities.includes(itemEid)) {
-            changedEntities.push(itemEid);
-          }
-        } else {
-          // Move toward checkpoint
-          const dx = targetX - currentX;
-          const dy = targetY - currentY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const moveX = (dx / dist) * Math.min(speed, dist);
-          const moveY = (dy / dist) * Math.min(speed, dist);
+      for (const [, items] of laneMap) {
+        for (const item of items) {
+          // Refresh item position (may have been updated by earlier iterations)
+          item.x = Position(world).x[item.eid];
+          item.y = Position(world).y[item.eid];
+          item.state = ConveyorItem(world).reachedCheckpoint[item.eid] as ConveyorItemState;
 
-          Position(world).x[itemEid] = currentX + moveX;
-          Position(world).y[itemEid] = currentY + moveY;
-
-          if (!changedEntities.includes(itemEid)) {
-            changedEntities.push(itemEid);
-          }
-        }
-        continue; // Don't process normal movement until checkpoint reached
-      }
-
-      // Phase 2: Normal conveyor movement (checkpoint reached)
-      // Calculate new position
-      const newX = currentX + dirVec.x * speed;
-      const newY = currentY + dirVec.y * speed;
-
-      // Check if item is trying to move past the center of the conveyor
-      const distFromCenterAlongDir = (newX - conveyorCenterX) * dirVec.x + (newY - conveyorCenterY) * dirVec.y;
-      const isPastCenter = distFromCenterAlongDir > 0;
-
-      // Check collision with items ahead on current conveyor
-      let blocked = false;
-      for (const otherItem of itemsOnConveyors) {
-        if (otherItem.eid === itemEid) continue;
-
-        const otherX = Position(world).x[otherItem.eid];
-        const otherY = Position(world).y[otherItem.eid];
-
-        // Calculate distance between items
-        const dx = newX - otherX;
-        const dy = newY - otherY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < MIN_ITEM_DISTANCE) {
-          // Check if this item is ahead in the conveyor direction
-          const dotProduct = dx * dirVec.x + dy * dirVec.y;
-          if (dotProduct > 0) {
-            // Other item is ahead - we're blocked
-            blocked = true;
-            break;
+          switch (item.state) {
+            case ConveyorItemState.ALIGNING:
+              processAligning(world, item, conveyor, changedEntities);
+              break;
+            case ConveyorItemState.MOVING:
+              processMoving(world, item, conveyor, itemsByConveyorLane, conveyorMap, changedEntities);
+              break;
           }
         }
       }
-
-      if (blocked) {
-        // Can't move - blocked by another item
-        continue;
-      }
-
-      // If moving past center, check if there's a connecting conveyor
-      if (isPastCenter) {
-        // Check for next conveyor at the edge of current tile
-        const edgeCheckX = conveyorCenterX + dirVec.x * (tileSize / 2 + 1);
-        const edgeCheckY = conveyorCenterY + dirVec.y * (tileSize / 2 + 1);
-        const nextConveyorEid = findConveyorAt(edgeCheckX, edgeCheckY);
-
-        if (nextConveyorEid === null) {
-          // No connecting piece - stop at center (along movement axis)
-          const stoppedX = isHorizontal ? conveyorCenterX : currentX;
-          const stoppedY = isHorizontal ? currentY : conveyorCenterY;
-          if (currentX !== stoppedX || currentY !== stoppedY) {
-            Position(world).x[itemEid] = stoppedX;
-            Position(world).y[itemEid] = stoppedY;
-            if (!changedEntities.includes(itemEid)) {
-              changedEntities.push(itemEid);
-            }
-          }
-          continue;
-        }
-
-        // There's a next conveyor - check if it has room
-        const nextDirection = Conveyor(world).direction[nextConveyorEid];
-        const isNextHorizontal = nextDirection === 0 || nextDirection === 2;
-        const isPerpendicular = isHorizontal !== isNextHorizontal;
-
-        // Determine item's lane on the next conveyor
-        // Lane is preserved across transitions (same lane number maps to same relative side)
-        const itemLaneOnNext = itemLane;
-
-        if (!hasRoomInLane(nextConveyorEid, itemLaneOnNext)) {
-          // Next conveyor is full in this lane - stop at center (along movement axis)
-          const stoppedX = isHorizontal ? conveyorCenterX : currentX;
-          const stoppedY = isHorizontal ? currentY : conveyorCenterY;
-          if (currentX !== stoppedX || currentY !== stoppedY) {
-            Position(world).x[itemEid] = stoppedX;
-            Position(world).y[itemEid] = stoppedY;
-            if (!changedEntities.includes(itemEid)) {
-              changedEntities.push(itemEid);
-            }
-          }
-          continue;
-        }
-      }
-
-      // Check if new position transitions to a new conveyor
-      const nextConveyorEid = findConveyorAt(newX, newY);
-
-      if (nextConveyorEid !== null && nextConveyorEid !== conveyorEid) {
-        // Transitioning to new conveyor
-        const nextDirection = Conveyor(world).direction[nextConveyorEid];
-        const isNextHorizontal = nextDirection === 0 || nextDirection === 2;
-        const isPerpendicular = isHorizontal !== isNextHorizontal;
-
-        // Move item
-        Position(world).x[itemEid] = newX;
-        Position(world).y[itemEid] = newY;
-        ConveyorItem(world).onConveyorEntity[itemEid] = nextConveyorEid;
-
-        if (isPerpendicular) {
-          ConveyorItem(world).reachedCheckpoint[itemEid] = 0; // Must reach new checkpoint
-        }
-
-        if (!changedEntities.includes(itemEid)) {
-          changedEntities.push(itemEid);
-        }
-      } else if (nextConveyorEid === conveyorEid) {
-        // Still on same conveyor - just move
-        Position(world).x[itemEid] = newX;
-        Position(world).y[itemEid] = newY;
-
-        if (!changedEntities.includes(itemEid)) {
-          changedEntities.push(itemEid);
-        }
-      }
-      // If nextConveyorEid is null, we already handled it above (stop at center)
     }
 
     // Sync changed items
