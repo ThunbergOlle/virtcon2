@@ -11,8 +11,11 @@ import {
   getSerializeConfig,
   getLane,
   getLanePosition,
+  getOppositeDirection,
+  getTargetLaneAtTurn,
   isAhead,
   isHorizontalDirection,
+  isTurnMergePoint,
   Item,
   MIN_ITEM_DISTANCE,
   Position,
@@ -72,7 +75,7 @@ const checkCollisionInLane = (
   newX: number,
   newY: number,
   itemsInLane: ItemOnConveyor[],
-  dirVec: { x: number; y: number }
+  dirVec: { x: number; y: number },
 ): boolean => {
   const newPos = { x: newX, y: newY };
   for (const other of itemsInLane) {
@@ -85,11 +88,7 @@ const checkCollisionInLane = (
   return false;
 };
 
-const hasRoomInLane = (
-  itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>,
-  conveyorEid: number,
-  lane: number
-): boolean => {
+const hasRoomInLane = (itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>, conveyorEid: number, lane: number): boolean => {
   const laneMap = itemsByConveyorLane.get(conveyorEid);
   if (!laneMap) return true;
   const itemsInLane = laneMap.get(lane);
@@ -100,7 +99,7 @@ const addToItemsByConveyorLane = (
   itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>,
   conveyorEid: number,
   lane: number,
-  item: ItemOnConveyor
+  item: ItemOnConveyor,
 ): void => {
   if (!itemsByConveyorLane.has(conveyorEid)) {
     itemsByConveyorLane.set(conveyorEid, new Map());
@@ -113,12 +112,7 @@ const addToItemsByConveyorLane = (
 };
 
 // ============ State Handlers ============
-const processAligning = (
-  world: World,
-  item: ItemOnConveyor,
-  conveyor: ConveyorData,
-  changedEntities: number[]
-): void => {
+const processAligning = (world: World, item: ItemOnConveyor, conveyor: ConveyorData, changedEntities: number[]): void => {
   const targetLanePos = getLanePosition(conveyor.isHorizontal ? conveyor.centerY : conveyor.centerX, item.lane);
 
   const currentPerp = conveyor.isHorizontal ? item.y : item.x;
@@ -154,7 +148,7 @@ const processMoving = (
   conveyor: ConveyorData,
   itemsByConveyorLane: Map<number, Map<number, ItemOnConveyor[]>>,
   conveyorMap: Map<string, number>,
-  changedEntities: number[]
+  changedEntities: number[],
 ): void => {
   const dirVec = DIRECTION_VECTORS[conveyor.direction];
 
@@ -185,8 +179,21 @@ const processMoving = (
       return;
     }
 
-    // Check if next conveyor has room in this lane
-    if (!hasRoomInLane(itemsByConveyorLane, nextConveyorEid, item.lane)) {
+    // Calculate target lane on next conveyor
+    const nextDirection = Conveyor(world).direction[nextConveyorEid];
+    const isNextHorizontal = isHorizontalDirection(nextDirection);
+    const isPerpendicular = conveyor.isHorizontal !== isNextHorizontal;
+
+    let targetLane = item.lane;
+    if (isPerpendicular) {
+      const nextConveyorData = getConveyorData(world, nextConveyorEid);
+      const entryDirection = getOppositeDirection(conveyor.direction);
+      const isMerge = isTurnMergePoint(conveyorMap, nextConveyorData.centerX, nextConveyorData.centerY, entryDirection, nextDirection);
+      targetLane = getTargetLaneAtTurn(item.lane, entryDirection, nextDirection, isMerge);
+    }
+
+    // Check if next conveyor has room in target lane
+    if (!hasRoomInLane(itemsByConveyorLane, nextConveyorEid, targetLane)) {
       snapToCenter(world, item, conveyor, changedEntities);
       return;
     }
@@ -206,6 +213,13 @@ const processMoving = (
     ConveyorItem(world).onConveyorEntity[item.eid] = nextConveyorEid;
 
     if (isPerpendicular) {
+      // Calculate target lane at the turn
+      const nextConveyorData = getConveyorData(world, nextConveyorEid);
+      const entryDirection = getOppositeDirection(conveyor.direction);
+      const isMerge = isTurnMergePoint(conveyorMap, nextConveyorData.centerX, nextConveyorData.centerY, entryDirection, nextDirection);
+      const targetLane = getTargetLaneAtTurn(item.lane, entryDirection, nextDirection, isMerge);
+
+      ConveyorItem(world).lane[item.eid] = targetLane;
       ConveyorItem(world).reachedCheckpoint[item.eid] = ConveyorItemState.ALIGNING;
     }
   } else if (nextConveyorEid === item.conveyorEid) {
@@ -277,9 +291,7 @@ export const createConveyorSystem = (world: World) => {
       if (conveyorEid === null) continue;
 
       const conveyor = getConveyorData(world, conveyorEid);
-      const itemLane = conveyor.isHorizontal
-        ? getLane(itemY, conveyor.centerY)
-        : getLane(itemX, conveyor.centerX);
+      const itemLane = conveyor.isHorizontal ? getLane(itemY, conveyor.centerY) : getLane(itemX, conveyor.centerX);
 
       if (!hasRoomInLane(itemsByConveyorLane, conveyorEid, itemLane)) continue;
 

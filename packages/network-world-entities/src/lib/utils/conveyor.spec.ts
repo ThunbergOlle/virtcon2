@@ -13,7 +13,10 @@ import {
   isAhead,
   moveTowardTarget,
   posToTileKey,
+  isTurnMergePoint,
+  getTargetLaneAtTurn,
 } from './conveyor';
+import { tileSize } from './coordinates';
 
 describe('conveyor utilities', () => {
   describe('DIRECTION_VECTORS', () => {
@@ -204,6 +207,195 @@ describe('conveyor utilities', () => {
       expect(posToTileKey(-8, -8)).toBe('-1,-1');
       expect(posToTileKey(-16, -16)).toBe('-1,-1');
       expect(posToTileKey(-17, -17)).toBe('-2,-2');
+    });
+  });
+
+  describe('isTurnMergePoint', () => {
+    // Helper to create a conveyor map with conveyors at specified tile positions
+    const createConveyorMap = (tiles: [number, number][]): Map<string, number> => {
+      const map = new Map<string, number>();
+      tiles.forEach(([tx, ty], i) => {
+        // Convert tile coords to pixel center, then to key
+        const px = tx * tileSize + tileSize / 2;
+        const py = ty * tileSize + tileSize / 2;
+        map.set(posToTileKey(px, py), i + 1); // entity IDs start at 1
+      });
+      return map;
+    };
+
+    it('returns false when no adjacent conveyors exist', () => {
+      const map = createConveyorMap([[0, 0]]); // Just the turn conveyor
+      const centerX = tileSize / 2;
+      const centerY = tileSize / 2;
+
+      // Entry from left (direction 2), turning down (direction 1)
+      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(false);
+    });
+
+    it('returns true when conveyor exists opposite to turn direction', () => {
+      // Turn conveyor at (0,0), conveyor above at (0,-1)
+      const map = createConveyorMap([
+        [0, 0],
+        [0, -1],
+      ]);
+      const centerX = tileSize / 2;
+      const centerY = tileSize / 2;
+
+      // Entry from left (direction 2), turning down (direction 1)
+      // Check opposite of down (1) = up (3), which is position (0,-1)
+      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(true);
+    });
+
+    it('returns true when conveyor exists at entry direction position', () => {
+      // Turn conveyor at (0,0), conveyor to the right at (1,0)
+      // Entry from left (direction 2), entryVec = (-1,0)
+      // This checks position at (-1,0), so put conveyor there instead
+      const map = createConveyorMap([
+        [0, 0],
+        [-1, 0], // Conveyor to the left
+      ]);
+      const centerX = tileSize / 2;
+      const centerY = tileSize / 2;
+
+      // Entry from left (direction 2), turning down (direction 1)
+      // entryVec = (-1,0), so checks position (-1,0) which has a conveyor
+      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(true);
+    });
+
+    it('returns true when conveyor exists at entry direction position (right entry)', () => {
+      // Turn conveyor at (0,0), conveyor to the right at (1,0)
+      const map = createConveyorMap([
+        [0, 0],
+        [1, 0],
+      ]);
+      const centerX = tileSize / 2;
+      const centerY = tileSize / 2;
+
+      // Entry from right (direction 0), so entryVec = (1,0)
+      // This checks position to the right at (1,0) - we have a conveyor there
+      expect(isTurnMergePoint(map, centerX, centerY, 0, 1)).toBe(true);
+    });
+
+    it('detects T-junction with conveyor from above', () => {
+      // Horizontal conveyor turning down, with feeder from above
+      //     [A]
+      // ────►│
+      //      ▼
+      const map = createConveyorMap([
+        [1, 1], // Turn conveyor
+        [1, 0], // Conveyor above (feeder)
+      ]);
+      const centerX = tileSize + tileSize / 2;
+      const centerY = tileSize + tileSize / 2;
+
+      // Entry from left (direction 2), turning down (direction 1)
+      // Opposite of down is up, which has a conveyor
+      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(true);
+    });
+  });
+
+  describe('getTargetLaneAtTurn', () => {
+    describe('merge points', () => {
+      // At merge points, items from each side go to separate lanes
+      // Coming from left (2) or up (3) → left lane (-1)
+      // Coming from right (0) or down (1) → right lane (1)
+
+      it('routes items from right to right lane (1)', () => {
+        expect(getTargetLaneAtTurn(-1, 0, 1, true)).toBe(1);
+        expect(getTargetLaneAtTurn(1, 0, 1, true)).toBe(1);
+      });
+
+      it('routes items from down to right lane (1)', () => {
+        expect(getTargetLaneAtTurn(-1, 1, 0, true)).toBe(1);
+        expect(getTargetLaneAtTurn(1, 1, 0, true)).toBe(1);
+      });
+
+      it('routes items from left to left lane (-1)', () => {
+        expect(getTargetLaneAtTurn(-1, 2, 1, true)).toBe(-1);
+        expect(getTargetLaneAtTurn(1, 2, 1, true)).toBe(-1);
+      });
+
+      it('routes items from up to left lane (-1)', () => {
+        expect(getTargetLaneAtTurn(-1, 3, 0, true)).toBe(-1);
+        expect(getTargetLaneAtTurn(1, 3, 0, true)).toBe(-1);
+      });
+    });
+
+    describe('simple corners', () => {
+      // At simple corners, lanes curve naturally
+      // The outer lane stays outer, inner stays inner
+
+      describe('Right (0) → Down (1): lanes flip', () => {
+        it('top lane (-1) becomes right lane (1)', () => {
+          expect(getTargetLaneAtTurn(-1, 0, 1, false)).toBe(1);
+        });
+        it('bottom lane (1) becomes left lane (-1)', () => {
+          expect(getTargetLaneAtTurn(1, 0, 1, false)).toBe(-1);
+        });
+      });
+
+      describe('Right (0) → Up (3): lanes stay same', () => {
+        it('top lane (-1) stays left lane (-1)', () => {
+          expect(getTargetLaneAtTurn(-1, 0, 3, false)).toBe(-1);
+        });
+        it('bottom lane (1) stays right lane (1)', () => {
+          expect(getTargetLaneAtTurn(1, 0, 3, false)).toBe(1);
+        });
+      });
+
+      describe('Left (2) → Down (1): lanes stay same', () => {
+        it('top lane (-1) stays left lane (-1)', () => {
+          expect(getTargetLaneAtTurn(-1, 2, 1, false)).toBe(-1);
+        });
+        it('bottom lane (1) stays right lane (1)', () => {
+          expect(getTargetLaneAtTurn(1, 2, 1, false)).toBe(1);
+        });
+      });
+
+      describe('Left (2) → Up (3): lanes flip', () => {
+        it('top lane (-1) becomes right lane (1)', () => {
+          expect(getTargetLaneAtTurn(-1, 2, 3, false)).toBe(1);
+        });
+        it('bottom lane (1) becomes left lane (-1)', () => {
+          expect(getTargetLaneAtTurn(1, 2, 3, false)).toBe(-1);
+        });
+      });
+
+      describe('Down (1) → Right (0): lanes flip', () => {
+        it('left lane (-1) becomes bottom lane (1)', () => {
+          expect(getTargetLaneAtTurn(-1, 1, 0, false)).toBe(1);
+        });
+        it('right lane (1) becomes top lane (-1)', () => {
+          expect(getTargetLaneAtTurn(1, 1, 0, false)).toBe(-1);
+        });
+      });
+
+      describe('Down (1) → Left (2): lanes stay same', () => {
+        it('left lane (-1) stays top lane (-1)', () => {
+          expect(getTargetLaneAtTurn(-1, 1, 2, false)).toBe(-1);
+        });
+        it('right lane (1) stays bottom lane (1)', () => {
+          expect(getTargetLaneAtTurn(1, 1, 2, false)).toBe(1);
+        });
+      });
+
+      describe('Up (3) → Right (0): lanes stay same', () => {
+        it('left lane (-1) stays top lane (-1)', () => {
+          expect(getTargetLaneAtTurn(-1, 3, 0, false)).toBe(-1);
+        });
+        it('right lane (1) stays bottom lane (1)', () => {
+          expect(getTargetLaneAtTurn(1, 3, 0, false)).toBe(1);
+        });
+      });
+
+      describe('Up (3) → Left (2): lanes flip', () => {
+        it('left lane (-1) becomes bottom lane (1)', () => {
+          expect(getTargetLaneAtTurn(-1, 3, 2, false)).toBe(1);
+        });
+        it('right lane (1) becomes top lane (-1)', () => {
+          expect(getTargetLaneAtTurn(1, 3, 2, false)).toBe(-1);
+        });
+      });
     });
   });
 });
