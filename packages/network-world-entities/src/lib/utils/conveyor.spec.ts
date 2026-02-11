@@ -246,34 +246,34 @@ describe('conveyor utilities', () => {
       expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(true);
     });
 
-    it('returns true when conveyor exists at entry direction position', () => {
-      // Turn conveyor at (0,0), conveyor to the right at (1,0)
-      // Entry from left (direction 2), entryVec = (-1,0)
-      // This checks position at (-1,0), so put conveyor there instead
+    it('returns false when only the incoming conveyor exists (not a merge)', () => {
+      // Turn conveyor at (0,0), incoming conveyor to the left at (-1,0)
+      // This is a simple corner, NOT a merge point
       const map = createConveyorMap([
         [0, 0],
-        [-1, 0], // Conveyor to the left
+        [-1, 0], // Incoming conveyor (where we came from)
       ]);
       const centerX = tileSize / 2;
       const centerY = tileSize / 2;
 
       // Entry from left (direction 2), turning down (direction 1)
-      // entryVec = (-1,0), so checks position (-1,0) which has a conveyor
-      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(true);
+      // The conveyor at (-1,0) is where we came from - should NOT count as merge
+      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(false);
     });
 
-    it('returns true when conveyor exists at entry direction position (right entry)', () => {
+    it('returns true when conveyor exists opposite to entry direction (other side)', () => {
       // Turn conveyor at (0,0), conveyor to the right at (1,0)
+      // Entry from left means opposite side is RIGHT
       const map = createConveyorMap([
         [0, 0],
-        [1, 0],
+        [1, 0], // Conveyor on the OTHER side (opposite entry)
       ]);
       const centerX = tileSize / 2;
       const centerY = tileSize / 2;
 
-      // Entry from right (direction 0), so entryVec = (1,0)
-      // This checks position to the right at (1,0) - we have a conveyor there
-      expect(isTurnMergePoint(map, centerX, centerY, 0, 1)).toBe(true);
+      // Entry from left (direction 2), turning down (direction 1)
+      // Opposite of entry (2=left) is right (0), check position (1,0) which has a conveyor
+      expect(isTurnMergePoint(map, centerX, centerY, 2, 1)).toBe(true);
     });
 
     it('detects T-junction with conveyor from above', () => {
@@ -321,79 +321,88 @@ describe('conveyor utilities', () => {
       });
     });
 
-    describe('simple corners', () => {
-      // At simple corners, lanes curve naturally
-      // The outer lane stays outer, inner stays inner
+    describe('simple corners (Factorio-style: preserve physical track position)', () => {
+      // At simple corners, items stay on their physical track (inner stays inner, outer stays outer)
+      // This requires flipping the lane NUMBER for certain turn combinations
+      // Entry direction is where item comes FROM (opposite of conveyor movement direction)
 
-      describe('Right (0) → Down (1): lanes flip', () => {
-        it('top lane (-1) becomes right lane (1)', () => {
-          expect(getTargetLaneAtTurn(-1, 0, 1, false)).toBe(1);
+      // Movement RIGHT → DOWN (entry=2, turn=1): FLIP
+      describe('moving right, turning down (entry=2, turn=1): lanes flip', () => {
+        it('lane -1 becomes 1', () => {
+          expect(getTargetLaneAtTurn(-1, 2, 1, false)).toBe(1);
         });
-        it('bottom lane (1) becomes left lane (-1)', () => {
-          expect(getTargetLaneAtTurn(1, 0, 1, false)).toBe(-1);
+        it('lane 1 becomes -1', () => {
+          expect(getTargetLaneAtTurn(1, 2, 1, false)).toBe(-1);
         });
       });
 
-      describe('Right (0) → Up (3): lanes stay same', () => {
-        it('top lane (-1) stays left lane (-1)', () => {
-          expect(getTargetLaneAtTurn(-1, 0, 3, false)).toBe(-1);
+      // Movement RIGHT → UP (entry=2, turn=3): NO FLIP
+      describe('moving right, turning up (entry=2, turn=3): lanes stay same', () => {
+        it('lane -1 stays -1', () => {
+          expect(getTargetLaneAtTurn(-1, 2, 3, false)).toBe(-1);
         });
-        it('bottom lane (1) stays right lane (1)', () => {
-          expect(getTargetLaneAtTurn(1, 0, 3, false)).toBe(1);
-        });
-      });
-
-      describe('Left (2) → Down (1): lanes stay same', () => {
-        it('top lane (-1) stays left lane (-1)', () => {
-          expect(getTargetLaneAtTurn(-1, 2, 1, false)).toBe(-1);
-        });
-        it('bottom lane (1) stays right lane (1)', () => {
-          expect(getTargetLaneAtTurn(1, 2, 1, false)).toBe(1);
+        it('lane 1 stays 1', () => {
+          expect(getTargetLaneAtTurn(1, 2, 3, false)).toBe(1);
         });
       });
 
-      describe('Left (2) → Up (3): lanes flip', () => {
-        it('top lane (-1) becomes right lane (1)', () => {
-          expect(getTargetLaneAtTurn(-1, 2, 3, false)).toBe(1);
+      // Movement LEFT → DOWN (entry=0, turn=1): NO FLIP
+      describe('moving left, turning down (entry=0, turn=1): lanes stay same', () => {
+        it('lane -1 stays -1', () => {
+          expect(getTargetLaneAtTurn(-1, 0, 1, false)).toBe(-1);
         });
-        it('bottom lane (1) becomes left lane (-1)', () => {
-          expect(getTargetLaneAtTurn(1, 2, 3, false)).toBe(-1);
-        });
-      });
-
-      describe('Down (1) → Right (0): lanes flip', () => {
-        it('left lane (-1) becomes bottom lane (1)', () => {
-          expect(getTargetLaneAtTurn(-1, 1, 0, false)).toBe(1);
-        });
-        it('right lane (1) becomes top lane (-1)', () => {
-          expect(getTargetLaneAtTurn(1, 1, 0, false)).toBe(-1);
+        it('lane 1 stays 1', () => {
+          expect(getTargetLaneAtTurn(1, 0, 1, false)).toBe(1);
         });
       });
 
-      describe('Down (1) → Left (2): lanes stay same', () => {
-        it('left lane (-1) stays top lane (-1)', () => {
-          expect(getTargetLaneAtTurn(-1, 1, 2, false)).toBe(-1);
+      // Movement LEFT → UP (entry=0, turn=3): FLIP
+      describe('moving left, turning up (entry=0, turn=3): lanes flip', () => {
+        it('lane -1 becomes 1', () => {
+          expect(getTargetLaneAtTurn(-1, 0, 3, false)).toBe(1);
         });
-        it('right lane (1) stays bottom lane (1)', () => {
-          expect(getTargetLaneAtTurn(1, 1, 2, false)).toBe(1);
-        });
-      });
-
-      describe('Up (3) → Right (0): lanes stay same', () => {
-        it('left lane (-1) stays top lane (-1)', () => {
-          expect(getTargetLaneAtTurn(-1, 3, 0, false)).toBe(-1);
-        });
-        it('right lane (1) stays bottom lane (1)', () => {
-          expect(getTargetLaneAtTurn(1, 3, 0, false)).toBe(1);
+        it('lane 1 becomes -1', () => {
+          expect(getTargetLaneAtTurn(1, 0, 3, false)).toBe(-1);
         });
       });
 
-      describe('Up (3) → Left (2): lanes flip', () => {
-        it('left lane (-1) becomes bottom lane (1)', () => {
-          expect(getTargetLaneAtTurn(-1, 3, 2, false)).toBe(1);
+      // Movement DOWN → RIGHT (entry=3, turn=0): FLIP
+      describe('moving down, turning right (entry=3, turn=0): lanes flip', () => {
+        it('lane -1 becomes 1', () => {
+          expect(getTargetLaneAtTurn(-1, 3, 0, false)).toBe(1);
         });
-        it('right lane (1) becomes top lane (-1)', () => {
-          expect(getTargetLaneAtTurn(1, 3, 2, false)).toBe(-1);
+        it('lane 1 becomes -1', () => {
+          expect(getTargetLaneAtTurn(1, 3, 0, false)).toBe(-1);
+        });
+      });
+
+      // Movement DOWN → LEFT (entry=3, turn=2): NO FLIP
+      describe('moving down, turning left (entry=3, turn=2): lanes stay same', () => {
+        it('lane -1 stays -1', () => {
+          expect(getTargetLaneAtTurn(-1, 3, 2, false)).toBe(-1);
+        });
+        it('lane 1 stays 1', () => {
+          expect(getTargetLaneAtTurn(1, 3, 2, false)).toBe(1);
+        });
+      });
+
+      // Movement UP → RIGHT (entry=1, turn=0): NO FLIP
+      describe('moving up, turning right (entry=1, turn=0): lanes stay same', () => {
+        it('lane -1 stays -1', () => {
+          expect(getTargetLaneAtTurn(-1, 1, 0, false)).toBe(-1);
+        });
+        it('lane 1 stays 1', () => {
+          expect(getTargetLaneAtTurn(1, 1, 0, false)).toBe(1);
+        });
+      });
+
+      // Movement UP → LEFT (entry=1, turn=2): FLIP
+      describe('moving up, turning left (entry=1, turn=2): lanes flip', () => {
+        it('lane -1 becomes 1', () => {
+          expect(getTargetLaneAtTurn(-1, 1, 2, false)).toBe(1);
+        });
+        it('lane 1 becomes -1', () => {
+          expect(getTargetLaneAtTurn(1, 1, 2, false)).toBe(-1);
         });
       });
     });

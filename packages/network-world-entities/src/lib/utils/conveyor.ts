@@ -72,24 +72,32 @@ export const isTurnMergePoint = (
   entryDirection: number,
   turnDirection: number
 ): boolean => {
-  // Check positions based on entry and turn direction
-  // Position 1: Opposite to turn direction
-  // Position 2: Opposite to entry direction
+  // A merge point exists when there's a THIRD conveyor feeding into the turn
+  // (besides the incoming conveyor and the outgoing direction)
+  //
+  // We check two positions:
+  // 1. Opposite to turn direction (behind the turn) - could have a feeder
+  // 2. Opposite to entry direction (the other side) - could have another feeder
+  //
+  // We do NOT check:
+  // - The entry direction position (that's where we came from - always has a conveyor)
+  // - The turn direction position (that's where we're going)
 
   const checkPositions: { x: number; y: number }[] = [];
 
-  // Position opposite to turn direction
+  // Position opposite to turn direction (behind the turn)
   const oppositeTurnVec = DIRECTION_VECTORS[getOppositeDirection(turnDirection)];
   checkPositions.push({
     x: turnCenterX + oppositeTurnVec.x * tileSize,
     y: turnCenterY + oppositeTurnVec.y * tileSize,
   });
 
-  // Position opposite to entry direction (same as entry direction vector since entry is "coming from")
-  const entryVec = DIRECTION_VECTORS[entryDirection];
+  // Position opposite to entry direction (the other perpendicular side)
+  // Entry direction is where we came FROM, so opposite is the other side
+  const oppositeEntryVec = DIRECTION_VECTORS[getOppositeDirection(entryDirection)];
   checkPositions.push({
-    x: turnCenterX + entryVec.x * tileSize,
-    y: turnCenterY + entryVec.y * tileSize,
+    x: turnCenterX + oppositeEntryVec.x * tileSize,
+    y: turnCenterY + oppositeEntryVec.y * tileSize,
   });
 
   // Check if any of these positions have a conveyor
@@ -105,16 +113,19 @@ export const isTurnMergePoint = (
 
 /**
  * Determines the target lane when transitioning between perpendicular conveyors.
+ * Implements Factorio-style belt lane routing.
  *
  * There are two routing strategies:
  *
- * 1. **Merge Point**: When other conveyors feed into the turn, all items from one
- *    direction go to one lane to prevent collisions.
- *    - Coming from left/top (directions 2, 3) → left lane (-1)
- *    - Coming from right/bottom (directions 0, 1) → right lane (1)
+ * 1. **Merge Point (T-junction)**: When 3+ conveyors connect, items go to the
+ *    "near lane" - the lane closest to where they entered. This matches Factorio's
+ *    sideloading behavior.
+ *    - Coming from left/up (directions 2, 3) → left lane (-1)
+ *    - Coming from right/down (directions 0, 1) → right lane (1)
  *
- * 2. **Simple Corner**: When there's no merge, lanes curve naturally (outer stays outer).
- *    The mapping follows the physical curve of the turn.
+ * 2. **Simple Corner**: Items preserve their physical track position - inner lane
+ *    stays inner, outer lane stays outer. This requires flipping the lane number
+ *    for certain turn combinations.
  *
  * @param currentLane - Item's current lane (-1 or 1)
  * @param entryDirection - Direction the item is coming FROM (0=right, 1=down, 2=left, 3=up)
@@ -129,60 +140,35 @@ export const getTargetLaneAtTurn = (
   isMergePoint: boolean
 ): -1 | 1 => {
   if (isMergePoint) {
-    // At merge points, all items from one side go to one lane
+    // At merge points, items go to the "near lane" (Factorio sideloading behavior)
     // Coming from left (2) or up (3) → left lane (-1)
     // Coming from right (0) or down (1) → right lane (1)
     return entryDirection === 2 || entryDirection === 3 ? -1 : 1;
   }
 
-  // Simple corner: lanes curve naturally
-  // The lane mapping depends on the turn combination
-  // Key insight: when turning "inward", the lane flips; when turning "outward", it stays
-
-  // Lane conventions:
-  // Horizontal: -1 = top (smaller Y), 1 = bottom (larger Y)
-  // Vertical: -1 = left (smaller X), 1 = right (larger X)
-
-  // Turn mapping table for simple corners:
-  // | Entry → Turn | Lane -1 becomes | Lane 1 becomes |
-  // |--------------|-----------------|----------------|
-  // | Right → Down | 1 (right)       | -1 (left)      |
-  // | Right → Up   | -1 (left)       | 1 (right)      |
-  // | Left → Down  | -1 (left)       | 1 (right)      |
-  // | Left → Up    | 1 (right)       | -1 (left)      |
-  // | Down → Right | 1 (bottom)      | -1 (top)       |
-  // | Down → Left  | -1 (top)        | 1 (bottom)     |
-  // | Up → Right   | -1 (top)        | 1 (bottom)     |
-  // | Up → Left    | 1 (bottom)      | -1 (top)       |
-
-  // Encode this as: for certain turn combinations, flip the lane
+  // Simple corner: preserve physical track position (inner stays inner, outer stays outer)
+  // This requires flipping the lane number for certain turn combinations
   const shouldFlip = shouldFlipLaneAtTurn(entryDirection, turnDirection);
   return shouldFlip ? ((-currentLane) as -1 | 1) : currentLane;
 };
 
 /**
- * Helper to determine if lane should flip at a simple corner turn.
+ * Determines if lane number should flip at a simple corner to preserve physical track position.
+ *
+ * Lane conventions:
+ * - Horizontal: -1 = top (smaller Y), 1 = bottom (larger Y)
+ * - Vertical: -1 = left (smaller X), 1 = right (larger X)
+ *
+ * To keep items on the same physical track (inner/outer), we flip the lane number
+ * when the "inside" of the turn changes sides.
  */
 const shouldFlipLaneAtTurn = (entryDirection: number, turnDirection: number): boolean => {
-  // Turns that flip the lane (outer becomes inner):
-  // Right (0) → Down (1): flip
-  // Right (0) → Up (3): no flip
-  // Left (2) → Down (1): no flip
-  // Left (2) → Up (3): flip
-  // Down (1) → Right (0): flip
-  // Down (1) → Left (2): no flip
-  // Up (3) → Right (0): no flip
-  // Up (3) → Left (2): flip
-
-  // Pattern: flip when (entry + turn) is odd and entry < 2, or even and entry >= 2
-  // Simpler: flip when entry is 0 or 3, and turn is "clockwise" from entry perspective
-  // Or: flip when (entry, turn) is one of: (0,1), (2,3), (1,0), (3,2)
-
+  // Flip combinations: when turning causes the physical inside/outside to swap lane numbers
   const flipCombinations: [number, number][] = [
-    [0, 1], // Right → Down
-    [2, 3], // Left → Up
-    [1, 0], // Down → Right
-    [3, 2], // Up → Left
+    [2, 1], // Moving right → down (entry from left, turn down)
+    [0, 3], // Moving left → up (entry from right, turn up)
+    [3, 0], // Moving down → right (entry from above, turn right)
+    [1, 2], // Moving up → left (entry from below, turn left)
   ];
 
   return flipCombinations.some(([e, t]) => e === entryDirection && t === turnDirection);
