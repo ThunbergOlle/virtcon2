@@ -1,6 +1,6 @@
 import { addComponent, addEntity, Entity, World } from '@virtcon2/bytenetc';
 import { DBItemName, get_building_by_id } from '@virtcon2/static-game-data';
-import { Animation, Building, Collider, Conveyor, Position, Sprite } from '../network-world-entities';
+import { Animation, Building, Collider, Conveyor, Inserter, Position, Sprite } from '../network-world-entities';
 import { ItemTextureMap } from '../SpriteMap';
 import { tileSize, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -13,7 +13,7 @@ export interface NewBuildingEntity {
   buildingId: number;
 }
 
-export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position];
+export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position, Inserter];
 export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): Entity => {
   const metadata = get_building_by_id(data.buildingId);
   if (!metadata) throw new Error(`Building with id ${data.buildingId} not found`);
@@ -47,6 +47,23 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   addComponent(world, Animation, building);
   Animation(world).animationIndex[building] = 0; // idle
   Animation(world).isPlaying[building] = 1;
+
+  // Set inserter display size and direction-based animation
+  if (metadata.name === DBItemName.BUILDING_INSERTER) {
+    Sprite(world).width[building] = 48;
+    Sprite(world).height[building] = 48;
+    Sprite(world).rotation[building] = 0; // No sprite rotation — direction is baked into animation frames
+    const direction = Math.floor(data.rotation / 90) % 4;
+    Animation(world).animationIndex[building] = direction; // idle animation for this direction
+  }
+
+  // Add Inserter component if this is an inserter building
+  if (metadata.name === DBItemName.BUILDING_INSERTER) {
+    addComponent(world, Inserter, building);
+    Inserter(world).direction[building] = Math.floor(data.rotation / 90) % 4;
+    Inserter(world).heldItemId[building] = 0;
+    Inserter(world).enabled[building] = 1;
+  }
 
   // Add Conveyor component if this is a conveyor building
   if (metadata.name === DBItemName.BUILDING_CONVEYOR) {

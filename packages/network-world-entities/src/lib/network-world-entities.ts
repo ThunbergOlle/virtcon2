@@ -18,6 +18,7 @@ export * from './components/GhostHarvestable';
 export * from './components/Animation';
 export * from './components/Conveyor';
 export * from './components/ConveyorItem';
+export * from './components/Inserter';
 
 /* Entities */
 export * from './entities/Building';

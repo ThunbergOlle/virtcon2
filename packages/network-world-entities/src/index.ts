@@ -25,6 +25,7 @@ import {
   WorldBorder,
   GrowableTile,
   Harvestable,
+  Inserter,
 } from './lib/network-world-entities';
 
 export const allComponents = [
@@ -49,4 +50,5 @@ export const allComponents = [
   Item,
   WorldBorder,
   Harvestable,
+  Inserter,
 ];

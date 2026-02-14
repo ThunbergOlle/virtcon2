@@ -123,6 +123,25 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'carrot_seed',
     variants: ['sprites/items/carrot_seed.png'],
   },
+  [DBItemName.BUILDING_INSERTER]: {
+    textureId: 20,
+    textureName: 'building_inserter',
+    variants: ['sprites/buildings/building_inserter.png'],
+    animations: [
+      // Idle animations (one per direction) — indices 0-3
+      { name: 'idle_right', frames: [4], frameRate: 0, repeat: -1, playOnCreate: true },
+      { name: 'idle_down', frames: [6], frameRate: 0, repeat: -1 },
+      { name: 'idle_left', frames: [0], frameRate: 0, repeat: -1 },
+      { name: 'idle_up', frames: [2], frameRate: 0, repeat: -1 },
+      // Active animations (one per direction) — indices 4-7
+      { name: 'active_right', frames: [4, 5, 6, 7, 0, 1, 2, 3], frameRate: 10, repeat: -1 },
+      { name: 'active_down', frames: [6, 7, 0, 1, 2, 3, 4, 5], frameRate: 10, repeat: -1 },
+      { name: 'active_left', frames: [0, 1, 2, 3, 4, 5, 6, 7], frameRate: 10, repeat: -1 },
+      { name: 'active_up', frames: [2, 3, 4, 5, 6, 7, 0, 1], frameRate: 10, repeat: -1 },
+    ],
+    spriteSheetFrameWidth: 48,
+    spriteSheetFrameHeight: 48,
+  },
   [DBItemName.BUILDING_CONVEYOR]: {
     textureId: 19,
     textureName: 'building_conveyor',
