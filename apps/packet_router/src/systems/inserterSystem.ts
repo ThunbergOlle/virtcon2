@@ -137,7 +137,7 @@ export const createInserterSystem = (world: World) => {
               x: backX,
               y: backY,
               droppedFromX: backX,
-              droppedFromY: backX,
+              droppedFromY: backY,
             });
             newItemEntities.push(newItemEid);
             Inserter(world).heldItemId[inserterEid] = 0;

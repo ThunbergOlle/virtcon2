@@ -53,6 +53,7 @@ export const createInserterAnimationSystem = (world: World) => {
           Animation(world).isPlaying[inserterEid] = 1;
           Inserter(world).holdingTick[inserterEid] = 0;
           if (!changedEntities.includes(inserterEid)) changedEntities.push(inserterEid);
+          continue; // Skip cap check — holdingTick is already reset to 0
         } else if (Animation(world).isPlaying[inserterEid] !== 0) {
           // Output blocked, item still held — pause animation
           Inserter(world).enabled[inserterEid] = 0;

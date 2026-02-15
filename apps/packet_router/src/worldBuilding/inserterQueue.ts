@@ -7,7 +7,7 @@ import {
   WorldBuilding,
   WorldBuildingInventory,
 } from '@virtcon2/database-postgres';
-import { Animation, getSerializeConfig, Inserter, SerializationID } from '@virtcon2/network-world-entities';
+import { getSerializeConfig, Inserter, SerializationID } from '@virtcon2/network-world-entities';
 import { WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { log, LogLevel, LogApp } from '@shared';
 import { syncServerEntities } from '../packet/enqueue';
@@ -112,12 +112,9 @@ class InserterQueue {
 
         await queryRunner.commitTransaction();
 
-        // Update ECS: set held item and start active animation
-        const direction = Inserter(cmd.world).direction[cmd.inserterEid];
+        // Update ECS: set held item (animation system will start the animation)
         Inserter(cmd.world).heldItemId[cmd.inserterEid] = pickedItemId;
         Inserter(cmd.world).enabled[cmd.inserterEid] = 1;
-        Animation(cmd.world).animationIndex[cmd.inserterEid] = direction + 4;
-        Animation(cmd.world).isPlaying[cmd.inserterEid] = 1;
 
         this.syncInserter(cmd.world, cmd.inserterEid);
         await publishWorldBuildingUpdate(cmd.worldBuildingId);
@@ -129,9 +126,9 @@ class InserterQueue {
       }
     } catch (e) {
       log(`Inserter pickup connection error: ${e}`, LogLevel.ERROR, LogApp.SERVER);
+    } finally {
+      cmd.onComplete();
     }
-
-    cmd.onComplete();
   }
 
   private async placeIntoBuilding(cmd: PlaceCommand): Promise<void> {
@@ -174,12 +171,10 @@ class InserterQueue {
         });
 
         if (remainder > 0) {
-          // Inventory full — rollback and pause inserter
+          // Inventory full — rollback and pause inserter (animation system will handle animation state)
           await queryRunner.rollbackTransaction();
 
           Inserter(cmd.world).enabled[cmd.inserterEid] = 0;
-          Animation(cmd.world).animationIndex[cmd.inserterEid] = Inserter(cmd.world).direction[cmd.inserterEid];
-          Animation(cmd.world).isPlaying[cmd.inserterEid] = 0;
 
           this.syncInserter(cmd.world, cmd.inserterEid);
           return;
@@ -199,9 +194,9 @@ class InserterQueue {
       }
     } catch (e) {
       log(`Inserter placement connection error: ${e}`, LogLevel.ERROR, LogApp.SERVER);
+    } finally {
+      cmd.onComplete();
     }
-
-    cmd.onComplete();
   }
 }
 
