@@ -48,29 +48,35 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
   Animation(world).animationIndex[building] = 0; // idle
   Animation(world).isPlaying[building] = 1;
 
-  // Set inserter display size and direction-based animation
-  if (metadata.name === DBItemName.BUILDING_INSERTER) {
-    Sprite(world).width[building] = 48;
-    Sprite(world).height[building] = 48;
-    Sprite(world).rotation[building] = 0; // No sprite rotation — direction is baked into animation frames
-    const direction = Math.floor(data.rotation / 90) % 4;
-    Animation(world).animationIndex[building] = direction; // idle animation for this direction
+  switch (metadata.name) {
+    case DBItemName.BUILDING_INSERTER:
+      return createNewInserterEntity(world, data, building);
+    case DBItemName.BUILDING_CONVEYOR:
+      return createNewConveyorEntity(world, data, building);
+    default:
+      return building;
   }
+};
 
-  // Add Inserter component if this is an inserter building
-  if (metadata.name === DBItemName.BUILDING_INSERTER) {
-    addComponent(world, Inserter, building);
-    Inserter(world).direction[building] = Math.floor(data.rotation / 90) % 4;
-    Inserter(world).heldItemId[building] = 0;
-    Inserter(world).enabled[building] = 1;
-  }
+export const createNewInserterEntity = (world: World, data: NewBuildingEntity, eid: Entity): Entity => {
+  Sprite(world).width[eid] = 48;
+  Sprite(world).height[eid] = 48;
+  Sprite(world).rotation[eid] = 0; // No sprite rotation — direction is baked into animation frames
+  const direction = Math.floor(data.rotation / 90) % 4;
+  Animation(world).animationIndex[eid] = direction; // idle animation for this direction
 
-  // Add Conveyor component if this is a conveyor building
-  if (metadata.name === DBItemName.BUILDING_CONVEYOR) {
-    addComponent(world, Conveyor, building);
-    Conveyor(world).direction[building] = Math.floor(data.rotation / 90) % 4;
-    Conveyor(world).speed[building] = 1.5; // pixels per tick
-  }
+  addComponent(world, Inserter, eid);
+  Inserter(world).direction[eid] = Math.floor(data.rotation / 90) % 4;
+  Inserter(world).heldItemId[eid] = 0;
+  Inserter(world).enabled[eid] = 1;
 
-  return building;
+  return eid;
+};
+
+export const createNewConveyorEntity = (world: World, data: NewBuildingEntity, eid: Entity): Entity => {
+  addComponent(world, Conveyor, eid);
+  Conveyor(world).direction[eid] = Math.floor(data.rotation / 90) % 4;
+  Conveyor(world).speed[eid] = 1.5; // pixels per tick
+
+  return eid;
 };
