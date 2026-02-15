@@ -42,13 +42,6 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @OneToMany(() => WorldBuildingInventory, (wbi) => wbi.world_building, { nullable: true })
   world_building_inventory: WorldBuildingInventory[];
 
-  /* Outputs into building */
-  @Field(() => WorldBuilding, { nullable: true })
-  @ManyToOne(() => WorldBuilding, (wb) => wb.id, { nullable: true })
-  output_world_building: WorldBuilding;
-  @Column({ type: 'int', nullable: true })
-  outputWorldBuildingId: number;
-
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   active: boolean;

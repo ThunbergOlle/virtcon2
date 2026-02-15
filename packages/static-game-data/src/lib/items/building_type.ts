@@ -25,7 +25,6 @@ export interface DBBuilding {
   output_item: DBItem | null;
   output_quantity: number | null;
   processing_ticks: number;
-  inventory_transfer_quantity_per_cycle?: number;
   inventory_slots: WorldBuildingInventorySlotType[];
   width: number;
   height: number;
@@ -40,7 +39,6 @@ export interface DBWorldBuilding {
   y: number;
   rotation: number;
   building: DBBuilding;
-  output_world_building: DBWorldBuilding | null;
   world_building_inventory: DBWorldBuildingInventoryItem[];
   active: boolean;
 }

@@ -12,14 +12,12 @@ export enum PacketType {
   REQUEST_DESTROY_HARVESTABLE = 'requestDestroyHarvestable',
   REQUEST_PLACE_BUILDING = 'requestPlaceBuilding',
   REQUEST_MOVE_INVENTORY_ITEM = 'requestMoveInventoryItem',
-  REQUEST_WORLD_BUILDING_CHANGE_OUTPUT = 'requestWorldBuildingChangeOutput',
   WORLD_BUILDING = 'worldBuilding',
 
   SYNC_CLIENT_ENTITY = 'syncClientEntity',
   SYNC_SERVER_ENTITY = 'syncServerEntity',
   REMOVE_ENTITY = 'removeEntity',
 
-  REQUEST_CREATE_CONNECTION_POINT = 'requestCreateConnectionPoint',
   REQUEST_PICKUP_ITEM = 'requestPickupItem',
   REQUEST_DROP_ITEM = 'requestDropItem',
   REQUEST_PLACE_HARVESTABLE = 'requestPlaceHarvestable',

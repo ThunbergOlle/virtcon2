@@ -47,13 +47,6 @@ export interface InspectBuildingClientPacket {
   worldBuildingId: number;
 }
 
-export interface CreateConnectionPointPacket {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-}
-
 export interface LoadWorldPacketData {
   id: string;
   mainPlayerId: number;

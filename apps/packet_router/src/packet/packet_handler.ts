@@ -2,7 +2,6 @@ import { log, LogLevel } from '@shared';
 import {
   ClientPacket,
   ClientPacketWithSender,
-  CreateConnectionPointPacket,
   PacketSender,
   PacketType,
   RequestDestroyHarvestablePacket,
@@ -17,7 +16,6 @@ import {
   SyncClientEntityPacket,
 } from '@virtcon2/network-packet';
 import syncClientEntityPacket from './enqueue';
-import { requestCreateConnectionPoint } from './packets/requestCreateConnectionPoint';
 import requestDropItemPacket from './packets/requestDropItemPacket';
 import requestPickupItemPacket from './packets/requestPickupItemPacket';
 import request_destroy_harvestable_packet from './packets/request_destroy_harvestable_packet';
@@ -46,8 +44,6 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return request_move_inventory_item_packet(packet as ClientPacketWithSender<RequestMoveInventoryItemPacketData>);
     case PacketType.SYNC_CLIENT_ENTITY:
       return syncClientEntityPacket(packet as ClientPacketWithSender<SyncClientEntityPacket>);
-    case PacketType.REQUEST_CREATE_CONNECTION_POINT:
-      return requestCreateConnectionPoint(packet as ClientPacketWithSender<CreateConnectionPointPacket>);
     case PacketType.REQUEST_PICKUP_ITEM:
       return requestPickupItemPacket(packet as ClientPacketWithSender<RequestPickupItemPacketData>);
     case PacketType.REQUEST_DROP_ITEM:

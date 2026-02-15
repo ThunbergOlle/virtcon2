@@ -5,7 +5,6 @@ import {
   AppDataSource,
   InventoryOperationType,
   publishWorldBuildingUpdate,
-  safelyMoveItemsBetweenInventories,
   WorldBuilding,
   WorldResource,
 } from '@virtcon2/database-postgres';
@@ -24,12 +23,7 @@ interface ProcessBuildingCommand {
   buildingType: DBBuilding;
 }
 
-interface TransferInventoriesCommand {
-  type: 'transfer_inventories';
-  worldId: World;
-}
-
-type ProcessingCommand = ProcessBuildingCommand | TransferInventoriesCommand;
+type ProcessingCommand = ProcessBuildingCommand;
 
 /**
  * Updates the animation state for a building entity in the ECS world.
@@ -87,9 +81,6 @@ class BuildingProcessingQueue {
     switch (command.type) {
       case 'process_building':
         await this.processBuilding(command.worldId, command.buildingType);
-        break;
-      case 'transfer_inventories':
-        await this.processInventoryTransfers(command.worldId);
         break;
     }
   }
@@ -334,51 +325,6 @@ class BuildingProcessingQueue {
     }
 
     await pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
-  }
-
-  private async processInventoryTransfers(worldId: World): Promise<void> {
-    const worldBuildings = await WorldBuilding.find({
-      where: { world: { id: worldId }, output_world_building: Not(IsNull()) },
-      relations: [
-        'building',
-        'world_building_inventory',
-        'output_world_building',
-        'output_world_building.building',
-        'output_world_building.building.fuel_requirements',
-        'output_world_building.building.fuel_requirements.item',
-        'output_world_building.building.processing_requirements',
-        'output_world_building.building.processing_requirements.item',
-        'output_world_building.world_building_inventory',
-        'output_world_building.world_building_inventory.item',
-      ],
-    });
-
-    for (const worldBuilding of worldBuildings) {
-      // Transfer from OUTPUT or INPUT_AND_OUTPUT slots
-      const itemsToMove = worldBuilding.world_building_inventory.find(
-        (inv) =>
-          inv.itemId &&
-          (inv.slotType === WorldBuildingInventorySlotType.OUTPUT || inv.slotType === WorldBuildingInventorySlotType.INPUT_AND_OUTPUT),
-      );
-      if (!itemsToMove) continue;
-
-      // Get the target building's requirements for slot type determination
-      const targetBuilding = worldBuilding.output_world_building.building;
-      const processingRequirements = targetBuilding?.processing_requirements ?? [];
-      const fuelRequirements = targetBuilding?.fuel_requirements ?? [];
-
-      await safelyMoveItemsBetweenInventories({
-        fromId: worldBuilding.id,
-        toId: worldBuilding.output_world_building.id,
-        itemId: itemsToMove.itemId,
-        quantity: Math.min(itemsToMove.quantity, worldBuilding.building.inventory_transfer_quantity_per_cycle),
-        fromType: 'building',
-        toType: 'building',
-        fromSlot: itemsToMove.slot,
-        processingRequirements,
-        fuelRequirements,
-      });
-    }
   }
 }
 

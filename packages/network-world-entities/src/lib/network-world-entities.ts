@@ -9,7 +9,6 @@ export * from './components/Sprite';
 export * from './components/Tag';
 export * from './components/Velocity';
 export * from './components/Tile';
-export * from './components/ConnectionPoint';
 export * from './components/Range';
 export * from './components/Item';
 export * from './components/WorldBorder';

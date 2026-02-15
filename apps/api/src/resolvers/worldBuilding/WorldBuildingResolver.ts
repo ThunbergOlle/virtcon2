@@ -30,10 +30,4 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   async world_building_inventory(@Root() worldBuilding: WorldBuilding): Promise<WorldBuildingInventory[] | undefined> {
     return WorldBuildingInventory.find({ where: { worldBuildingId: worldBuilding.id } });
   }
-
-  @FieldResolver(() => WorldBuilding, { nullable: true })
-  async output_world_building(@Root() worldBuilding: WorldBuilding): Promise<WorldBuilding | undefined> {
-    if (!worldBuilding.outputWorldBuildingId) return null;
-    return WorldBuilding.findOne({ where: { id: worldBuilding.outputWorldBuildingId } });
-  }
 }

@@ -26,7 +26,6 @@ export const building_sawmill: DBBuilding = {
   processing_ticks: 100,
   items_to_be_placed_on: [],
   is_rotatable: false,
-  inventory_transfer_quantity_per_cycle: 5,
   inventory_slots: [WorldBuildingInventorySlotType.INPUT, WorldBuildingInventorySlotType.OUTPUT],
   output_item: item_stick,
   can_collide: true,

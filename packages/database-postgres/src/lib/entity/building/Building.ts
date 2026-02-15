@@ -34,11 +34,6 @@ export class Building extends BaseEntity implements DBBuilding {
   @Column({ type: 'int', nullable: true })
   output_quantity: number | null;
 
-  // Output quantity
-  @Field(() => Int, { nullable: false, defaultValue: 5 })
-  @Column({ type: 'int', nullable: false, default: 5 })
-  inventory_transfer_quantity_per_cycle: number;
-
   @Field(() => [Int], { nullable: false, defaultValue: [] })
   @Column({ type: 'simple-array', nullable: false, default: [] })
   inventory_slots: WorldBuildingInventorySlotType[];
