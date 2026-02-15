@@ -354,9 +354,11 @@ class BuildingProcessingQueue {
     });
 
     for (const worldBuilding of worldBuildings) {
-      // Only transfer from OUTPUT slots
+      // Transfer from OUTPUT or INPUT_AND_OUTPUT slots
       const itemsToMove = worldBuilding.world_building_inventory.find(
-        (inv) => inv.itemId && inv.slotType === WorldBuildingInventorySlotType.OUTPUT,
+        (inv) =>
+          inv.itemId &&
+          (inv.slotType === WorldBuildingInventorySlotType.OUTPUT || inv.slotType === WorldBuildingInventorySlotType.INPUT_AND_OUTPUT),
       );
       if (!itemsToMove) continue;
 

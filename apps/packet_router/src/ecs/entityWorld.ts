@@ -19,6 +19,7 @@ import { createBuildingProcessingSystem } from '../systems/buildingProcessingSys
 import { createHarvestableGrowingSystem } from '../systems/harvestableGrowingSystem';
 import { createConveyorSystem } from '../systems/conveyorSystem';
 import { createInserterSystem } from '../systems/inserterSystem';
+import { createInserterAnimationSystem } from '../systems/inserterAnimationSystem';
 import { SyncEntities, WorldBounds, WorldData } from '../systems/types';
 import { AppDataSource, WorldHarvestable, WorldResource } from '@virtcon2/database-postgres';
 import { getItemByName, Harvestable as HarvestableData } from '@virtcon2/static-game-data';
@@ -48,6 +49,7 @@ const setupSystems = (world: World, seed: number) => {
     createHarvestableGrowingSystem(world),
     createConveyorSystem(world),
     createInserterSystem(world),
+    createInserterAnimationSystem(world),
   ];
 };
 
