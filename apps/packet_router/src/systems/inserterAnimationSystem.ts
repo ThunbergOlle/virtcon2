@@ -3,8 +3,7 @@ import { Animation, Building, getSerializeConfig, Inserter, Position, Serializat
 import { syncServerEntities } from '../packet/enqueue';
 import { defineSystem } from '@virtcon2/bytenetc';
 import { SyncEntities } from './types';
-
-const INSERTER_ANIMATION_TICKS = 16; // Full animation cycle: 8 frames at 10fps = 0.8s = 16 ticks at 20 TPS
+import { INSERTER_ANIMATION_TICKS } from './inserterSystem';
 
 export const createInserterAnimationSystem = (world: World) => {
   const inserterQuery = defineQuery(Inserter, Building, Position);
@@ -19,53 +18,29 @@ export const createInserterAnimationSystem = (world: World) => {
 
     for (const inserterEid of inserterEntities) {
       const direction = Inserter(world).direction[inserterEid];
-      const heldItemId = Inserter(world).heldItemId[inserterEid];
-      let holdingTick = Inserter(world).holdingTick[inserterEid];
+      const progressTick = Inserter(world).progressTick[inserterEid];
+      const enabled = Inserter(world).enabled[inserterEid];
 
-      // Just picked up: start animation
-      if (heldItemId !== 0 && holdingTick === 0) {
-        Animation(world).animationIndex[inserterEid] = direction + 4;
-        Animation(world).isPlaying[inserterEid] = 1;
-        Inserter(world).holdingTick[inserterEid] = 1;
-        changedEntities.push(inserterEid);
-        continue;
+      const prevAnimIndex = Animation(world).animationIndex[inserterEid];
+      const prevIsPlaying = Animation(world).isPlaying[inserterEid];
+
+      let animationIndex: number;
+      let isPlaying: number;
+
+      if (progressTick > 0 && progressTick < INSERTER_ANIMATION_TICKS) {
+        // Active animation
+        animationIndex = direction + 4;
+        isPlaying = enabled; // 1 if progressing, 0 if paused
+      } else {
+        // Idle animation
+        animationIndex = direction;
+        isPlaying = 1;
       }
 
-      // Idle — nothing to do
-      if (holdingTick === 0) continue;
-
-      // Increment tick
-      holdingTick++;
-      Inserter(world).holdingTick[inserterEid] = holdingTick;
-
-      // At midpoint: if inserter disabled (output blocked), pause animation
-      if (holdingTick >= 8 && Inserter(world).enabled[inserterEid] === 0 && Animation(world).isPlaying[inserterEid] !== 0) {
-        Animation(world).isPlaying[inserterEid] = 0;
+      if (animationIndex !== prevAnimIndex || isPlaying !== prevIsPlaying) {
+        Animation(world).animationIndex[inserterEid] = animationIndex;
+        Animation(world).isPlaying[inserterEid] = isPlaying;
         changedEntities.push(inserterEid);
-      }
-
-      // After full cycle
-      if (holdingTick >= INSERTER_ANIMATION_TICKS) {
-        if (heldItemId === 0) {
-          // Item was dropped — reset to idle
-          Inserter(world).enabled[inserterEid] = 1;
-          Animation(world).animationIndex[inserterEid] = direction;
-          Animation(world).isPlaying[inserterEid] = 1;
-          Inserter(world).holdingTick[inserterEid] = 0;
-          if (!changedEntities.includes(inserterEid)) changedEntities.push(inserterEid);
-          continue; // Skip cap check — holdingTick is already reset to 0
-        } else if (Animation(world).isPlaying[inserterEid] !== 0) {
-          // Output blocked, item still held — pause animation
-          Inserter(world).enabled[inserterEid] = 0;
-          Animation(world).animationIndex[inserterEid] = direction;
-          Animation(world).isPlaying[inserterEid] = 0;
-          if (!changedEntities.includes(inserterEid)) changedEntities.push(inserterEid);
-        }
-
-        // Cap holdingTick to prevent overflow
-        if (holdingTick > INSERTER_ANIMATION_TICKS) {
-          Inserter(world).holdingTick[inserterEid] = INSERTER_ANIMATION_TICKS;
-        }
       }
     }
 

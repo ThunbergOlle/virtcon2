@@ -112,9 +112,10 @@ class InserterQueue {
 
         await queryRunner.commitTransaction();
 
-        // Update ECS: set held item (animation system will start the animation)
+        // Update ECS: set held item and start progress (InserterSystem owns enabled/progressTick)
         Inserter(cmd.world).heldItemId[cmd.inserterEid] = pickedItemId;
         Inserter(cmd.world).enabled[cmd.inserterEid] = 1;
+        Inserter(cmd.world).progressTick[cmd.inserterEid] = 1;
 
         this.syncInserter(cmd.world, cmd.inserterEid);
         await publishWorldBuildingUpdate(cmd.worldBuildingId);
@@ -171,12 +172,9 @@ class InserterQueue {
         });
 
         if (remainder > 0) {
-          // Inventory full — rollback and pause inserter (animation system will handle animation state)
+          // Inventory full — rollback and pause inserter (InserterSystem will re-check and re-enable)
           await queryRunner.rollbackTransaction();
-
           Inserter(cmd.world).enabled[cmd.inserterEid] = 0;
-
-          this.syncInserter(cmd.world, cmd.inserterEid);
           return;
         }
 

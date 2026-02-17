@@ -23,6 +23,7 @@ import { SyncEntities } from './types';
 
 const INSERTER_INTERVAL = 20; // Every 20 ticks (1 item/second at 20 TPS)
 export const INSERTER_DROP_DELAY = 8; // Drop item after 8 ticks (halfway through 8-frame animation at 10fps)
+export const INSERTER_ANIMATION_TICKS = 16; // Full animation cycle: 8 frames at 10fps = 0.8s = 16 ticks at 20 TPS
 
 export const createInserterSystem = (world: World) => {
   const inserterQuery = defineQuery(Inserter, Building, Position);
@@ -32,6 +33,47 @@ export const createInserterSystem = (world: World) => {
 
   let tickCounter = 0;
   const waitingForQueue = new Set<number>();
+
+  /** Check if the output target (conveyor lane or building) has space for an item */
+  const checkOutputAvailable = (
+    inserterEid: number,
+    conveyorMap: Map<string, number>,
+    buildingMap: Map<string, number>,
+    conveyorItemsByConveyor: Map<number, number[]>,
+  ): boolean => {
+    const direction = Inserter(world).direction[inserterEid];
+    const inserterX = Position(world).x[inserterEid];
+    const inserterY = Position(world).y[inserterEid];
+    const backDir = getOppositeDirection(direction);
+    const backVec = DIRECTION_VECTORS[backDir];
+    const backX = inserterX + backVec.x * tileSize;
+    const backY = inserterY + backVec.y * tileSize;
+    const backKey = posToTileKey(backX, backY);
+
+    const backConveyorEid = conveyorMap.get(backKey);
+    if (backConveyorEid !== undefined) {
+      const conveyorCenterX = Position(world).x[backConveyorEid];
+      const conveyorCenterY = Position(world).y[backConveyorEid];
+      const conveyorDir = Conveyor(world).direction[backConveyorEid];
+      const horizontal = isHorizontalDirection(conveyorDir);
+      const targetLane = horizontal ? getLane(backY, conveyorCenterY) : getLane(backX, conveyorCenterX);
+
+      const itemsOnBackConveyor = conveyorItemsByConveyor.get(backConveyorEid);
+      const laneOccupied =
+        itemsOnBackConveyor && itemsOnBackConveyor.some((itemEid) => ConveyorItem(world).lane[itemEid] === targetLane);
+
+      return !laneOccupied;
+    }
+
+    // For buildings, we can't synchronously check inventory — assume available
+    // (the queue will handle the actual check and set enabled=0 if full)
+    if (buildingMap.has(backKey)) {
+      return true;
+    }
+
+    // No valid output target — treat as available (item will be dropped on ground)
+    return true;
+  };
 
   return defineSystem<SyncEntities>(({ worldData, sync, removeEntities }) => {
     tickCounter++;
@@ -76,12 +118,25 @@ export const createInserterSystem = (world: World) => {
 
     for (const inserterEid of inserterEntities) {
       const direction = Inserter(world).direction[inserterEid];
-      const holdingTick = Inserter(world).holdingTick[inserterEid];
+      const progressTick = Inserter(world).progressTick[inserterEid];
 
       // === BUSY (animating/holding) ===
-      if (holdingTick > 0) {
-        // At drop time: try to drop (if not already waiting for queue)
-        if (holdingTick >= INSERTER_DROP_DELAY && Inserter(world).heldItemId[inserterEid] !== 0 && !waitingForQueue.has(inserterEid)) {
+      if (progressTick > 0) {
+        // Re-check output availability if disabled
+        if (Inserter(world).enabled[inserterEid] === 0) {
+          if (checkOutputAvailable(inserterEid, conveyorMap, buildingMap, conveyorItemsByConveyor)) {
+            Inserter(world).enabled[inserterEid] = 1;
+          } else {
+            continue; // Still blocked, stay paused
+          }
+        }
+
+        // Increment progressTick (only when enabled)
+        Inserter(world).progressTick[inserterEid]++;
+        const currentTick = Inserter(world).progressTick[inserterEid];
+
+        // At or past drop point: try to drop item (>= allows retry after re-enable from blocked state)
+        if (currentTick >= INSERTER_DROP_DELAY && Inserter(world).heldItemId[inserterEid] !== 0 && !waitingForQueue.has(inserterEid)) {
           const heldItemId = Inserter(world).heldItemId[inserterEid];
           const inserterX = Position(world).x[inserterEid];
           const inserterY = Position(world).y[inserterEid];
@@ -104,10 +159,6 @@ export const createInserterSystem = (world: World) => {
               targetWorldBuildingId,
               onComplete: () => {
                 waitingForQueue.delete(inserterEid);
-                // If inventory was full (queue paused the inserter), reset holdingTick
-                if (Inserter(world).enabled[inserterEid] === 0) {
-                  Inserter(world).holdingTick[inserterEid] = 0;
-                }
               },
             });
           } else {
@@ -125,7 +176,7 @@ export const createInserterSystem = (world: World) => {
                 itemsOnBackConveyor && itemsOnBackConveyor.some((itemEid) => ConveyorItem(world).lane[itemEid] === targetLane);
 
               if (laneOccupied) {
-                // Target lane full — animation system will handle pausing at full cycle
+                Inserter(world).enabled[inserterEid] = 0;
                 continue;
               }
             }
@@ -144,7 +195,16 @@ export const createInserterSystem = (world: World) => {
           }
         }
 
-        continue; // Inserter is busy (animating), skip pickup logic
+        // At cycle end: reset for next pickup (only if item was successfully dropped)
+        if (currentTick >= INSERTER_ANIMATION_TICKS && Inserter(world).heldItemId[inserterEid] === 0) {
+          Inserter(world).progressTick[inserterEid] = 0;
+          Inserter(world).enabled[inserterEid] = 1;
+        } else if (currentTick > INSERTER_ANIMATION_TICKS) {
+          // Cap progressTick to prevent overflow while waiting for drop
+          Inserter(world).progressTick[inserterEid] = INSERTER_ANIMATION_TICKS;
+        }
+
+        continue; // Inserter is busy, skip pickup logic
       }
 
       // Skip pickup if waiting for async building pickup
@@ -173,6 +233,7 @@ export const createInserterSystem = (world: World) => {
 
             Inserter(world).heldItemId[inserterEid] = pickedItemId;
             Inserter(world).enabled[inserterEid] = 1;
+            Inserter(world).progressTick[inserterEid] = 1;
             continue;
           }
         }
