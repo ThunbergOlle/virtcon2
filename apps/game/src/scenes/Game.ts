@@ -29,7 +29,6 @@ import { createResourceSystem } from '../systems/ResourceSystem';
 import { createHarvestableSystem } from '../systems/HarvestableSystem';
 import { createMovingSpriteSystem, createSpriteRegisterySystem } from '../systems/SpriteSystem';
 import { createTagSystem } from '../systems/TagSystem';
-import { createConnectionSystem } from '../systems/ConnectionSystem';
 import { createItemSystem } from '../systems/ItemSystem';
 import { createWorldBorderSystem } from '../systems/WorldBorderSystem';
 import { createCursorHighlightSystem } from '../systems/CursorHighlightSystem';
@@ -51,16 +50,12 @@ export interface GameState {
   tagGameObjectById: { [key: number]: Phaser.GameObjects.Text };
   ghostBuildingById: { [key: number]: DBBuilding };
   ghostHarvestableById: { [key: number]: HarvestableType };
-  worldConnectionPointById: {
-    [key: number]: { startPoint: Phaser.GameObjects.Arc; endPoint: Phaser.GameObjects.Arc; line: Phaser.GameObjects.Line };
-  };
-
   gameObjectGroups: {
     [key in GameObjectGroups]: Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup | null;
   };
 }
 
-export const debugMode = makeVar(false);
+export const debugMode = makeVar(true);
 
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
@@ -74,7 +69,6 @@ export default class Game extends Scene implements SceneStates {
     ghostBuildingById: {},
     ghostHarvestableById: {},
     tagGameObjectById: {},
-    worldConnectionPointById: {},
     gameObjectGroups: {
       [GameObjectGroups.PLAYER]: null,
       [GameObjectGroups.BUILDING]: null,
@@ -96,7 +90,6 @@ export default class Game extends Scene implements SceneStates {
   public buildingSystem?: System<GameState>;
   public tagSystem?: System<GameState>;
   public playerSystem?: System<GameState>;
-  public connectionSystem?: System<GameState>;
   public itemSystem?: System<GameState>;
   public worldBorderSystem?: System<GameState>;
   public cursorHighlightSystem?: System<GameState>;
@@ -224,7 +217,6 @@ export default class Game extends Scene implements SceneStates {
       this.buildingSystem = createBuildingSystem(this.state.world);
       this.tagSystem = createTagSystem(this.state.world, this);
       this.playerSystem = createPlayerSystem(this.state.world, mainPlayerId, this);
-      this.connectionSystem = createConnectionSystem(this.state.world, this);
       this.itemSystem = createItemSystem(this.state.world, this);
       this.worldBorderSystem = createWorldBorderSystem(this.state.world, this);
       this.cursorHighlightSystem = createCursorHighlightSystem(this, this.state.world);
@@ -258,7 +250,6 @@ export default class Game extends Scene implements SceneStates {
       !this.playerSystem ||
       !this.tagSystem ||
       !this.itemSystem ||
-      !this.connectionSystem ||
       !this.worldBorderSystem ||
       !this.cursorHighlightSystem ||
       !this.harvestableSystem ||
@@ -296,7 +287,6 @@ export default class Game extends Scene implements SceneStates {
     newState = this.harvestablePlacementSystem(newState);
     newState = this.tagSystem(newState);
 
-    newState = this.connectionSystem(newState);
     newState = this.itemSystem(newState);
 
     newState = this.worldBorderSystem(newState);

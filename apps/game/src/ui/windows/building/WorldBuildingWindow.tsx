@@ -8,7 +8,6 @@ import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemGhost, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { close, WindowType } from '../../lib/WindowSlice';
-import { WorldBuildingConnection } from './WorldBuildingConnection';
 
 const WORLD_BUILDING_FRAGMENT = gql`
   fragment WorldBuildingFragment on WorldBuilding {
@@ -126,6 +125,7 @@ export default function WorldBuildingWindow() {
   const inputSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.INPUT);
   const fuelSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.FUEL);
   const outputSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.OUTPUT);
+  const storageSlots = inventorySorted.filter((item) => item.slotType === WorldBuildingInventorySlotType.INPUT_AND_OUTPUT);
 
   const renderInventorySlots = (
     slots: typeof inventorySorted,
@@ -239,13 +239,22 @@ export default function WorldBuildingWindow() {
           {inputSlots.length === 0 && fuelSlots.length > 0 && <div className="text-4xl text-gray-400">→</div>}
 
           {/* Output Section - Right */}
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-sm text-gray-300 font-semibold">Output</p>
-            <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(outputSlots)}</div>
-          </div>
+          {outputSlots.length > 0 && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-gray-300 font-semibold">Output</p>
+              <div className="flex flex-col gap-2">{worldBuilding && renderInventorySlots(outputSlots)}</div>
+            </div>
+          )}
+
+          {/* Storage Section - for INPUT_AND_OUTPUT slots */}
+          {storageSlots.length > 0 && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-gray-300 font-semibold">Inventory</p>
+              <div className="grid grid-cols-3 gap-2">{worldBuilding && renderInventorySlots(storageSlots)}</div>
+            </div>
+          )}
         </div>
 
-        <WorldBuildingConnection x={worldBuilding?.x ?? 0} y={worldBuilding?.y ?? 0} />
       </div>
     </Window>
   );

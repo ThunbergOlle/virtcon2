@@ -86,7 +86,9 @@ export async function addToBuildingInventory(options: {
 
   switch (operationType) {
     case InventoryOperationType.PRODUCTION_OUTPUT:
-      allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.OUTPUT);
+      allowedSlots = inventorySlots.filter(
+        (s) => s.slotType === WorldBuildingInventorySlotType.OUTPUT || s.slotType === WorldBuildingInventorySlotType.INPUT_AND_OUTPUT,
+      );
       break;
 
     case InventoryOperationType.FUEL_CONSUMPTION:
@@ -94,7 +96,9 @@ export async function addToBuildingInventory(options: {
       break;
 
     case InventoryOperationType.INPUT_CONSUMPTION:
-      allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.INPUT);
+      allowedSlots = inventorySlots.filter(
+        (s) => s.slotType === WorldBuildingInventorySlotType.INPUT || s.slotType === WorldBuildingInventorySlotType.INPUT_AND_OUTPUT,
+      );
       break;
 
     case InventoryOperationType.TRANSFER_TO_BUILDING: {
@@ -103,8 +107,10 @@ export async function addToBuildingInventory(options: {
       if (isFuel) {
         allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.FUEL);
       } else {
-        // Non-fuel items go to INPUT slots
-        allowedSlots = inventorySlots.filter((s) => s.slotType === WorldBuildingInventorySlotType.INPUT);
+        // Non-fuel items go to INPUT or INPUT_AND_OUTPUT slots
+        allowedSlots = inventorySlots.filter(
+          (s) => s.slotType === WorldBuildingInventorySlotType.INPUT || s.slotType === WorldBuildingInventorySlotType.INPUT_AND_OUTPUT,
+        );
       }
       break;
     }
