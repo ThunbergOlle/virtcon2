@@ -133,14 +133,24 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
       { name: 'idle_down', frames: [6], frameRate: 0, repeat: -1 },
       { name: 'idle_left', frames: [0], frameRate: 0, repeat: -1 },
       { name: 'idle_up', frames: [2], frameRate: 0, repeat: -1 },
-      // Active animations (one per direction) — indices 4-7
-      { name: 'active_right', frames: [4, 5, 6, 7, 0, 1, 2, 3], frameRate: 10, repeat: -1 },
-      { name: 'active_down', frames: [6, 7, 0, 1, 2, 3, 4, 5], frameRate: 10, repeat: -1 },
-      { name: 'active_left', frames: [0, 1, 2, 3, 4, 5, 6, 7], frameRate: 10, repeat: -1 },
-      { name: 'active_up', frames: [2, 3, 4, 5, 6, 7, 0, 1], frameRate: 10, repeat: -1 },
+      // Pickup animations (idle → output, play once) — indices 4-7
+      { name: 'pickup_right', frames: [4, 5, 6, 7, 0], frameRate: 10, repeat: 0 },
+      { name: 'pickup_down', frames: [6, 7, 0, 1, 2], frameRate: 10, repeat: 0 },
+      { name: 'pickup_left', frames: [0, 1, 2, 3, 4], frameRate: 10, repeat: 0 },
+      { name: 'pickup_up', frames: [2, 3, 4, 5, 6], frameRate: 10, repeat: 0 },
+      // Return animations (output → idle, play once) — indices 8-11
+      { name: 'return_right', frames: [0, 1, 2, 3, 4], frameRate: 10, repeat: 0 },
+      { name: 'return_down', frames: [2, 3, 4, 5, 6], frameRate: 10, repeat: 0 },
+      { name: 'return_left', frames: [4, 5, 6, 7, 0], frameRate: 10, repeat: 0 },
+      { name: 'return_up', frames: [6, 7, 0, 1, 2], frameRate: 10, repeat: 0 },
     ],
     spriteSheetFrameWidth: 48,
     spriteSheetFrameHeight: 48,
+  },
+  [DBItemName.BUILDING_CRATE]: {
+    textureId: 21,
+    textureName: 'building_crate',
+    variants: ['sprites/items/building_crate.png'],
   },
   [DBItemName.BUILDING_CONVEYOR]: {
     textureId: 19,

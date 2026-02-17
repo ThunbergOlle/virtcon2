@@ -3,7 +3,6 @@ import { Animation, Building, getSerializeConfig, Inserter, Position, Serializat
 import { syncServerEntities } from '../packet/enqueue';
 import { defineSystem } from '@virtcon2/bytenetc';
 import { SyncEntities } from './types';
-import { INSERTER_ANIMATION_TICKS } from './inserterSystem';
 
 export const createInserterAnimationSystem = (world: World) => {
   const inserterQuery = defineQuery(Inserter, Building, Position);
@@ -19,7 +18,6 @@ export const createInserterAnimationSystem = (world: World) => {
     for (const inserterEid of inserterEntities) {
       const direction = Inserter(world).direction[inserterEid];
       const progressTick = Inserter(world).progressTick[inserterEid];
-      const enabled = Inserter(world).enabled[inserterEid];
 
       const prevAnimIndex = Animation(world).animationIndex[inserterEid];
       const prevIsPlaying = Animation(world).isPlaying[inserterEid];
@@ -27,12 +25,17 @@ export const createInserterAnimationSystem = (world: World) => {
       let animationIndex: number;
       let isPlaying: number;
 
-      if (progressTick > 0 && progressTick < INSERTER_ANIMATION_TICKS) {
-        // Active animation
-        animationIndex = direction + 4;
-        isPlaying = enabled; // 1 if progressing, 0 if paused
+      if (progressTick > 0) {
+        if (Inserter(world).heldItemId[inserterEid] !== 0) {
+          // Holding item: pickup phase (or paused at output if blocked)
+          animationIndex = direction + 4;
+        } else {
+          // Item dropped: return phase
+          animationIndex = direction + 8;
+        }
+        isPlaying = 1;
       } else {
-        // Idle animation
+        // Idle
         animationIndex = direction;
         isPlaying = 1;
       }

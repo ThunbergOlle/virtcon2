@@ -33,8 +33,10 @@ export const createAnimationSystem = (world: World) => {
       const animationKey = `${texture.textureName}_${variant}_anim_${animationData.name}`;
 
       if (isPlaying === 1) {
-        // Play animation (ignoreIfPlaying=true to avoid redundant calls)
-        sprite.anims.play(animationKey, true);
+        // Only switch animation when the key changes — prevents restarting finished repeat:0 animations
+        if (sprite.anims.currentAnim?.key !== animationKey) {
+          sprite.anims.play(animationKey);
+        }
       } else {
         sprite.anims.stop();
       }
