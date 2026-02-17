@@ -14,6 +14,7 @@ export enum WorldBuildingInventorySlotType {
   INPUT = 'input',
   OUTPUT = 'output',
   FUEL = 'fuel',
+  INPUT_AND_OUTPUT = 'input_and_output',
 }
 
 export interface DBBuilding {
