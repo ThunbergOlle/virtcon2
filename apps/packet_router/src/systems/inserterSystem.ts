@@ -1,6 +1,7 @@
 import { defineQuery, defineSerializer, removeEntity, World } from '@virtcon2/bytenetc';
 import {
   Building,
+  Collider,
   Conveyor,
   ConveyorItem,
   DIRECTION_VECTORS,
@@ -96,9 +97,22 @@ export const createInserterSystem = (world: World) => {
 
     const buildingMap = new Map<string, number>();
     for (const eid of allBuildingEntities) {
-      const key = posToTileKey(Position(world).x[eid], Position(world).y[eid]);
-      if (!conveyorMap.has(key) && !inserterEntities.includes(eid)) {
-        buildingMap.set(key, eid);
+      if (inserterEntities.includes(eid)) continue;
+
+      const widthTiles = Math.round(Collider(world).sizeWidth[eid] / tileSize) || 1;
+      const heightTiles = Math.round(Collider(world).sizeHeight[eid] / tileSize) || 1;
+      const xCenterOffset = (((widthTiles + 1) % 2) / 2) * tileSize;
+      const yCenterOffset = (((heightTiles + 1) % 2) / 2) * tileSize;
+      const originTileX = Math.floor((Position(world).x[eid] - xCenterOffset) / tileSize);
+      const originTileY = Math.floor((Position(world).y[eid] - yCenterOffset) / tileSize);
+
+      for (let tx = 0; tx < widthTiles; tx++) {
+        for (let ty = 0; ty < heightTiles; ty++) {
+          const tileKey = `${originTileX + tx},${originTileY + ty}`;
+          if (!conveyorMap.has(tileKey)) {
+            buildingMap.set(tileKey, eid);
+          }
+        }
       }
     }
 

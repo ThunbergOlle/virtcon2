@@ -1,4 +1,4 @@
-import { WorldBuilding, WorldBuildingInventory, Building, Topic } from '@virtcon2/database-postgres';
+import { AssemblerWorldBuilding, WorldBuilding, WorldBuildingInventory, Building, Topic } from '@virtcon2/database-postgres';
 import { Arg, FieldResolver, ID, Query, Resolver, ResolverInterface, Root, Subscription } from 'type-graphql';
 
 @Resolver(() => WorldBuilding)
@@ -29,5 +29,13 @@ export class WorldBuildingResolver implements ResolverInterface<WorldBuilding> {
   @FieldResolver(() => [WorldBuildingInventory], { nullable: true })
   async world_building_inventory(@Root() worldBuilding: WorldBuilding): Promise<WorldBuildingInventory[] | undefined> {
     return WorldBuildingInventory.find({ where: { worldBuildingId: worldBuilding.id } });
+  }
+
+  @FieldResolver(() => AssemblerWorldBuilding, { nullable: true })
+  async assemblerData(@Root() worldBuilding: WorldBuilding): Promise<AssemblerWorldBuilding | null> {
+    return AssemblerWorldBuilding.findOne({
+      where: { worldBuildingId: worldBuilding.id },
+      relations: ['outputItem'],
+    });
   }
 }

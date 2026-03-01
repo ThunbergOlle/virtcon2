@@ -9,7 +9,8 @@ import {
   WorldBuildingInventory,
   WorldResource,
 } from '@virtcon2/database-postgres';
-import { DBItemName } from '@virtcon2/static-game-data';
+import { DBItemName, get_building_by_id } from '@virtcon2/static-game-data';
+import { Between } from 'typeorm';
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 
 import {
@@ -37,15 +38,37 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
     relations: ['building', 'building.items_to_be_placed_on', 'building.item'],
   });
 
-  /* Check if position is occupied */
-  const occuping_building = await WorldBuilding.findOne({ where: { x: packet.data.x, y: packet.data.y, world: { id: packet.world_id } } });
-  if (occuping_building) {
-    log(
-      `Player ${player_id} tried to place item ${packet.data.buildingItemId} on occupied position ${packet.data.x}, ${packet.data.y}`,
-      LogLevel.ERROR,
-      LogApp.PACKET_DATA_SERVER,
-    );
-    return;
+  /* Check if position is occupied (AABB multi-tile check) */
+  const buildingDef = get_building_by_id(item.building.id);
+  const newW = buildingDef?.width ?? 1;
+  const newH = buildingDef?.height ?? 1;
+  const MAX_BUILDING_SPAN = 5;
+
+  const nearbyBuildings = await WorldBuilding.find({
+    where: {
+      world: { id: packet.world_id },
+      x: Between(packet.data.x - MAX_BUILDING_SPAN + 1, packet.data.x + newW - 1),
+      y: Between(packet.data.y - MAX_BUILDING_SPAN + 1, packet.data.y + newH - 1),
+    },
+    relations: ['building'],
+  });
+
+  for (const existing of nearbyBuildings) {
+    const existingW = existing.building.width ?? 1;
+    const existingH = existing.building.height ?? 1;
+    const overlaps =
+      packet.data.x < existing.x + existingW &&
+      packet.data.x + newW > existing.x &&
+      packet.data.y < existing.y + existingH &&
+      packet.data.y + newH > existing.y;
+    if (overlaps) {
+      log(
+        `Player ${player_id} tried to place item ${packet.data.buildingItemId} on occupied tiles at ${packet.data.x}, ${packet.data.y}`,
+        LogLevel.ERROR,
+        LogApp.PACKET_DATA_SERVER,
+      );
+      return;
+    }
   }
 
   const newWorldBuilding = {

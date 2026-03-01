@@ -19,8 +19,8 @@ export const item_assembler: DBItem = {
 export const building_assembler: DBBuilding = {
   name: DBItemName.BUILDING_ASSEMBLER,
   id: ID,
-  height: 1,
-  width: 1,
+  height: 3,
+  width: 2,
   item: item_assembler,
   processing_ticks: 20,
   items_to_be_placed_on: [],
