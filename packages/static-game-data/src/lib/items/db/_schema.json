@@ -17,6 +17,9 @@
     "icon": {
       "type": "string"
     },
+    "craftingTime": {
+      "type": "integer"
+    },
     "rarity": {
       "type": "string",
       "enum": ["common", "uncommon", "rare", "epic", "legendary"]

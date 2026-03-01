@@ -11,6 +11,7 @@ export const item_crate: DBItem = {
   icon: 'building_crate.png',
   rarity: DBItemRarity.common,
   stack_size: 64,
+  craftingTime: 3000,
   is_building: true,
   buildingId: ID,
 };

@@ -76,6 +76,9 @@ export class ItemResolver implements ResolverInterface<Item> {
     if (!hasRequiredItems) {
       throw new Error('Missing required items');
     }
+    if (item.craftingTime) {
+      await new Promise((resolve) => setTimeout(resolve, item.craftingTime * quantity));
+    }
     await AppDataSource.transaction(async (transaction) => {
       /* Remove the required items from the user's inventory */
       await Promise.all(

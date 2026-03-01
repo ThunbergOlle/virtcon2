@@ -14,6 +14,7 @@ export const item_drill: DBItem = {
   icon: 'drill.png',
   rarity: DBItemRarity.common,
   stack_size: 64,
+  craftingTime: 15000,
   is_building: true,
   buildingId: ID,
 };

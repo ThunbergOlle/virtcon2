@@ -11,6 +11,7 @@ export const item_conveyor: DBItem = {
   icon: 'building_conveyor.png',
   rarity: DBItemRarity.common,
   stack_size: 64,
+  craftingTime: 3000,
   is_building: true,
   buildingId: ID,
 };

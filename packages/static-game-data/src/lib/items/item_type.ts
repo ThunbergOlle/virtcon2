@@ -43,6 +43,7 @@ export interface DBItem {
   description: string;
   icon: string;
   stack_size: number;
+  craftingTime?: number;
   rarity: DBItemRarity;
   recipe?: DBItemRecipe[];
   is_building: boolean;

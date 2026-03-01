@@ -13,6 +13,7 @@ export const wood_axe: DBItem = {
   icon: 'wood_axe.png',
   rarity: DBItemRarity.common,
   stack_size: 1,
+  craftingTime: 3000,
   is_building: false,
 };
 

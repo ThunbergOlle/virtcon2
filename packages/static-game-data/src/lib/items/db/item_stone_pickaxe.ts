@@ -12,6 +12,7 @@ export const stone_pickaxe: DBItem = {
   icon: 'stone_pickaxe.png',
   rarity: DBItemRarity.common,
   stack_size: 1,
+  craftingTime: 8000,
   is_building: false,
 };
 

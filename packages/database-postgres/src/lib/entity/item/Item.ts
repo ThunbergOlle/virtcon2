@@ -36,6 +36,10 @@ export class Item extends BaseEntity {
   @Column({ type: 'int', default: 64 })
   stack_size: number;
 
+  @Field(() => Int, { nullable: true })
+  @Column({ type: 'int', nullable: true })
+  craftingTime: number | null;
+
   @OneToMany(() => UserInventoryItem, (i) => i.item)
   inventory: UserInventoryItem[];
 

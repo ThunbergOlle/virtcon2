@@ -11,6 +11,7 @@ export const item_inserter: DBItem = {
   icon: 'building_inserter.png',
   rarity: DBItemRarity.common,
   stack_size: 64,
+  craftingTime: 5000,
   is_building: true,
   buildingId: ID,
 };

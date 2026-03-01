@@ -21,6 +21,7 @@ const CRAFTER_WINDOW_QUERY = gql`
     items {
       id
       display_name
+      craftingTime
       recipe {
         id
         ...CrafterRecipeItemFragment
@@ -97,6 +98,14 @@ export default function CrafterWindow() {
   const [quantityToCraft, setQuantityToCraft] = useState<string>('1');
   const [selectedItem, setSelectedItem] = useState<DBItem | null>(null);
 
+  const craftProgressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (craftProgressInterval.current) clearInterval(craftProgressInterval.current);
+    };
+  }, []);
+
   const dispatch = useAppDispatch();
 
   const onCrafterButtonPressed = useCallback(() => dispatch(toggle(WindowType.VIEW_CRAFTER)), [dispatch]);
@@ -110,13 +119,73 @@ export default function CrafterWindow() {
   }, [onCrafterButtonPressed]);
 
   const craftItem = () => {
+    if (craftProgressInterval.current) {
+      clearInterval(craftProgressInterval.current);
+      craftProgressInterval.current = null;
+    }
+
+    const qty = parseInt(quantityToCraft);
+    const totalTime = (selectedItem?.craftingTime ?? 0) * qty;
+
+    const toastId =
+      totalTime > 0
+        ? toast(`Crafting ${qty}x ${selectedItem?.display_name}...`, {
+            autoClose: false,
+            progress: 0,
+            closeOnClick: false,
+            draggable: false,
+          })
+        : undefined;
+
+    if (toastId !== undefined) {
+      const startTime = Date.now();
+      craftProgressInterval.current = setInterval(() => {
+        const progress = Math.min((Date.now() - startTime) / totalTime, 1);
+        toast.update(toastId, { progress });
+        if (progress >= 1) {
+          clearInterval(craftProgressInterval.current!);
+          craftProgressInterval.current = null;
+        }
+      }, 50);
+    }
+
     mutateCraftItem({
-      variables: {
-        quantity: parseInt(quantityToCraft),
-        itemId: selectedItem?.id,
-      },
+      variables: { quantity: qty, itemId: selectedItem?.id },
       onCompleted: () => {
-        toast(`Crafted ${quantityToCraft}x ${selectedItem?.display_name}`, { type: 'success' });
+        if (craftProgressInterval.current) {
+          clearInterval(craftProgressInterval.current);
+          craftProgressInterval.current = null;
+        }
+        if (toastId !== undefined) {
+          toast.update(toastId, {
+            render: `Crafted ${qty}x ${selectedItem?.display_name}!`,
+            type: 'success',
+            autoClose: 2000,
+            progress: undefined,
+            hideProgressBar: true,
+            closeOnClick: true,
+            draggable: true,
+          });
+        } else {
+          toast.success(`Crafted ${qty}x ${selectedItem?.display_name}!`);
+        }
+      },
+      onError: () => {
+        if (craftProgressInterval.current) {
+          clearInterval(craftProgressInterval.current);
+          craftProgressInterval.current = null;
+        }
+        if (toastId !== undefined) {
+          toast.update(toastId, {
+            render: `Failed to craft ${selectedItem?.display_name}`,
+            type: 'error',
+            autoClose: 3000,
+            progress: undefined,
+            hideProgressBar: true,
+            closeOnClick: true,
+            draggable: true,
+          });
+        }
       },
     });
   };
@@ -191,8 +260,11 @@ export default function CrafterWindow() {
                     }}
                   />
                 </div>
-                <div className="flex-1">
-                  <Button onClick={craftItem} variant="primary" className="float-right">
+                <div className="flex-1 flex flex-row items-center justify-between">
+                  <span className="text-sm text-gray-400">
+                    Time: {((selectedItem.craftingTime ?? 0) * parseInt(quantityToCraft)) / 1000}s
+                  </span>
+                  <Button onClick={craftItem} variant="primary">
                     Craft
                   </Button>
                 </div>

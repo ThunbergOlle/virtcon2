@@ -8,6 +8,7 @@ const item_carrot_seed: DBItem = {
   description: 'A carrot seed that can be planted to grow carrots.',
   icon: 'carrot_seed.png',
   stack_size: 99,
+  craftingTime: 1000,
   rarity: DBItemRarity.common,
   is_building: false,
   harvestable: Harvestable[HarvestableNames.CARROT],

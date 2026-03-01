@@ -8,6 +8,7 @@ const item_sapling: DBItem = {
   description: 'A small tree seedling that can be planted.',
   icon: 'sapling.png',
   stack_size: 64,
+  craftingTime: 2000,
   rarity: DBItemRarity.common,
   is_building: false,
   harvestable: Harvestable[HarvestableNames.WOOD],

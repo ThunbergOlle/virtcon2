@@ -4,6 +4,7 @@ const item_stick: DBItem = {
   id: 2,
   name: DBItemName.STICK,
   stack_size: 256,
+  craftingTime: 1000,
   display_name: 'Stick',
   description: 'Stick is a natural resource that can be used to craft items.',
   icon: 'stick.png',
