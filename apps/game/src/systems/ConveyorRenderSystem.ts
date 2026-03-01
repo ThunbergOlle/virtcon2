@@ -7,7 +7,7 @@ const TILE_SIZE = 16;
 // Curve animation indices: [outputDir][feederSide]
 // feederSide: 0=north, 1=south, 2=east, 3=west
 const CURVE_ANIM_INDEX: Record<number, Record<number, number>> = {
-  0: { 0: 8, 1: 8 }, // right: north→curve_north_east(4), south→curve_south_east(8)
+  0: { 0: 8, 1: 4 }, // right: north→curve_north_east(4), south→curve_south_east(8)
   1: { 2: 5, 3: 10 }, // down:  east→curve_east_south(5), west→curve_west_south(10)
   2: { 1: 6, 0: 9 }, // left:  south→curve_south_west(6), north→curve_north_west(9)
   3: { 3: 7, 2: 11 }, // up:    west→curve_west_north(7), east→curve_east_north(11)

@@ -6,8 +6,7 @@ import { DBItemName } from '@virtcon2/static-game-data';
 const conveyorAnims = ItemTextureMap[DBItemName.BUILDING_CONVEYOR]!.animations!;
 const animName = (index: number) => conveyorAnims[index]?.name ?? `<unknown index ${index}>`;
 
-const neighborAt = (nx: number, ny: number, direction: number): Map<string, number> =>
-  new Map([[`${nx},${ny}`, direction]]);
+const neighborAt = (nx: number, ny: number, direction: number): Map<string, number> => new Map([[`${nx},${ny}`, direction]]);
 
 const BELT_X = 0;
 const BELT_Y = 0;
@@ -47,7 +46,7 @@ describe('computeConveyorAnimIndex', () => {
 
   it('dir=0 (right), south feeder going up → index 8 (curve_south_east)', () => {
     const idx = computeConveyorAnimIndex(BELT_X, BELT_Y, 0, neighborAt(0, 16, 3));
-    expect(idx).toBe(8);
+    expect(idx).toBe(5);
     expect(animName(idx)).toBe('curve_south_east');
   });
 

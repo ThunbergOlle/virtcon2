@@ -36,6 +36,7 @@ import { createSpriteTextureUpdateSystem } from '../systems/SpriteTextureUpdateS
 import { createResourceSpriteManagementSystem } from '../systems/ResourceSpriteManagementSystem';
 import { createHarvestableSpriteManagementSystem } from '../systems/HarvestableSpriteManagementSystem';
 import { createAnimationSystem } from '../systems/AnimationSystem';
+import { createConveyorRenderSystem } from '../systems/ConveyorRenderSystem';
 import { createConveyorItemInterpolationSystem } from '../systems/ConveyorItemInterpolationSystem';
 import { makeVar } from '@apollo/client';
 
@@ -55,7 +56,7 @@ export interface GameState {
   };
 }
 
-export const debugMode = makeVar(true);
+export const debugMode = makeVar(false);
 
 export default class Game extends Scene implements SceneStates {
   private isInitialized = false;
@@ -98,6 +99,7 @@ export default class Game extends Scene implements SceneStates {
   public resourceSpriteManagementSystem?: System<GameState>;
   public harvestableSpriteManagementSystem?: System<GameState>;
   public animationSystem?: System<GameState>;
+  public conveyorRenderSystem?: System<GameState>;
   public conveyorItemInterpolationSystem?: System<GameState>;
   public debugPositionSystem?: System<GameState>;
 
@@ -225,6 +227,7 @@ export default class Game extends Scene implements SceneStates {
       this.resourceSpriteManagementSystem = createResourceSpriteManagementSystem(this.state.world);
       this.harvestableSpriteManagementSystem = createHarvestableSpriteManagementSystem(this.state.world);
       this.animationSystem = createAnimationSystem(this.state.world);
+      this.conveyorRenderSystem = createConveyorRenderSystem(this.state.world);
       this.conveyorItemInterpolationSystem = createConveyorItemInterpolationSystem(this.state.world);
 
       //if (debugMode()) this.debugPositionSystem = createDebugPositionSystem(this.state.world, this);
@@ -257,6 +260,7 @@ export default class Game extends Scene implements SceneStates {
       !this.resourceSpriteManagementSystem ||
       !this.harvestableSpriteManagementSystem ||
       !this.animationSystem ||
+      !this.conveyorRenderSystem ||
       !this.conveyorItemInterpolationSystem ||
       !this.isInitialized
     )
@@ -293,6 +297,7 @@ export default class Game extends Scene implements SceneStates {
     newState = this.cursorHighlightSystem(newState);
     newState = this.spriteTextureUpdateSystem(newState);
     newState = this.animationSystem(newState);
+    newState = this.conveyorRenderSystem(newState);
     newState = this.conveyorItemInterpolationSystem(newState);
 
     if (this.debugPositionSystem) {

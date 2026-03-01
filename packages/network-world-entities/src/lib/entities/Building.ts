@@ -13,7 +13,7 @@ export interface NewBuildingEntity {
   buildingId: number;
 }
 
-export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position, Inserter];
+export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position, Inserter, Conveyor];
 export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): Entity => {
   const metadata = get_building_by_id(data.buildingId);
   if (!metadata) throw new Error(`Building with id ${data.buildingId} not found`);
