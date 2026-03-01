@@ -199,6 +199,7 @@ process.on('SIGINT', async () => {
   clearInterval(tickInterval);
 
   for (const world of worlds) {
+    await syncWorldState(world);
     const users = await User.find({ where: { currentlyInWorld: world } });
     for (const user of users) {
       user.currentlyInWorld = null;

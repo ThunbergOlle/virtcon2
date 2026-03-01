@@ -1,8 +1,9 @@
 import { Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Building } from '../building/Building';
 import { World } from '../world/World';
 import { WorldBuildingInventory } from '../world_building_inventory/WorldBuildingInventory';
+import { AssemblerWorldBuilding } from '../assembler_world_building/AssemblerWorldBuilding';
 
 import { DBWorldBuilding } from '@virtcon2/static-game-data';
 
@@ -45,4 +46,8 @@ export class WorldBuilding extends BaseEntity implements DBWorldBuilding {
   @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   active: boolean;
+
+  @OneToOne(() => AssemblerWorldBuilding, (awb) => awb.worldBuilding, { nullable: true })
+  @Field(() => AssemblerWorldBuilding, { nullable: true })
+  assemblerData: AssemblerWorldBuilding | null;
 }

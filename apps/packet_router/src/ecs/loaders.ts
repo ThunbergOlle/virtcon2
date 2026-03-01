@@ -1,9 +1,15 @@
-import { World, WorldBuilding, WorldHarvestable, WorldResource } from '@virtcon2/database-postgres';
-import { Not } from 'typeorm';
+import { AssemblerWorldBuilding, World, WorldBuilding, WorldHarvestable, WorldResource } from '@virtcon2/database-postgres';
+import { In, Not } from 'typeorm';
 
 export const loadWorldFromDb = async (
   worldId: string,
-): Promise<{ worldBuildings: WorldBuilding[]; world: World; worldResources: WorldResource[]; worldHarvestables: WorldHarvestable[] }> => {
+): Promise<{
+  worldBuildings: WorldBuilding[];
+  world: World;
+  worldResources: WorldResource[];
+  worldHarvestables: WorldHarvestable[];
+  assemblerData: AssemblerWorldBuilding[];
+}> => {
   const world = await World.findOne({ where: { id: worldId } });
   if (!world) {
     throw new Error(`World ${worldId} does not exist.`);
@@ -22,5 +28,10 @@ export const loadWorldFromDb = async (
     where: { world: { id: world.id } },
   });
 
-  return { worldBuildings, world, worldResources, worldHarvestables };
+  const assemblerData =
+    worldBuildings.length > 0
+      ? await AssemblerWorldBuilding.findBy({ worldBuildingId: In(worldBuildings.map((wb) => wb.id)) })
+      : [];
+
+  return { worldBuildings, world, worldResources, worldHarvestables, assemblerData };
 };

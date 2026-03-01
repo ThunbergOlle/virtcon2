@@ -1,6 +1,6 @@
 import { addComponent, addEntity, Entity, World } from '@virtcon2/bytenetc';
-import { DBItemName, get_building_by_id } from '@virtcon2/static-game-data';
-import { Animation, Building, Collider, Conveyor, Inserter, Position, Sprite } from '../network-world-entities';
+import { DBItemName, get_building_by_id, get_item_by_id } from '@virtcon2/static-game-data';
+import { Animation, Assembler, Building, Collider, Conveyor, Inserter, Position, Sprite } from '../network-world-entities';
 import { ItemTextureMap } from '../SpriteMap';
 import { tileSize, toPhaserPos } from '../utils/coordinates';
 import { GameObjectGroups } from '../utils/gameObject';
@@ -11,9 +11,10 @@ export interface NewBuildingEntity {
   y: number;
   rotation: number;
   buildingId: number;
+  assemblerData?: { outputItemId: number; progressTicks: number };
 }
 
-export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position, Inserter, Conveyor];
+export const worldBuildingEntityComponents = [Animation, Building, Sprite, Collider, Position, Inserter, Conveyor, Assembler];
 export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): Entity => {
   const metadata = get_building_by_id(data.buildingId);
   if (!metadata) throw new Error(`Building with id ${data.buildingId} not found`);
@@ -53,9 +54,26 @@ export const createNewBuildingEntity = (world: World, data: NewBuildingEntity): 
       return createNewInserterEntity(world, data, building);
     case DBItemName.BUILDING_CONVEYOR:
       return createNewConveyorEntity(world, data, building);
+    case DBItemName.BUILDING_ASSEMBLER:
+      return createNewAssemblerEntity(world, data, building);
     default:
       return building;
   }
+};
+
+const computeRequiredTicks = (outputItemId: number | undefined): number => {
+  if (!outputItemId) return 0;
+  const item = get_item_by_id(outputItemId);
+  if (!item?.craftingTime) return 0;
+  return Math.ceil(item.craftingTime / 50);
+};
+
+export const createNewAssemblerEntity = (world: World, data: NewBuildingEntity, eid: Entity): Entity => {
+  addComponent(world, Assembler, eid);
+  Assembler(world).outputItemId[eid] = data.assemblerData?.outputItemId ?? 0;
+  Assembler(world).progressTicks[eid] = data.assemblerData?.progressTicks ?? 0;
+  Assembler(world).requiredTicks[eid] = computeRequiredTicks(data.assemblerData?.outputItemId);
+  return eid;
 };
 
 export const createNewInserterEntity = (world: World, data: NewBuildingEntity, eid: Entity): Entity => {

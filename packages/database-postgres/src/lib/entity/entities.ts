@@ -12,6 +12,7 @@ import { WorldBuildingInventory } from './world_building_inventory/WorldBuilding
 import { WorldHarvestable } from './world_harvestable/WorldHarvestable';
 import { WorldPlot } from './world_plot/WorldPlot';
 import { WorldResource } from './world_resource/WorldResource';
+import { AssemblerWorldBuilding } from './assembler_world_building/AssemblerWorldBuilding';
 
 export default [
   User,
@@ -28,4 +29,5 @@ export default [
   WorldPlot,
   WorldResource,
   WorldHarvestable,
+  AssemblerWorldBuilding,
 ];

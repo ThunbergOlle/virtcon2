@@ -3,13 +3,14 @@ import { defineQuery, defineSerializer, Entity, World } from '@virtcon2/bytenetc
 import {
   addToBuildingInventory,
   AppDataSource,
+  AssemblerWorldBuilding,
   InventoryOperationType,
   publishWorldBuildingUpdate,
   WorldBuilding,
   WorldResource,
 } from '@virtcon2/database-postgres';
-import { Animation, Building, getSerializeConfig, SerializationID } from '@virtcon2/network-world-entities';
-import { DBBuilding, getItemByName, ResourceNames, Resources, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
+import { Animation, Assembler, Building, getSerializeConfig, SerializationID } from '@virtcon2/network-world-entities';
+import { all_db_items_recipes, DBBuilding, DBItemName, getItemByName, ResourceNames, Resources, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { EntityManager, IsNull, Not } from 'typeorm';
 import { syncServerEntities } from '../packet/enqueue';
 
@@ -86,6 +87,11 @@ class BuildingProcessingQueue {
   }
 
   private async processBuilding(worldId: World, building: DBBuilding): Promise<void> {
+    if (building.name === DBItemName.BUILDING_ASSEMBLER) {
+      await this.processAssemblerBuilding(worldId, building);
+      return;
+    }
+
     const hasRequirements = building.processing_requirements.length > 0 || building.fuel_requirements.length > 0;
 
     // Resource extractor with requirements (dynamic output based on resource)
@@ -325,6 +331,98 @@ class BuildingProcessingQueue {
     }
 
     await pMap(worldBuildings, (worldBuilding) => publishWorldBuildingUpdate(worldBuilding.id));
+  }
+
+  private async processAssemblerBuilding(worldId: World, building: DBBuilding): Promise<void> {
+    const worldBuildings = await WorldBuilding.find({
+      where: { building: { id: building.id }, world: { id: worldId } },
+      relations: ['world_building_inventory'],
+    });
+
+    // Build ECS entity map: worldBuildingId → eid
+    const assemblerQuery = defineQuery(Building, Assembler);
+    const assemblerEntities = assemblerQuery(worldId);
+    const ecsEntityMap = new Map<number, Entity>();
+    for (const eid of assemblerEntities) {
+      ecsEntityMap.set(Building(worldId).worldBuildingId[eid], eid);
+    }
+
+    const buildingsNeedingUpdate: number[] = [];
+
+    await AppDataSource.manager.transaction(async (transaction: EntityManager) => {
+      await pMap(
+        worldBuildings,
+        async (worldBuilding) => {
+          const eid = ecsEntityMap.get(worldBuilding.id);
+          if (eid === undefined) return;
+
+          const outputItemId = Assembler(worldId).outputItemId[eid];
+          const requiredTicks = Assembler(worldId).requiredTicks[eid];
+
+          // Not configured: ensure idle animation
+          if (outputItemId === 0) {
+            setBuildingAnimation(worldId, worldBuilding.id, false);
+            return;
+          }
+
+          // Find recipe for configured output item from static data
+          const recipes = all_db_items_recipes.filter((r) => r.resultingItem.id === outputItemId);
+          if (recipes.length === 0) {
+            setBuildingAnimation(worldId, worldBuilding.id, false);
+            return;
+          }
+
+          // Check all ingredients are available in INPUT slots
+          const inputSlots = worldBuilding.world_building_inventory.filter(
+            (s) => s.slotType === WorldBuildingInventorySlotType.INPUT,
+          );
+          const ingredientsAvailable = recipes.every((recipe) => {
+            const slot = inputSlots.find((s) => s.itemId === recipe.requiredItem.id);
+            return slot && slot.quantity >= recipe.requiredQuantity;
+          });
+
+          if (!ingredientsAvailable) {
+            Assembler(worldId).progressTicks[eid] = 0;
+            setBuildingAnimation(worldId, worldBuilding.id, false);
+            return;
+          }
+
+          // Increment progress
+          Assembler(worldId).progressTicks[eid] += building.processing_ticks;
+          setBuildingAnimation(worldId, worldBuilding.id, true);
+
+          // Check if crafting is complete
+          if (Assembler(worldId).progressTicks[eid] >= requiredTicks) {
+            // Consume ingredients
+            for (const recipe of recipes) {
+              await addToBuildingInventory({
+                transaction,
+                inventorySlots: worldBuilding.world_building_inventory,
+                itemId: recipe.requiredItem.id,
+                quantity: -recipe.requiredQuantity,
+                operationType: InventoryOperationType.INPUT_CONSUMPTION,
+              });
+            }
+
+            // Produce output
+            await addToBuildingInventory({
+              transaction,
+              inventorySlots: worldBuilding.world_building_inventory,
+              itemId: outputItemId,
+              quantity: 1,
+              operationType: InventoryOperationType.PRODUCTION_OUTPUT,
+            });
+
+            Assembler(worldId).progressTicks[eid] = 0;
+            buildingsNeedingUpdate.push(worldBuilding.id);
+          }
+        },
+        { concurrency: 10 },
+      );
+    });
+
+    // Only publish update when inventory actually changed (output produced)
+    await pMap(buildingsNeedingUpdate, (worldBuildingId) => publishWorldBuildingUpdate(worldBuildingId));
   }
 }
 

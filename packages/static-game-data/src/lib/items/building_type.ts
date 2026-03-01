@@ -42,6 +42,21 @@ export interface DBWorldBuilding {
   building: DBBuilding;
   world_building_inventory: DBWorldBuildingInventoryItem[];
   active: boolean;
+  assemblerData?: {
+    outputItemId?: number | null;
+    progressTicks?: number;
+    outputItem?: {
+      id: number;
+      name: string;
+      display_name: string;
+      craftingTime?: number | null;
+      recipe?: Array<{
+        id: number;
+        requiredItem: { id: number; name: string; display_name: string };
+        requiredQuantity: number;
+      }>;
+    } | null;
+  } | null;
 }
 
 export interface DBWorldBuildingInventoryItem {

@@ -2,6 +2,7 @@ import item_coal from './lib/items/db/item_coal';
 import { item_conveyor, building_conveyor } from './lib/items/db/item_conveyor';
 import { item_inserter, building_inserter } from './lib/items/db/item_inserter';
 import { item_crate, building_crate } from './lib/items/db/item_crate';
+import { item_assembler, building_assembler } from './lib/items/db/item_assembler';
 import { item_drill, building_drill } from './lib/items/db/item_drill';
 import item_iron_ore from './lib/items/db/item_iron';
 import { item_sawmill, building_sawmill } from './lib/items/db/item_sawmill';
@@ -27,6 +28,7 @@ import { carrot_seed_recipe } from './lib/items_recipe/db/item_carrot_seeed';
 import { item_conveyor_recipe } from './lib/items_recipe/db/item_conveyor';
 import { item_inserter_recipe } from './lib/items_recipe/db/item_inserter';
 import { item_crate_recipe } from './lib/items_recipe/db/item_crate';
+import { item_assembler_recipe } from './lib/items_recipe/db/item_assembler';
 import { Harvestable, HarvestableType } from './lib/harvestable_type';
 
 /* Items */
@@ -44,6 +46,7 @@ export * from './lib/items/db/item_carrot_seed';
 export * from './lib/items/db/item_conveyor';
 export * from './lib/items/db/item_inserter';
 export * from './lib/items/db/item_crate';
+export * from './lib/items/db/item_assembler';
 
 export * from './lib/harvestable_type';
 
@@ -61,6 +64,7 @@ export const all_db_items = [
   item_conveyor,
   item_inserter,
   item_crate,
+  item_assembler,
   item_stone,
   item_coal,
   item_iron_ore,
@@ -100,6 +104,7 @@ export * from './lib/items_recipe/db/item_carrot_seeed';
 export * from './lib/items_recipe/db/item_conveyor';
 export * from './lib/items_recipe/db/item_inserter';
 export * from './lib/items_recipe/db/item_crate';
+export * from './lib/items_recipe/db/item_assembler';
 
 export const all_db_items_recipes = [
   ...item_stick_recipe,
@@ -113,11 +118,12 @@ export const all_db_items_recipes = [
   ...carrot_seed_recipe,
   ...item_inserter_recipe,
   ...item_crate_recipe,
+  ...item_assembler_recipe,
 ];
 
 /* Buildings */
 export * from './lib/items/building_type';
-export const all_db_buildings = [building_sawmill, building_drill, building_conveyor, building_inserter, building_crate];
+export const all_db_buildings = [building_sawmill, building_drill, building_conveyor, building_inserter, building_crate, building_assembler];
 
 export const get_building_by_id = (id: number) => {
   return all_db_buildings.find((building) => building.id === id);

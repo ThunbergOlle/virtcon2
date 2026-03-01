@@ -1,6 +1,7 @@
 import { log, LogApp, LogLevel } from '@shared';
 import {
   AppDataSource,
+  AssemblerWorldBuilding,
   Item,
   publishUserInventoryUpdate,
   UserInventoryItem,
@@ -8,6 +9,7 @@ import {
   WorldBuildingInventory,
   WorldResource,
 } from '@virtcon2/database-postgres';
+import { DBItemName } from '@virtcon2/static-game-data';
 import { ClientPacketWithSender, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
 
 import {
@@ -75,6 +77,12 @@ export default async function requestPlaceBuildingPacket(packet: ClientPacketWit
   if (resource) {
     resource.worldBuildingId = worldBuilding.id;
     await resource.save();
+  }
+
+  // Create AssemblerWorldBuilding record for assembler buildings
+  if (item.building.name === DBItemName.BUILDING_ASSEMBLER) {
+    const awb = AssemblerWorldBuilding.create({ worldBuildingId: worldBuilding.id, outputItemId: null, progressTicks: 0 });
+    await awb.save();
   }
 
   /* Remove the item from players inventory */

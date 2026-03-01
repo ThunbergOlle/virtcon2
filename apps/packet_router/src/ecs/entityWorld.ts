@@ -2,8 +2,11 @@ import { loadWorldFromDb } from './loaders';
 import { log, LogApp, LogLevel, plotSize } from '@shared';
 import { createWorld, defineQuery, deleteWorld, registerComponents, System, World } from '@virtcon2/bytenetc';
 import * as DB from '@virtcon2/database-postgres';
+import { AssemblerWorldBuilding } from '@virtcon2/database-postgres';
 import {
   allComponents,
+  Assembler,
+  Building,
   createNewBuildingEntity,
   createNewHarvestableEntity,
   createNewResourceEntity,
@@ -117,7 +120,7 @@ export const initialiseWorldBounds = async (world: World, bounds: WorldBounds[])
 };
 
 export const initializeWorld = async (dbWorldId: string) => {
-  const { worldBuildings, worldResources, worldHarvestables, world: dbWorld } = await loadWorldFromDb(dbWorldId);
+  const { worldBuildings, worldResources, worldHarvestables, world: dbWorld, assemblerData } = await loadWorldFromDb(dbWorldId);
 
   const world = newEntityWorld(dbWorldId);
 
@@ -139,12 +142,16 @@ export const initializeWorld = async (dbWorldId: string) => {
   }
 
   for (const worldBuilding of worldBuildings) {
+    const assemblerRecord = assemblerData.find((a) => a.worldBuildingId === worldBuilding.id);
     createNewBuildingEntity(world, {
       buildingId: worldBuilding.building.id,
       worldBuildingId: worldBuilding.id,
       x: worldBuilding.x,
       y: worldBuilding.y,
       rotation: worldBuilding.rotation,
+      assemblerData: assemblerRecord
+        ? { outputItemId: assemblerRecord.outputItemId ?? 0, progressTicks: assemblerRecord.progressTicks }
+        : undefined,
     });
   }
 
@@ -186,6 +193,7 @@ export const syncWorldState = async (world: World) => {
   log(`Syncing world state for world ${world}`, LogLevel.INFO, LogApp.SERVER);
   const resourceQuery = defineQuery(Resource);
   const resourceEntities = resourceQuery(world);
+
 
   const harvestableQuery = defineQuery(Harvestable);
   const harvestableEntities = harvestableQuery(world);
@@ -238,6 +246,16 @@ export const syncWorldState = async (world: World) => {
         await transaction.update(WorldHarvestable, { id: dbHarvestable.id }, { age: ecsAge });
         log(`Updated harvestable ${dbHarvestable.id} age from ${dbHarvestable.age} to ${ecsAge}`, LogLevel.INFO, LogApp.SERVER);
       }
+    }
+
+    // Sync assembler progress ticks
+    const assemblerEntityQuery = defineQuery(Building, Assembler);
+    const assemblerEntities = assemblerEntityQuery(world);
+    for (let i = 0; i < assemblerEntities.length; i++) {
+      const eid = assemblerEntities[i];
+      const worldBuildingId = Building(world).worldBuildingId[eid];
+      const progressTicks = Assembler(world).progressTicks[eid];
+      await transaction.update(AssemblerWorldBuilding, { worldBuildingId }, { progressTicks });
     }
   });
 };

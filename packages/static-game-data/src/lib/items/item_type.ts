@@ -30,6 +30,7 @@ export enum DBItemName {
   BUILDING_CONVEYOR = 'building_conveyor',
   BUILDING_INSERTER = 'building_inserter',
   BUILDING_CRATE = 'building_crate',
+  BUILDING_ASSEMBLER = 'building_assembler',
 }
 export interface DBItemSpawnSettings {
   minHeight: number;

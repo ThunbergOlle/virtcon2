@@ -99,3 +99,8 @@ export interface RequestPlaceHarvestablePacketData {
 export interface RequestPickupBuildingPacketData {
   worldBuildingId: number;
 }
+
+export interface RequestSetAssemblerOutputPacketData {
+  worldBuildingId: number;
+  outputItemId: number | null;
+}

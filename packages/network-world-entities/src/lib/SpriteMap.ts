@@ -152,6 +152,17 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'building_crate',
     variants: ['sprites/items/building_crate.png'],
   },
+  [DBItemName.BUILDING_ASSEMBLER]: {
+    textureId: 22,
+    textureName: 'building_assembler',
+    variants: ['sprites/buildings/building_assembler.png'],
+    animations: [
+      { name: 'idle', frames: [0], frameRate: 0, repeat: -1, playOnCreate: true },
+      { name: 'active', frames: [1, 2, 3, 4], frameRate: 8, repeat: -1 },
+    ],
+    spriteSheetFrameWidth: 32,
+    spriteSheetFrameHeight: 48,
+  },
   [DBItemName.BUILDING_CONVEYOR]: {
     textureId: 19,
     textureName: 'building_conveyor',

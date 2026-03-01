@@ -22,6 +22,7 @@ export enum PacketType {
   REQUEST_DROP_ITEM = 'requestDropItem',
   REQUEST_PLACE_HARVESTABLE = 'requestPlaceHarvestable',
   REQUEST_PICKUP_BUILDING = 'requestPickupBuilding',
+  REQUEST_SET_ASSEMBLER_OUTPUT = 'requestSetAssemblerOutput',
 }
 
 export interface PacketSender {
