@@ -74,9 +74,14 @@ export const createNewInserterEntity = (world: World, data: NewBuildingEntity, e
 };
 
 export const createNewConveyorEntity = (world: World, data: NewBuildingEntity, eid: Entity): Entity => {
+  Sprite(world).rotation[eid] = 0; // no visual rotation — direction is baked into animation
+
   addComponent(world, Conveyor, eid);
   Conveyor(world).direction[eid] = Math.floor(data.rotation / 90) % 4;
   Conveyor(world).speed[eid] = 1.5; // pixels per tick
+
+  // Set initial animation to match straight direction (0=right,1=down,2=left,3=up)
+  Animation(world).animationIndex[eid] = Conveyor(world).direction[eid];
 
   return eid;
 };

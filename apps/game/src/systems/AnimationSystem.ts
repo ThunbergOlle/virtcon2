@@ -6,6 +6,7 @@ import { GameState } from '../scenes/Game';
  * Client-side system that controls sprite animations based on the Animation component.
  * Reads animationIndex to determine which animation to play from TextureMetaData.animations.
  * Uses isPlaying to start/stop animations.
+ * ConveyorRenderSystem sets the correct animationIndex; this system handles the actual playback.
  */
 export const createAnimationSystem = (world: World) => {
   const animatedQuery = defineQuery(Animation, Sprite, Position);

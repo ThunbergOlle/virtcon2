@@ -157,13 +157,20 @@ export const ItemTextureMap: { [key in DBItemName]: TextureMetaData | null } = {
     textureName: 'building_conveyor',
     variants: ['sprites/buildings/building_conveyor.png'],
     animations: [
-      {
-        name: 'active',
-        frames: [0, 1, 2, 3, 4, 5, 6, 7],
-        frameRate: 12,
-        repeat: -1,
-        playOnCreate: true,
-      },
+      // Straight animations — indices 0-3 match Conveyor.direction values
+      { name: 'active_right', frames: [145, 151, 157, 163, 169, 175, 181], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'active_down', frames: [59, 65, 71, 77, 83, 89, 95], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'active_left', frames: [97, 103, 109, 115, 121, 127, 133], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'active_up', frames: [52, 58, 64, 70, 76, 82, 88], frameRate: 12, repeat: -1, playOnCreate: false },
+      // Curve animations — indices 4-11
+      { name: 'curve_south_east', frames: [0, 6, 12, 18, 24, 30, 36], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_east_south', frames: [2, 8, 14, 20, 26, 32, 38], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_south_west', frames: [3, 9, 15, 21, 27, 33, 39], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_west_north', frames: [57, 63, 69, 75, 81, 87, 93], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_north_east', frames: [56, 62, 68, 74, 80, 86, 92], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_north_west', frames: [3, 9, 15, 21, 27, 33, 39], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_west_south', frames: [1, 7, 13, 19, 25, 31, 37], frameRate: 12, repeat: -1, playOnCreate: false },
+      { name: 'curve_east_north', frames: [0, 6, 12, 18, 24, 30, 36], frameRate: 12, repeat: -1, playOnCreate: false },
     ],
     spriteSheetFrameWidth: 16,
     spriteSheetFrameHeight: 16,
