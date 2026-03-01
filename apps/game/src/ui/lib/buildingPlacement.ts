@@ -1,7 +1,7 @@
 import { gql, makeVar } from '@apollo/client';
 import { addComponent, addReservedEntity, Entity, removeEntity } from '@virtcon2/bytenetc';
 import { ClientPacket, PacketType, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
-import { Collider, fromPhaserPos, GhostBuilding, ItemTextureMap, Position, Sprite } from '@virtcon2/network-world-entities';
+import { Collider, fromPhaserPos, GhostBuilding, ItemTextureMap, Position, Sprite, tileSize } from '@virtcon2/network-world-entities';
 import { DBUserInventoryItem, get_building_by_id } from '@virtcon2/static-game-data';
 import { clone } from 'ramda';
 import { toast } from 'react-toastify';
@@ -109,6 +109,8 @@ export function startPlaceBuildingIntent(inventoryItem: DBUserInventoryItem) {
   Sprite(world).height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
   Sprite(world).width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
   Sprite(world).opacity[ghostBuilding] = 0.5;
+  Collider(world).sizeWidth[ghostBuilding] = (buildingSettings?.width ?? 1) * tileSize;
+  Collider(world).sizeHeight[ghostBuilding] = (buildingSettings?.height ?? 1) * tileSize;
   Position(world).x[ghostBuilding] = 0;
   Position(world).y[ghostBuilding] = 0;
 

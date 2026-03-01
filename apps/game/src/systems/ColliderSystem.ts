@@ -16,8 +16,12 @@ export const createColliderSystem = (world: World, scene: Phaser.Scene) => {
           | Phaser.Types.Physics.Arcade.SpriteWithStaticBody
           | Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-        collider.body.setSize(Collider(world).sizeWidth[eid], Collider(world).sizeHeight[eid]);
-        collider.body.setOffset(Collider(world).offsetX[eid], Collider(world).offsetY[eid]);
+        const bodyW = Collider(world).sizeWidth[eid];
+        const bodyH = Collider(world).sizeHeight[eid];
+        collider.body.setSize(bodyW, bodyH);
+        const centerOffsetX = (sprite.displayWidth - bodyW) / 2;
+        const centerOffsetY = (sprite.displayHeight - bodyH) / 2;
+        collider.body.setOffset(centerOffsetX, centerOffsetY);
 
         const collisionGroup = state.gameObjectGroups[Collider(world).group[eid] as GameObjectGroups];
         if (collisionGroup) {

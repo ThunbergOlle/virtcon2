@@ -1,8 +1,8 @@
 import { gql, useQuery } from '@apollo/client';
-import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData, RequestPickupBuildingPacketData } from '@virtcon2/network-packet';
-import { DBWorldBuilding, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
+import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData, RequestPickupBuildingPacketData, RequestSetAssemblerOutputPacketData } from '@virtcon2/network-packet';
+import { all_db_items, all_db_items_recipes, DBItemName, DBWorldBuilding, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
 import InventoryItem, { InventoryItemPlaceholder, InventoryItemGhost, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
@@ -47,6 +47,24 @@ const WORLD_BUILDING_FRAGMENT = gql`
         name
       }
     }
+    assemblerData {
+      progressTicks
+      outputItem {
+        id
+        name
+        display_name
+        craftingTime
+        recipe {
+          id
+          requiredQuantity
+          requiredItem {
+            id
+            name
+            display_name
+          }
+        }
+      }
+    }
   }
 `;
 
@@ -68,9 +86,12 @@ const WORLD_BUILDING_SUBSCRIPTION = gql`
   }
 `;
 
+const craftableItems = all_db_items.filter((item) => item.craftingTime && all_db_items_recipes.some((r) => r.resultingItem.id === item.id));
+
 export default function WorldBuildingWindow() {
   const dispatch = useAppDispatch();
   const inspectedWorldBuilding = useAppSelector((state) => state.inspectedBuilding.inspectedWorldBuildingId);
+  const [showItemPicker, setShowItemPicker] = useState(false);
 
   const { subscribeToMore, data, loading } = useQuery<{ worldBuilding: DBWorldBuilding }>(WORLD_BUILDING_QUERY, {
     variables: { id: inspectedWorldBuilding },
@@ -118,6 +139,18 @@ export default function WorldBuildingWindow() {
     // Close window after pickup request
     dispatch(close(WindowType.VIEW_BUILDING));
   };
+
+  const onSetAssemblerOutput = (outputItemId: number | null) => {
+    if (!worldBuilding) return;
+    const packet: ClientPacket<RequestSetAssemblerOutputPacketData> = {
+      data: { worldBuildingId: worldBuilding.id, outputItemId },
+      packet_type: PacketType.REQUEST_SET_ASSEMBLER_OUTPUT,
+    };
+    Game.network.sendPacket(packet);
+    setShowItemPicker(false);
+  };
+
+  const isAssembler = worldBuilding?.building?.name === DBItemName.BUILDING_ASSEMBLER;
 
   const inventorySorted = sortBy(prop('slot'))(worldBuilding?.world_building_inventory ?? []);
 
@@ -180,7 +213,7 @@ export default function WorldBuildingWindow() {
       title="Building Viewer"
       fullWindowLoading={loading}
       width={600}
-      height={400}
+      height={450}
       defaultPosition={{ x: 40, y: 40 }}
       windowType={WindowType.VIEW_BUILDING}
     >
@@ -214,8 +247,14 @@ export default function WorldBuildingWindow() {
           {inputSlots.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               <p className="text-sm text-gray-300 font-semibold">Input</p>
-              <div className="flex flex-col gap-2">
-                {worldBuilding && renderInventorySlots(inputSlots, worldBuilding.building?.processing_requirements || [])}
+              <div className="grid grid-cols-2 gap-2">
+                {worldBuilding &&
+                  renderInventorySlots(
+                    inputSlots,
+                    isAssembler
+                      ? (worldBuilding.assemblerData?.outputItem?.recipe?.map((r) => ({ item: r.requiredItem, quantity: r.requiredQuantity })) ?? [])
+                      : (worldBuilding.building?.processing_requirements ?? []),
+                  )}
               </div>
             </div>
           )}
@@ -255,6 +294,40 @@ export default function WorldBuildingWindow() {
           )}
         </div>
 
+        {/* Assembler output configuration */}
+        {isAssembler && (
+          <div className="border-t border-gray-600 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400">Producing:</span>
+                {worldBuilding?.assemblerData?.outputItem ? (
+                  <span className="text-sm text-white font-medium">{worldBuilding.assemblerData.outputItem.display_name}</span>
+                ) : (
+                  <span className="text-sm text-gray-500 italic">Not configured</span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowItemPicker(!showItemPicker)}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+              >
+                Change Output
+              </button>
+            </div>
+            {showItemPicker && (
+              <div className="max-h-28 overflow-y-auto flex flex-wrap gap-1 p-1 bg-gray-800 rounded">
+                {craftableItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onSetAssemblerOutput(item.id)}
+                    className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-white transition-colors"
+                  >
+                    {item.display_name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Window>
   );
