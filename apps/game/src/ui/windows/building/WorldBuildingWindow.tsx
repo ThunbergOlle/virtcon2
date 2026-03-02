@@ -1,11 +1,29 @@
 import { gql, useQuery } from '@apollo/client';
-import { ClientPacket, InventoryType, PacketType, RequestMoveInventoryItemPacketData, RequestPickupBuildingPacketData, RequestSetAssemblerOutputPacketData } from '@virtcon2/network-packet';
-import { all_db_items, all_db_items_recipes, DBItemName, DBWorldBuilding, WorldBuildingInventorySlotType } from '@virtcon2/static-game-data';
+import {
+  ClientPacket,
+  InventoryType,
+  PacketType,
+  RequestMoveInventoryItemPacketData,
+  RequestPickupBuildingPacketData,
+  RequestSetAssemblerOutputPacketData,
+} from '@virtcon2/network-packet';
+import {
+  all_db_items,
+  all_db_items_recipes,
+  DBItemName,
+  DBWorldBuilding,
+  WorldBuildingInventorySlotType,
+} from '@virtcon2/static-game-data';
 import { prop, sortBy } from 'ramda';
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import Game from '../../../scenes/Game';
-import InventoryItem, { InventoryItemPlaceholder, InventoryItemGhost, InventoryItemType } from '../../components/inventoryItem/InventoryItem';
+import { ItemSearchPopup } from '../../components/itemSearch/ItemSearchPopup';
+import InventoryItem, {
+  InventoryItemPlaceholder,
+  InventoryItemGhost,
+  InventoryItemType,
+} from '../../components/inventoryItem/InventoryItem';
 import Window from '../../components/window/Window';
 import { close, WindowType } from '../../lib/WindowSlice';
 
@@ -91,7 +109,7 @@ const craftableItems = all_db_items.filter((item) => item.craftingTime && all_db
 export default function WorldBuildingWindow() {
   const dispatch = useAppDispatch();
   const inspectedWorldBuilding = useAppSelector((state) => state.inspectedBuilding.inspectedWorldBuildingId);
-  const [showItemPicker, setShowItemPicker] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState<{ x: number; y: number } | null>(null);
 
   const { subscribeToMore, data, loading } = useQuery<{ worldBuilding: DBWorldBuilding }>(WORLD_BUILDING_QUERY, {
     variables: { id: inspectedWorldBuilding },
@@ -147,7 +165,7 @@ export default function WorldBuildingWindow() {
       packet_type: PacketType.REQUEST_SET_ASSEMBLER_OUTPUT,
     };
     Game.network.sendPacket(packet);
-    setShowItemPicker(false);
+    setPickerPosition(null);
   };
 
   const isAssembler = worldBuilding?.building?.name === DBItemName.BUILDING_ASSEMBLER;
@@ -197,14 +215,7 @@ export default function WorldBuildingWindow() {
       }
 
       // Otherwise show empty placeholder
-      return (
-        <InventoryItemPlaceholder
-          slot={slot.slot}
-          inventoryId={worldBuilding!.id}
-          onDrop={onInventoryDropItem}
-          key={slot.slot}
-        />
-      );
+      return <InventoryItemPlaceholder slot={slot.slot} inventoryId={worldBuilding!.id} onDrop={onInventoryDropItem} key={slot.slot} />;
     });
   };
 
@@ -252,8 +263,11 @@ export default function WorldBuildingWindow() {
                   renderInventorySlots(
                     inputSlots,
                     isAssembler
-                      ? (worldBuilding.assemblerData?.outputItem?.recipe?.map((r) => ({ item: r.requiredItem, quantity: r.requiredQuantity })) ?? [])
-                      : (worldBuilding.building?.processing_requirements ?? []),
+                      ? worldBuilding.assemblerData?.outputItem?.recipe?.map((r) => ({
+                          item: r.requiredItem,
+                          quantity: r.requiredQuantity,
+                        })) ?? []
+                      : worldBuilding.building?.processing_requirements ?? [],
                   )}
               </div>
             </div>
@@ -307,24 +321,22 @@ export default function WorldBuildingWindow() {
                 )}
               </div>
               <button
-                onClick={() => setShowItemPicker(!showItemPicker)}
+                onClick={(e) => setPickerPosition(pickerPosition ? null : { x: e.clientX, y: e.clientY })}
                 className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
               >
                 Change Output
               </button>
             </div>
-            {showItemPicker && (
-              <div className="max-h-28 overflow-y-auto flex flex-wrap gap-1 p-1 bg-gray-800 rounded">
-                {craftableItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => onSetAssemblerOutput(item.id)}
-                    className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-white transition-colors"
-                  >
-                    {item.display_name}
-                  </button>
-                ))}
-              </div>
+            {pickerPosition && (
+              <ItemSearchPopup
+                items={craftableItems}
+                onSelect={(item) => {
+                  onSetAssemblerOutput(item.id);
+                  setPickerPosition(null);
+                }}
+                onClose={() => setPickerPosition(null)}
+                position={pickerPosition}
+              />
             )}
           </div>
         )}

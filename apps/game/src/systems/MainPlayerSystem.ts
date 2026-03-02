@@ -86,13 +86,18 @@ export const createMainPlayerSystem = (world: World, scene: Phaser.Scene, cursor
     }
 
     const entities = mainPlayerQuery(world);
+    const activeEl = document.activeElement;
+    const isTyping = activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement;
+
     for (let i = 0; i < entities.length; i++) {
-      let xVel: number =
-        (Number(cursors.right.isDown || keyboard.checkDown(keyD)) - Number(cursors.left.isDown || keyboard.checkDown(keyA))) / 10;
-      let yVel: number =
-        (Number(cursors.down.isDown || scene.input.keyboard?.checkDown(keyS)) -
-          Number(cursors.up.isDown || scene.input.keyboard?.checkDown(keyW))) /
-        10;
+      let xVel: number = isTyping
+        ? 0
+        : (Number(cursors.right.isDown || keyboard.checkDown(keyD)) - Number(cursors.left.isDown || keyboard.checkDown(keyA))) / 10;
+      let yVel: number = isTyping
+        ? 0
+        : (Number(cursors.down.isDown || scene.input.keyboard?.checkDown(keyS)) -
+            Number(cursors.up.isDown || scene.input.keyboard?.checkDown(keyW))) /
+          10;
 
       // Normalize speed in the diagonals
       if (yVel !== 0 && xVel !== 0) {
