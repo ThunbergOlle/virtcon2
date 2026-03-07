@@ -17,7 +17,6 @@ import {
   tileSize,
   createItem,
 } from '@virtcon2/network-world-entities';
-import { syncRemoveEntities } from '../packet/enqueue';
 import { defineSystem } from '@virtcon2/bytenetc';
 import { inserterQueue } from '../worldBuilding/inserterQueue';
 import { SyncEntities } from './types';
@@ -272,7 +271,7 @@ export const createInserterSystem = (world: World) => {
     }
 
     if (removedItemEntities.length > 0) {
-      syncRemoveEntities(world, removedItemEntities);
+      removeEntities.push(...removedItemEntities);
     }
 
     if (newItemEntities.length > 0) {

@@ -17,15 +17,13 @@ export const createBuildingPlacementSystem = (world: World, scene: Phaser.Scene)
 
       sprite.setTint(GhostBuilding(world).placementIsValid[ghostBuilding] ? 0x00ff00 : 0xff0000);
 
-      const width = Sprite(world).width[ghostBuilding];
-      const height = Sprite(world).height[ghostBuilding];
-
       // convert activePointer world coords to tile coords
       const { x, y } = toPhaserPos(fromPhaserPos({ x: scene.input.activePointer.worldX, y: scene.input.activePointer.worldY }));
 
-      /* Calculate correct offset based on width and height */
-      const inTilesWidth = Math.floor(width / tileSize);
-      const inTilesHeight = Math.floor(height / tileSize);
+      /* Calculate correct offset based on tile footprint (not sprite pixel size) */
+      const building = state.ghostBuildingById[ghostBuilding];
+      const inTilesWidth = building?.width ?? Math.floor(Sprite(world).width[ghostBuilding] / tileSize);
+      const inTilesHeight = building?.height ?? Math.floor(Sprite(world).height[ghostBuilding] / tileSize);
 
       const offsetX = ((inTilesWidth + 1) % 2) / 2;
       const offsetY = ((inTilesHeight + 1) % 2) / 2;

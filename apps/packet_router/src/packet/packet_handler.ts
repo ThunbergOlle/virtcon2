@@ -27,6 +27,7 @@ import requestPlaceBuildingPacket from './packets/request_place_building_packet'
 import requestPlaceHarvestablePacket from './packets/request_place_harvestable_packet';
 import requestPickupBuildingPacket from './packets/request_pickup_building_packet';
 import requestSetAssemblerOutputPacket from './packets/request_set_assembler_output_packet';
+import { requestDebugDumpPacket } from './packets/request_debug_dump_packet';
 
 interface ClientPacketWithPotentialSender<T> extends ClientPacket<T> {
   sender?: PacketSender;
@@ -56,6 +57,8 @@ export function handleClientPacket(packet: ClientPacketWithPotentialSender<unkno
       return requestPickupBuildingPacket(packet as ClientPacketWithSender<RequestPickupBuildingPacketData>);
     case PacketType.REQUEST_SET_ASSEMBLER_OUTPUT:
       return requestSetAssemblerOutputPacket(packet as ClientPacketWithSender<RequestSetAssemblerOutputPacketData>);
+    case PacketType.REQUEST_DEBUG_DUMP:
+      return requestDebugDumpPacket(packet as ClientPacketWithSender<unknown>);
 
     default: {
       log(`Unknown packet type: ${packet.packet_type}`, LogLevel.ERROR);

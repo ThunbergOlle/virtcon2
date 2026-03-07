@@ -1,7 +1,7 @@
 import { gql, makeVar } from '@apollo/client';
-import { addComponent, addReservedEntity, Entity, removeEntity } from '@virtcon2/bytenetc';
+import { addComponent, addReservedEntity, Entity, Has, removeEntity } from '@virtcon2/bytenetc';
 import { ClientPacket, PacketType, RequestPlaceBuildingPacketData } from '@virtcon2/network-packet';
-import { Collider, fromPhaserPos, GhostBuilding, ItemTextureMap, Position, Sprite, tileSize } from '@virtcon2/network-world-entities';
+import { Animation, Collider, fromPhaserPos, GhostBuilding, ItemTextureMap, Position, Sprite, tileSize } from '@virtcon2/network-world-entities';
 import { DBUserInventoryItem, get_building_by_id } from '@virtcon2/static-game-data';
 import { clone } from 'ramda';
 import { toast } from 'react-toastify';
@@ -18,6 +18,9 @@ function rotatePlaceBuildingIntent() {
   const buildingBeingPlacedEntity = buildingBeingPlacedEntityVar();
   if (!world || !buildingBeingPlacedEntity) return;
   Sprite(world).rotation[buildingBeingPlacedEntity] = (90 + Sprite(world).rotation[buildingBeingPlacedEntity]) % 360;
+  if (Has(Animation)(buildingBeingPlacedEntity, world)) {
+    Animation(world).animationIndex[buildingBeingPlacedEntity] = Math.floor(Sprite(world).rotation[buildingBeingPlacedEntity] / 90) % 4;
+  }
 }
 
 export const cancelPlaceBuildingIntent = () => {
@@ -105,12 +108,19 @@ export function startPlaceBuildingIntent(inventoryItem: DBUserInventoryItem) {
 
   game.state.ghostBuildingById[ghostBuilding] = buildingSettings;
 
-  Sprite(world).texture[ghostBuilding] = ItemTextureMap[inventoryItem.item.name]?.textureId ?? 0;
-  Sprite(world).height[ghostBuilding] = (buildingSettings?.height ?? 1) * 16;
-  Sprite(world).width[ghostBuilding] = (buildingSettings?.width ?? 1) * 16;
+  const textureInfo = ItemTextureMap[inventoryItem.item.name];
+  Sprite(world).texture[ghostBuilding] = textureInfo?.textureId ?? 0;
+  Sprite(world).width[ghostBuilding] = textureInfo?.spriteSheetFrameWidth ?? (buildingSettings.width * 16);
+  Sprite(world).height[ghostBuilding] = textureInfo?.spriteSheetFrameHeight ?? (buildingSettings.height * 16);
   Sprite(world).opacity[ghostBuilding] = 0.5;
-  Collider(world).sizeWidth[ghostBuilding] = (buildingSettings?.width ?? 1) * tileSize;
-  Collider(world).sizeHeight[ghostBuilding] = (buildingSettings?.height ?? 1) * tileSize;
+  Collider(world).sizeWidth[ghostBuilding] = buildingSettings.width * tileSize;
+  Collider(world).sizeHeight[ghostBuilding] = buildingSettings.height * tileSize;
+
+  if (textureInfo?.animations?.length) {
+    addComponent(game.state.world, Animation, ghostBuilding);
+    Animation(world).animationIndex[ghostBuilding] = 0;
+    Animation(world).isPlaying[ghostBuilding] = 1;
+  }
   Position(world).x[ghostBuilding] = 0;
   Position(world).y[ghostBuilding] = 0;
 

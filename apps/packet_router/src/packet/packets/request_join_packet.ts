@@ -84,23 +84,36 @@ export default async function requestJoinPacket(packet: ClientPacketWithSender<R
   return;
 }
 
-const ensureWorldIsRunning = async (worldId: string) => {
-  let dbWorld = await World.findOne({ where: { id: worldId } });
-  console.log(`Does world exist in DB: ${!!dbWorld}`);
-  if (!dbWorld) {
-    await AppDataSource.manager.transaction(async (transaction) => {
-      dbWorld = await World.GenerateNewWorld(transaction, worldId);
-    });
-  }
-  console.log(`Generated or found world in DB: ${dbWorld.id}`);
+const worldInitInFlight = new Map<string, Promise<void>>();
 
-  if (!doesWorldExist(worldId)) {
+const ensureWorldIsRunning = async (worldId: string) => {
+  if (doesWorldExist(worldId)) {
+    log(`World ${worldId} is already running.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+    return;
+  }
+
+  if (worldInitInFlight.has(worldId)) {
+    return worldInitInFlight.get(worldId);
+  }
+
+  const initPromise = (async () => {
+    let dbWorld = await World.findOne({ where: { id: worldId } });
+    if (!dbWorld) {
+      await AppDataSource.manager.transaction(async (transaction) => {
+        dbWorld = await World.GenerateNewWorld(transaction, worldId);
+      });
+    }
     log(`World ${worldId} is not running. Starting up world...`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
     try {
       await initializeWorld(worldId);
     } catch (e) {
       log(e, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
-      return log(`Failed to start world ${worldId}.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
+      log(`Failed to start world ${worldId}.`, LogLevel.ERROR, LogApp.PACKET_DATA_SERVER);
+    } finally {
+      worldInitInFlight.delete(worldId);
     }
-  } else log(`World ${worldId} is already running.`, LogLevel.INFO, LogApp.PACKET_DATA_SERVER);
+  })();
+
+  worldInitInFlight.set(worldId, initPromise);
+  return initPromise;
 };

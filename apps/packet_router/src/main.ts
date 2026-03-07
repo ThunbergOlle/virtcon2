@@ -183,8 +183,13 @@ const tickInterval = setInterval(() => {
   const groupedByTarget = groupBy((packet: ServerPacket<unknown>) => packet.target)(packets);
 
   for (const target in groupedByTarget) {
-    const packets = groupedByTarget[target];
-    io.sockets.to(target).emit('packets', packets);
+    const worldPackets = groupedByTarget[target];
+    worldPackets.sort((a, b) => {
+      if (a.packet_type === PacketType.REMOVE_ENTITY && b.packet_type !== PacketType.REMOVE_ENTITY) return -1;
+      if (a.packet_type !== PacketType.REMOVE_ENTITY && b.packet_type === PacketType.REMOVE_ENTITY) return 1;
+      return 0;
+    });
+    io.sockets.to(target).emit('packets', worldPackets);
   }
 
   const endTime = Date.now();

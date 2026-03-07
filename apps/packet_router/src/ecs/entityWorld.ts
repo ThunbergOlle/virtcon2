@@ -50,8 +50,8 @@ const setupSystems = (world: World, seed: number) => {
     createResourceSystem(world, seed),
     createBuildingProcessingSystem(world),
     createHarvestableGrowingSystem(world),
-    createConveyorSystem(world),
     createInserterSystem(world),
+    createConveyorSystem(world),
     createInserterAnimationSystem(world),
   ];
 };

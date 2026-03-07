@@ -12,6 +12,7 @@ import {
   doesEntityExist,
   registerComponents,
   removeEntity,
+  serializeAllEntities,
   System,
   World,
 } from '@virtcon2/bytenetc';
@@ -204,6 +205,16 @@ export default class Game extends Scene implements SceneStates {
       this.state.worldSeed = seed;
 
       window.debugEntity = (entityId) => console.log(debugEntity(this.state.world, entityId));
+      window.dumpECS = () => {
+        const clientDump = serializeAllEntities(this.state.world);
+        console.log('[ECS DUMP - CLIENT]', clientDump);
+        Game.network.sendPacket({ packet_type: PacketType.REQUEST_DEBUG_DUMP, world_id: this.state.world, data: { clientDump } });
+      };
+
+      window.addEventListener('error', (e) => {
+        console.error('[Global error - triggering ECS dump]', e.error);
+        window.dumpECS?.();
+      });
 
       registerComponents(this.state.world, allComponents);
       console.log('Loading world data...');
@@ -270,38 +281,44 @@ export default class Game extends Scene implements SceneStates {
     const [packets, length] = Game.network.getReceivedPackets();
     receiveServerPackets(this.state.world, packets);
 
-    // Add/remove sprite components based on render distance
-    newState = this.resourceSpriteManagementSystem(newState);
-    newState = this.harvestableSpriteManagementSystem(newState);
+    try {
+      // Add/remove sprite components based on render distance
+      newState = this.resourceSpriteManagementSystem(newState);
+      newState = this.harvestableSpriteManagementSystem(newState);
 
-    // Create/destroy Phaser sprites based on Sprite component presence
-    newState = this.spriteRegisterySystem(newState);
-    newState = this.colliderSystem(newState);
-    newState = this.spriteSystem(newState);
+      // Create/destroy Phaser sprites based on Sprite component presence
+      newState = this.spriteRegisterySystem(newState);
+      newState = this.colliderSystem(newState);
+      newState = this.spriteSystem(newState);
 
-    newState = this.playerSystem(newState);
-    newState = this.mainPlayerSystem(newState);
-    newState = this.mainPlayerSyncSystem(newState);
+      newState = this.playerSystem(newState);
+      newState = this.mainPlayerSystem(newState);
+      newState = this.mainPlayerSyncSystem(newState);
 
-    newState = this.resourceSystem(newState);
-    newState = this.harvestableSystem(newState);
-    newState = this.buildingSystem(newState);
+      newState = this.resourceSystem(newState);
+      newState = this.harvestableSystem(newState);
+      newState = this.buildingSystem(newState);
 
-    newState = this.buildingPlacementSystem(newState);
-    newState = this.harvestablePlacementSystem(newState);
-    newState = this.tagSystem(newState);
+      newState = this.buildingPlacementSystem(newState);
+      newState = this.harvestablePlacementSystem(newState);
+      newState = this.tagSystem(newState);
 
-    newState = this.itemSystem(newState);
+      newState = this.itemSystem(newState);
 
-    newState = this.worldBorderSystem(newState);
-    newState = this.cursorHighlightSystem(newState);
-    newState = this.spriteTextureUpdateSystem(newState);
-    newState = this.animationSystem(newState);
-    newState = this.conveyorRenderSystem(newState);
-    newState = this.conveyorItemInterpolationSystem(newState);
+      newState = this.worldBorderSystem(newState);
+      newState = this.cursorHighlightSystem(newState);
+      newState = this.spriteTextureUpdateSystem(newState);
+      newState = this.animationSystem(newState);
+      newState = this.conveyorRenderSystem(newState);
+      newState = this.conveyorItemInterpolationSystem(newState);
 
-    if (this.debugPositionSystem) {
-      newState = this.debugPositionSystem(newState);
+      if (this.debugPositionSystem) {
+        newState = this.debugPositionSystem(newState);
+      }
+    } catch (e) {
+      console.error('[Game loop error]', e);
+      window.dumpECS?.();
+      throw e;
     }
 
     this.state = newState;
