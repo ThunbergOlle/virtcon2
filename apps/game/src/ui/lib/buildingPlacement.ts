@@ -17,9 +17,11 @@ function rotatePlaceBuildingIntent() {
   const world = game.state.world;
   const buildingBeingPlacedEntity = buildingBeingPlacedEntityVar();
   if (!world || !buildingBeingPlacedEntity) return;
-  Sprite(world).rotation[buildingBeingPlacedEntity] = (90 + Sprite(world).rotation[buildingBeingPlacedEntity]) % 360;
   if (Has(Animation)(buildingBeingPlacedEntity, world)) {
-    Animation(world).animationIndex[buildingBeingPlacedEntity] = Math.floor(Sprite(world).rotation[buildingBeingPlacedEntity] / 90) % 4;
+    // Direction baked into animation frames — only cycle animationIndex, no physical rotation
+    Animation(world).animationIndex[buildingBeingPlacedEntity] = (Animation(world).animationIndex[buildingBeingPlacedEntity] + 1) % 4;
+  } else {
+    Sprite(world).rotation[buildingBeingPlacedEntity] = (Sprite(world).rotation[buildingBeingPlacedEntity] + 90) % 360;
   }
 }
 
@@ -27,7 +29,7 @@ export const cancelPlaceBuildingIntent = () => {
   const game = Game.getInstance();
 
   game.input.off('pointerdown', placeBuilding);
-  game.input.off('keydown-R', rotatePlaceBuildingIntent);
+  game.input.keyboard?.off('keydown-R', rotatePlaceBuildingIntent);
 
   buildingBeingPlacedVar(null);
 
@@ -63,7 +65,9 @@ function placeBuilding(e: Phaser.Input.Pointer) {
   const packet: ClientPacket<RequestPlaceBuildingPacketData> = {
     data: {
       buildingItemId: buildingBeingPlaced.item.id,
-      rotation: Sprite(world).rotation[buildingBeingPlacedEntitiy],
+      rotation: Has(Animation)(buildingBeingPlacedEntitiy, world)
+        ? Animation(world).animationIndex[buildingBeingPlacedEntitiy] * 90
+        : Sprite(world).rotation[buildingBeingPlacedEntitiy],
       x,
       y,
     },
@@ -132,6 +136,6 @@ export function startPlaceBuildingIntent(inventoryItem: DBUserInventoryItem) {
   game.input.keyboard?.once('keydown-ESC', () => cancelPlaceBuildingIntent());
   game.input.keyboard?.once('keydown-Q', () => cancelPlaceBuildingIntent());
   if (buildingSettings?.is_rotatable) {
-    game.input.keyboard?.on('keydown-R', () => rotatePlaceBuildingIntent());
+    game.input.keyboard?.on('keydown-R', rotatePlaceBuildingIntent);
   }
 }
