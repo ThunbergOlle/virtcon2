@@ -1,6 +1,6 @@
 # Virtcon2
 
-The second version of the Virtcon project. This is a complete rewrite of the original. 
+Virtcon2 is a 2d game focused on production and economics
 
 #### Installation
 
