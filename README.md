@@ -1,6 +1,6 @@
 # Virtcon2
 
-Virtcon2 is a 2d game focused on production and economics
+Virtcon2 is a 2d game focused on production and economics.
 
 #### Installation
 
